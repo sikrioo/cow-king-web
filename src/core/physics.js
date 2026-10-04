@@ -1,7 +1,7 @@
 // Matter 엔진/월드와 목장 울타리 벽
 import Matter from 'matter-js';
 
-const { Engine, World, Bodies } = Matter;
+export const { Engine, World, Bodies, Body } = Matter;
 
 export const engine = Engine.create();
 engine.gravity.x = 0;

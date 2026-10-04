@@ -1,4 +1,3 @@
-import Matter from 'matter-js';
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, WARCRY_RADIUS,
   WARCRY_COOLDOWN, WARCRY_MANA_COST, WHIRLWIND_DURATION, WHIRLWIND_COOLDOWN, WHIRLWIND_RADIUS,
@@ -28,10 +27,9 @@ import { SKILL_ORDER, SKILL_META, SKILL_UNLOCK_LEVEL } from './data/skills.js';
 import { clamp01, lerpAngle, moveToward2D, distToSegment } from './util.js';
 import { canvas, resize } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
-import { engine, world, PEN } from './core/physics.js';
+import { Engine, World, Bodies, Body, engine, world, PEN } from './core/physics.js';
 import { game, ui, input, player } from './state.js';
 import { render } from './render/renderer.js';
-const { Engine, World, Bodies, Body } = Matter;
 
 // ===========================================================
 // 펜(사각형 목장) + 울타리
@@ -684,7 +682,7 @@ function gainExp(amount) {
     player.expToNext = expForLevel(player.level);
     floatText(player.x, player.y - 54, `LEVEL UP! Lv.${player.level}`, '#ffe066');
     Object.keys(SKILL_UNLOCK_LEVEL).forEach((id) => {
-      if (SKILL_UNLOCK_LEVEL[id] === player.level) floatText(player.x, player.y - 74, `새 스킬 해금: ${SKILLS[id].label}`, '#9be39b');
+      if (SKILL_UNLOCK_LEVEL[id] === player.level) floatText(player.x, player.y - 74, `새 스킬 해금: ${SKILL_META[id].label}`, '#9be39b');
     });
     game.shake = Math.min(game.shake + 5, 12);
   }

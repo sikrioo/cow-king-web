@@ -1,5 +1,5 @@
 // 게임 상태 한 곳. 다른 모듈은 이 객체들의 속성을 읽고/바꾼다 (바인딩 재할당 대신 game.cows = [] 처럼 속성 대입)
-import { MAX_MANA, MAX_STAMINA, ATTACK_DURATION, expForLevel } from './data/balance.js';
+import { ATTACK_DURATION, MAX_MANA, MAX_STAMINA, expForLevel } from './data/balance.js';
 
 // 월드/진행 상태
 export const game = {
