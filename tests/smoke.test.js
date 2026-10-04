@@ -88,6 +88,39 @@ function runZoo(env, seed, view, spawn, killAll) {
   return prints;
 }
 
+// 모바일: HTML 버튼(슬롯 길게/전환/물약/일시정지/장비)과 가상 조이스틱만으로 조작
+function runMobile(env, seed, view) {
+  const rnd = mulberry32(seed + 13);
+  const prints = [];
+  const snap = (frame) => prints.push({ frame, draw: env.drawHash, ...fingerprint(view()) });
+  const ev = (extra = {}) => ({ preventDefault() {}, stopPropagation() {}, pointerId: 7, clientX: 50, clientY: 50, ...extra });
+  const fire = (id, type, extra) => env.elCache[id]._fire(type, ev(extra));
+  env.frame(60);
+  fire('slot1', 'pointerdown'); fire('slot1', 'pointerup'); // 타이틀에서 버튼 = 시작
+  env.frame(300); snap('start');
+  let joy = false;
+  for (let i = 0; i < 3000; i++) {
+    if (i % 50 === 0) {
+      if (!joy) { fire('joystick-base', 'pointerdown', { clientX: 50, clientY: 50 }); joy = true; }
+      fire('joystick-base', 'pointermove', { clientX: 50 + (rnd() - 0.5) * 120, clientY: 50 + (rnd() - 0.5) * 120 });
+    }
+    if (i % 230 === 200) { fire('joystick-base', i % 460 === 200 ? 'pointerup' : 'pointercancel'); joy = false; }
+    if (i % 25 === 0) fire('slot1', 'pointerdown'); if (i % 25 === 15) fire('slot1', i % 50 === 15 ? 'pointerup' : 'pointerleave');
+    if (i % 70 === 0) fire('slot2', 'pointerdown'); if (i % 70 === 40) fire('slot2', 'pointercancel');
+    if (i % 160 === 80) fire('slot1-cycle', 'pointerdown');
+    if (i % 190 === 95) fire('slot2-cycle', 'pointerdown');
+    if (i % 140 === 30) fire('pot-heal', 'pointerdown');
+    if (i % 150 === 60) fire('pot-mana', 'pointerdown');
+    if ([500, 900, 1300].includes(i)) env.key('l');
+    if (i === 1000 || i === 1060) fire('btn-pause', 'pointerdown');
+    if (i === 1500 || i === 1700) fire('btn-inv', 'pointerdown');
+    if (i === 1520) fire('btn-full', 'pointerdown');
+    env.frame(1);
+    if ((i + 1) % 100 === 0) snap(i + 1);
+  }
+  return prints;
+}
+
 function runLegacy(seed) {
   const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
   const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
@@ -113,6 +146,24 @@ async function runModularZoo(seed) {
     return runZoo(env, seed, () => ({ game: state.game, ui: state.ui, player: state.game.hero }),
       (k) => { state.game.cows.push(new Monster(0.4, k)); },
       () => { state.game.cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); });
+  } finally {
+    env.restore();
+  }
+}
+
+function runLegacyMobile(seed) {
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
+  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
+  return runMobile(env, seed, () => env.sandbox.__view());
+}
+
+async function runModularMobile(seed) {
+  const env = installBrowserEnv({ seed });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const state = await import('../src/state.js');
+    return runMobile(env, seed, () => ({ game: state.game, ui: state.ui, player: state.game.hero }));
   } finally {
     env.restore();
   }
@@ -149,6 +200,18 @@ describe('smoke: 몬스터 11종 특수 행동/처치가 레거시와 동일', (
       expect(modular.length).toBe(legacy.length);
       for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]);
       expect(legacy[legacy.length - 1].gameState).toBe('victory'); // 보스 처치까지 실제로 경유했는지
+    }, 120000);
+  }
+});
+
+describe('smoke: 모바일 버튼/조이스틱 조작이 레거시와 동일', () => {
+  for (const seed of [3, 2024]) {
+    it(`mobile seed ${seed}`, async () => {
+      const legacy = runLegacyMobile(seed);
+      const modular = await runModularMobile(seed);
+      expect(modular.length).toBe(legacy.length);
+      for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]);
+      expect(legacy.some((p) => p.kills > 0), '전투가 실제로 일어났는지').toBe(true);
     }, 120000);
   }
 });

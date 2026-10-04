@@ -7,17 +7,18 @@ import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
 import { drawMonster } from './monsterSprites.js';
+import { updatePotionButtonsUI, updateSkillButtonsUI, syncTitleModeClass } from '../ui/dom.js';
+import { drawInventoryPanel } from '../ui/menu/panel.js';
 import {
   drawTitleScene, drawTitleOverlay, drawStartCountdown, drawWavePresentation, drawDemoTip, drawPauseOverlay
 } from '../ui/overlays.js';
 
-// hooks: 아직 main.js에 있는 DOM 버튼 동기화/캔버스 메뉴 (Step 6에서 ui/dom, ui/menu로 옮기면 직접 import)
-export function render(t, hooks) {
+export function render(t) {
   ctx.fillStyle = '#0c1f10';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const titleMode = game.gameState === 'title';
-  document.body.classList.toggle('title-mode', titleMode);
+  syncTitleModeClass(titleMode);
   if (titleMode) {
     ctx.save();
     drawPen();
@@ -49,8 +50,9 @@ export function render(t, hooks) {
   ctx.restore();
 
   drawHUD();
-  hooks.syncDomButtons();
-  if (ui.showInventory) hooks.drawMenu(ctx);
+  updateSkillButtonsUI();
+  updatePotionButtonsUI();
+  if (ui.showInventory) drawInventoryPanel(ctx);
   if (game.paused) drawPauseOverlay();
 
   if (game.impactFlash > 0) {

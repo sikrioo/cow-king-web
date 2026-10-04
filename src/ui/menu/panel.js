@@ -114,3 +114,13 @@ export function drawInventoryPanel(ctx) {
   else drawUpgradeTab(ctx, x, contentTop, w);
   ctx.restore();
 }
+
+// 메뉴 위 포인터 이동: 가방 탭이면 올려둔 칸 미리보기
+export function menuPointerMove(mx, my) {
+  if (ui.invPanelTab === 'bag') {
+    const hit = ui.invSlotRects.find((r) => pointInRect(mx, my, r));
+    ui.hoverInvIndex = hit ? hit.index : null; // 올려두기만 하면 미리보기 - 고정(selectedInvIndex)은 건드리지 않음
+  } else {
+    ui.hoverInvIndex = null;
+  }
+}

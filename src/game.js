@@ -1,10 +1,19 @@
 // 게임 흐름: 새 게임 초기화 (상태 머신/승패 기록은 Step 6에서 이쪽으로)
-import { ATTACK_DURATION, MAX_MANA, expForLevel, FIRST_WAVE_DELAY } from './data/balance.js';
-import { World, Body, world } from './core/physics.js';
+import { ATTACK_DURATION, MAX_MANA, expForLevel, LEVEL_STAT_KEYS, FIRST_WAVE_DELAY, WAVE_GAP } from './data/balance.js';
+import { STEP_MS } from './core/loop.js';
+import { Engine, World, Body, engine, world } from './core/physics.js';
 import { game, ui, input } from './state.js';
-import { giveStarterGear, giveTestStash } from './systems/gear.js';
-import { SKILLS } from './systems/skills.js';
-import { PEN } from './world/arena.js';
+import { updatePlayer } from './entities/hero.js';
+import { updateHazards } from './systems/combat.js';
+import { updateParticles, updateLightningBolts, updateShockwaves, updateFloatTexts } from './systems/fx.js';
+import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot } from './systems/gear.js';
+import { updateItems } from './systems/loot.js';
+import { tryDrinkPotion } from './systems/potions.js';
+import { gainExp, trySpendStatPoint } from './systems/progression.js';
+import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
+import { startNextWave } from './systems/waves.js';
+import { setInventoryOpen } from './ui/menu/panel.js';
+import { PEN, randomPointInPen } from './world/arena.js';
 
 export function resetGame() {
   game.paused = false;
@@ -120,4 +129,141 @@ export function resetGame() {
   if (s1el) s1el.style.background = SKILLS[game.hero.slot1].color;
   if (s2el) s2el.style.background = SKILLS[game.hero.slot2].color;
   game.gameState = 'playing';
+}
+
+export function setPaused(v) {
+  if (game.gameState !== 'playing') { game.paused = false; return; }
+  game.paused = !!v;
+  const pb = document.getElementById('btn-pause');
+  if (pb) pb.textContent = game.paused ? '▶' : 'Ⅱ';
+}
+
+export function initTitleScene() {
+  ui.titleCows = [];
+  const count = Math.max(7, Math.min(12, Math.round(PEN.size / 70)));
+  for (let i = 0; i < count; i++) {
+    const p = randomPointInPen(0.10);
+    const a = Math.random() * Math.PI * 2;
+    ui.titleCows.push({
+      x: p.x, y: p.y,
+      vx: Math.cos(a) * (10 + Math.random() * 14),
+      vy: Math.sin(a) * (8 + Math.random() * 12),
+      scale: 0.23 + Math.random() * 0.12,
+      phase: Math.random() * 8,
+      facing: Math.cos(a) >= 0 ? 1 : -1
+    });
+  }
+}
+
+export function updateTitleScene(dt) {
+  ui.titleTime += dt;
+  if (!ui.titleCows.length) initTitleScene();
+  const minX = PEN.x + 34, maxX = PEN.x + PEN.size - 34;
+  const minY = PEN.y + 40, maxY = PEN.y + PEN.size - 32;
+  ui.titleCows.forEach((c, i) => {
+    c.vx += Math.sin(ui.titleTime * 0.7 + c.phase + i) * 2.2 * dt;
+    c.vy += Math.cos(ui.titleTime * 0.6 + c.phase * 1.3) * 1.8 * dt;
+    const sp = Math.hypot(c.vx, c.vy) || 1;
+    const maxSp = 24;
+    if (sp > maxSp) { c.vx = c.vx / sp * maxSp; c.vy = c.vy / sp * maxSp; }
+    c.x += c.vx * dt; c.y += c.vy * dt;
+    if (c.x < minX || c.x > maxX) { c.vx *= -1; c.x = Math.max(minX, Math.min(maxX, c.x)); }
+    if (c.y < minY || c.y > maxY) { c.vy *= -1; c.y = Math.max(minY, Math.min(maxY, c.y)); }
+    if (Math.abs(c.vx) > 0.2) c.facing = c.vx > 0 ? 1 : -1;
+  });
+}
+
+export function pressAction(fn) {
+  if (game.gameState !== 'playing') { resetGame(); return; }
+  if (game.paused) return;
+  fn();
+}
+
+export function fixedUpdate(dt) {
+  if (game.gameState === 'title') {
+    updateTitleScene(dt);
+    updateParticles(dt);
+    if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
+    return;
+  }
+  if (ui.showInventory) {
+    // 장비창을 보는 동안은 전투/이동을 전부 멈춤 - 감정 진행만은 메뉴 안의 행동이라 계속 흐름
+    updateIdentify(dt);
+    updateParticles(dt);
+    if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
+    return;
+  }
+  if (game.paused) return;
+  if (game.hitstop > 0) { game.hitstop--; return; }
+  if (game.gameState === 'playing') {
+    updatePlayer(dt);
+    updateSkillSlots();
+    game.cows.forEach((c) => c.update(dt));
+    for (let i = game.cows.length - 1; i >= 0; i--) {
+      if (game.cows[i].state === 'dead' && game.cows[i].deadTimer <= 0) game.cows.splice(i, 1);
+    }
+    if (game.cows.length === 0) {
+      game.waveTransition -= dt;
+      if (game.waveTransition <= 0) {
+        startNextWave();
+        game.waveTransition = WAVE_GAP;
+      }
+    }
+    updateItems(dt);
+    Engine.update(engine, STEP_MS);
+  }
+  updateParticles(dt);
+  updateShockwaves(dt);
+  updateHazards(dt);
+  updateLightningBolts(dt);
+  updateFloatTexts(dt);
+  if (game.waveBannerTimer > 0) game.waveBannerTimer = Math.max(0, game.waveBannerTimer - dt);
+  if (game.demoTipTimer > 0) game.demoTipTimer = Math.max(0, game.demoTipTimer - dt);
+  if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 40);
+  if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
+}
+
+// 키 의도 처리 - 순서가 의미: 메뉴 닫기/일시정지 → (일시정지 중이면 여기서 끝) → 나머지
+export function handleKeyDown(intent, k, e) {
+  if (intent === 'back') {
+    e.preventDefault();
+    if (ui.showInventory) { setInventoryOpen(false); return; }
+    if (game.gameState === 'playing') { setPaused(!game.paused); return; }
+  }
+  if (intent === 'pause' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
+  if (game.paused) return;
+  if (intent === 'debugLevelUp' && game.gameState === 'playing') gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
+  const num = intent === 'num' ? Number(k) : 0;
+  if (!ui.showInventory && game.gameState === 'playing') {
+    if (num === 1) tryDrinkPotion('heal');
+    if (num === 2) tryDrinkPotion('mana');
+  }
+  // 슬롯1 = Space(길게 누르면 계속 시전), 슬롯2 = E(길게)
+  if (intent === 'slot1') {
+    e.preventDefault();
+    if (game.gameState !== 'playing') { resetGame(); }
+    else if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); }
+  }
+  if (intent === 'slot2') {
+    if (game.gameState !== 'playing') { resetGame(); }
+    else if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); }
+  }
+  // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
+  if (intent === 'cycleSlot1') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
+  if (intent === 'cycleSlot2') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(2); }
+  if (intent === 'toggleMenu') setInventoryOpen(!ui.showInventory);
+  if (ui.showInventory && num >= 1 && num <= 7) {
+    tryUpgradeSlot(num - 1);
+  }
+  if (ui.showInventory && intent === 'stat') {
+    trySpendStatPoint(LEVEL_STAT_KEYS[k]);
+  }
+}
+
+// 캔버스 클릭으로 슬롯 시전 시작 (좌클릭/터치 = 1, 우클릭 = 2)
+export function slotPress(slotNum) {
+  if (game.gameState !== 'playing') { resetGame(); return; }
+  if (game.paused) return;
+  if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); } }
+  else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); } }
 }
