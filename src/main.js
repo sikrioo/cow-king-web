@@ -1,4 +1,32 @@
 import Matter from 'matter-js';
+import {
+  ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, WARCRY_RADIUS,
+  WARCRY_COOLDOWN, WARCRY_MANA_COST, WHIRLWIND_DURATION, WHIRLWIND_COOLDOWN, WHIRLWIND_RADIUS,
+  WHIRLWIND_MANA_COST, WHIRLWIND_MANA_DRAIN, WHIRLWIND_TICK, LEAP_DISTANCE, LEAP_DURATION, LEAP_COOLDOWN,
+  LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
+  RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
+  SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL, MOVE_REVERSE_ACCEL, MOVE_BRAKE,
+  MOVE_FACING_RESPONSE, MOVE_DUST_COLOR, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA, STAMINA_DRAIN,
+  STAMINA_REGEN, COMBO_WINDOW, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION,
+  VITALITY_DURATION, SPEED_BUFF_DURATION, ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL,
+  POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION,
+  UPGRADE_SUCCESS_CHANCE, GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO,
+  POTION_MANA_AMOUNT, POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN,
+  BOSS_SLAM_RADIUS, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER,
+  CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE,
+  ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+} from './data/balance.js';
+import {
+  MONSTERS, FLASH_COLORS, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE,
+  ELITE_CHANCE_MAX
+} from './data/monsters.js';
+import {
+  ITEM_STYLE, POTION_LABEL, GEAR_SLOTS, GEAR_SLOT_LABEL, GEAR_CATEGORY_LABEL, GEAR_VARIANT_LABEL,
+  WEAPON_VARIANTS, ACCESSORY_VARIANTS, GEAR_CATEGORY_COLOR, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
+} from './data/items.js';
+import {
+  SKILL_ORDER, SKILL_META, SKILL_UNLOCK_LEVEL
+} from './data/skills.js';
 const { Engine, World, Bodies, Body } = Matter;
 
 const canvas = document.getElementById('c');
@@ -259,7 +287,6 @@ let impactFlash = 0;
 // ===========================================================
 const RELEASE_VERSION = '1.2.0-merged';
 const SAVE_KEY = 'cowking_release_meta_v1';
-const FIRST_WAVE_DELAY = 4.0;
 let paused = false;
 let runRecorded = false;
 let releaseMeta = { bestWave: 0, bestKills: 0, clears: 0, runs: 0 };
@@ -492,175 +519,27 @@ function applyKnockback(body, fromX, fromY, force) {
 // ===========================================================
 // 플레이어
 // ===========================================================
-const ATTACK_DURATION = 0.22;
-const ATTACK_COOLDOWN = 0.32;
-const ATTACK_RANGE = 50; // 맨손/기본값
-const WEAPON_RANGE = { sword: 50, axe: 46, mace: 46, dagger: 38, spear: 68 };
 function getWeaponRange() {
   const w = player.equipment.weaponMain;
   if (w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined) return WEAPON_RANGE[w.variant];
   return ATTACK_RANGE;
 }
-const ATTACK_ARC = Math.PI * 0.9; // 쌍수(양손 다 무기)일 때 - 두 칼날이 넓게 휩쓺
-const ATTACK_ARC_SINGLE = Math.PI * 0.62; // 한손무기+방패(또는 빈손)일 때 - 한 자루라 더 좁고 집중됨
 function getAttackArc() {
   const off = player.equipment.weaponOff;
   const dualWield = off && off !== 'LOCKED' && off.category === 'weapon';
   return dualWield ? ATTACK_ARC : ATTACK_ARC_SINGLE;
 }
 
-const WARCRY_RADIUS = 170;
-const WARCRY_COOLDOWN = 4.5;
-const WARCRY_MANA_COST = 15;
-
-const WHIRLWIND_DURATION = 1.1;
-const WHIRLWIND_COOLDOWN = 3.5;
-const WHIRLWIND_RADIUS = 62;
-const WHIRLWIND_MANA_COST = 10;
-const WHIRLWIND_MANA_DRAIN = 9;
-const WHIRLWIND_TICK = 0.4; // 한 번 맞은 적은 이 시간 동안 다시 안 맞음 (예전엔 매 프레임 맞아서 초당 60번 타격 → 순식간에 전멸)
-
-const LEAP_DISTANCE = 150;
-const LEAP_DURATION = 0.32;
-const LEAP_COOLDOWN = 4.0;
-const LEAP_MANA_COST = 12;
-const LEAP_RADIUS = 55;
-
-// 아래 두 스킬(러시/그라운드 스매시)과 관성 이동 상수는 같은 게임을 만든 다른 에이전트 버전에서 가져옴
-const RUSH_DISTANCE = 190;
-const RUSH_DURATION = 0.28;
-const RUSH_COOLDOWN = 3.2;
-const RUSH_MANA_COST = 8;
-const RUSH_HIT_RADIUS = 34;
-const RUSH_DAMAGE_BONUS = 3;
-
-const SMASH_DURATION = 0.52;
-const SMASH_IMPACT_TIME = 0.27;
-const SMASH_COOLDOWN = 4.2;
-const SMASH_MANA_COST = 16;
-const SMASH_RADIUS = 82;
-const SMASH_DAMAGE_BONUS = 6;
-
-const MOVE_START_ACCEL = 4.0;
-const MOVE_CRUISE_ACCEL = 9.2;
-const MOVE_TURN_ACCEL = 11.2;
-const MOVE_REVERSE_ACCEL = 15.0;
-const MOVE_BRAKE = 10.5;
-const MOVE_FACING_RESPONSE = 10.0;
-const MOVE_DUST_COLOR = '#bda98b';
-
-const WALK_SPEED = 130;
-const RUN_SPEED = 215;
-const MAX_MANA = 100;
-const MANA_REGEN = 5;
-const MAX_STAMINA = 100;
-const STAMINA_DRAIN = 30;
-const STAMINA_REGEN = 18;
-
-const BOSS_WAVE = 6;
-const BOSS_SLAM_COOLDOWN = 4.5;
-const BOSS_SLAM_RADIUS = 115;
-
-const CHARGE_RANGE = 240;
-const CHARGE_TELEGRAPH = 0.8;
-const CHARGE_DISTANCE = 260;
-const CHARGE_DURATION = 0.3;
-const CHARGE_RECOVER = 0.6;
-const EXPLODER_FUSE_TIME = 0.55;
-const EXPLODER_FUSE_RANGE = 54;
-const EXPLODER_BLAST_RADIUS = 60;
-const ZAP_RANGE = 260;
-const ZAP_TELEGRAPH = 0.55;
-const ZAP_COOLDOWN = 3.0;
-const ZAP_BEAM_LENGTH = 420; // 조준 지점을 지나 더 멀리까지 뻗어나감 - 유도미사일이 아니라 그냥 직선으로 지나가는 느낌
-const ZAP_BEAM_WIDTH = 24;
-const CHARGE_COOLDOWN = 5.5;
-const CHARGE_WIDTH = 34;
-
-const AURA_RADIUS = 170;
-const AURA_SPEED_MULT = 1.4;
-
-const KIND_STYLE = {
-  normal: { ring: null, colors: null },
-  tough:  { ring: '#ff5b4d', colors: { hide: '#a8402c', horn: '#f2c9a0', snout: '#6e2416', eye: '#ff3b30' } },
-  fast:   { ring: '#ffcf4d', colors: { hide: '#c99a2e', horn: '#fff0c2', snout: '#7a5c16', eye: '#ff3b30' } },
-  cold:   { ring: '#7fd4ff', colors: { hide: '#4f7fa8', horn: '#dff3ff', snout: '#274a63', eye: '#8fe8ff' } },
-  boss:   { ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } },
-  charger:{ ring: '#ffffff', colors: { hide: '#8a8a8a', horn: '#f5f5f5', snout: '#5c5c5c', eye: '#ff3b30' } },
-  fanatic:{ ring: '#ff2d55', colors: { hide: '#7a1030', horn: '#ffb8c9', snout: '#4a0a1c', eye: '#ffe066' } },
-  burning:{ ring: '#ff7a1a', colors: { hide: '#8a2f12', horn: '#ffcf8a', snout: '#4a1608', eye: '#ffb02e' } },
-  exploder:{ ring: '#ff2d2d', colors: { hide: '#5c1414', horn: '#ff9b9b', snout: '#2e0a0a', eye: '#fff066' } },
-  shaman: { ring: '#9f6bff', colors: { hide: '#3a2a5c', horn: '#d9c6ff', snout: '#241a3d', eye: '#7fffd4' } },
-  shocker:{ ring: '#fff066', colors: { hide: '#8a7a2e', horn: '#fffde0', snout: '#4a4015', eye: '#fff9b0' } }
-};
-const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
-
-const VITALITY_DURATION = 20;
-const SPEED_BUFF_DURATION = 15;
-const ATTACK_BUFF_DURATION = 20;
-const DEFENSE_BUFF_DURATION = 20;
-
-const ITEM_STYLE = {
-  heal:     { color: '#ff5b52', label: 'HP' },
-  mana:     { color: '#4d6bff', label: 'MP' },
-  vitality: { color: '#ffd34d', label: '체력' },
-  speed:    { color: '#5be0c9', label: '속도' },
-  attack:   { color: '#ff8a3d', label: '공격' },
-  defense:  { color: '#6fb3ff', label: '방어' }
-};
-
 // ===========================================================
 // 장비 시스템 (갑옷/무기/각반/신발/장신구2)
 // ===========================================================
-const GEAR_SLOTS = ['armor', 'weaponMain', 'weaponOff', 'greaves', 'boots', 'accessory1', 'accessory2'];
-const GEAR_SLOT_LABEL = {
-  armor: '갑옷', weaponMain: '무기(주)', weaponOff: '무기(보조)',
-  greaves: '각반', boots: '신발', accessory1: '장신구1', accessory2: '장신구2'
-};
-const GEAR_CATEGORY_LABEL = { armor: '갑옷', weapon: '무기', greaves: '각반', boots: '신발', accessory: '장신구', shield: '방패' };
-const GEAR_VARIANT_LABEL = {
-  sword: '검', axe: '도끼', mace: '메이스', dagger: '단검', spear: '창',
-  amulet: '목걸이', ring: '반지', charm: '부적'
-};
 function gearDisplayName(gear) {
   return GEAR_VARIANT_LABEL[gear.variant] || GEAR_CATEGORY_LABEL[gear.category];
 }
-// 무기/장신구 변형 목록 - rollGearItem이 쓰므로 resetGame()의 최초 호출(파일 하단)보다 앞에 있어야 함
-const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear'];
-const ACCESSORY_VARIANTS = ['amulet', 'ring', 'charm'];
-const GEAR_CATEGORY_COLOR = { armor: '#c9a227', weapon: '#e05b4d', greaves: '#7fa8c9', boots: '#8fbf6b', accessory: '#c07fe0' };
-
-const STAT_DEF = {
-  atkSpeed:  { label: '공격속도', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
-  atkPower:  { label: '공격력',   min: 1,    max: 3,    fmt: (v) => `+${Math.round(v)}` },
-  defense:   { label: '방어력(블락)', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
-  evasion:   { label: '회피율',   min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
-  moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
-  health:    { label: '체력',     min: 1,    max: 3,    fmt: (v) => `+${Math.round(v)}` },
-  mana:      { label: '마나',     min: 5,    max: 15,   fmt: (v) => `+${Math.round(v)}` }
-};
-// ★ 전투 수치 ×3 스케일: 정수 체력/데미지(1~3)가 너무 거칠어서 +1 데미지만 올라도 몬스터가 한 방이었음.
-//   플레이어 기본 데미지·체력, 몬스터 체력·공격력, 스킬 보너스를 ×3으로 키워 장비/스탯 +1~3이 '조금 센 정도'로 느껴지게 함
-const BASE_DAMAGE = 3;
-const BASE_BLOCK = 0.05;
-const BASE_EVASION = 0.05;
 
 // ===========================================================
 // 레벨업 & 스탯 분배
 // ===========================================================
-const MAX_LEVEL = 30;
-const POINTS_PER_LEVEL = 5; // 레벨마다 고정 5포인트 (디아2와 같은 값 - 이전 10포인트는 몬스터 체력 대비 너무 빨리 강해졌음)
-function expForLevel(level) {
-  return Math.round(130 * Math.pow(level, 1.6)); // Lv1→2 = 130, Lv2→3 = 394, Lv3→4 = 754 ... (예전보다 완만하게 느려짐)
-}
-const KILL_EXP = { normal: 10, tough: 25, fast: 25, cold: 25, charger: 25, fanatic: 30, burning: 28, exploder: 22, shaman: 32, shocker: 30, boss: 400 };
-
-// 스탯 1포인트당 실제 증가량 (장비 옵션과 동일한 계열로 합산됨)
-// 포인트당 효과 - 기본 체력 5 / 몬스터 체력 2~3 기준이라 공격력·체력은 아주 작게 (이전엔 공격력 +1, 체력 +2씩이라 한 레벨에 몬스터가 다 한 방이었음)
-const LEVEL_STAT_PER_POINT = { atkPower: 0.2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, moveSpeed: 0.01, health: 1.0, mana: 3 };
-const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana' };
-const GEAR_DROP_CHANCE = 0.10; // 일반 카우 기준 (난이도 조정으로 하향)
-const INVENTORY_SIZE = 20;
 
 // 장비창 UI 상호작용 상태 (탭/선택/히트박스) - 마우스 호버와 모바일 탭을 동일하게 처리
 let invPanelTab = 'equip'; // 'equip' | 'stats' | 'bag' | 'upgrade'
@@ -671,12 +550,10 @@ let invTabRects = {};
 let invButtons = [];         // 그릴 때마다 채워지는 클릭 버튼 목록 {x,y,w,h,fn}
 let invToast = null;         // 메뉴 안에서 잠깐 보여주는 안내 {text,color,until}
 let invReveal = null;        // 방금 감정된 아이템 강조 {item,color,until}
-const MATERIAL_DROP_CHANCE = 0.07; // 하향 조정
 
 // ===========================================================
 // 아이템 감정(식별) 시스템 - 드랍된 장비는 전부 미감정 상태로 시작
 // ===========================================================
-const IDENTIFY_DURATION = 0.8;
 let identifyingItem = null; // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
 let identifyTimer = 0;
 
@@ -717,14 +594,6 @@ function revealIdentifiedGear(gear) {
   invReveal = { item: gear, color: rDef.color, until: performance.now() + 1100 };
 }
 
-const RARITY_DEF = {
-  normal:    { label: '일반',   color: '#e8e8e8', weight: 55, statMin: 1, statMax: 1, mult: 1.0 },
-  magic:     { label: '매직',   color: '#4d7fff', weight: 28, statMin: 1, statMax: 2, mult: 1.15 },
-  rare:      { label: '레어',   color: '#ffd23f', weight: 13, statMin: 2, statMax: 3, mult: 1.35 },
-  legendary: { label: '레전드', color: '#ff8c1a', weight: 4,  statMin: 3, statMax: 4, mult: 1.7 }
-};
-const RARITY_TOTAL_WEIGHT = Object.values(RARITY_DEF).reduce((s, r) => s + r.weight, 0);
-
 function rollRarity() {
   let roll = Math.random() * RARITY_TOTAL_WEIGHT;
   for (const key of Object.keys(RARITY_DEF)) {
@@ -733,8 +602,6 @@ function rollRarity() {
   }
   return 'normal';
 }
-
-const UPGRADE_SUCCESS_CHANCE = 0.65;
 
 const player = {
   body: Bodies.circle(0, 0, 17, { frictionAir: 0.15, friction: 0, restitution: 0.1, label: 'player' }),
@@ -1193,10 +1060,6 @@ function updatePlayer(dt) {
   player.moveInputActive = moving;
 }
 
-const COMBO_WINDOW = 1.8;
-const COMBO_SPEED_PER_HIT = 0.015;
-const COMBO_SPEED_CAP = 0.3;
-
 function registerComboHit() {
   player.combo++;
   player.comboTimer = COMBO_WINDOW;
@@ -1231,7 +1094,7 @@ function killCow(c) {
   c.deadTimer = 0.3;
   World.remove(world, c.body);
   kills++;
-  gainExp(KILL_EXP[c.kind] || 10);
+  gainExp((MONSTERS[c.kind] || MONSTERS.normal).exp);
   spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
   if (c.kind === 'cold') spawnColdNova(c.x, c.y);
   if (c.kind === 'exploder') {
@@ -1871,13 +1734,6 @@ function updateItems(dt) {
   }
 }
 
-const POTION_MAX = 6;           // 종류별 보관 한도
-const POTION_COOLDOWN = 1.2;    // 물약 사이 대기시간 (연타 방지)
-const POTION_HEAL_RATIO = 0.5;  // 생명 물약: 최대 체력의 50% 회복
-const POTION_MANA_AMOUNT = 60;  // 마나 물약: 마나 60 회복
-// 드랍 풀: 생명/마나는 '채우는' 물약. 최대체력을 올리는 체력(vitality) 물약은 의도와 달라서 드랍에서 뺌 (applyItem 코드는 남겨둠)
-const POTION_DROP_WEIGHTS = { heal: 3, mana: 2.5, speed: 1, attack: 1, defense: 1 };
-
 function rollConsumableType() {
   const entries = Object.entries(POTION_DROP_WEIGHTS);
   let r = Math.random() * entries.reduce((a, [, w]) => a + w, 0);
@@ -1930,8 +1786,6 @@ function applyItem(type) {
     floatText(player.x, player.y - 40, '방어력 UP', ITEM_STYLE.defense.color);
   }
 }
-
-const POTION_LABEL = { heal: '생명물약', mana: '마나물약', speed: '속도물약', attack: '공격물약', defense: '방어물약', vitality: '체력물약' };
 
 // 바닥 아이템은 아이콘 대신 글자 칩으로 표시 - 장비는 미감정이라 회색, 물약/재료는 색으로 구분
 function groundLabelForGear(gear) {
@@ -2674,21 +2528,18 @@ function updateGroundSmash(dt) {
 // 디아블로식 2슬롯 스킬 시스템 - 슬롯에 스킬을 배정하고 누르고 있으면 시전
 // (각 스킬의 try* 함수가 자체 쿨다운/마나 체크를 하므로 매 프레임 호출해도 안전함)
 // ===========================================================
-const SKILL_ORDER = ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash'];
 const SKILLS = {
-  attack:    { label: '공격',   color: 'rgba(220,70,60,0.35)',   try: () => tryPlayerAttack(), cd: () => player.attackCooldown,    cdMax: () => ATTACK_COOLDOWN },
-  warcry:    { label: '함성',   color: 'rgba(232,163,61,0.40)',  try: () => tryWarCry(),       cd: () => player.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN },
-  whirlwind: { label: '휠윈드', color: 'rgba(127,212,224,0.40)', try: () => tryWhirlwind(),    cd: () => player.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION },
-  leap:      { label: '리프',   color: 'rgba(201,180,138,0.40)', try: () => tryLeap(),         cd: () => player.leapCooldown,      cdMax: () => LEAP_COOLDOWN },
-  rush:      { label: '러시',   color: 'rgba(255,138,77,0.40)',  try: () => tryRush(),         cd: () => player.rushCooldown,      cdMax: () => RUSH_COOLDOWN },
-  smash:     { label: '강타',   color: 'rgba(255,200,87,0.40)',  try: () => tryGroundSmash(),  cd: () => player.smashCooldown,     cdMax: () => SMASH_COOLDOWN }
+  attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(), cd: () => player.attackCooldown,    cdMax: () => ATTACK_COOLDOWN },
+  warcry:    { ...SKILL_META.warcry,    try: () => tryWarCry(),       cd: () => player.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN },
+  whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => player.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION },
+  leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => player.leapCooldown,      cdMax: () => LEAP_COOLDOWN },
+  rush:      { ...SKILL_META.rush,      try: () => tryRush(),         cd: () => player.rushCooldown,      cdMax: () => RUSH_COOLDOWN },
+  smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => player.smashCooldown,     cdMax: () => SMASH_COOLDOWN }
 };
 
 let holdSlot1 = false;
 let holdSlot2 = false;
 
-// 스킬 해금 레벨 - 나중에 스킬트리(스킬포인트)가 생기면 isSkillUnlocked 판정만 바꿔 끼우면 됨
-const SKILL_UNLOCK_LEVEL = { attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5 };
 function isSkillUnlocked(id) {
   return player.level >= (SKILL_UNLOCK_LEVEL[id] || 1);
 }
@@ -2720,19 +2571,9 @@ class Cow {
   constructor(scale, kind = 'normal') {
     this.kind = kind;
 
-    // 체구 기준 밸런싱: 작은(기본 체구) 카우는 2방, 큰(강화) 카우는 3방 - 보스는 별도 체계라 제외
-    // 체력 ×3 (기본 데미지 3 기준: 작은 놈 2방, 큰 놈 3방 구조는 그대로)
-    let hp = 6, speedMul = 1, aggroMul = 1, scaleMul = 1;
-    if (kind === 'tough') { hp = 9; scaleMul = 1.3; }
-    else if (kind === 'fast') { hp = 6; speedMul = 1.9; aggroMul = 1.3; }
-    else if (kind === 'cold') { hp = 6; }
-    else if (kind === 'charger') { hp = 6; }
-    else if (kind === 'fanatic') { hp = 6; }
-    else if (kind === 'burning') { hp = 6; speedMul = 0.85; }
-    else if (kind === 'exploder') { hp = 3; speedMul = 1.7; aggroMul = 1.6; }
-    else if (kind === 'shaman') { hp = 6; speedMul = 0.9; }
-    else if (kind === 'shocker') { hp = 6; speedMul = 0.9; }
-    else if (kind === 'boss') { hp = 78; scaleMul = 2.7; speedMul = 0.85; }
+    // 종류별 수치는 data/monsters.js (모르는 종류는 normal 수치)
+    const def = MONSTERS[kind] || MONSTERS.normal;
+    const { hp, speedMul, aggroMul, scaleMul } = def;
 
     this.scale = scale * scaleMul;
     const p = randomPointInPen();
@@ -2773,7 +2614,7 @@ class Cow {
     this.zapCooldown = kind === 'shocker' ? 0.8 + Math.random() * 1.2 : Infinity;
     this.zapTargetX = 0;
     this.zapTargetY = 0;
-    this.dmg = (kind === 'tough' || kind === 'charger' || kind === 'fanatic') ? 6 : 3;
+    this.dmg = def.dmg;
     this.whirlHitCd = 0;
   }
 
@@ -3041,7 +2882,7 @@ class Cow {
       return;
     }
 
-    const style = KIND_STYLE[this.kind];
+    const style = MONSTERS[this.kind];
 
     if (this.kind === 'fanatic') {
       ctx.save();
@@ -3339,14 +3180,12 @@ let kills = 0;
 let gameState = 'playing';
 let wave = 0;
 let waveTransition = 0;
-const WAVE_GAP = 2.2;
 
 function pickCowKind() {
-  if (wave < 2) return 'normal';
-  const eliteChance = Math.min(0.16 + wave * 0.05, 0.45);
+  if (wave < ELITE_MIN_WAVE) return 'normal';
+  const eliteChance = Math.min(ELITE_CHANCE_BASE + wave * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX);
   if (Math.random() < eliteChance) {
-    const kinds = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker'];
-    return kinds[Math.floor(Math.random() * kinds.length)];
+    return ELITE_KINDS[Math.floor(Math.random() * ELITE_KINDS.length)];
   }
   return 'normal';
 }
