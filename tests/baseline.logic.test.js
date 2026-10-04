@@ -2,7 +2,7 @@
 // 절차·순서·시드는 legacy/tools/baseline.cjs와 같게 (기대값은 골든 JSON에서만 읽음 - 숫자를 테스트에 복사하지 말 것)
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import goldenRaw from '../docs/baseline.golden.json';
-import { applyOverrides } from './golden.overrides.js';
+import { applyOverrides, LEGACY_HP_SCALE } from './golden.overrides.js';
 
 const golden = applyOverrides(goldenRaw); // 의도적으로 바꾼 값은 tests/golden.overrides.js
 import { installBrowserEnv } from './helpers/browserEnv.js';
@@ -81,9 +81,11 @@ beforeAll(async () => {
     fresh();
     const o = {}; ui.showInventory = false;
     tryDrinkPotion('heal'); o.fullHpDoesNotConsume = hero().potions.heal === 2;
-    hero().hp = 3; hero().potionCd = { heal: 0, mana: 0 };
+    // 1단계: 회복량은 레거시 단위로 올림 → 레거시 단위로 환산해서 같은 규칙인지 확인
+    const S = LEGACY_HP_SCALE;
+    hero().hp = 3 * S; hero().potionCd = { heal: 0, mana: 0 };
     const maxHp = hero().maxHp + hero().bonusMaxHp + hero().gearMaxHp;
-    tryDrinkPotion('heal'); o.healAmountIsHalfMaxCeil = (hero().hp - 3) === Math.min(Math.ceil(maxHp * 0.5), maxHp - 3); o.healConsumed = hero().potions.heal === 1;
+    tryDrinkPotion('heal'); o.healAmountIsHalfMaxCeil = (hero().hp - 3 * S) / S === Math.min(Math.ceil(maxHp / S * 0.5), maxHp / S - 3); o.healConsumed = hero().potions.heal === 1;
     hero().mana = 10; tryDrinkPotion('mana'); o.manaAdds60 = hero().mana === 70; o.otherTypeNotBlockedByCooldown = hero().potions.mana === 1;
     tryDrinkPotion('heal'); o.sameTypeBlockedByCooldown = hero().potions.heal === 1;
     out.exact.potions = Object.assign(o, { max: POTION_MAX, cooldown: POTION_COOLDOWN, healRatio: POTION_HEAL_RATIO, manaAmount: POTION_MANA_AMOUNT, dropWeights: POTION_DROP_WEIGHTS });

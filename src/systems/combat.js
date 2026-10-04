@@ -1,7 +1,8 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS
+  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
+  BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
@@ -89,7 +90,7 @@ export function bossSlam(c) {
   spawnShockwave(c.x, c.y, BOSS_SLAM_RADIUS, '#b57bd6');
   game.shake = Math.min(game.shake + 6, 12);
   if (game.hero.alive && Math.hypot(game.hero.x - c.x, game.hero.y - c.y) <= BOSS_SLAM_RADIUS) {
-    hitPlayer(c.x, c.y, 6);
+    hitPlayer(c.x, c.y, BOSS_SLAM_DAMAGE);
   }
 }
 
@@ -110,7 +111,7 @@ export function damageCow(c) {
   }
 }
 
-export function hitPlayer(fromX, fromY, dmg = 3) {
+export function hitPlayer(fromX, fromY, dmg) {
   if (!game.hero.alive || game.hero.invuln > 0) return;
 
   const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
@@ -153,7 +154,7 @@ export function updateHazards(dt) {
     h.tickTimer -= dt;
     if (h.life <= 0) { game.hazards.splice(i, 1); continue; }
     if (game.hero.alive && h.tickTimer <= 0 && Math.hypot(game.hero.x - h.x, game.hero.y - h.y) <= h.r) {
-      hitPlayer(h.x, h.y);
+      hitPlayer(h.x, h.y, FIRE_HAZARD_DAMAGE);
       h.tickTimer = 0.6;
       if (Math.random() < 0.4) spawnHitParticles(game.hero.x, game.hero.y - 10, '#ff7a1a', 3);
     }

@@ -2,7 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, expForLevel
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, expForLevel
 } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
@@ -17,7 +17,7 @@ export function createHero() {
     body: Bodies.circle(0, 0, 17, { frictionAir: 0.15, friction: 0, restitution: 0.1, label: 'player' }),
     x: 0, y: 0, r: 17,
     facing: 0,
-    hp: 15, maxHp: 15,
+    hp: HERO_BASE_HP, maxHp: HERO_BASE_HP,
     mana: MAX_MANA, maxMana: MAX_MANA,
     stamina: MAX_STAMINA, maxStamina: MAX_STAMINA,
     running: false,

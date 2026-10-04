@@ -8,9 +8,10 @@
 //   drawOver(m, ctx, t, style)   몸 위에 그리는 것. 있으면 기본 체력바 대신 그림
 // 상태를 점유하는 상태머신(fusing/zapping/telegraph…)은 매 틱 true를 반환해야 일반 AI가 상태를 덮어쓰지 않는다.
 import {
-  BOSS_SLAM_COOLDOWN, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER,
-  CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE,
-  ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  BOSS_SLAM_COOLDOWN, CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
+  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
+  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
+  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
 } from '../data/balance.js';
 import { distToSegment, getHitPoint } from '../util.js';
 import { Body } from '../core/physics.js';
@@ -111,7 +112,7 @@ export const behaviors = {
           if (c.hp < c.maxHp && ratio < worstRatio) { worstRatio = ratio; target = c; }
         });
         if (target) {
-          target.hp = Math.min(target.maxHp, target.hp + 3);
+          target.hp = Math.min(target.maxHp, target.hp + SHAMAN_HEAL);
           spawnShockwave(target.x, target.y, 36, '#9f6bff');
           spawnHitParticles(target.x, target.y, '#c9a8ff', 5);
           m.healCooldown = 3.2;
@@ -161,7 +162,7 @@ export const behaviors = {
           spawnLightningBolt(m.x, m.y, boltEndX, boltEndY);
           spawnHitParticles(m.x, m.y, '#fff066', 5);
           if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, m.x, m.y, boltEndX, boltEndY) <= ZAP_BEAM_WIDTH) {
-            hitPlayer(m.x, m.y, 6);
+            hitPlayer(m.x, m.y, ZAP_DAMAGE);
           }
           m.zapCooldown = ZAP_COOLDOWN;
           m.setState('idle', 0.4);
@@ -238,7 +239,7 @@ export const behaviors = {
       game.shake = Math.min(game.shake + 7, 12);
       game.impactFlash = Math.max(game.impactFlash, 0.10);
       if (game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= EXPLODER_BLAST_RADIUS) {
-        hitPlayer(m.x, m.y, 6);
+        hitPlayer(m.x, m.y, EXPLODER_BLAST_DAMAGE);
       }
       return false;
     },
@@ -284,7 +285,7 @@ export const behaviors = {
         m.x = nx; m.y = ny;
 
         if (!m.chargeHitDone && game.hero.alive && Math.hypot(game.hero.x - nx, game.hero.y - ny) < CHARGE_WIDTH) {
-          hitPlayer(nx, ny, 6);
+          hitPlayer(nx, ny, CHARGE_DAMAGE);
           m.chargeHitDone = true;
         }
 

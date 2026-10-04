@@ -6,6 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { installBrowserEnv, runLegacyHtml, mulberry32 } from './helpers/browserEnv.js';
+import { LEGACY_HP_SCALE } from './golden.overrides.js';
 
 const LEGACY_HTML = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../legacy/cow_pen.html');
 
@@ -15,13 +16,14 @@ const SEEDS = [1234, 777, 42];
 
 const r4 = (v) => (typeof v === 'number' ? +v.toFixed(4) : v);
 // view = { game, ui, player } → 비교용 지문 (레거시/새 코드 공통)
-function fingerprint({ game, ui, player }) {
+// hpScale: 레거시는 체력/피해 단위가 1/10이라 ×10 해서 비교
+function fingerprint({ game, ui, player, hpScale = 1 }) {
   return {
     gameState: game.gameState, paused: game.paused, wave: game.wave, waveTransition: r4(game.waveTransition), kills: game.kills,
-    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
+    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0) * hpScale), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
     items: game.items.length, particles: game.particles.length, floatTexts: game.floatTexts.length,
     hazards: game.hazards.length, bolts: game.lightningBolts.length, shockwaves: game.shockwaves.length, shake: r4(game.shake),
-    level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp), mana: r4(player.mana), stamina: r4(player.stamina),
+    level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp * hpScale), mana: r4(player.mana), stamina: r4(player.stamina),
     x: r4(player.x), y: r4(player.y), alive: player.alive, inventory: player.inventory.length, materials: player.materials,
     potions: JSON.stringify(player.potions), slots: player.slot1 + '/' + player.slot2,
     showInventory: ui.showInventory, invPanelTab: ui.invPanelTab, selectedInvIndex: ui.selectedInvIndex, hoverInvIndex: ui.hoverInvIndex,
@@ -123,13 +125,13 @@ function runMobile(env, seed, view) {
 }
 
 function runLegacy(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });';
   const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
   return runScenario(env, seed, () => env.sandbox.__view());
 }
 
 function runLegacyZoo(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });'
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });'
     + 'globalThis.__spawn = (k) => { cows.push(new Cow(0.4, k)); };'
     + "globalThis.__killAll = () => { cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); };";
   const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
@@ -153,7 +155,7 @@ async function runModularZoo(seed) {
 }
 
 function runLegacyMobile(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });';
   const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
   return runMobile(env, seed, () => env.sandbox.__view());
 }

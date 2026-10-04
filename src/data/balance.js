@@ -35,7 +35,7 @@ export const RUSH_DURATION = 0.28;
 export const RUSH_COOLDOWN = 3.2;
 export const RUSH_MANA_COST = 8;
 export const RUSH_HIT_RADIUS = 34;
-export const RUSH_DAMAGE_BONUS = 3;
+export const RUSH_DAMAGE_BONUS = 30;
 
 // --- 스킬: 강타
 export const SMASH_DURATION = 0.52;
@@ -43,7 +43,7 @@ export const SMASH_IMPACT_TIME = 0.27;
 export const SMASH_COOLDOWN = 4.2;
 export const SMASH_MANA_COST = 16;
 export const SMASH_RADIUS = 82;
-export const SMASH_DAMAGE_BONUS = 6;
+export const SMASH_DAMAGE_BONUS = 60;
 
 // --- 이동 관성
 export const MOVE_START_ACCEL = 4.0;
@@ -69,15 +69,18 @@ export const COMBO_SPEED_PER_HIT = 0.015;
 export const COMBO_SPEED_CAP = 0.3;
 
 // --- 플레이어 기본 전투 수치
-// ★ 전투 수치 ×3 스케일: 정수 체력/데미지(1~3)가 너무 거칠어서 +1 데미지만 올라도 몬스터가 한 방이었음.
-//   플레이어 기본 데미지·체력, 몬스터 체력·공격력, 스킬 보너스를 ×3으로 키워 장비/스탯 +1~3이 '조금 센 정도'로 느껴지게 함
-export const BASE_DAMAGE = 3;
+// ★ 전투 수치 스케일: 처음엔 체력/데미지가 1~3이라 +1만 올라도 한 방 → ×3, 이후 방어력/옵션을 정수로 세밀하게 다루려고 다시 ×10.
+//   (체력·피해·스킬 보너스·체력/공격력 옵션을 함께 ×10 - 몇 대에 죽는지는 그대로. 마나와 % 수치는 그대로)
+export const BASE_DAMAGE = 30;
+export const HERO_BASE_HP = 150;
 export const BASE_BLOCK = 0.05;
 export const BASE_EVASION = 0.05;
 
 // --- 버프 물약 지속시간
 export const VITALITY_DURATION = 20;
 export const SPEED_BUFF_DURATION = 15;
+export const VITALITY_BONUS_HP = 60;   // 체력물약: 최대체력 +
+export const ATTACK_BUFF_BONUS = 30;   // 공격물약: 공격력 +
 export const ATTACK_BUFF_DURATION = 20;
 export const DEFENSE_BUFF_DURATION = 20;
 
@@ -89,10 +92,12 @@ export function expForLevel(level) {
 }
 // 스탯 1포인트당 실제 증가량 (장비 옵션과 동일한 계열로 합산됨)
 // 포인트당 효과 - 기본 체력 5 / 몬스터 체력 2~3 기준이라 공격력·체력은 아주 작게 (이전엔 공격력 +1, 체력 +2씩이라 한 레벨에 몬스터가 다 한 방이었음)
-export const LEVEL_STAT_PER_POINT = { atkPower: 0.2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, moveSpeed: 0.01, health: 1.0, mana: 3 };
+export const LEVEL_STAT_PER_POINT = { atkPower: 2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, moveSpeed: 0.01, health: 10, mana: 3 };
 export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana' };
 
 // --- 아이템 (가방/감정/강화/드랍)
+// 1단계 임시: 공격력/체력 합계와 물약 회복량을 레거시와 같은 단위(10)로 반올림 → 2단계에서 1 단위로
+export const LEGACY_ROUND = 10;
 export const INVENTORY_SIZE = 20;
 export const IDENTIFY_DURATION = 0.8;
 export const UPGRADE_SUCCESS_CHANCE = 0.65;
@@ -111,6 +116,12 @@ export const BOSS_WAVE = 6;
 // --- 몬스터 특수 행동 (보스/돌진/자폭/번개/광신 오라)
 export const BOSS_SLAM_COOLDOWN = 4.5;
 export const BOSS_SLAM_RADIUS = 115;
+export const BOSS_SLAM_DAMAGE = 60;
+export const CHARGE_DAMAGE = 60;
+export const EXPLODER_BLAST_DAMAGE = 60;
+export const ZAP_DAMAGE = 60;
+export const FIRE_HAZARD_DAMAGE = 30;   // 불바닥 0.6초마다
+export const SHAMAN_HEAL = 30;
 export const CHARGE_RANGE = 240;
 export const CHARGE_TELEGRAPH = 0.8;
 export const CHARGE_DISTANCE = 260;

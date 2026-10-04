@@ -1,7 +1,7 @@
 // 장비: 굴리기(등급/옵션), 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
-  MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
+  MAX_MANA, LEVEL_STAT_PER_POINT, LEGACY_ROUND, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
 } from '../data/balance.js';
 import {
   GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
@@ -226,11 +226,11 @@ export function recalcGearStats() {
 
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;
-  game.hero.gearAtkPower = Math.round(atkPower);
+  game.hero.gearAtkPower = Math.round(atkPower / LEGACY_ROUND) * LEGACY_ROUND;
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
   game.hero.gearSpeedMult = 1 + moveSpeed;
-  game.hero.gearMaxHp = Math.round(health);
+  game.hero.gearMaxHp = Math.round(health / LEGACY_ROUND) * LEGACY_ROUND;
   game.hero.gearMaxMana = Math.round(mana);
 
   const newEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
