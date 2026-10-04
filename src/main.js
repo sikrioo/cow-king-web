@@ -1,17 +1,15 @@
 import {
-  ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, WARCRY_RADIUS,
-  WARCRY_COOLDOWN, WARCRY_MANA_COST, WHIRLWIND_DURATION, WHIRLWIND_COOLDOWN, WHIRLWIND_RADIUS,
-  WHIRLWIND_MANA_COST, WHIRLWIND_MANA_DRAIN, WHIRLWIND_TICK, LEAP_DISTANCE, LEAP_DURATION, LEAP_COOLDOWN,
-  LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
-  RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
-  SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL, MOVE_REVERSE_ACCEL, MOVE_BRAKE,
-  MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN, STAMINA_REGEN, COMBO_WINDOW,
-  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, MAX_LEVEL, POINTS_PER_LEVEL,
-  expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE,
-  POTION_COOLDOWN, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE,
-  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
-  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
-  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  ATTACK_DURATION, ATTACK_COOLDOWN, WARCRY_RADIUS, WARCRY_COOLDOWN, WARCRY_MANA_COST, WHIRLWIND_DURATION,
+  WHIRLWIND_COOLDOWN, WHIRLWIND_RADIUS, WHIRLWIND_MANA_COST, WHIRLWIND_MANA_DRAIN, WHIRLWIND_TICK, LEAP_DISTANCE,
+  LEAP_DURATION, LEAP_COOLDOWN, LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN,
+  RUSH_MANA_COST, RUSH_HIT_RADIUS, RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN,
+  SMASH_MANA_COST, SMASH_RADIUS, SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
+  MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN,
+  STAMINA_DRAIN, STAMINA_REGEN, BASE_DAMAGE, MAX_LEVEL, POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT,
+  LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, POTION_COOLDOWN, FIRST_WAVE_DELAY,
+  WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION,
+  CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, ZAP_RANGE,
+  ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
 } from './data/balance.js';
 import { GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
 import {
@@ -26,7 +24,11 @@ import { Engine, World, Bodies, Body, engine, world, PEN } from './core/physics.
 import { game, ui, input, player } from './state.js';
 import { applyKnockback } from './entities/actor.js';
 import { render } from './render/renderer.js';
-import { loadReleaseMeta, recordRun } from './save.js';
+import { loadReleaseMeta } from './save.js';
+import {
+  getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, bossSlam, hitPlayer, updateHazards,
+  skillDamageCow
+} from './systems/combat.js';
 import {
   spawnHitParticles, updateParticles, emitMoveReaction, spawnFireHazard, spawnLightningBolt,
   updateLightningBolts, spawnShockwave, updateShockwaves, spawnDamageNumber, updateFloatTexts, showInvToast
@@ -35,7 +37,7 @@ import {
   gearDisplayName, tryIdentify, updateIdentify, giveStarterGear, giveTestStash, equipFromInventory,
   tryUpgradeSlot
 } from './systems/gear.js';
-import { dropLoot, updateItems } from './systems/loot.js';
+import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progression.js';
 import { randomPointInPen, clampToPen } from './world/arena.js';
@@ -43,11 +45,6 @@ import { randomPointInPen, clampToPen } from './world/arena.js';
 // ===========================================================
 // 펜(사각형 목장) + 울타리
 // ===========================================================
-
-function getCowHitRadius(c) {
-  if (c.kind === 'boss') return c.r * 0.95;
-  return c.r * 0.58;
-}
 
 function getAuraSpeedMult(cow) {
   if (cow.kind === 'fanatic') return AURA_SPEED_MULT;
@@ -113,16 +110,6 @@ function updateTitleScene(dt) {
 // ===========================================================
 // 플레이어
 // ===========================================================
-function getWeaponRange() {
-  const w = player.equipment.weaponMain;
-  if (w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined) return WEAPON_RANGE[w.variant];
-  return ATTACK_RANGE;
-}
-function getAttackArc() {
-  const off = player.equipment.weaponOff;
-  const dualWield = off && off !== 'LOCKED' && off.category === 'weapon';
-  return dualWield ? ATTACK_ARC : ATTACK_ARC_SINGLE;
-}
 
 // ===========================================================
 // 장비 시스템 (갑옷/무기/각반/신발/장신구2)
@@ -516,133 +503,6 @@ function updatePlayer(dt) {
   player.moveInputActive = moving;
 }
 
-function registerComboHit() {
-  player.combo++;
-  player.comboTimer = COMBO_WINDOW;
-}
-
-function tryPlayerAttack() {
-  if (!player.alive || player.attackCooldown > 0 || player.whirlwindTimer > 0 || player.leapTimer > 0 || player.rushTimer > 0 || player.smashTimer > 0) return;
-  const comboBonus = Math.min(player.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
-  const spdMul = Math.max(1 - Math.min(player.gearAtkSpeed, 0.7) - comboBonus, 0.25);
-  player.currentAttackDuration = ATTACK_DURATION * spdMul;
-  player.attackTimer = player.currentAttackDuration;
-  player.attackCooldown = ATTACK_COOLDOWN * spdMul;
-
-  let landed = false;
-  const atkRange = getWeaponRange();
-  game.cows.forEach((c) => {
-    if (c.state === 'dead') return;
-    // 특정 지점(오프셋) 대신 몸 중심 + 몸집 반경으로 판정 - 접근 방향과 무관하게 몸 전체가 피격 범위가 됨
-    const dx = c.x - player.x, dy = c.y - player.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > atkRange + getCowHitRadius(c)) return;
-    let diff = Math.abs(Math.atan2(dy, dx) - player.facing);
-    if (diff > Math.PI) diff = Math.PI * 2 - diff;
-    if (diff < getAttackArc() / 2) { damageCow(c); landed = true; }
-  });
-  if (landed) registerComboHit();
-}
-
-function killCow(c) {
-  c.deadPos = { x: c.x, y: c.y };
-  c.state = 'dead';
-  c.deadTimer = 0.3;
-  World.remove(world, c.body);
-  game.kills++;
-  gainExp((MONSTERS[c.kind] || MONSTERS.normal).exp);
-  spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
-  if (c.kind === 'cold') spawnColdNova(c.x, c.y);
-  if (c.kind === 'exploder') {
-    spawnShockwave(c.x, c.y, EXPLODER_BLAST_RADIUS, '#ff5b3d');
-    spawnHitParticles(c.x, c.y, '#ff8a3d', 14);
-    game.shake = Math.min(game.shake + 7, 12);
-    game.impactFlash = Math.max(game.impactFlash, 0.10);
-    if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= EXPLODER_BLAST_RADIUS) {
-      hitPlayer(c.x, c.y, 6);
-    }
-  }
-  if (c.kind === 'boss') {
-    game.gameState = 'victory';
-    recordRun('victory');
-    game.shake = Math.min(game.shake + 12, 12);
-    spawnShockwave(c.x, c.y, 220, '#c98bef');
-    dropLoot(c.x, c.y, true, 4);
-  } else if (c.kind !== 'normal') {
-    dropLoot(c.x, c.y, true, 1);
-  } else {
-    dropLoot(c.x, c.y, false, 1);
-  }
-}
-
-function spawnColdNova(x, y) {
-  spawnShockwave(x, y, 90, '#9fd8ff');
-  if (player.alive && Math.hypot(player.x - x, player.y - y) <= 90) {
-    player.slowTimer = 2.5;
-  }
-}
-
-function bossSlam(c) {
-  spawnShockwave(c.x, c.y, BOSS_SLAM_RADIUS, '#b57bd6');
-  game.shake = Math.min(game.shake + 6, 12);
-  if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= BOSS_SLAM_RADIUS) {
-    hitPlayer(c.x, c.y, 6);
-  }
-}
-
-function damageCow(c) {
-  c.flash = 0.12;
-  applyKnockback(c.body, player.x, player.y, 7);
-  c.knockback = 0.18;
-  game.shake = Math.min(game.shake + 4, 10);
-  game.hitstop = 4;
-  spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
-
-  const dmg = BASE_DAMAGE + player.attackBonus + player.gearAtkPower;
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
-  c.hp -= dmg;
-  if (c.hp <= 0 && c.state !== 'dead') {
-    killCow(c);
-    game.shake = Math.min(game.shake + 6, 12);
-  }
-}
-
-function hitPlayer(fromX, fromY, dmg = 3) {
-  if (!player.alive || player.invuln > 0) return;
-
-  const totalEvasion = Math.min(BASE_EVASION + player.gearEvasion, 0.75);
-  if (Math.random() < totalEvasion) {
-    spawnDamageNumber(player.x, player.y - 34, 'MISS', '#8fe8ff');
-    player.invuln = 0.25;
-    return;
-  }
-
-  const totalBlock = Math.min(BASE_BLOCK + player.defenseChance + player.gearDefense, 0.85);
-  const blocked = Math.random() < totalBlock;
-  if (!blocked) {
-    player.hp -= dmg;
-    spawnDamageNumber(player.x, player.y - 34, `-${dmg}`, '#ff5b52');
-  } else {
-    spawnDamageNumber(player.x, player.y - 34, 'BLOCK', '#8fd0ff');
-  }
-
-  player.invuln = 0.55; // 기존 0.8 → 0.55, 여러 마리에게 둘러싸였을 때 실제로 더 아프게
-  player.flash = 0.14;
-  applyKnockback(player.body, fromX, fromY, blocked ? 3 : 6);
-  player.knockback = blocked ? 0.1 : 0.22;
-  game.shake = Math.min(game.shake + (blocked ? 3 : 6), 12);
-  game.hitstop = blocked ? 0 : 5;
-  spawnHitParticles(player.x, player.y, PALETTE.eye, blocked ? 4 : 8);
-
-  if (player.hp <= 0) {
-    player.hp = 0;
-    player.alive = false;
-    game.gameState = 'gameover';
-    recordRun('gameover');
-    Body.setVelocity(player.body, { x: 0, y: 0 });
-  }
-}
-
 function tryWarCry() {
   if (!player.alive || player.warcryCooldown > 0 || player.whirlwindTimer > 0 || player.leapTimer > 0 || player.rushTimer > 0 || player.smashTimer > 0) return;
   if (player.mana < WARCRY_MANA_COST) return;
@@ -768,19 +628,6 @@ function leapHitCow(c) {
 // 함성 충격파 시각 효과
 // ===========================================================
 // 버닝소울이 지나간 자리에 남기는 불바닥 - 밟고 있으면 주기적으로 피해
-function updateHazards(dt) {
-  for (let i = game.hazards.length - 1; i >= 0; i--) {
-    const h = game.hazards[i];
-    h.life -= dt;
-    h.tickTimer -= dt;
-    if (h.life <= 0) { game.hazards.splice(i, 1); continue; }
-    if (player.alive && h.tickTimer <= 0 && Math.hypot(player.x - h.x, player.y - h.y) <= h.r) {
-      hitPlayer(h.x, h.y);
-      h.tickTimer = 0.6;
-      if (Math.random() < 0.4) spawnHitParticles(player.x, player.y - 10, '#ff7a1a', 3);
-    }
-  }
-}
 
 // ===========================================================
 // 소비 아이템 드롭/픽업 시스템
@@ -821,18 +668,6 @@ function updatePlayerMotionReaction(dt, accelX, accelY) {
 // ===========================================================
 // 러시 / 그라운드 스매시 스킬 - 같은 게임을 만든 다른 에이전트 버전에서 이식
 // ===========================================================
-function skillDamageCow(c, bonusDamage, knockForce, color) {
-  if (!c || c.state === 'dead') return;
-  c.flash = 0.13;
-  applyKnockback(c.body, player.x, player.y, knockForce);
-  c.knockback = Math.max(c.knockback || 0, 0.22);
-  const dmg = Math.max(1, bonusDamage + player.attackBonus + player.gearAtkPower);
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, color || '#fff');
-  spawnHitParticles(c.x, c.y, color || PALETTE.hide, 8);
-  c.hp -= dmg;
-  registerComboHit();
-  if (c.hp <= 0 && c.state !== 'dead') killCow(c);
-}
 
 function tryRush() {
   if (!player.alive || player.rushCooldown > 0 || player.whirlwindTimer > 0 || player.leapTimer > 0 || player.smashTimer > 0) return;
