@@ -41,6 +41,14 @@ export const ui = {
   identifyTimer: 0
 };
 
+// 입력 상태 (눌린 키, 슬롯 길게 누르기, 가상 조이스틱)
+export const input = {
+  keys: {},
+  holdSlot1: false,
+  holdSlot2: false,
+  joystick: { active: false, id: null, baseX: 0, baseY: 0, dx: 0, dy: 0, magnitude: 0 }
+};
+
 // 주인공 (Step 5에서 entities/hero.js의 createHero로 옮길 예정)
 export const player = {
   body: null, // boot()에서 생성

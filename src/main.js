@@ -30,7 +30,7 @@ import {
 import { canvas, ctx, resize } from './core/context.js';
 import { engine, world, PEN } from './core/physics.js';
 import { STEP_MS, startLoop } from './core/loop.js';
-import { game, ui, player } from './state.js';
+import { game, ui, input, player } from './state.js';
 const { Engine, World, Bodies, Body } = Matter;
 
 const PALETTE = {
@@ -552,7 +552,6 @@ function rollRarity() {
 }
 
 
-const keys = {};
 function setInventoryOpen(open) {
   ui.showInventory = open;
   if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; }
@@ -566,7 +565,7 @@ function setInventoryOpen(open) {
 }
 window.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
-  keys[k] = true;
+  input.keys[k] = true;
   if (k === 'escape') {
     e.preventDefault();
     if (ui.showInventory) { setInventoryOpen(false); return; }
@@ -583,11 +582,11 @@ window.addEventListener('keydown', (e) => {
   if (k === ' ') {
     e.preventDefault();
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!holdSlot1) { holdSlot1 = true; SKILLS[player.slot1].try(); }
+    else if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[player.slot1].try(); }
   }
   if (k === 'e') {
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!holdSlot2) { holdSlot2 = true; SKILLS[player.slot2].try(); }
+    else if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[player.slot2].try(); }
   }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (k === 'q') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
@@ -602,9 +601,9 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => {
   const k = e.key.toLowerCase();
-  keys[k] = false;
-  if (k === ' ') holdSlot1 = false;
-  if (k === 'e') holdSlot2 = false;
+  input.keys[k] = false;
+  if (k === ' ') input.holdSlot1 = false;
+  if (k === 'e') input.holdSlot2 = false;
 });
 
 // 좌클릭(또는 터치) = 슬롯1 길게 누르기, 우클릭 = 슬롯2 길게 누르기
@@ -613,14 +612,14 @@ canvas.addEventListener('pointerdown', (e) => {
   if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
   if (game.gameState !== 'playing') { resetGame(); return; }
   if (game.paused) return;
-  if (e.button === 2) { if (!holdSlot2) { holdSlot2 = true; SKILLS[player.slot2].try(); } }
-  else { if (!holdSlot1) { holdSlot1 = true; SKILLS[player.slot1].try(); } }
+  if (e.button === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[player.slot2].try(); } }
+  else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[player.slot1].try(); } }
 });
 window.addEventListener('pointerup', (e) => {
-  if (e.button === 2) holdSlot2 = false;
-  else holdSlot1 = false;
+  if (e.button === 2) input.holdSlot2 = false;
+  else input.holdSlot1 = false;
 });
-canvas.addEventListener('pointerleave', () => { holdSlot1 = false; holdSlot2 = false; ui.hoverInvIndex = null; });
+canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; ui.hoverInvIndex = null; });
 
 function pointInRect(px, py, r) {
   return r && px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
@@ -669,47 +668,46 @@ function pressAction(fn) {
 // ===========================================================
 // 모바일 터치 컨트롤: 가상 조이스틱 + 액션 버튼
 // ===========================================================
-const joystick = { active: false, id: null, baseX: 0, baseY: 0, dx: 0, dy: 0, magnitude: 0 };
 const JOY_RADIUS = 42;
 const joyBase = document.getElementById('joystick-base');
 const joyKnob = document.getElementById('joystick-knob');
 
 function joyMove(clientX, clientY) {
-  const dx = clientX - joystick.baseX;
-  const dy = clientY - joystick.baseY;
+  const dx = clientX - input.joystick.baseX;
+  const dy = clientY - input.joystick.baseY;
   const dist = Math.hypot(dx, dy);
   const clamped = Math.min(dist, JOY_RADIUS);
   const angle = Math.atan2(dy, dx);
-  joystick.dx = Math.cos(angle) * clamped;
-  joystick.dy = Math.sin(angle) * clamped;
-  joystick.magnitude = clamped / JOY_RADIUS;
-  joyKnob.style.transform = `translate(${joystick.dx}px, ${joystick.dy}px)`;
+  input.joystick.dx = Math.cos(angle) * clamped;
+  input.joystick.dy = Math.sin(angle) * clamped;
+  input.joystick.magnitude = clamped / JOY_RADIUS;
+  joyKnob.style.transform = `translate(${input.joystick.dx}px, ${input.joystick.dy}px)`;
 }
 function joyEnd() {
-  joystick.active = false;
-  joystick.id = null;
-  joystick.dx = 0; joystick.dy = 0; joystick.magnitude = 0;
+  input.joystick.active = false;
+  input.joystick.id = null;
+  input.joystick.dx = 0; input.joystick.dy = 0; input.joystick.magnitude = 0;
   joyKnob.style.transform = 'translate(0px, 0px)';
 }
 joyBase.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   joyBase.setPointerCapture(e.pointerId);
-  joystick.active = true;
-  joystick.id = e.pointerId;
+  input.joystick.active = true;
+  input.joystick.id = e.pointerId;
   const rect = joyBase.getBoundingClientRect();
-  joystick.baseX = rect.left + rect.width / 2;
-  joystick.baseY = rect.top + rect.height / 2;
+  input.joystick.baseX = rect.left + rect.width / 2;
+  input.joystick.baseY = rect.top + rect.height / 2;
   joyMove(e.clientX, e.clientY);
 });
 joyBase.addEventListener('pointermove', (e) => {
-  if (joystick.active && e.pointerId === joystick.id) { e.preventDefault(); joyMove(e.clientX, e.clientY); }
+  if (input.joystick.active && e.pointerId === input.joystick.id) { e.preventDefault(); joyMove(e.clientX, e.clientY); }
 });
-joyBase.addEventListener('pointerup', (e) => { if (e.pointerId === joystick.id) joyEnd(); });
-joyBase.addEventListener('pointercancel', (e) => { if (e.pointerId === joystick.id) joyEnd(); });
+joyBase.addEventListener('pointerup', (e) => { if (e.pointerId === input.joystick.id) joyEnd(); });
+joyBase.addEventListener('pointercancel', (e) => { if (e.pointerId === input.joystick.id) joyEnd(); });
 
 function bindHoldSlot(slotId, slotNum) {
   const el = document.getElementById(slotId);
-  const setHold = slotNum === 1 ? (v) => { holdSlot1 = v; } : (v) => { holdSlot2 = v; };
+  const setHold = slotNum === 1 ? (v) => { input.holdSlot1 = v; } : (v) => { input.holdSlot2 = v; };
   const skillKey = () => (slotNum === 1 ? player.slot1 : player.slot2);
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
@@ -820,19 +818,19 @@ function updatePlayer(dt) {
   }
 
   let dx = 0, dy = 0, moving, wantsRun;
-  if (joystick.active && joystick.magnitude > 0.08) {
-    const len = Math.hypot(joystick.dx, joystick.dy) || 1;
-    dx = joystick.dx / len;
-    dy = joystick.dy / len;
+  if (input.joystick.active && input.joystick.magnitude > 0.08) {
+    const len = Math.hypot(input.joystick.dx, input.joystick.dy) || 1;
+    dx = input.joystick.dx / len;
+    dy = input.joystick.dy / len;
     moving = true;
-    wantsRun = joystick.magnitude > 0.72; // 조이스틱을 크게 기울이면 달리기
+    wantsRun = input.joystick.magnitude > 0.72; // 조이스틱을 크게 기울이면 달리기
   } else {
-    if (keys['arrowleft'] || keys['a']) dx -= 1;
-    if (keys['arrowright'] || keys['d']) dx += 1;
-    if (keys['arrowup'] || keys['w']) dy -= 1;
-    if (keys['arrowdown'] || keys['s']) dy += 1;
+    if (input.keys['arrowleft'] || input.keys['a']) dx -= 1;
+    if (input.keys['arrowright'] || input.keys['d']) dx += 1;
+    if (input.keys['arrowup'] || input.keys['w']) dy -= 1;
+    if (input.keys['arrowdown'] || input.keys['s']) dy += 1;
     moving = !!(dx || dy);
-    wantsRun = !!keys['shift'];
+    wantsRun = !!input.keys['shift'];
   }
 
   if (moving && wantsRun && player.stamina > 0) {
@@ -2403,8 +2401,6 @@ const SKILLS = {
   smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => player.smashCooldown,     cdMax: () => SMASH_COOLDOWN }
 };
 
-let holdSlot1 = false;
-let holdSlot2 = false;
 
 function isSkillUnlocked(id) {
   return player.level >= (SKILL_UNLOCK_LEVEL[id] || 1);
@@ -2426,8 +2422,8 @@ function cycleSkillSlot(slotNum) {
 
 function updateSkillSlots() {
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
-  if (holdSlot1) SKILLS[player.slot1].try();
-  if (holdSlot2) SKILLS[player.slot2].try();
+  if (input.holdSlot1) SKILLS[player.slot1].try();
+  if (input.holdSlot2) SKILLS[player.slot2].try();
 }
 
 // ===========================================================
@@ -3168,8 +3164,8 @@ function resetGame() {
   game.kills = 0;
   player.slot1 = 'attack';
   player.slot2 = 'warcry';
-  holdSlot1 = false;
-  holdSlot2 = false;
+  input.holdSlot1 = false;
+  input.holdSlot2 = false;
   const s1label = document.getElementById('slot1-label');
   const s2label = document.getElementById('slot2-label');
   const s1el = document.getElementById('slot1');
