@@ -96,16 +96,12 @@ export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: '
 export const INVENTORY_SIZE = 20;
 export const IDENTIFY_DURATION = 0.8;
 export const UPGRADE_SUCCESS_CHANCE = 0.65;
-export const GEAR_DROP_CHANCE = 0.10; // 일반 카우 기준 (난이도 조정으로 하향)
-export const MATERIAL_DROP_CHANCE = 0.07; // 하향 조정
 
 // --- 물약
 export const POTION_MAX = 6;           // 종류별 보관 한도
 export const POTION_COOLDOWN = 1.2;    // 물약 사이 대기시간 (연타 방지)
 export const POTION_HEAL_RATIO = 0.5;  // 생명 물약: 최대 체력의 50% 회복
 export const POTION_MANA_AMOUNT = 60;  // 마나 물약: 마나 60 회복
-// 드랍 풀: 생명/마나는 '채우는' 물약. 최대체력을 올리는 체력(vitality) 물약은 의도와 달라서 드랍에서 뺌 (applyItem 코드는 남겨둠)
-export const POTION_DROP_WEIGHTS = { heal: 3, mana: 2.5, speed: 1, attack: 1, defense: 1 };
 
 // --- 웨이브
 export const FIRST_WAVE_DELAY = 4.0;

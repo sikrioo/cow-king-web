@@ -25,7 +25,8 @@ beforeAll(async () => {
     const { startNextWave } = await import('../src/systems/waves.js');
     const { dropLoot } = await import('../src/systems/loot.js');
     const { WEAPON_VARIANTS } = await import('../src/data/items.js');
-    const { INVENTORY_SIZE, IDENTIFY_DURATION, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT, POTION_DROP_WEIGHTS, WHIRLWIND_TICK, BOSS_WAVE } = await import('../src/data/balance.js');
+    const { INVENTORY_SIZE, IDENTIFY_DURATION, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT, WHIRLWIND_TICK, BOSS_WAVE } = await import('../src/data/balance.js');
+    const { POTION_DROP_WEIGHTS } = await import('../src/data/drops.js');
 
     out = { exact: {}, statistical: {} };
     const hero = () => game.hero;

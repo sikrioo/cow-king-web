@@ -1,7 +1,6 @@
 // 드랍 굴리기와 줍기
-import {
-  INVENTORY_SIZE, GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_DROP_WEIGHTS
-} from '../data/balance.js';
+import { INVENTORY_SIZE, POTION_MAX } from '../data/balance.js';
+import { DROP_RATES, DROP_SCATTER, POTION_DROP_WEIGHTS } from '../data/drops.js';
 import { ITEM_STYLE } from '../data/items.js';
 import { game } from '../state.js';
 import { Item } from '../entities/drop.js';
@@ -13,18 +12,19 @@ import { unidentifiedTitle } from '../ui/itemView.js';
 export function dropLoot(x, y, guaranteed, count) {
   for (let i = 0; i < count; i++) {
     const ang = Math.random() * Math.PI * 2;
-    const dist = Math.random() * 18;
+    const dist = Math.random() * DROP_SCATTER;
     const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
 
-    if (Math.random() < (guaranteed ? 0.5 : GEAR_DROP_CHANCE)) {
+    const rates = guaranteed ? DROP_RATES.guaranteed : DROP_RATES.normal;
+    if (Math.random() < rates.gear) {
       game.items.push(new Item(px, py, 'gear', rollGearItem()));
       continue;
     }
-    if (Math.random() < (guaranteed ? 0.35 : MATERIAL_DROP_CHANCE)) {
+    if (Math.random() < rates.material) {
       game.items.push(new Item(px, py, 'material'));
       continue;
     }
-    if (!guaranteed && Math.random() > 0.20) continue;
+    if (rates.consumable < 1 && Math.random() > rates.consumable) continue; // 확률 1이면 굴리지 않음 (난수 소비도 그대로)
     game.items.push(new Item(px, py, rollConsumableType()));
   }
 }
