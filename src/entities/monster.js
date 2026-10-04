@@ -3,6 +3,7 @@
 import { MONSTERS } from '../data/monsters.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
 import { game } from '../state.js';
+import { TEAM_MONSTER } from './actor.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
 import { randomPointInPen } from '../world/arena.js';
@@ -57,6 +58,7 @@ export class Monster {
     this.zapTargetY = 0;
     this.dmg = def.dmg;
     this.whirlHitCd = 0;
+    this.team = TEAM_MONSTER;
     this.behavior = behaviors[kind] || null;
     if (this.behavior && this.behavior.init) this.behavior.init(this);
   }

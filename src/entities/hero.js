@@ -7,6 +7,7 @@ import {
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
 import { game, input } from '../state.js';
+import { TEAM_HERO } from './actor.js';
 import { emitMoveReaction } from '../systems/fx.js';
 import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../systems/skills.js';
 
@@ -84,7 +85,8 @@ export function createHero() {
     exp: 0,
     expToNext: expForLevel(1),
     statPoints: 0,
-    levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 }
+    levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 },
+    team: TEAM_HERO
   };
   Body.setInertia(hero.body, Infinity);
   World.add(world, hero.body);

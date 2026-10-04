@@ -13,6 +13,11 @@ import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot } from './loot.js';
 import { gainExp } from './progression.js';
 
+// 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
+export function canHit(attacker, target) {
+  return attacker.team !== target.team;
+}
+
 export function getCowHitRadius(c) {
   if (c.kind === 'boss') return c.r * 0.95;
   return c.r * 0.58;
@@ -47,6 +52,7 @@ export function tryPlayerAttack() {
   const atkRange = getWeaponRange();
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
+    if (!canHit(game.hero, c)) return;
     // 특정 지점(오프셋) 대신 몸 중심 + 몸집 반경으로 판정 - 접근 방향과 무관하게 몸 전체가 피격 범위가 됨
     const dx = c.x - game.hero.x, dy = c.y - game.hero.y;
     const dist = Math.hypot(dx, dy);

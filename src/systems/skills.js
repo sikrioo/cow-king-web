@@ -12,7 +12,7 @@ import { SKILL_ORDER, SKILL_META } from '../data/skills.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow } from './combat.js';
+import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow } from './combat.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
@@ -26,6 +26,7 @@ export function tryWarCry() {
   game.shake = Math.min(game.shake + 7, 12);
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
+    if (!canHit(game.hero, c)) return;
     if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= WARCRY_RADIUS) warCryHitCow(c);
   });
 }
@@ -52,6 +53,7 @@ export function updateWhirlwind(dt) {
   game.hero.whirlAngle += dt * 26;
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
+    if (!canHit(game.hero, c)) return;
     if (c.whirlHitCd > 0) c.whirlHitCd -= dt;
     if (c.whirlHitCd <= 0 && Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= WHIRLWIND_RADIUS) {
       whirlwindHit(c);
@@ -116,6 +118,7 @@ export function leapLand() {
   game.shake = Math.min(game.shake + 8, 12);
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
+    if (!canHit(game.hero, c)) return;
     if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= LEAP_RADIUS) leapHitCow(c);
   });
 }
@@ -174,6 +177,7 @@ export function updateRush(dt) {
 
   game.cows.forEach((c) => {
     if (c.state === 'dead' || game.hero.rushHitSet.has(c)) return;
+    if (!canHit(game.hero, c)) return;
     if (Math.hypot(c.x - nx, c.y - ny) <= RUSH_HIT_RADIUS + getCowHitRadius(c)) {
       game.hero.rushHitSet.add(c);
       skillDamageCow(c, BASE_DAMAGE + RUSH_DAMAGE_BONUS, 8.5, '#ff9b63');
@@ -217,6 +221,7 @@ export function updateGroundSmash(dt) {
 
     game.cows.forEach((c) => {
       if (c.state === 'dead') return;
+      if (!canHit(game.hero, c)) return;
       if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= SMASH_RADIUS + getCowHitRadius(c)) {
         skillDamageCow(c, BASE_DAMAGE + SMASH_DAMAGE_BONUS, 11, '#ffd36a');
         c.stunTimer = Math.max(c.stunTimer || 0, 0.35);
