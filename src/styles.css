@@ -1,0 +1,81 @@
+  html, body {
+    margin:0; height:100%; background:#0c1f10; overflow:hidden;
+    overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none;
+  }
+  canvas { display:block; touch-action:none; }
+  #hint {
+    position:fixed; top:8px; left:50%; transform:translateX(-50%);
+    color:#dfe9d8; font:12px/1.4 monospace; background:rgba(0,0,0,0.35);
+    padding:5px 10px; border-radius:6px; pointer-events:none;
+    max-width:min(92vw, 640px); white-space:normal; text-align:center;
+  }
+
+  #joystick-base {
+    position:fixed; left:26px; bottom:26px; width:104px; height:104px;
+    border-radius:50%; background:rgba(255,255,255,0.12); border:2px solid rgba(255,255,255,0.35);
+    touch-action:none; -webkit-tap-highlight-color:transparent;
+  }
+  #joystick-knob {
+    position:absolute; left:50%; top:50%; width:46px; height:46px; margin:-23px;
+    border-radius:50%; background:rgba(255,255,255,0.55); border:2px solid rgba(255,255,255,0.8);
+    pointer-events:none;
+  }
+
+  #action-buttons { position:fixed; right:18px; bottom:18px; display:flex; gap:14px; }
+  .skill-slot {
+    position:relative; width:84px; height:84px; border-radius:50%;
+    border:3px solid rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; overflow:hidden;
+    background:rgba(70,70,70,0.42);
+  }
+  .skill-slot .cd {
+    position:absolute; left:0; right:0; bottom:0; height:0%;
+    background:rgba(0,0,0,0.65); pointer-events:none;
+  }
+  .skill-slot .label {
+    position:relative; z-index:1; color:#fff; font:bold 13px/1.2 sans-serif;
+    text-align:center; pointer-events:none; text-shadow:0 1px 3px rgba(0,0,0,.8);
+  }
+  .skill-slot .keycap {
+    position:absolute; left:4px; top:4px; z-index:1; color:rgba(255,255,255,.6);
+    font:bold 10px monospace; pointer-events:none;
+  }
+  .skill-cycle {
+    position:absolute; top:-7px; right:-7px; width:26px; height:26px; border-radius:50%;
+    background:rgba(0,0,0,0.7); border:2px solid rgba(255,255,255,0.75); color:#fff;
+    display:flex; align-items:center; justify-content:center; font:bold 14px/1 sans-serif;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; z-index:3;
+  }
+  #slot1 { background:rgba(220,70,60,0.35); }
+  #slot2 { background:rgba(127,212,224,0.35); }
+  #potion-buttons { position:fixed; right:18px; bottom:116px; display:flex; gap:12px; }
+  .potion-btn {
+    position:relative; width:62px; height:62px; border-radius:50%;
+    border:3px solid rgba(255,255,255,0.6); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; overflow:hidden;
+    color:#fff; font:bold 11px/1.25 sans-serif; text-shadow:0 1px 3px rgba(0,0,0,.8);
+  }
+  .potion-btn .cd { position:absolute; left:0; right:0; bottom:0; height:0%; background:rgba(0,0,0,0.65); pointer-events:none; }
+  .potion-btn .label, .potion-btn .cnt { position:relative; z-index:1; pointer-events:none; }
+  .potion-btn .cnt { font-size:12px; color:#ffe9a8; }
+  .potion-btn .keycap { position:absolute; left:6px; top:3px; z-index:1; font:bold 9px monospace; color:rgba(255,255,255,.65); pointer-events:none; }
+  #pot-heal { background:rgba(255,91,82,0.42); }
+  #pot-mana { background:rgba(77,107,255,0.42); }
+  #btn-inv {
+    position:fixed; top:8px; right:8px; width:34px; height:34px; border-radius:8px;
+    background:rgba(0,0,0,0.45); border:2px solid rgba(255,255,255,0.4); color:#fff;
+    font:bold 11px sans-serif; display:flex; align-items:center; justify-content:center;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none;
+  }
+  #btn-pause, #btn-full {
+    position:fixed; top:8px; height:34px; border-radius:8px;
+    background:rgba(0,0,0,0.48); border:1px solid rgba(255,255,255,0.30); color:#f2eee5;
+    font:700 14px/1 sans-serif; display:flex; align-items:center; justify-content:center;
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; cursor:pointer;
+    transition:opacity .18s ease, background .16s ease;
+  }
+  #btn-pause { left:8px; width:38px; }
+  #btn-full { right:50px; width:38px; font-size:12px; }
+  #btn-pause:active, #btn-full:active { background:rgba(255,255,255,.14); }
+  body.title-mode #hint, body.title-mode #joystick-base, body.title-mode #action-buttons, body.title-mode #potion-buttons,
+  body.title-mode #btn-inv, body.title-mode #btn-pause { opacity:0; pointer-events:none; }

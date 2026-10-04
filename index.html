@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Cow Level - 물리 충돌 + 타격감 프로토타입</title>
+<link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">이동: WASD/방향키(Shift=달리기) 또는 조이스틱 &nbsp; 슬롯1: Space/좌클릭(길게) &nbsp; 슬롯2: E/우클릭(길게) &nbsp; Q/R 슬롯 전환 &nbsp; 1·2 물약 &nbsp; I 장비</div>
+
+<div id="btn-pause" aria-label="일시정지">Ⅱ</div>
+<div id="btn-full" aria-label="전체화면">⛶</div>
+<div id="btn-inv">장비</div>
+<div id="joystick-base"><div id="joystick-knob"></div></div>
+<div id="potion-buttons">
+  <div id="pot-heal" class="potion-btn"><div class="cd"></div><div class="keycap">1</div><div class="label">물약먹기</div><div class="cnt" id="pot-heal-cnt">2개</div></div>
+  <div id="pot-mana" class="potion-btn"><div class="cd"></div><div class="keycap">2</div><div class="label">마나먹기</div><div class="cnt" id="pot-mana-cnt">2개</div></div>
+</div>
+<div id="action-buttons">
+  <div id="slot1" class="skill-slot">
+    <div class="cd"></div>
+    <div class="keycap">SPACE</div>
+    <div class="label" id="slot1-label">공격</div>
+    <div class="skill-cycle" id="slot1-cycle">⟳</div>
+  </div>
+  <div id="slot2" class="skill-slot">
+    <div class="cd"></div>
+    <div class="keycap">E</div>
+    <div class="label" id="slot2-label">함성</div>
+    <div class="skill-cycle" id="slot2-cycle">⟳</div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
