@@ -3169,7 +3169,8 @@ function fixedUpdate(dt) {
   if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
 }
 
-function render(t) {
+// hooks: 아직 main.js에 있는 DOM 버튼 동기화/캔버스 메뉴 (Step 6에서 ui/dom, ui/menu로 옮기면 직접 import)
+function render(t, hooks) {
   ctx.fillStyle = '#0c1f10';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -3206,9 +3207,8 @@ function render(t) {
   ctx.restore();
 
   drawHUD();
-  updateSkillButtonsUI();
-  updatePotionButtonsUI();
-  if (ui.showInventory) drawInventoryPanel(ctx);
+  hooks.syncDomButtons();
+  if (ui.showInventory) hooks.drawMenu(ctx);
   if (game.paused) drawPauseOverlay();
 
   if (game.impactFlash > 0) {
@@ -3782,6 +3782,10 @@ function boot() {
   initTitleScene();
   document.body.classList.add('title-mode');
 
-  startLoop(fixedUpdate, render);
+  const renderHooks = {
+    syncDomButtons() { updateSkillButtonsUI(); updatePotionButtonsUI(); },
+    drawMenu: drawInventoryPanel
+  };
+  startLoop(fixedUpdate, (t) => render(t, renderHooks));
 }
 boot();
