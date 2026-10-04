@@ -1,19 +1,14 @@
 import {
   ATTACK_DURATION, MAX_MANA, MAX_LEVEL, POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS,
-  INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, POTION_COOLDOWN, FIRST_WAVE_DELAY, WAVE_GAP,
-  BOSS_WAVE
+  INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, POTION_COOLDOWN, FIRST_WAVE_DELAY, WAVE_GAP
 } from './data/balance.js';
 import { GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
-import {
-  ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
-} from './data/monsters.js';
 import { SKILL_UNLOCK_LEVEL } from './data/skills.js';
 import { canvas, resize } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
 import { Engine, World, Body, engine, world, PEN } from './core/physics.js';
 import { game, ui, input } from './state.js';
 import { createHero, updatePlayer } from './entities/hero.js';
-import { Monster } from './entities/monster.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
 import { updateHazards } from './systems/combat.js';
@@ -28,6 +23,7 @@ import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progression.js';
 import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
+import { startNextWave } from './systems/waves.js';
 import { randomPointInPen } from './world/arena.js';
 
 // ===========================================================
@@ -333,29 +329,6 @@ document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.pr
 // ===========================================================
 // 게임 상태 초기화
 // ===========================================================
-
-function pickCowKind() {
-  if (game.wave < ELITE_MIN_WAVE) return 'normal';
-  const eliteChance = Math.min(ELITE_CHANCE_BASE + game.wave * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX);
-  if (Math.random() < eliteChance) {
-    return ELITE_KINDS[Math.floor(Math.random() * ELITE_KINDS.length)];
-  }
-  return 'normal';
-}
-
-function startNextWave() {
-  game.wave++;
-  game.waveBannerTimer = 1.6;
-  if (game.wave === BOSS_WAVE) {
-    game.cows.push(new Monster(1.0, 'boss'));
-    for (let i = 0; i < 4; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, 'normal'));
-    return;
-  }
-  const size = 6 + game.wave * 4; // 웨이브가 지날수록 순차적으로 마리 수 증가 (난이도 상향)
-  for (let i = 0; i < size; i++) {
-    game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind()));
-  }
-}
 
 function resetGame() {
   game.paused = false;
