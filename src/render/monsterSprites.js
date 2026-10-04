@@ -1,8 +1,6 @@
 // 몬스터(카우) 그리기 - 상태를 읽기만 함
-import { CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_BLAST_RADIUS, AURA_RADIUS } from '../data/balance.js';
 import { MONSTERS, FLASH_COLORS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
-import { getHitPoint } from '../util.js';
 
 export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null) {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
@@ -129,69 +127,9 @@ export function drawMonster(c, ctx, t) {
 
   const style = MONSTERS[c.kind];
 
-  if (c.kind === 'fanatic') {
-    ctx.save();
-    ctx.globalAlpha = 0.12 + Math.sin(t * 3) * 0.05;
-    ctx.fillStyle = style.ring;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, AURA_RADIUS, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  if (c.kind === 'shaman') {
-    ctx.save();
-    ctx.globalAlpha = 0.10 + Math.sin(t * 2.2) * 0.04;
-    ctx.fillStyle = style.ring;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 170, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  if (c.state === 'telegraph') {
-    const dx = c.chargeTarget.x - c.x, dy = c.chargeTarget.y - c.y;
-    const dist = Math.hypot(dx, dy);
-    const ang = Math.atan2(dy, dx);
-    const pulse = 0.3 + Math.sin(t * 22) * 0.15;
-    ctx.save();
-    ctx.translate(c.x, c.y);
-    ctx.rotate(ang);
-    ctx.fillStyle = `rgba(255,255,255,${pulse})`;
-    ctx.fillRect(0, -CHARGE_WIDTH / 2, dist, CHARGE_WIDTH);
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, -CHARGE_WIDTH / 2, dist, CHARGE_WIDTH);
-    ctx.restore();
-  }
-
-  if (c.state === 'fusing') {
-    const pulse = Math.sin((c.stateElapsed / EXPLODER_FUSE_TIME) * Math.PI * 7) * 0.5 + 0.5;
-    ctx.save();
-    ctx.globalAlpha = 0.25 + pulse * 0.45;
-    ctx.fillStyle = '#ff2d2d';
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, EXPLODER_BLAST_RADIUS * (0.3 + c.stateElapsed / EXPLODER_FUSE_TIME * 0.7), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  if (c.state === 'zapping' && Math.random() < 0.6) {
-    // 번개카우 충전 중 - 뿔 끝에서 지지직거리는 스파크
-    ctx.save();
-    ctx.globalAlpha = 0.5 + Math.random() * 0.4;
-    ctx.strokeStyle = '#fff9b0';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 2; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const len = 10 + Math.random() * 14;
-      ctx.beginPath();
-      ctx.moveTo(c.x, c.y - 22 * c.scale);
-      ctx.lineTo(c.x + Math.cos(ang) * len, c.y - 22 * c.scale + Math.sin(ang) * len);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  // 종류별 몸 아래 그림 (광신/주술사 오라, 돌진 예고선, 자폭 점화, 번개 충전) - behaviors[kind].drawUnder
+  const b = c.behavior;
+  if (b && b.drawUnder) b.drawUnder(c, ctx, t, style);
 
   if (style.ring) {
     ctx.save();
@@ -231,34 +169,9 @@ export function drawMonster(c, ctx, t) {
     ctx.textBaseline = 'alphabetic';
   }
 
-  if (c.kind === 'boss') {
-    const wp = getHitPoint(c);
-    const gemR = 9 + Math.sin(t * 5) * 2;
-
-    ctx.save();
-    ctx.globalAlpha = 0.25 + Math.sin(t * 5) * 0.08;
-    ctx.fillStyle = '#4dfff0';
-    ctx.beginPath();
-    ctx.arc(wp.x, wp.y, gemR * 2.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(wp.x, wp.y);
-    ctx.rotate(Math.PI / 4);
-    ctx.fillStyle = '#4dfff0';
-    ctx.fillRect(-gemR, -gemR, gemR * 2, gemR * 2);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-gemR, -gemR, gemR * 2, gemR * 2);
-    ctx.restore();
-
-    const w = 74;
-    const barY = c.y - 34 * c.scale - 96;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(c.x - w / 2, barY, w, 8);
-    ctx.fillStyle = style.ring;
-    ctx.fillRect(c.x - w / 2, barY, w * (c.hp / c.maxHp), 8);
+  // 종류별 몸 위 그림 (보스: 타격점 보석 + 큰 체력바) - 없으면 기본 체력바
+  if (b && b.drawOver) {
+    b.drawOver(c, ctx, t, style);
   } else if (c.maxHp > 1) {
     const w = 26 * c.scale;
     const barY = c.y - 96 * c.scale - 6;

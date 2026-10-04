@@ -3,26 +3,24 @@ import {
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN,
   STAMINA_DRAIN, STAMINA_REGEN, MAX_LEVEL, POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS,
   INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, POTION_COOLDOWN, FIRST_WAVE_DELAY, WAVE_GAP,
-  BOSS_WAVE, BOSS_SLAM_COOLDOWN, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION,
-  CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, ZAP_RANGE,
-  ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  BOSS_WAVE
 } from './data/balance.js';
 import { GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
 import {
-  MONSTERS, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
+  ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
 } from './data/monsters.js';
 import { SKILL_UNLOCK_LEVEL } from './data/skills.js';
-import { clamp01, lerpAngle, moveToward2D, distToSegment } from './util.js';
+import { clamp01, lerpAngle, moveToward2D } from './util.js';
 import { canvas, resize } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
 import { Engine, World, Bodies, Body, engine, world, PEN } from './core/physics.js';
 import { game, ui, input, player } from './state.js';
+import { Monster } from './entities/monster.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
-import { killCow, bossSlam, hitPlayer, updateHazards } from './systems/combat.js';
+import { updateHazards } from './systems/combat.js';
 import {
-  spawnHitParticles, updateParticles, emitMoveReaction, spawnFireHazard, spawnLightningBolt,
-  updateLightningBolts, spawnShockwave, updateShockwaves, updateFloatTexts, showInvToast
+  updateParticles, emitMoveReaction, updateLightningBolts, updateShockwaves, updateFloatTexts, showInvToast
 } from './systems/fx.js';
 import {
   gearDisplayName, tryIdentify, updateIdentify, giveStarterGear, giveTestStash, equipFromInventory,
@@ -34,20 +32,11 @@ import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progressi
 import {
   updateWhirlwind, updateLeap, updateRush, updateGroundSmash, SKILLS, cycleSkillSlot, updateSkillSlots
 } from './systems/skills.js';
-import { randomPointInPen, clampToPen } from './world/arena.js';
+import { randomPointInPen } from './world/arena.js';
 
 // ===========================================================
 // 펜(사각형 목장) + 울타리
 // ===========================================================
-
-function getAuraSpeedMult(cow) {
-  if (cow.kind === 'fanatic') return AURA_SPEED_MULT;
-  for (const other of game.cows) {
-    if (other === cow || other.kind !== 'fanatic' || other.state === 'dead') continue;
-    if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) return AURA_SPEED_MULT;
-  }
-  return 1;
-}
 
 // ===========================================================
 // 타이틀 화면 / 일시정지 / 로컬 기록 - 다른 에이전트의 릴리즈 버전에서 이식
@@ -555,307 +544,6 @@ function updatePlayerMotionReaction(dt, accelX, accelY) {
 // ===========================================================
 // 카우 AI + 물리 바디
 // ===========================================================
-class Cow {
-  constructor(scale, kind = 'normal') {
-    this.kind = kind;
-
-    // 종류별 수치는 data/monsters.js (모르는 종류는 normal 수치)
-    const def = MONSTERS[kind] || MONSTERS.normal;
-    const { hp, speedMul, aggroMul, scaleMul } = def;
-
-    this.scale = scale * scaleMul;
-    const p = randomPointInPen();
-    const r = 22 * this.scale + 6;
-    this.r = r;
-    this.body = Bodies.circle(p.x, p.y, r, { frictionAir: 0.25, friction: 0, restitution: 0.1, label: 'cow' });
-    Body.setInertia(this.body, Infinity);
-    World.add(world, this.body);
-
-    this.x = p.x; this.y = p.y;
-    this.target = randomPointInPen();
-    this.state = 'idle';
-    this.timer = 0.5 + Math.random() * 1.5;
-    this.stateElapsed = 0;
-    this.facing = 1;
-    this.phase = Math.random() * 10;
-    this.speed = (34 + Math.random() * 18) * speedMul;
-    this.hp = hp;
-    this.maxHp = hp;
-    this.deadTimer = 0;
-    this.deadPos = null;
-    this.attackHit = false;
-    this.attackingPlayer = false;
-    this.flash = 0;
-    this.knockback = 0;
-    this.stunTimer = 0;
-    this.aggroRange = 150 * aggroMul;
-    this.meleeRange = 46 * this.scale + 16;
-    this.specialTimer = kind === 'boss' ? BOSS_SLAM_COOLDOWN : Infinity;
-    this.chargeCooldownTimer = kind === 'charger' ? 1 + Math.random() * 2 : Infinity;
-    this.chargeDir = { x: 1, y: 0 };
-    this.chargeTarget = { x: 0, y: 0 };
-    this.chargeStart = { x: 0, y: 0 };
-    this.chargeHitDone = false;
-    this.fireDropTimer = kind === 'burning' ? 0.5 + Math.random() * 0.4 : Infinity;
-    this.fuseTimer = Infinity; // exploder 전용 - 점화되면 카운트다운 시작
-    this.healCooldown = kind === 'shaman' ? 1 + Math.random() * 1.5 : Infinity;
-    this.zapCooldown = kind === 'shocker' ? 0.8 + Math.random() * 1.2 : Infinity;
-    this.zapTargetX = 0;
-    this.zapTargetY = 0;
-    this.dmg = def.dmg;
-    this.whirlHitCd = 0;
-  }
-
-  setState(state, duration) {
-    this.state = state;
-    this.timer = duration;
-    this.stateElapsed = 0;
-  }
-
-  update(dt) {
-    if (this.flash > 0) this.flash -= dt;
-
-    if (this.state === 'dead') {
-      this.deadTimer -= dt;
-      return;
-    }
-
-    this.x = this.body.position.x;
-    this.y = this.body.position.y;
-
-    if (this.kind === 'boss') {
-      this.specialTimer -= dt;
-      if (this.specialTimer <= 0) {
-        this.specialTimer = BOSS_SLAM_COOLDOWN;
-        bossSlam(this);
-      }
-    }
-
-    // 버닝소울 - 돌아다니는 동안 주기적으로 발밑에 불바닥을 남김
-    if (this.kind === 'burning' && this.state !== 'stunned') {
-      this.fireDropTimer -= dt;
-      if (this.fireDropTimer <= 0) {
-        this.fireDropTimer = 0.55;
-        spawnFireHazard(this.x, this.y);
-      }
-    }
-
-    // 주술사 - 근처에서 가장 많이 다친 아군에게 주기적으로 소량 치유를 걸어줌 (우선 처치 대상으로 만드는 용도)
-    if (this.kind === 'shaman') {
-      this.healCooldown -= dt;
-      if (this.healCooldown <= 0) {
-        let target = null, worstRatio = 1;
-        game.cows.forEach((c) => {
-          if (c === this || c.state === 'dead') return;
-          if (Math.hypot(c.x - this.x, c.y - this.y) > 170) return;
-          const ratio = c.hp / c.maxHp;
-          if (c.hp < c.maxHp && ratio < worstRatio) { worstRatio = ratio; target = c; }
-        });
-        if (target) {
-          target.hp = Math.min(target.maxHp, target.hp + 3);
-          spawnShockwave(target.x, target.y, 36, '#9f6bff');
-          spawnHitParticles(target.x, target.y, '#c9a8ff', 5);
-          this.healCooldown = 3.2;
-        } else {
-          this.healCooldown = 1.2; // 치유할 대상이 없으면 금방 다시 체크
-        }
-      }
-    }
-
-    // 번개카우 - 사정거리 안에 들어오면 잠깐 충전한 뒤 번개를 쏨 (충전 중 플레이어가 피하면 빗나감)
-    if (this.kind === 'shocker') {
-      if (this.zapCooldown > 0) this.zapCooldown -= dt;
-      if (this.state === 'zapping') {
-        this.stateElapsed += dt;
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        if (Math.abs(this.zapTargetX - this.x) > 1) this.facing = this.zapTargetX > this.x ? 1 : -1;
-        if (this.stateElapsed >= ZAP_TELEGRAPH) {
-          // 충전 시작 시점에 고정된 방향으로 긴 직선 빔을 쏨 - 유도가 아니라 그 방향으로 쭉 지나감
-          const aimAngle = Math.atan2(this.zapTargetY - this.y, this.zapTargetX - this.x);
-          const boltEndX = this.x + Math.cos(aimAngle) * ZAP_BEAM_LENGTH;
-          const boltEndY = this.y + Math.sin(aimAngle) * ZAP_BEAM_LENGTH;
-          spawnLightningBolt(this.x, this.y, boltEndX, boltEndY);
-          spawnHitParticles(this.x, this.y, '#fff066', 5);
-          if (player.alive && distToSegment(player.x, player.y, this.x, this.y, boltEndX, boltEndY) <= ZAP_BEAM_WIDTH) {
-            hitPlayer(this.x, this.y, 6);
-          }
-          this.zapCooldown = ZAP_COOLDOWN;
-          this.setState('idle', 0.4);
-        }
-        return;
-      }
-      if (this.zapCooldown <= 0 && player.alive && Math.hypot(player.x - this.x, player.y - this.y) <= ZAP_RANGE) {
-        this.zapTargetX = player.x;
-        this.zapTargetY = player.y;
-        this.setState('zapping', 0);
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        return;
-      }
-    }
-
-    // 자폭잼민이 - 플레이어에게 바짝 붙으면 점화되어 잠시 후 폭발
-    if (this.kind === 'exploder') {
-      if (this.state === 'fusing') {
-        this.stateElapsed += dt;
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        if (this.stateElapsed >= EXPLODER_FUSE_TIME) {
-          killCow(this);
-        }
-        return; // 터지기 전까지는 매 프레임 여기서 끝 - 아래 일반 AI가 상태를 덮어쓰지 않게 함
-      } else if (player.alive && Math.hypot(player.x - this.x, player.y - this.y) <= EXPLODER_FUSE_RANGE) {
-        this.setState('fusing', 0);
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        return;
-      }
-    }
-
-    if (this.kind === 'charger') {
-      if (this.chargeCooldownTimer > 0) this.chargeCooldownTimer -= dt;
-
-      if (this.state === 'telegraph') {
-        this.stateElapsed += dt;
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        if (this.stateElapsed >= CHARGE_TELEGRAPH) {
-          this.state = 'charging';
-          this.stateElapsed = 0;
-          this.chargeStart = { x: this.x, y: this.y };
-          this.chargeHitDone = false;
-        }
-        return; // 예고 중엔 제자리에 멈춰서 경고만 함
-      }
-
-      if (this.state === 'charging') {
-        this.stateElapsed += dt;
-        const t = Math.min(this.stateElapsed / CHARGE_DURATION, 1);
-        const nx = this.chargeStart.x + (this.chargeTarget.x - this.chargeStart.x) * t;
-        const ny = this.chargeStart.y + (this.chargeTarget.y - this.chargeStart.y) * t;
-        Body.setPosition(this.body, { x: nx, y: ny });
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        this.x = nx; this.y = ny;
-
-        if (!this.chargeHitDone && player.alive && Math.hypot(player.x - nx, player.y - ny) < CHARGE_WIDTH) {
-          hitPlayer(nx, ny, 6);
-          this.chargeHitDone = true;
-        }
-
-        if (t >= 1) {
-          this.state = 'recover';
-          this.stateElapsed = 0;
-          this.chargeCooldownTimer = CHARGE_COOLDOWN;
-        }
-        return;
-      }
-
-      if (this.state === 'recover') {
-        this.stateElapsed += dt;
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        if (this.stateElapsed >= CHARGE_RECOVER) this.setState('idle', 0.3);
-        return;
-      }
-
-      if (this.chargeCooldownTimer <= 0 && player.alive) {
-        const dToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
-        if (dToPlayer <= CHARGE_RANGE && dToPlayer > 40) {
-          const ang = Math.atan2(player.y - this.y, player.x - this.x);
-          this.chargeDir = { x: Math.cos(ang), y: Math.sin(ang) };
-          this.chargeTarget = clampToPen(this.x + this.chargeDir.x * CHARGE_DISTANCE, this.y + this.chargeDir.y * CHARGE_DISTANCE, this.r + 6);
-          this.facing = this.chargeDir.x >= 0 ? 1 : -1;
-          this.setState('telegraph', 0);
-          Body.setVelocity(this.body, { x: 0, y: 0 });
-          return;
-        }
-      }
-    }
-
-    if (this.stunTimer > 0) {
-      this.stunTimer -= dt;
-      this.state = 'stunned';
-      this.stateElapsed += dt;
-      if (this.knockback > 0) this.knockback -= dt;
-      else Body.setVelocity(this.body, { x: 0, y: 0 });
-      return; // 기절 중엔 배회/추격/공격 불가
-    }
-
-    if (this.knockback > 0) {
-      this.knockback -= dt;
-      this.stateElapsed += dt;
-      return; // 넉백 중엔 AI가 속도를 덮어쓰지 않음
-    }
-
-    this.stateElapsed += dt;
-    const auraMult = getAuraSpeedMult(this);
-
-    const dxP = player.x - this.x, dyP = player.y - this.y;
-    const distP = Math.hypot(dxP, dyP);
-    const playerNear = player.alive && distP < this.aggroRange;
-
-    // 번개카우는 사정거리 밖이면 들어올 때까지 접근함 (너무 멀면 영영 못 쏘니까)
-    if (this.kind === 'shocker' && player.alive && distP > ZAP_RANGE && distP < this.aggroRange) {
-      this.state = 'walk';
-      Body.setVelocity(this.body, { x: (dxP / distP) * this.speed * auraMult / 60, y: (dyP / distP) * this.speed * auraMult / 60 });
-      if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
-      return;
-    }
-
-    // 주술사/번개카우는 근접하지 않고 플레이어가 가까이 오면 뒷걸음질쳐서 거리를 유지 (후방 지원/원거리형)
-    const isRangedKiter = this.kind === 'shaman' || this.kind === 'shocker';
-    const kiteDistance = this.kind === 'shocker' ? 170 : 130;
-    if (isRangedKiter && player.alive && distP < kiteDistance && distP > 0.001) {
-      this.state = 'walk';
-      Body.setVelocity(this.body, { x: (-dxP / distP) * this.speed * auraMult / 60, y: (-dyP / distP) * this.speed * auraMult / 60 });
-      this.facing = dxP > 0 ? -1 : 1; // 물러나면서도 플레이어 쪽을 바라봄
-      return;
-    }
-
-    if (playerNear && distP > this.meleeRange && !isRangedKiter) {
-      this.state = 'walk';
-      Body.setVelocity(this.body, { x: (dxP / distP) * this.speed * auraMult / 60, y: (dyP / distP) * this.speed * auraMult / 60 });
-      if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
-      return;
-    }
-
-    if (playerNear && distP <= this.meleeRange && !isRangedKiter) {
-      Body.setVelocity(this.body, { x: 0, y: 0 });
-      if (this.state !== 'attack') { this.setState('attack', 0.6); this.attackHit = false; this.attackingPlayer = true; }
-      if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
-      if (!this.attackHit && this.stateElapsed > 0.12 && this.stateElapsed < 0.22) {
-        if (distP <= this.meleeRange + 10) { hitPlayer(this.x, this.y, this.dmg); this.attackHit = true; }
-      }
-      this.timer -= dt;
-      if (this.timer <= 0) this.setState('idle', auraMult > 1 ? 0.08 : 0.18);
-      return;
-    }
-
-    if (this.state === 'idle') {
-      Body.setVelocity(this.body, { x: 0, y: 0 });
-      this.timer -= dt;
-      if (this.timer <= 0) {
-        if (Math.random() < 0.3) {
-          this.setState('attack', 0.6);
-          this.attackingPlayer = false;
-        } else {
-          this.target = randomPointInPen();
-          this.setState('walk', 999);
-        }
-      }
-    } else if (this.state === 'walk') {
-      const dx = this.target.x - this.x;
-      const dy = this.target.y - this.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 4) {
-        Body.setVelocity(this.body, { x: 0, y: 0 });
-        this.setState('idle', 0.6 + Math.random() * 1.6);
-      } else {
-        Body.setVelocity(this.body, { x: (dx / dist) * this.speed * auraMult / 60, y: (dy / dist) * this.speed * auraMult / 60 });
-        if (Math.abs(dx) > 1) this.facing = dx > 0 ? 1 : -1;
-      }
-    } else if (this.state === 'attack') {
-      Body.setVelocity(this.body, { x: 0, y: 0 });
-      this.timer -= dt;
-      if (this.timer <= 0) this.setState('idle', 0.6 + Math.random() * 1.4);
-    }
-  }
-}
 
 // ===========================================================
 // 게임 상태 초기화
@@ -874,13 +562,13 @@ function startNextWave() {
   game.wave++;
   game.waveBannerTimer = 1.6;
   if (game.wave === BOSS_WAVE) {
-    game.cows.push(new Cow(1.0, 'boss'));
-    for (let i = 0; i < 4; i++) game.cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, 'normal'));
+    game.cows.push(new Monster(1.0, 'boss'));
+    for (let i = 0; i < 4; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, 'normal'));
     return;
   }
   const size = 6 + game.wave * 4; // 웨이브가 지날수록 순차적으로 마리 수 증가 (난이도 상향)
   for (let i = 0; i < size; i++) {
-    game.cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, pickCowKind()));
+    game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind()));
   }
 }
 

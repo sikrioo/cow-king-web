@@ -17,7 +17,7 @@ const r4 = (v) => (typeof v === 'number' ? +v.toFixed(4) : v);
 function fingerprint({ game, ui, player }) {
   return {
     gameState: game.gameState, paused: game.paused, wave: game.wave, waveTransition: r4(game.waveTransition), kills: game.kills,
-    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
+    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
     items: game.items.length, particles: game.particles.length, floatTexts: game.floatTexts.length,
     hazards: game.hazards.length, bolts: game.lightningBolts.length, shockwaves: game.shockwaves.length, shake: r4(game.shake),
     level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp), mana: r4(player.mana), stamina: r4(player.stamina),
@@ -63,10 +63,59 @@ function runScenario(env, seed, view) {
   return prints;
 }
 
+// 몬스터 11종 동물원: 시작 후 각 종류를 한 마리씩 소환해 900프레임 동안 싸우고, 남은 몬스터를 전부 처치(보스 승리 처리 포함)
+const KINDS = ['normal', 'tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'boss'];
+function runZoo(env, seed, view, spawn, killAll) {
+  const rnd = mulberry32(seed + 7);
+  const prints = [];
+  const snap = (frame) => prints.push({ frame, draw: env.drawHash, ...fingerprint(view()) });
+  env.frame(60); env.key(' '); env.key(' ', false);
+  env.frame(300); snap('start');
+  KINDS.forEach((k) => spawn(k));
+  const dirs = ['w', 'a', 's', 'd']; let cur = null;
+  for (let i = 0; i < 900; i++) {
+    if (view().game.gameState !== 'playing') { env.frame(1); if ((i + 1) % 30 === 0) snap(i + 1); continue; } // 사망/승리 후 키 입력은 재시작이 되므로 멈춤
+    if (i % 40 === 0) { if (cur) env.key(cur, false); cur = dirs[Math.floor(rnd() * 4)]; env.key(cur); }
+    if (i % 12 === 0) env.key(' '); if (i % 12 === 6) env.key(' ', false);
+    if (i % 90 === 0) env.key('e'); if (i % 90 === 45) env.key('e', false);
+    if (i === 100 || i === 200 || i === 300 || i === 400) env.key('l');
+    if (i % 150 === 75) env.key('q');
+    env.frame(1);
+    if ((i + 1) % 30 === 0) snap(i + 1);
+  }
+  killAll();
+  env.frame(60); snap('afterKillAll');
+  return prints;
+}
+
 function runLegacy(seed) {
   const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
   const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
   return runScenario(env, seed, () => env.sandbox.__view());
+}
+
+function runLegacyZoo(seed) {
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });'
+    + 'globalThis.__spawn = (k) => { cows.push(new Cow(0.4, k)); };'
+    + "globalThis.__killAll = () => { cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); };";
+  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
+  return runZoo(env, seed, () => env.sandbox.__view(), (k) => env.sandbox.__spawn(k), () => env.sandbox.__killAll());
+}
+
+async function runModularZoo(seed) {
+  const env = installBrowserEnv({ seed });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const state = await import('../src/state.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { killCow } = await import('../src/systems/combat.js');
+    return runZoo(env, seed, () => ({ game: state.game, ui: state.ui, player: state.player }),
+      (k) => { state.game.cows.push(new Monster(0.4, k)); },
+      () => { state.game.cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); });
+  } finally {
+    env.restore();
+  }
 }
 
 async function runModular(seed) {
@@ -88,6 +137,18 @@ describe('smoke: 레거시와 동일하게 동작', () => {
       const modular = await runModular(seed);
       expect(modular.length).toBe(legacy.length);
       for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]); // 처음 어긋난 지점에서 멈춤
+    }, 120000);
+  }
+});
+
+describe('smoke: 몬스터 11종 특수 행동/처치가 레거시와 동일', () => {
+  for (const seed of [5, 99]) {
+    it(`zoo seed ${seed}`, async () => {
+      const legacy = runLegacyZoo(seed);
+      const modular = await runModularZoo(seed);
+      expect(modular.length).toBe(legacy.length);
+      for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]);
+      expect(legacy[legacy.length - 1].gameState).toBe('victory'); // 보스 처치까지 실제로 경유했는지
     }, 120000);
   }
 });

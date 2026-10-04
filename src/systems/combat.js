@@ -1,8 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
-  EXPLODER_BLAST_RADIUS
+  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
@@ -67,27 +66,10 @@ export function killCow(c) {
   game.kills++;
   gainExp((MONSTERS[c.kind] || MONSTERS.normal).exp);
   spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
-  if (c.kind === 'cold') spawnColdNova(c.x, c.y);
-  if (c.kind === 'exploder') {
-    spawnShockwave(c.x, c.y, EXPLODER_BLAST_RADIUS, '#ff5b3d');
-    spawnHitParticles(c.x, c.y, '#ff8a3d', 14);
-    game.shake = Math.min(game.shake + 7, 12);
-    game.impactFlash = Math.max(game.impactFlash, 0.10);
-    if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= EXPLODER_BLAST_RADIUS) {
-      hitPlayer(c.x, c.y, 6);
-    }
-  }
-  if (c.kind === 'boss') {
-    game.gameState = 'victory';
-    recordRun('victory');
-    game.shake = Math.min(game.shake + 12, 12);
-    spawnShockwave(c.x, c.y, 220, '#c98bef');
-    dropLoot(c.x, c.y, true, 4);
-  } else if (c.kind !== 'normal') {
-    dropLoot(c.x, c.y, true, 1);
-  } else {
-    dropLoot(c.x, c.y, false, 1);
-  }
+  // 종류별 처치 효과 (냉기 노바/자폭/보스 승리) - behaviors[kind].onDeath. true면 자체 드랍을 했으므로 기본 드랍 생략
+  const b = c.behavior;
+  if (b && b.onDeath && b.onDeath(c)) return;
+  dropLoot(c.x, c.y, c.kind !== 'normal', 1); // 엘리트는 장비 드랍 보장
 }
 
 export function spawnColdNova(x, y) {
