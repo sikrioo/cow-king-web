@@ -6,14 +6,13 @@ import {
   RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
   SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL, MOVE_REVERSE_ACCEL, MOVE_BRAKE,
   MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN, STAMINA_REGEN, COMBO_WINDOW,
-  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION,
-  SPEED_BUFF_DURATION, ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL, POINTS_PER_LEVEL, expForLevel,
-  LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE,
-  GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT,
-  POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE,
-  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
-  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
-  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, MAX_LEVEL, POINTS_PER_LEVEL,
+  expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE,
+  GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY,
+  WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE,
+  CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE,
+  EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS,
+  AURA_SPEED_MULT
 } from './data/balance.js';
 import { ITEM_STYLE, GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
 import {
@@ -36,8 +35,10 @@ import {
 } from './systems/fx.js';
 import {
   gearDisplayName, tryIdentify, updateIdentify, rollGearItem, giveStarterGear, giveTestStash, equipFromInventory,
-  tryUpgradeSlot, recalcGearStats
+  tryUpgradeSlot
 } from './systems/gear.js';
+import { tryDrinkPotion, applyItem } from './systems/potions.js';
+import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progression.js';
 import { randomPointInPen, clampToPen } from './world/arena.js';
 
 // ===========================================================
@@ -575,31 +576,6 @@ function killCow(c) {
   }
 }
 
-function gainExp(amount) {
-  if (player.level >= MAX_LEVEL) return;
-  player.exp += amount;
-  while (player.level < MAX_LEVEL && player.exp >= player.expToNext) {
-    player.exp -= player.expToNext;
-    player.level++;
-    player.statPoints += POINTS_PER_LEVEL;
-    player.expToNext = expForLevel(player.level);
-    floatText(player.x, player.y - 54, `LEVEL UP! Lv.${player.level}`, '#ffe066');
-    Object.keys(SKILL_UNLOCK_LEVEL).forEach((id) => {
-      if (SKILL_UNLOCK_LEVEL[id] === player.level) floatText(player.x, player.y - 74, `새 스킬 해금: ${SKILL_META[id].label}`, '#9be39b');
-    });
-    game.shake = Math.min(game.shake + 5, 12);
-  }
-  if (player.level >= MAX_LEVEL) player.exp = Math.min(player.exp, player.expToNext);
-}
-
-function trySpendStatPoint(statKey) {
-  if (player.statPoints <= 0) return;
-  player.statPoints -= 1;
-  player.levelStats[statKey] = (player.levelStats[statKey] || 0) + 1;
-  recalcGearStats();
-  floatText(player.x, player.y - 40, `${STAT_DEF[statKey].label} +1 (Lv)`, '#ffe066');
-}
-
 function spawnColdNova(x, y) {
   spawnShockwave(x, y, 90, '#9fd8ff');
   if (player.alive && Math.hypot(player.x - x, player.y - y) <= 90) {
@@ -891,52 +867,6 @@ function rollConsumableType() {
   return 'heal';
 }
 
-function tryDrinkPotion(kind) {
-  if (!player.alive || player.potionCd[kind] > 0) return;
-  const label = kind === 'heal' ? '생명' : '마나';
-  if ((player.potions[kind] || 0) <= 0) {
-    floatText(player.x, player.y - 40, `${label} 물약 없음`, '#999');
-    return;
-  }
-  const color = ITEM_STYLE[kind].color;
-  if (kind === 'heal') {
-    const maxHp = player.maxHp + player.bonusMaxHp + player.gearMaxHp;
-    if (player.hp >= maxHp) { floatText(player.x, player.y - 40, '체력이 가득 차 있어', '#999'); return; }
-    const amount = Math.max(1, Math.ceil(maxHp * POTION_HEAL_RATIO));
-    player.hp = Math.min(maxHp, player.hp + amount);
-    floatText(player.x, player.y - 40, `+${amount} HP`, color);
-  } else {
-    if (player.mana >= player.maxMana) { floatText(player.x, player.y - 40, '마나가 가득 차 있어', '#999'); return; }
-    player.mana = Math.min(player.maxMana, player.mana + POTION_MANA_AMOUNT);
-    floatText(player.x, player.y - 40, `+${POTION_MANA_AMOUNT} MP`, color);
-  }
-  player.potions[kind] -= 1;
-  player.potionCd[kind] = POTION_COOLDOWN;
-  spawnHitParticles(player.x, player.y, color, 8);
-}
-
-function applyItem(type) {
-  // 생명/마나 물약은 줍는 즉시 쓰지 않고 보관함 - tryDrinkPotion으로 마심 (여기는 즉시 효과형 버프 물약만)
-  if (type === 'vitality') {
-    player.bonusMaxHp = 6;
-    player.vitalityTimer = VITALITY_DURATION;
-    player.hp = Math.min(player.hp + 6, player.maxHp + player.bonusMaxHp + player.gearMaxHp);
-    floatText(player.x, player.y - 40, '최대체력 +6', ITEM_STYLE.vitality.color);
-  } else if (type === 'speed') {
-    player.speedMult = 1.35;
-    player.speedBuffTimer = SPEED_BUFF_DURATION;
-    floatText(player.x, player.y - 40, '이동속도 UP', ITEM_STYLE.speed.color);
-  } else if (type === 'attack') {
-    player.attackBonus = 3;
-    player.attackBuffTimer = ATTACK_BUFF_DURATION;
-    floatText(player.x, player.y - 40, '공격력 UP', ITEM_STYLE.attack.color);
-  } else if (type === 'defense') {
-    player.defenseChance = 0.5;
-    player.defenseBuffTimer = DEFENSE_BUFF_DURATION;
-    floatText(player.x, player.y - 40, '방어력 UP', ITEM_STYLE.defense.color);
-  }
-}
-
 // ===========================================================
 // 플레이어 렌더링 - 같은 게임을 만든 다른 에이전트 버전에서 이식
 // (추상적인 "조약돌+가면" 몸체 + 분리된 손/칼 표현, 스킬별 포즈 전환)
@@ -1090,10 +1020,6 @@ const SKILLS = {
   smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => player.smashCooldown,     cdMax: () => SMASH_COOLDOWN }
 };
 
-
-function isSkillUnlocked(id) {
-  return player.level >= (SKILL_UNLOCK_LEVEL[id] || 1);
-}
 
 function cycleSkillSlot(slotNum) {
   const key = slotNum === 1 ? 'slot1' : 'slot2';
