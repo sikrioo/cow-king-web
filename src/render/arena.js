@@ -1,7 +1,7 @@
 // 목장(아레나) 바닥/울타리 그리기
 import { PALETTE } from '../data/palette.js';
 import { ctx } from '../core/context.js';
-import { PEN } from '../core/physics.js';
+import { PEN } from '../world/arena.js';
 
 export function drawPen() {
   ctx.fillStyle = PALETTE.ground;

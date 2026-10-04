@@ -4,9 +4,9 @@ import {
 } from './data/balance.js';
 import { GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
 import { SKILL_UNLOCK_LEVEL } from './data/skills.js';
-import { canvas, resize } from './core/context.js';
+import { canvas, resizeCanvas } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
-import { Engine, World, Body, engine, world, PEN } from './core/physics.js';
+import { Engine, World, Body, engine, world } from './core/physics.js';
 import { game, ui, input } from './state.js';
 import { createHero, updatePlayer } from './entities/hero.js';
 import { render } from './render/renderer.js';
@@ -24,7 +24,7 @@ import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progression.js';
 import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
 import { startNextWave } from './systems/waves.js';
-import { randomPointInPen } from './world/arena.js';
+import { PEN, layoutArena, randomPointInPen } from './world/arena.js';
 
 // ===========================================================
 // 펜(사각형 목장) + 울타리
@@ -1036,6 +1036,12 @@ function updateSkillButtonsUI() {
 // ===========================================================
 // 부트 - 순서 중요: 캔버스/벽 → 플레이어 바디 → 초기화 → 타이틀 → 루프
 // ===========================================================
+// 화면 크기 변경: 캔버스 → 목장 배치/벽
+function resize() {
+  resizeCanvas();
+  layoutArena(canvas.width, canvas.height);
+}
+
 function boot() {
   resize();
   window.addEventListener('resize', resize);

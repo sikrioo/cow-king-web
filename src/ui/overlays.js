@@ -2,9 +2,9 @@
 import { BOSS_WAVE } from '../data/balance.js';
 import { RELEASE_VERSION } from '../config.js';
 import { canvas, ctx } from '../core/context.js';
-import { PEN } from '../core/physics.js';
 import { game, ui } from '../state.js';
 import { drawCow } from '../render/monsterSprites.js';
+import { PEN } from '../world/arena.js';
 
 export function drawTitleScene(t) {
   const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);

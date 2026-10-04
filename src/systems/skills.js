@@ -9,13 +9,13 @@ import {
 } from '../data/balance.js';
 import { PALETTE } from '../data/palette.js';
 import { SKILL_ORDER, SKILL_META } from '../data/skills.js';
-import { Body, PEN } from '../core/physics.js';
+import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow } from './combat.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
-import { clampToPen } from '../world/arena.js';
+import { PEN, clampToPen } from '../world/arena.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
