@@ -1,4 +1,5 @@
-// 게임 흐름: 새 게임 초기화 (상태 머신/승패 기록은 Step 6에서 이쪽으로)
+// 게임 흐름: 새 게임 초기화, 상태(title → playing → gameover/victory, paused), 매 틱 갱신 순서, 입력 의도 처리
+// 승패 기록은 save.js의 recordRun (사망: combat.hitPlayer, 승리: behaviors.boss.onDeath)
 import { ATTACK_DURATION, MAX_MANA, expForLevel, LEVEL_STAT_KEYS, FIRST_WAVE_DELAY, WAVE_GAP } from './data/balance.js';
 import { STEP_MS } from './core/loop.js';
 import { Engine, World, Body, engine, world } from './core/physics.js';
