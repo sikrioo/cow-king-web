@@ -87,6 +87,7 @@ function createStubs({ width = 1024, height = 768, drawSampleEvery = 50 } = {}) 
       }
     },
     key(key, down = true) { (winHandlers[down ? 'keydown' : 'keyup'] || []).forEach((h) => h({ key, preventDefault() {} })); },
+    keyEvent(down, evt) { (winHandlers[down ? 'keydown' : 'keyup'] || []).forEach((h) => h({ preventDefault() {}, ...evt })); },
     pointer(type, x, y, button = 0) { (canvasHandlers[type] || []).forEach((h) => h({ button, clientX: x, clientY: y, preventDefault() {} })); },
     windowPointerUp(button = 0) { (winHandlers.pointerup || []).forEach((h) => h({ button })); }
   };

@@ -64,7 +64,7 @@ export function updateSkillButtonsUI() {
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
 }
 
-// HTML 버튼 연결. actions: { restart, pressAction, setPaused } - game.js
+// HTML 버튼 연결. actions: { restart, pressAction, setPaused, toggleHelp } - game.js
 export function bindDomButtons(actions) {
   bindHoldSlot('slot1', 1, actions);
   bindHoldSlot('slot2', 2, actions);
@@ -80,9 +80,16 @@ export function bindDomButtons(actions) {
   document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.setPaused(!game.paused); });
   document.getElementById('btn-full').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
   document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); setInventoryOpen(!ui.showInventory); });
+  document.getElementById('btn-help').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.toggleHelp(); });
+  document.getElementById('help-panel').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.toggleHelp(); });
 }
 
 // 타이틀 화면에서는 조작 버튼 숨김 (styles.css의 body.title-mode)
 export function syncTitleModeClass(titleMode) {
   document.body.classList.toggle('title-mode', titleMode);
+}
+
+// 도움말 창 보이기/숨기기
+export function showHelpPanel(open) {
+  document.getElementById('help-panel').classList.toggle('open', open);
 }

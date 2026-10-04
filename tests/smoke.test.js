@@ -1,5 +1,6 @@
 // 스모크 + 동등성: 레거시(legacy/cow_pen.html)와 새 모듈 코드를 같은 시드·같은 입력으로 돌려서
-// 300프레임마다 찍은 상태 지문(+50프레임마다 샘플링한 그리기 호출 해시)이 처음부터 끝까지 같아야 한다. (예외/NaN이 없어야 하는 것은 기본)
+// 300프레임마다 찍은 상태 지문이 처음부터 끝까지 같아야 한다. (예외/NaN이 없어야 하는 것은 기본 - 그리기에 NaN이 들어가면 ctx 스텁이 throw)
+// 그리기 호출 해시 비교는 v1-modular 이후 의도적인 화면 변경(HUD/도움말)을 시작하면서 뺐다 - 게임플레이(상태)는 계속 레거시와 같아야 함
 // 입력 시나리오는 legacy/tools/smoke.cjs와 동일: 타이틀 → 시작 → 약 150초 무작위 입력(이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사)
 import { describe, it, expect, vi } from 'vitest';
 import path from 'node:path';
@@ -58,7 +59,7 @@ function runScenario(env, seed, view) {
     }
     if (i === 4400 || i === 7300) { env.key('i'); invOpen = false; }
     env.frame(1);
-    if ((i + 1) % CHECK_EVERY === 0) prints.push({ frame: i + 1, draw: env.drawHash, ...fingerprint(view()) });
+    if ((i + 1) % CHECK_EVERY === 0) prints.push({ frame: i + 1, ...fingerprint(view()) });
   }
   return prints;
 }
@@ -68,7 +69,7 @@ const KINDS = ['normal', 'tough', 'fast', 'cold', 'charger', 'fanatic', 'burning
 function runZoo(env, seed, view, spawn, killAll) {
   const rnd = mulberry32(seed + 7);
   const prints = [];
-  const snap = (frame) => prints.push({ frame, draw: env.drawHash, ...fingerprint(view()) });
+  const snap = (frame) => prints.push({ frame, ...fingerprint(view()) });
   env.frame(60); env.key(' '); env.key(' ', false);
   env.frame(300); snap('start');
   KINDS.forEach((k) => spawn(k));
@@ -92,7 +93,7 @@ function runZoo(env, seed, view, spawn, killAll) {
 function runMobile(env, seed, view) {
   const rnd = mulberry32(seed + 13);
   const prints = [];
-  const snap = (frame) => prints.push({ frame, draw: env.drawHash, ...fingerprint(view()) });
+  const snap = (frame) => prints.push({ frame, ...fingerprint(view()) });
   const ev = (extra = {}) => ({ preventDefault() {}, stopPropagation() {}, pointerId: 7, clientX: 50, clientY: 50, ...extra });
   const fire = (id, type, extra) => env.elCache[id]._fire(type, ev(extra));
   env.frame(60);

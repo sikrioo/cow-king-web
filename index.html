@@ -8,11 +8,29 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hint">이동: WASD/방향키(Shift=달리기) 또는 조이스틱 &nbsp; 슬롯1: Space/좌클릭(길게) &nbsp; 슬롯2: E/우클릭(길게) &nbsp; Q/R 슬롯 전환 &nbsp; 1·2 물약 &nbsp; I 장비</div>
 
 <div id="btn-pause" aria-label="일시정지">Ⅱ</div>
 <div id="btn-full" aria-label="전체화면">⛶</div>
 <div id="btn-inv">장비</div>
+<div id="btn-help" aria-label="도움말">도움말</div>
+<div id="help-panel" role="dialog" aria-label="조작 도움말">
+  <div class="help-card">
+    <div class="help-title">조작 도움말</div>
+    <table>
+      <tr><th></th><th>PC</th><th>모바일</th></tr>
+      <tr><td>이동 / 달리기</td><td>WASD·방향키 / Shift</td><td>왼쪽 조이스틱</td></tr>
+      <tr><td>슬롯1 스킬</td><td>Space · 좌클릭 (길게 = 반복)</td><td>슬롯1 버튼 (길게)</td></tr>
+      <tr><td>슬롯2 스킬</td><td>E · 우클릭 (길게 = 반복)</td><td>슬롯2 버튼 (길게)</td></tr>
+      <tr><td>스킬 전환</td><td>Q / R</td><td>⟳ 버튼</td></tr>
+      <tr><td>생명 / 마나 물약</td><td>1 / 2</td><td>물약 버튼</td></tr>
+      <tr><td>캐릭터 메뉴</td><td>I</td><td>장비 버튼</td></tr>
+      <tr><td>메뉴: 강화 / 스탯</td><td>1~7 / Z~M</td><td>화면 버튼</td></tr>
+      <tr><td>일시정지</td><td>P · ESC</td><td>Ⅱ 버튼</td></tr>
+      <tr><td>도움말</td><td>H</td><td>도움말 버튼</td></tr>
+    </table>
+    <div class="help-foot">죽거나 이긴 뒤에는 아무 행동 키나 눌러 다시 시작 · 아무 곳이나 누르면 닫힘</div>
+  </div>
+</div>
 <div id="joystick-base"><div id="joystick-knob"></div></div>
 <div id="potion-buttons">
   <div id="pot-heal" class="potion-btn"><div class="cd"></div><div class="keycap">1</div><div class="label">물약먹기</div><div class="cnt" id="pot-heal-cnt">2개</div></div>

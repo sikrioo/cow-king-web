@@ -55,31 +55,46 @@ export function drawBuffIcons(ctx) {
   });
 }
 
-export function drawStatReadout(ctx, y) {
-  const totalAtk = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
-  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
-  const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
-  const totalSpeedPct = Math.round((game.hero.gearSpeedMult * game.hero.speedMult - 1) * 100);
+// 전투 스탯 카드 - 오른쪽, 마나 구슬 아래 (버프가 걸린 스탯은 값 옆에 ▲)
+export function drawStatReadout(ctx) {
+  const h = game.hero;
+  const totalAtk = BASE_DAMAGE + h.attackBonus + h.gearAtkPower;
+  const totalBlock = Math.min(BASE_BLOCK + h.defenseChance + h.gearDefense, 0.85);
+  const totalEvasion = Math.min(BASE_EVASION + h.gearEvasion, 0.75);
+  const totalSpeedPct = Math.round((h.gearSpeedMult * h.speedMult - 1) * 100);
 
   const stats = [
-    { label: '공격력', value: `${totalAtk}`, color: '#ff8a3d' },
-    { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff' },
-    { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff' },
-    { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9' }
+    { label: '공격력', value: `${+totalAtk.toFixed(1)}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
+    { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
+    { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
+    { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 }
   ];
 
-  ctx.font = 'bold 12px monospace';
-  const gap = 20;
-  const texts = stats.map((s) => `${s.label} ${s.value}`);
-  const widths = texts.map((txt) => ctx.measureText(txt).width);
-  const totalW = widths.reduce((a, b) => a + b, 0) + gap * (stats.length - 1);
-  let x = canvas.width / 2 - totalW / 2;
-  ctx.textAlign = 'left';
-  stats.forEach((s, i) => {
-    ctx.fillStyle = s.color;
-    ctx.fillText(texts[i], x, y);
-    x += widths[i] + gap;
+  const w = 118, rowH = 19, pad = 8;
+  const panelH = pad * 2 + rowH * stats.length - 4;
+  const x = canvas.width - w - 10;
+  const y = 14 + 38 * 2 + 14; // 마나 구슬(지름 76, 위 여백 14) 아래
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.42)';
+  ctx.fillRect(x, y, w, panelH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, panelH - 1);
+  ctx.textBaseline = 'middle';
+  stats.forEach((st, i) => {
+    const cy = y + pad + i * rowH + 7;
+    ctx.fillStyle = st.color;
+    ctx.fillRect(x + pad, cy - 6, 3, 12);
+    ctx.textAlign = 'left';
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#cfd8c8';
+    ctx.fillText(st.label, x + pad + 9, cy);
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = st.color;
+    ctx.fillText(st.buffed ? `▲${st.value}` : st.value, x + w - pad, cy);
   });
+  ctx.restore();
 }
 
 export function drawHUD() {
@@ -126,13 +141,13 @@ export function drawHUD() {
   ctx.fillText(`웨이브 ${game.wave}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
   ctx.textAlign = 'left';
 
-  drawStatReadout(ctx, expY + 50);
+  drawStatReadout(ctx);
 
   if (game.hero.statPoints > 0) {
     ctx.fillStyle = `rgba(255,224,102,${0.6 + Math.sin(performance.now() / 200) * 0.4})`;
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`스탯 포인트 ${game.hero.statPoints}개 보유! (I 눌러서 분배)`, canvas.width / 2, expY + 70);
+    ctx.fillText(`스탯 포인트 ${game.hero.statPoints}개 보유! (I 눌러서 분배)`, canvas.width / 2, expY + 52);
     ctx.textAlign = 'left';
   }
 

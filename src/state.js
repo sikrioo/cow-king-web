@@ -28,6 +28,8 @@ export const game = {
 // 화면/메뉴 상태 (장비창 탭·선택·클릭 영역, 타이틀 연출, 감정 진행)
 export const ui = {
   showInventory: false,
+  showHelp: false, // 도움말 창
+  helpPausedGame: false, // 도움말을 열면서 일시정지시켰는지 (닫을 때 원래대로)
   invPanelTab: 'equip', // 'equip' | 'stats' | 'bag' | 'upgrade'
   selectedInvIndex: null, // 클릭해서 고정한 가방 칸
   hoverInvIndex: null, // 마우스를 올려둔 가방 칸(미리보기용)

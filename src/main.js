@@ -5,7 +5,9 @@ import { canvas, resizeCanvas } from './core/context.js';
 import { startLoop } from './core/loop.js';
 import { game } from './state.js';
 import { createHero } from './entities/hero.js';
-import { resetGame, setPaused, initTitleScene, pressAction, fixedUpdate, handleKeyDown, slotPress } from './game.js';
+import {
+  resetGame, setPaused, initTitleScene, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp
+} from './game.js';
 import { bindInput } from './input.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
@@ -24,7 +26,7 @@ function boot() {
   window.addEventListener('resize', resize);
   game.hero = createHero();
   bindInput({ keyDown: handleKeyDown, slotPress });
-  bindDomButtons({ restart: resetGame, pressAction, setPaused });
+  bindDomButtons({ restart: resetGame, pressAction, setPaused, toggleHelp });
 
   resetGame();
   // 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌

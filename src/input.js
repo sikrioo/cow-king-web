@@ -43,19 +43,28 @@ export const KEY_INTENTS = {
   q: 'cycleSlot1',       // 슬롯 스킬 전환
   r: 'cycleSlot2',
   i: 'toggleMenu',
+  h: 'help',             // 도움말 창
   1: 'num', 2: 'num', 3: 'num', 4: 'num', 5: 'num', 6: 'num', 7: 'num',
   ...Object.fromEntries(Object.keys(LEVEL_STAT_KEYS).map((k) => [k, 'stat']))
 };
 
+// 키 이름 정규화: 글자/숫자 키는 물리 위치(e.code)로 읽음 - 한글 입력 상태에서도 W가 'ㅈ'이 아니라 'w'
+// (keydown/keyup 모두 같은 규칙이라 키가 눌린 채로 남지 않음). 그 밖의 키는 e.key 소문자 (' ', 'escape', 'shift', 'arrowup' …)
+export function keyOf(e) {
+  const m = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(e.code || '');
+  if (m) return (m[1] || m[2]).toLowerCase();
+  return e.key.toLowerCase();
+}
+
 // 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum) } - 의도 처리는 game.js
 export function bindInput(actions) {
   window.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
+    const k = keyOf(e);
     input.keys[k] = true;
     actions.keyDown(KEY_INTENTS[k] || null, k, e);
   });
   window.addEventListener('keyup', (e) => {
-    const k = e.key.toLowerCase();
+    const k = keyOf(e);
     input.keys[k] = false;
     if (KEY_INTENTS[k] === 'slot1') input.holdSlot1 = false;
     if (KEY_INTENTS[k] === 'slot2') input.holdSlot2 = false;

@@ -13,6 +13,7 @@ import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint } from './systems/progression.js';
 import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
 import { startNextWave } from './systems/waves.js';
+import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
 import { PEN, randomPointInPen } from './world/arena.js';
 
@@ -226,6 +227,9 @@ export function fixedUpdate(dt) {
 
 // 키 의도 처리 - 순서가 의미: 메뉴 닫기/일시정지 → (일시정지 중이면 여기서 끝) → 나머지
 export function handleKeyDown(intent, k, e) {
+  if (intent === 'help') { setHelpOpen(!ui.showHelp); return; }
+  if (intent === 'back' && ui.showHelp) { e.preventDefault(); setHelpOpen(false); return; }
+  if (ui.showHelp) return; // 도움말 창이 열려 있는 동안 다른 입력은 무시
   if (intent === 'back') {
     e.preventDefault();
     if (ui.showInventory) { setInventoryOpen(false); return; }
@@ -268,3 +272,18 @@ export function slotPress(slotNum) {
   if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); } }
   else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); } }
 }
+
+// 도움말 창: 플레이 중에 열면 일시정지하고, 닫으면 (도움말이 일시정지시킨 경우에만) 다시 진행
+export function setHelpOpen(open) {
+  if (open === ui.showHelp) return;
+  ui.showHelp = open;
+  if (open) {
+    ui.helpPausedGame = game.gameState === 'playing' && !game.paused;
+    if (ui.helpPausedGame) setPaused(true);
+  } else {
+    if (ui.helpPausedGame && game.gameState === 'playing') setPaused(false);
+    ui.helpPausedGame = false;
+  }
+  showHelpPanel(open);
+}
+export function toggleHelp() { setHelpOpen(!ui.showHelp); }
