@@ -1,9 +1,10 @@
 // 메뉴 - 가방 탭 (칸 목록 + 선택 아이템 상세: 감정/장착)
 import { INVENTORY_SIZE, IDENTIFY_DURATION } from '../../data/balance.js';
-import { STAT_DEF, RARITY_DEF } from '../../data/items.js';
+import { STAT_DEF } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
-import { gearDisplayName, tryIdentify, equipFromInventory } from '../../systems/gear.js';
+import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
+import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareItemForGear } from './common.js';
 
 export function drawBagTab(ctx, x, startRow, w, bottom) {
@@ -44,12 +45,11 @@ export function drawBagTab(ctx, x, startRow, w, bottom) {
 
     let text, color;
     if (g.identified) {
-      const rDef = RARITY_DEF[g.rarity];
-      text = `[${rDef.label}] ${gearDisplayName(g)}${g.upgradeLevel > 0 ? ` +${g.upgradeLevel}` : ''}`;
-      color = rDef.color;
+      text = gearTitle(g);
+      color = gearColor(g);
     } else {
-      text = `${ui.identifyingItem === g ? '감정 중… ' : '미감정 '}${gearDisplayName(g)}`;
-      color = '#a9a9a9';
+      text = unidentifiedTitle(g, ui.identifyingItem === g);
+      color = UNIDENTIFIED_COLOR;
     }
     ctx.font = '11px sans-serif';
     ctx.fillStyle = color;
@@ -121,7 +121,7 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   if (!sel.identified) {
     ctx.font = 'bold 13px sans-serif';
     ctx.fillStyle = '#c9c9c9';
-    ctx.fillText(`미감정 ${gearDisplayName(sel)}`, x + 16, y);
+    ctx.fillText(unidentifiedTitle(sel), x + 16, y);
     y += 20;
     ctx.font = '11px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
@@ -139,12 +139,9 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     return;
   }
 
-  const rDef = RARITY_DEF[sel.rarity];
-  const upgTxt = sel.upgradeLevel > 0 ? ` +${sel.upgradeLevel}` : '';
-  const handTxt = sel.category === 'weapon' ? (sel.handedness === 'two' ? ' (양손)' : ' (한손)') : '';
   ctx.font = 'bold 13px sans-serif';
-  ctx.fillStyle = rDef.color;
-  ctx.fillText(fitText(ctx, `[${rDef.label}] ${gearDisplayName(sel)}${handTxt}${upgTxt}`, w - 32), x + 16, y);
+  ctx.fillStyle = gearColor(sel);
+  ctx.fillText(fitText(ctx, gearTitle(sel, { hand: true }), w - 32), x + 16, y);
   y += 19;
 
   ctx.font = '11px sans-serif';
@@ -157,10 +154,9 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   const equipped = getCompareItemForGear(sel);
   if (equipped && equipped !== sel) {
     y += 5;
-    const eDef = RARITY_DEF[equipped.rarity];
     ctx.font = 'bold 11px sans-serif';
-    ctx.fillStyle = eDef.color;
-    ctx.fillText(fitText(ctx, `현재 장착: [${eDef.label}] ${gearDisplayName(equipped)}`, w - 32), x + 16, y);
+    ctx.fillStyle = gearColor(equipped);
+    ctx.fillText(fitText(ctx, `현재 장착: ${gearTitle(equipped, { upgrade: false })}`, w - 32), x + 16, y);
     y += 15;
     ctx.font = '11px sans-serif';
     const keys = Array.from(new Set([...Object.keys(sel.stats || {}), ...Object.keys(equipped.stats || {})]));

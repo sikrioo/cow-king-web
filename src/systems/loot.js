@@ -6,8 +6,9 @@ import { ITEM_STYLE } from '../data/items.js';
 import { game } from '../state.js';
 import { Item } from '../entities/drop.js';
 import { spawnHitParticles, floatText } from './fx.js';
-import { gearDisplayName, rollGearItem } from './gear.js';
+import { rollGearItem } from './gear.js';
 import { applyItem } from './potions.js';
+import { unidentifiedTitle } from '../ui/itemView.js';
 
 export function dropLoot(x, y, guaranteed, count) {
   for (let i = 0; i < count; i++) {
@@ -45,7 +46,7 @@ export function updateItems(dt) {
           }
           game.hero.inventory.push(it.gearData);
           // 미감정 상태로 줍는 것이므로 등급은 아직 알려주지 않음 (감정해야 공개됨)
-          floatText(it.x, it.y - 30, `미감정 ${gearDisplayName(it.gearData)} 획득`, '#c9c9c9');
+          floatText(it.x, it.y - 30, `${unidentifiedTitle(it.gearData)} 획득`, '#c9c9c9');
           spawnHitParticles(it.x, it.y, '#9a9a9a', 8);
         } else if (it.type === 'material') {
           game.hero.materials++;

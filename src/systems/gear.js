@@ -4,15 +4,11 @@ import {
   MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
 } from '../data/balance.js';
 import {
-  GEAR_SLOTS, GEAR_SLOT_LABEL, GEAR_CATEGORY_LABEL, GEAR_VARIANT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS,
-  STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
+  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
 } from '../data/items.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
 
-export function gearDisplayName(gear) {
-  return GEAR_VARIANT_LABEL[gear.variant] || GEAR_CATEGORY_LABEL[gear.category];
-}
 
 export function tryIdentify(index) {
   if (ui.identifyingItem !== null) return; // 이미 감정 중이면 중복 시작 방지

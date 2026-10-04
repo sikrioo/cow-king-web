@@ -1,14 +1,10 @@
 // 바닥 아이템 그리기
-import { ITEM_STYLE, POTION_LABEL } from '../data/items.js';
 import { game } from '../state.js';
-import { groundLabelForGear } from '../ui/itemView.js';
+import { groundChip } from '../ui/itemView.js';
 
 export function drawItems(ctx, t) {
   game.items.forEach((it) => {
-    const isGear = it.type === 'gear';
-    const isMaterial = it.type === 'material';
-    const label = isGear ? groundLabelForGear(it.gearData) : isMaterial ? '재료' : (POTION_LABEL[it.type] || '물약');
-    const color = isGear ? '#cfcfcf' : isMaterial ? '#9fd6e0' : ITEM_STYLE[it.type].color;
+    const { label, color } = groundChip(it);
     const bobY = Math.sin(t * 4 + it.bob) * 3;
     const pop = Math.max(it.spawnT, 0.01);
     const fade = it.life < 2 ? Math.max(it.life / 2, 0) : 1;

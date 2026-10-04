@@ -1,7 +1,7 @@
 // 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비 합산 옵션)
-import { GEAR_SLOTS, GEAR_SLOT_LABEL, RARITY_DEF } from '../../data/items.js';
+import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
 import { game } from '../../state.js';
-import { gearDisplayName } from '../../systems/gear.js';
+import { gearTitle, gearColor } from '../itemView.js';
 import { fitText, wrapStatLines } from './common.js';
 
 export function drawEquipTab(ctx, x, startRow, w) {
@@ -32,11 +32,9 @@ export function drawEquipTab(ctx, x, startRow, w) {
       ctx.fillText('비어 있음', textX, row);
       row += 20;
     } else {
-      const rDef = RARITY_DEF[it.rarity];
-      const upg = it.upgradeLevel > 0 ? ` +${it.upgradeLevel}` : '';
       ctx.font = 'bold 11px sans-serif';
-      ctx.fillStyle = rDef.color;
-      ctx.fillText(fitText(ctx, `[${rDef.label}] ${gearDisplayName(it)}${upg}`, maxW), textX, row);
+      ctx.fillStyle = gearColor(it);
+      ctx.fillText(fitText(ctx, gearTitle(it), maxW), textX, row);
       row += 13;
       ctx.font = '10px sans-serif';
       ctx.fillStyle = '#cfd8c8';

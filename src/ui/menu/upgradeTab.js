@@ -1,9 +1,10 @@
 // 메뉴 - 강화 탭 (장착 장비 강화)
 import { UPGRADE_SUCCESS_CHANCE } from '../../data/balance.js';
-import { GEAR_SLOTS, GEAR_SLOT_LABEL, RARITY_DEF } from '../../data/items.js';
+import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
-import { gearDisplayName, tryUpgradeSlot } from '../../systems/gear.js';
+import { tryUpgradeSlot } from '../../systems/gear.js';
+import { gearTitle, gearColor } from '../itemView.js';
 import { fitText } from './common.js';
 
 export function drawUpgradeTab(ctx, x, startRow, w) {
@@ -35,9 +36,8 @@ export function drawUpgradeTab(ctx, x, startRow, w) {
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.fillText('비어 있음', x + 16, row + 14);
     } else {
-      const rDef = RARITY_DEF[it.rarity];
-      ctx.fillStyle = rDef.color;
-      ctx.fillText(fitText(ctx, `[${rDef.label}] ${gearDisplayName(it)}${it.upgradeLevel > 0 ? ` +${it.upgradeLevel}` : ''}`, w - 32 - 80), x + 16, row + 14);
+      ctx.fillStyle = gearColor(it);
+      ctx.fillText(fitText(ctx, gearTitle(it), w - 32 - 80), x + 16, row + 14);
       const canTry = game.hero.materials >= 1;
       const btn = { x: x + w - 16 - 66, y: row - 8, w: 66, h: 28 };
       ui.invButtons.push({ ...btn, fn: () => {
@@ -46,7 +46,7 @@ export function drawUpgradeTab(ctx, x, startRow, w) {
         const before = cur.upgradeLevel || 0, mats = game.hero.materials;
         tryUpgradeSlot(i);
         if (game.hero.materials === mats) showInvToast('재료 부족', '#ff8a80');
-        else if ((cur.upgradeLevel || 0) > before) showInvToast(`강화 성공! +${cur.upgradeLevel}`, RARITY_DEF[cur.rarity].color);
+        else if ((cur.upgradeLevel || 0) > before) showInvToast(`강화 성공! +${cur.upgradeLevel}`, gearColor(cur));
         else showInvToast('강화 실패…', '#bbb');
       } });
       ctx.fillStyle = canTry ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.06)';
