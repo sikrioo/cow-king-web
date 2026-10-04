@@ -8,13 +8,12 @@ import {
   MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN, STAMINA_REGEN, COMBO_WINDOW,
   COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, MAX_LEVEL, POINTS_PER_LEVEL,
   expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE,
-  GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY,
-  WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE,
-  CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE,
-  EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS,
-  AURA_SPEED_MULT
+  POTION_COOLDOWN, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE,
+  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
+  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
+  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
 } from './data/balance.js';
-import { ITEM_STYLE, GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
+import { GEAR_SLOTS, GEAR_SLOT_LABEL, STAT_DEF, RARITY_DEF } from './data/items.js';
 import {
   MONSTERS, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
 } from './data/monsters.js';
@@ -30,14 +29,14 @@ import { render } from './render/renderer.js';
 import { loadReleaseMeta, recordRun } from './save.js';
 import {
   spawnHitParticles, updateParticles, emitMoveReaction, spawnFireHazard, spawnLightningBolt,
-  updateLightningBolts, spawnShockwave, updateShockwaves, floatText, spawnDamageNumber, updateFloatTexts,
-  showInvToast
+  updateLightningBolts, spawnShockwave, updateShockwaves, spawnDamageNumber, updateFloatTexts, showInvToast
 } from './systems/fx.js';
 import {
-  gearDisplayName, tryIdentify, updateIdentify, rollGearItem, giveStarterGear, giveTestStash, equipFromInventory,
+  gearDisplayName, tryIdentify, updateIdentify, giveStarterGear, giveTestStash, equipFromInventory,
   tryUpgradeSlot
 } from './systems/gear.js';
-import { tryDrinkPotion, applyItem } from './systems/potions.js';
+import { dropLoot, updateItems } from './systems/loot.js';
+import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint, isSkillUnlocked } from './systems/progression.js';
 import { randomPointInPen, clampToPen } from './world/arena.js';
 
@@ -786,86 +785,6 @@ function updateHazards(dt) {
 // ===========================================================
 // 소비 아이템 드롭/픽업 시스템
 // ===========================================================
-
-class Item {
-  constructor(x, y, type, gearData = null) {
-    this.x = x;
-    this.y = y;
-    this.type = type; // 'heal'|'vitality'|'speed'|'attack'|'defense'|'gear'
-    this.gearData = gearData;
-    this.life = 14;
-    this.bob = Math.random() * 10;
-    this.spawnT = 0;
-  }
-}
-
-function dropLoot(x, y, guaranteed, count) {
-  for (let i = 0; i < count; i++) {
-    const ang = Math.random() * Math.PI * 2;
-    const dist = Math.random() * 18;
-    const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
-
-    if (Math.random() < (guaranteed ? 0.5 : GEAR_DROP_CHANCE)) {
-      game.items.push(new Item(px, py, 'gear', rollGearItem()));
-      continue;
-    }
-    if (Math.random() < (guaranteed ? 0.35 : MATERIAL_DROP_CHANCE)) {
-      game.items.push(new Item(px, py, 'material'));
-      continue;
-    }
-    if (!guaranteed && Math.random() > 0.20) continue;
-    game.items.push(new Item(px, py, rollConsumableType()));
-  }
-}
-
-function updateItems(dt) {
-  for (let i = game.items.length - 1; i >= 0; i--) {
-    const it = game.items[i];
-    if (it.spawnT < 1) it.spawnT = Math.min(it.spawnT + dt * 6, 1);
-    it.life -= dt;
-    if (it.warnCd > 0) it.warnCd -= dt;
-    if (it.life <= 0) { game.items.splice(i, 1); continue; }
-    if (player.alive) {
-      const d = Math.hypot(player.x - it.x, player.y - it.y);
-      if (d <= player.r + 16) {
-        if (it.type === 'gear') {
-          if (player.inventory.length >= INVENTORY_SIZE) {
-            if (!(it.warnCd > 0)) { floatText(player.x, player.y - 40, '인벤토리 가득!', '#ff5b52'); it.warnCd = 1.5; } // 매 프레임 도배되지 않게 간격 둠
-            continue; // 바닥에 그대로 둠
-          }
-          player.inventory.push(it.gearData);
-          // 미감정 상태로 줍는 것이므로 등급은 아직 알려주지 않음 (감정해야 공개됨)
-          floatText(it.x, it.y - 30, `미감정 ${gearDisplayName(it.gearData)} 획득`, '#c9c9c9');
-          spawnHitParticles(it.x, it.y, '#9a9a9a', 8);
-        } else if (it.type === 'material') {
-          player.materials++;
-          floatText(it.x, it.y - 30, `재료 +1 (보유 ${player.materials})`, '#c9c9c9');
-          spawnHitParticles(it.x, it.y, '#c9c9c9', 6);
-        } else if (it.type === 'heal' || it.type === 'mana') {
-          if (player.potions[it.type] >= POTION_MAX) {
-            if (!(it.warnCd > 0)) { floatText(player.x, player.y - 40, '물약 가득!', '#ff5b52'); it.warnCd = 1.5; }
-            continue; // 바닥에 그대로 둠
-          }
-          player.potions[it.type] += 1;
-          floatText(it.x, it.y - 30, `${it.type === 'heal' ? '생명' : '마나'} 물약 +1 (${player.potions[it.type]})`, ITEM_STYLE[it.type].color);
-          spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
-        } else {
-          applyItem(it.type);
-          spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
-        }
-        game.shake = Math.min(game.shake + 2, 12);
-        game.items.splice(i, 1);
-      }
-    }
-  }
-}
-
-function rollConsumableType() {
-  const entries = Object.entries(POTION_DROP_WEIGHTS);
-  let r = Math.random() * entries.reduce((a, [, w]) => a + w, 0);
-  for (const [type, w] of entries) { r -= w; if (r <= 0) return type; }
-  return 'heal';
-}
 
 // ===========================================================
 // 플레이어 렌더링 - 같은 게임을 만든 다른 에이전트 버전에서 이식

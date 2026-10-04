@@ -1,0 +1,78 @@
+// 드랍 굴리기와 줍기
+import {
+  INVENTORY_SIZE, GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_DROP_WEIGHTS
+} from '../data/balance.js';
+import { ITEM_STYLE } from '../data/items.js';
+import { game, player } from '../state.js';
+import { Item } from '../entities/drop.js';
+import { spawnHitParticles, floatText } from './fx.js';
+import { gearDisplayName, rollGearItem } from './gear.js';
+import { applyItem } from './potions.js';
+
+export function dropLoot(x, y, guaranteed, count) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const dist = Math.random() * 18;
+    const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
+
+    if (Math.random() < (guaranteed ? 0.5 : GEAR_DROP_CHANCE)) {
+      game.items.push(new Item(px, py, 'gear', rollGearItem()));
+      continue;
+    }
+    if (Math.random() < (guaranteed ? 0.35 : MATERIAL_DROP_CHANCE)) {
+      game.items.push(new Item(px, py, 'material'));
+      continue;
+    }
+    if (!guaranteed && Math.random() > 0.20) continue;
+    game.items.push(new Item(px, py, rollConsumableType()));
+  }
+}
+
+export function updateItems(dt) {
+  for (let i = game.items.length - 1; i >= 0; i--) {
+    const it = game.items[i];
+    if (it.spawnT < 1) it.spawnT = Math.min(it.spawnT + dt * 6, 1);
+    it.life -= dt;
+    if (it.warnCd > 0) it.warnCd -= dt;
+    if (it.life <= 0) { game.items.splice(i, 1); continue; }
+    if (player.alive) {
+      const d = Math.hypot(player.x - it.x, player.y - it.y);
+      if (d <= player.r + 16) {
+        if (it.type === 'gear') {
+          if (player.inventory.length >= INVENTORY_SIZE) {
+            if (!(it.warnCd > 0)) { floatText(player.x, player.y - 40, '인벤토리 가득!', '#ff5b52'); it.warnCd = 1.5; } // 매 프레임 도배되지 않게 간격 둠
+            continue; // 바닥에 그대로 둠
+          }
+          player.inventory.push(it.gearData);
+          // 미감정 상태로 줍는 것이므로 등급은 아직 알려주지 않음 (감정해야 공개됨)
+          floatText(it.x, it.y - 30, `미감정 ${gearDisplayName(it.gearData)} 획득`, '#c9c9c9');
+          spawnHitParticles(it.x, it.y, '#9a9a9a', 8);
+        } else if (it.type === 'material') {
+          player.materials++;
+          floatText(it.x, it.y - 30, `재료 +1 (보유 ${player.materials})`, '#c9c9c9');
+          spawnHitParticles(it.x, it.y, '#c9c9c9', 6);
+        } else if (it.type === 'heal' || it.type === 'mana') {
+          if (player.potions[it.type] >= POTION_MAX) {
+            if (!(it.warnCd > 0)) { floatText(player.x, player.y - 40, '물약 가득!', '#ff5b52'); it.warnCd = 1.5; }
+            continue; // 바닥에 그대로 둠
+          }
+          player.potions[it.type] += 1;
+          floatText(it.x, it.y - 30, `${it.type === 'heal' ? '생명' : '마나'} 물약 +1 (${player.potions[it.type]})`, ITEM_STYLE[it.type].color);
+          spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
+        } else {
+          applyItem(it.type);
+          spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
+        }
+        game.shake = Math.min(game.shake + 2, 12);
+        game.items.splice(i, 1);
+      }
+    }
+  }
+}
+
+export function rollConsumableType() {
+  const entries = Object.entries(POTION_DROP_WEIGHTS);
+  let r = Math.random() * entries.reduce((a, [, w]) => a + w, 0);
+  for (const [type, w] of entries) { r -= w; if (r <= 0) return type; }
+  return 'heal';
+}
