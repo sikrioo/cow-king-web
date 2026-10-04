@@ -930,33 +930,6 @@ function updateShockwaves(dt) {
   }
 }
 
-function drawSkillIcon(ctx, x, y, label, color, cooldownFrac) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, 13, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fill();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  if (cooldownFrac > 0) {
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.arc(x, y, 13, -Math.PI / 2, -Math.PI / 2 + cooldownFrac * Math.PI * 2);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fill();
-  }
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, x, y + 1);
-  ctx.restore();
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-}
-
 // ===========================================================
 // 소비 아이템 드롭/픽업 시스템
 // ===========================================================
