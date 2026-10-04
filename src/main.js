@@ -5,15 +5,15 @@ import {
   LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
   RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
   SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL, MOVE_REVERSE_ACCEL, MOVE_BRAKE,
-  MOVE_FACING_RESPONSE, MOVE_DUST_COLOR, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN,
-  STAMINA_REGEN, COMBO_WINDOW, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION,
-  VITALITY_DURATION, SPEED_BUFF_DURATION, ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL,
-  POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION,
-  UPGRADE_SUCCESS_CHANCE, GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO,
-  POTION_MANA_AMOUNT, POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN,
-  BOSS_SLAM_RADIUS, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER,
-  CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE,
-  ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN, STAMINA_REGEN, COMBO_WINDOW,
+  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION,
+  SPEED_BUFF_DURATION, ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL, POINTS_PER_LEVEL, expForLevel,
+  LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE,
+  GEAR_DROP_CHANCE, MATERIAL_DROP_CHANCE, POTION_MAX, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT,
+  POTION_DROP_WEIGHTS, FIRST_WAVE_DELAY, WAVE_GAP, BOSS_WAVE, BOSS_SLAM_COOLDOWN, BOSS_SLAM_RADIUS, CHARGE_RANGE,
+  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
+  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
+  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
 } from './data/balance.js';
 import {
   ITEM_STYLE, GEAR_SLOTS, GEAR_SLOT_LABEL, GEAR_CATEGORY_LABEL, GEAR_VARIANT_LABEL, WEAPON_VARIANTS,
@@ -29,26 +29,19 @@ import { canvas, resize } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
 import { Engine, World, Bodies, Body, engine, world, PEN } from './core/physics.js';
 import { game, ui, input, player } from './state.js';
+import { applyKnockback } from './entities/actor.js';
 import { render } from './render/renderer.js';
+import { loadReleaseMeta, recordRun } from './save.js';
+import {
+  spawnHitParticles, updateParticles, emitMoveReaction, spawnFireHazard, spawnLightningBolt,
+  updateLightningBolts, spawnShockwave, updateShockwaves, floatText, spawnDamageNumber, updateFloatTexts,
+  showInvToast
+} from './systems/fx.js';
+import { randomPointInPen, clampToPen } from './world/arena.js';
 
 // ===========================================================
 // 펜(사각형 목장) + 울타리
 // ===========================================================
-
-function randomPointInPen(marginRatio = 0.14) {
-  const m = PEN.size * marginRatio;
-  return {
-    x: PEN.x + m + Math.random() * (PEN.size - m * 2),
-    y: PEN.y + m + Math.random() * (PEN.size - m * 2)
-  };
-}
-
-function clampToPen(x, y, margin) {
-  return {
-    x: Math.min(Math.max(x, PEN.x + margin), PEN.x + PEN.size - margin),
-    y: Math.min(Math.max(y, PEN.y + margin), PEN.y + PEN.size - margin)
-  };
-}
 
 function getCowHitRadius(c) {
   if (c.kind === 'boss') return c.r * 0.95;
@@ -67,23 +60,7 @@ function getAuraSpeedMult(cow) {
 // ===========================================================
 // 타이틀 화면 / 일시정지 / 로컬 기록 - 다른 에이전트의 릴리즈 버전에서 이식
 // ===========================================================
-const SAVE_KEY = 'cowking_release_meta_v1';
-try {
-  const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
-  if (saved && typeof saved === 'object') game.releaseMeta = { ...game.releaseMeta, ...saved };
-} catch (_) {}
-function saveReleaseMeta() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.releaseMeta)); } catch (_) {}
-}
-function recordRun(kind) {
-  if (game.runRecorded) return;
-  game.runRecorded = true;
-  game.releaseMeta.runs += 1;
-  game.releaseMeta.bestWave = Math.max(game.releaseMeta.bestWave || 0, game.wave || 0);
-  game.releaseMeta.bestKills = Math.max(game.releaseMeta.bestKills || 0, game.kills || 0);
-  if (kind === 'victory') game.releaseMeta.clears += 1;
-  saveReleaseMeta();
-}
+loadReleaseMeta();
 function setPaused(v) {
   if (game.gameState !== 'playing') { game.paused = false; return; }
   game.paused = !!v;
@@ -130,32 +107,6 @@ function updateTitleScene(dt) {
     if (c.y < minY || c.y > maxY) { c.vy *= -1; c.y = Math.max(minY, Math.min(maxY, c.y)); }
     if (Math.abs(c.vx) > 0.2) c.facing = c.vx > 0 ? 1 : -1;
   });
-}
-
-function spawnHitParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const sp = 60 + Math.random() * 100;
-    game.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35, maxLife: 0.35, color });
-  }
-}
-function updateParticles(dt) {
-  for (let i = game.particles.length - 1; i >= 0; i--) {
-    const p = game.particles[i];
-    p.life -= dt;
-    if (p.life <= 0) { game.particles.splice(i, 1); continue; }
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vx *= 0.9;
-    p.vy *= 0.9;
-  }
-}
-
-function applyKnockback(body, fromX, fromY, force) {
-  const dx = body.position.x - fromX;
-  const dy = body.position.y - fromY;
-  const dist = Math.hypot(dx, dy) || 1;
-  Body.setVelocity(body, { x: (dx / dist) * force, y: (dy / dist) * force });
 }
 
 // ===========================================================
@@ -890,9 +841,6 @@ function leapHitCow(c) {
 // 함성 충격파 시각 효과
 // ===========================================================
 // 버닝소울이 지나간 자리에 남기는 불바닥 - 밟고 있으면 주기적으로 피해
-function spawnFireHazard(x, y) {
-  game.hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0 });
-}
 function updateHazards(dt) {
   for (let i = game.hazards.length - 1; i >= 0; i--) {
     const h = game.hazards[i];
@@ -904,27 +852,6 @@ function updateHazards(dt) {
       h.tickTimer = 0.6;
       if (Math.random() < 0.4) spawnHitParticles(player.x, player.y - 10, '#ff7a1a', 3);
     }
-  }
-}
-
-// 번개카우가 쏘는 전기 줄기 - 아주 짧게 번쩍이는 시각 효과
-function spawnLightningBolt(x1, y1, x2, y2) {
-  game.lightningBolts.push({ x1, y1, x2, y2, life: 0.18, maxLife: 0.18 });
-}
-function updateLightningBolts(dt) {
-  for (let i = game.lightningBolts.length - 1; i >= 0; i--) {
-    game.lightningBolts[i].life -= dt;
-    if (game.lightningBolts[i].life <= 0) game.lightningBolts.splice(i, 1);
-  }
-}
-
-function spawnShockwave(x, y, maxRadius, color) {
-  game.shockwaves.push({ x, y, maxRadius, age: 0, duration: 0.45, color });
-}
-function updateShockwaves(dt) {
-  for (let i = game.shockwaves.length - 1; i >= 0; i--) {
-    game.shockwaves[i].age += dt;
-    if (game.shockwaves[i].age >= game.shockwaves[i].duration) game.shockwaves.splice(i, 1);
   }
 }
 
@@ -1236,23 +1163,6 @@ function applyItem(type) {
   }
 }
 
-function floatText(x, y, text, color) {
-  game.floatTexts.push({ x, y, text, color, life: 0.8, maxLife: 0.8, big: false });
-}
-function spawnDamageNumber(x, y, text, color) {
-  game.floatTexts.push({
-    x: x + (Math.random() - 0.5) * 16, y, text, color,
-    life: 0.65, maxLife: 0.65, big: true
-  });
-}
-function updateFloatTexts(dt) {
-  for (let i = game.floatTexts.length - 1; i >= 0; i--) {
-    game.floatTexts[i].life -= dt;
-    game.floatTexts[i].y -= dt * (game.floatTexts[i].big ? 36 : 28);
-    if (game.floatTexts[i].life <= 0) game.floatTexts.splice(i, 1);
-  }
-}
-
 // ===========================================================
 // 플레이어 렌더링 - 같은 게임을 만든 다른 에이전트 버전에서 이식
 // (추상적인 "조약돌+가면" 몸체 + 분리된 손/칼 표현, 스킬별 포즈 전환)
@@ -1283,16 +1193,6 @@ function updatePlayerMotionReaction(dt, accelX, accelY) {
   const leanDamping = 16;
   player.moveLeanV += ((leanTarget - player.moveLean) * leanSpring - player.moveLeanV * leanDamping) * dt;
   player.moveLean += player.moveLeanV * dt;
-}
-
-function emitMoveReaction(dirX, dirY, strength = 1) {
-  if (player.moveFxCooldown > 0) return;
-  const px = player.x - dirX * player.r * 0.35;
-  const py = player.y - dirY * player.r * 0.20 + player.r * 0.55;
-  spawnHitParticles(px, py, MOVE_DUST_COLOR, strength > 0.8 ? 5 : 3);
-  player.moveReaction = Math.max(player.moveReaction, strength);
-  player.moveFxCooldown = strength > 0.8 ? 0.11 : 0.16;
-  game.shake = Math.min(game.shake + 0.55 * strength, 12);
 }
 
 // ===========================================================
@@ -1944,10 +1844,6 @@ const INV_TABS = [
   { key: 'bag', label: '가방' },
   { key: 'upgrade', label: '강화' }
 ];
-
-function showInvToast(text, color = '#ffe066') {
-  ui.invToast = { text, color, until: performance.now() + 1600 };
-}
 
 // 가방에서 상세정보로 보여줄 칸: 클릭해서 고정한 것이 우선, 없으면 마우스가 올라가 있는 것
 function getInvViewIndex() {
