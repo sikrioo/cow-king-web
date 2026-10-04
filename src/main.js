@@ -27,42 +27,11 @@ import {
 import {
   SKILL_ORDER, SKILL_META, SKILL_UNLOCK_LEVEL
 } from './data/skills.js';
+import { canvas, ctx, resize } from './core/context.js';
+import { engine, world, PEN } from './core/physics.js';
+import { STEP_MS, startLoop } from './core/loop.js';
+import { game, player } from './state.js';
 const { Engine, World, Bodies, Body } = Matter;
-
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-const engine = Engine.create();
-engine.gravity.x = 0;
-engine.gravity.y = 0;
-const world = engine.world;
-
-const PEN = { x: 0, y: 0, size: 0 };
-let wallBodies = [];
-function setupWalls() {
-  if (wallBodies.length) World.remove(world, wallBodies);
-  const t = 24;
-  const { x, y, size } = PEN;
-  wallBodies = [
-    Bodies.rectangle(x + size / 2, y - t / 2, size + t * 2, t, { isStatic: true, label: 'wall' }),
-    Bodies.rectangle(x + size / 2, y + size + t / 2, size + t * 2, t, { isStatic: true, label: 'wall' }),
-    Bodies.rectangle(x - t / 2, y + size / 2, t, size + t * 2, { isStatic: true, label: 'wall' }),
-    Bodies.rectangle(x + size + t / 2, y + size / 2, t, size + t * 2, { isStatic: true, label: 'wall' })
-  ];
-  World.add(world, wallBodies);
-}
-
-function resize() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  const pad = Math.max(20, Math.min(canvas.width, canvas.height) * 0.05);
-  PEN.size = Math.min(canvas.width, canvas.height) - pad * 2;
-  PEN.x = (canvas.width - PEN.size) / 2;
-  PEN.y = (canvas.height - PEN.size) / 2;
-  setupWalls();
-}
-resize();
-window.addEventListener('resize', resize);
 
 const PALETTE = {
   hide:    '#8a5a3c',
@@ -267,7 +236,7 @@ function getCowHitRadius(c) {
 
 function getAuraSpeedMult(cow) {
   if (cow.kind === 'fanatic') return AURA_SPEED_MULT;
-  for (const other of cows) {
+  for (const other of game.cows) {
     if (other === cow || other.kind !== 'fanatic' || other.state === 'dead') continue;
     if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) return AURA_SPEED_MULT;
   }
@@ -277,40 +246,33 @@ function getAuraSpeedMult(cow) {
 // ===========================================================
 // 타격감: 파티클 / 화면 흔들림 / 히트스탑
 // ===========================================================
-let particles = [];
-let shake = 0;
-let hitstop = 0;
-let impactFlash = 0;
 
 // ===========================================================
 // 타이틀 화면 / 일시정지 / 로컬 기록 - 다른 에이전트의 릴리즈 버전에서 이식
 // ===========================================================
 const RELEASE_VERSION = '1.2.0-merged';
 const SAVE_KEY = 'cowking_release_meta_v1';
-let paused = false;
-let runRecorded = false;
-let releaseMeta = { bestWave: 0, bestKills: 0, clears: 0, runs: 0 };
 try {
   const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
-  if (saved && typeof saved === 'object') releaseMeta = { ...releaseMeta, ...saved };
+  if (saved && typeof saved === 'object') game.releaseMeta = { ...game.releaseMeta, ...saved };
 } catch (_) {}
 function saveReleaseMeta() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(releaseMeta)); } catch (_) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.releaseMeta)); } catch (_) {}
 }
 function recordRun(kind) {
-  if (runRecorded) return;
-  runRecorded = true;
-  releaseMeta.runs += 1;
-  releaseMeta.bestWave = Math.max(releaseMeta.bestWave || 0, wave || 0);
-  releaseMeta.bestKills = Math.max(releaseMeta.bestKills || 0, kills || 0);
-  if (kind === 'victory') releaseMeta.clears += 1;
+  if (game.runRecorded) return;
+  game.runRecorded = true;
+  game.releaseMeta.runs += 1;
+  game.releaseMeta.bestWave = Math.max(game.releaseMeta.bestWave || 0, game.wave || 0);
+  game.releaseMeta.bestKills = Math.max(game.releaseMeta.bestKills || 0, game.kills || 0);
+  if (kind === 'victory') game.releaseMeta.clears += 1;
   saveReleaseMeta();
 }
 function setPaused(v) {
-  if (gameState !== 'playing') { paused = false; return; }
-  paused = !!v;
+  if (game.gameState !== 'playing') { game.paused = false; return; }
+  game.paused = !!v;
   const pb = document.getElementById('btn-pause');
-  if (pb) pb.textContent = paused ? '▶' : 'Ⅱ';
+  if (pb) pb.textContent = game.paused ? '▶' : 'Ⅱ';
 }
 async function toggleFullscreen() {
   try {
@@ -321,8 +283,6 @@ async function toggleFullscreen() {
 
 let titleCows = [];
 let titleTime = 0;
-let waveBannerTimer = 0;
-let demoTipTimer = 0;
 
 function initTitleScene() {
   titleCows = [];
@@ -409,12 +369,12 @@ function drawTitleOverlay(t) {
   ctx.fillText('WASD 이동 · Space/E 시전(길게) · Q/R 슬롯전환 · 1/2 물약 · I 장비', cx, cy + 116);
   ctx.font = '11px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.36)';
-  ctx.fillText(`BEST WAVE ${releaseMeta.bestWave}  ·  BEST KILLS ${releaseMeta.bestKills}  ·  CLEAR ${releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, cy + 142);
+  ctx.fillText(`BEST WAVE ${game.releaseMeta.bestWave}  ·  BEST KILLS ${game.releaseMeta.bestKills}  ·  CLEAR ${game.releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, cy + 142);
   ctx.textAlign = 'left';
 }
 function drawStartCountdown() {
-  if (gameState !== 'playing' || showInventory || wave !== 0 || cows.length !== 0 || waveTransition <= 0) return;
-  const remain = Math.max(0, waveTransition);
+  if (game.gameState !== 'playing' || showInventory || game.wave !== 0 || game.cows.length !== 0 || game.waveTransition <= 0) return;
+  const remain = Math.max(0, game.waveTransition);
   const number = Math.ceil(remain);
   ctx.save();
   ctx.textAlign = 'center';
@@ -430,9 +390,9 @@ function drawStartCountdown() {
   ctx.restore();
 }
 function drawWavePresentation(t) {
-  if (waveBannerTimer <= 0 || gameState !== 'playing' || showInventory) return;
-  const a = Math.min(1, waveBannerTimer * 2.2) * Math.min(1, (1.6 - waveBannerTimer) * 3.0 + 1);
-  const boss = wave === BOSS_WAVE;
+  if (game.waveBannerTimer <= 0 || game.gameState !== 'playing' || showInventory) return;
+  const a = Math.min(1, game.waveBannerTimer * 2.2) * Math.min(1, (1.6 - game.waveBannerTimer) * 3.0 + 1);
+  const boss = game.wave === BOSS_WAVE;
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, a));
   ctx.textAlign = 'center';
@@ -440,7 +400,7 @@ function drawWavePresentation(t) {
   ctx.shadowColor = 'rgba(0,0,0,.75)';
   ctx.shadowBlur = 12;
   ctx.font = boss ? '900 38px Georgia, serif' : '900 28px sans-serif';
-  ctx.fillText(boss ? 'THE COW KING' : `WAVE ${wave}`, canvas.width / 2, canvas.height * 0.42);
+  ctx.fillText(boss ? 'THE COW KING' : `WAVE ${game.wave}`, canvas.width / 2, canvas.height * 0.42);
   ctx.shadowBlur = 0;
   ctx.font = '12px monospace';
   ctx.fillStyle = boss ? '#ffe8a1' : 'rgba(255,255,255,.75)';
@@ -448,8 +408,8 @@ function drawWavePresentation(t) {
   ctx.restore();
 }
 function drawDemoTip() {
-  if (demoTipTimer <= 0 || gameState !== 'playing' || showInventory) return;
-  const alpha = Math.min(1, demoTipTimer) * Math.min(1, (5.0 - demoTipTimer) * 2 + 1);
+  if (game.demoTipTimer <= 0 || game.gameState !== 'playing' || showInventory) return;
+  const alpha = Math.min(1, game.demoTipTimer) * Math.min(1, (5.0 - game.demoTipTimer) * 2 + 1);
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
   const w = Math.min(430, canvas.width - 40), h = 38;
@@ -475,7 +435,7 @@ function drawPauseOverlay() {
   ctx.fillText('P / ESC / 좌측 상단 버튼으로 계속', cx, cy + 2);
   ctx.font = '12px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.50)';
-  ctx.fillText(`WAVE ${wave}  ·  KILLS ${kills}  ·  v${RELEASE_VERSION}`, cx, cy + 34);
+  ctx.fillText(`WAVE ${game.wave}  ·  KILLS ${game.kills}  ·  v${RELEASE_VERSION}`, cx, cy + 34);
   ctx.restore();
 }
 
@@ -483,14 +443,14 @@ function spawnHitParticles(x, y, color, count) {
   for (let i = 0; i < count; i++) {
     const a = Math.random() * Math.PI * 2;
     const sp = 60 + Math.random() * 100;
-    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35, maxLife: 0.35, color });
+    game.particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35, maxLife: 0.35, color });
   }
 }
 function updateParticles(dt) {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
+  for (let i = game.particles.length - 1; i >= 0; i--) {
+    const p = game.particles[i];
     p.life -= dt;
-    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    if (p.life <= 0) { game.particles.splice(i, 1); continue; }
     p.x += p.vx * dt;
     p.y += p.vy * dt;
     p.vx *= 0.9;
@@ -498,7 +458,7 @@ function updateParticles(dt) {
   }
 }
 function drawParticles(ctx) {
-  particles.forEach((p) => {
+  game.particles.forEach((p) => {
     const a = Math.max(p.life / p.maxLife, 0);
     ctx.globalAlpha = a;
     ctx.fillStyle = p.color;
@@ -580,8 +540,8 @@ function revealIdentifiedGear(gear) {
   const rDef = RARITY_DEF[gear.rarity];
   // 등급이 높을수록 연출을 크게 - "감정의 기쁨"을 등급에 비례해서 전달
   const intensity = { normal: 1, magic: 2, rare: 3, legendary: 5 }[gear.rarity] || 1;
-  shake = Math.min(shake + intensity * 2, 12);
-  impactFlash = Math.max(impactFlash, Math.min(0.06 * intensity, 0.22));
+  game.shake = Math.min(game.shake + intensity * 2, 12);
+  game.impactFlash = Math.max(game.impactFlash, Math.min(0.06 * intensity, 0.22));
   spawnHitParticles(player.x, player.y - 30, rDef.color, 4 + intensity * 4);
   if (gear.rarity === 'legendary') {
     spawnShockwave(player.x, player.y, 70, rDef.color);
@@ -603,82 +563,6 @@ function rollRarity() {
   return 'normal';
 }
 
-const player = {
-  body: Bodies.circle(0, 0, 17, { frictionAir: 0.15, friction: 0, restitution: 0.1, label: 'player' }),
-  x: 0, y: 0, r: 17,
-  facing: 0,
-  hp: 15, maxHp: 15,
-  mana: MAX_MANA, maxMana: MAX_MANA,
-  stamina: MAX_STAMINA, maxStamina: MAX_STAMINA,
-  running: false,
-  invuln: 0,
-  attackTimer: 0,
-  attackCooldown: 0,
-  currentAttackDuration: ATTACK_DURATION,
-  combo: 0,
-  comboTimer: 0,
-  knockback: 0,
-  flash: 0,
-  alive: true,
-  warcryCooldown: 0,
-  whirlwindTimer: 0,
-  whirlwindCooldown: 0,
-  whirlAngle: 0,
-  leapTimer: 0,
-  leapCooldown: 0,
-  leapFrom: { x: 0, y: 0 },
-  leapTo: { x: 0, y: 0 },
-  slowTimer: 0,
-  bonusMaxHp: 0,
-  vitalityTimer: 0,
-  speedMult: 1,
-  speedBuffTimer: 0,
-  attackBonus: 0,
-  attackBuffTimer: 0,
-  defenseChance: 0,
-  defenseBuffTimer: 0,
-  equipment: { armor: null, weaponMain: null, weaponOff: null, greaves: null, boots: null, accessory1: null, accessory2: null },
-  gearAtkSpeed: 0,
-  gearAtkPower: 0,
-  gearDefense: 0,
-  gearEvasion: 0,
-  gearSpeedMult: 1,
-  gearMaxHp: 0,
-  gearMaxMana: 0,
-  materials: 0,
-  inventory: [],
-  rushCooldown: 0,
-  rushTimer: 0,
-  rushFrom: { x: 0, y: 0 },
-  rushTo: { x: 0, y: 0 },
-  rushHitSet: null,
-  smashCooldown: 0,
-  smashTimer: 0,
-  smashHitDone: false,
-  slot1: 'attack',
-  slot2: 'warcry',
-  potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
-  potionCd: { heal: 0, mana: 0 }, // 종류별 대기시간 (생명 마신 직후에도 마나는 바로 마실 수 있게)
-  moveOffsetX: 0,
-  moveOffsetY: 0,
-  moveOffsetVX: 0,
-  moveOffsetVY: 0,
-  moveLean: 0,
-  moveLeanV: 0,
-  moveFxCooldown: 0,
-  moveReaction: 0,
-  renderBreath: 0,
-  moveSpeedN: 0,
-  moveInputActive: false,
-  moveStep: 0,
-  level: 1,
-  exp: 0,
-  expToNext: expForLevel(1),
-  statPoints: 0,
-  levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 }
-};
-Body.setInertia(player.body, Infinity);
-World.add(world, player.body);
 
 const keys = {};
 let showInventory = false;
@@ -699,28 +583,28 @@ window.addEventListener('keydown', (e) => {
   if (k === 'escape') {
     e.preventDefault();
     if (showInventory) { setInventoryOpen(false); return; }
-    if (gameState === 'playing') { setPaused(!paused); return; }
+    if (game.gameState === 'playing') { setPaused(!game.paused); return; }
   }
-  if (k === 'p' && gameState === 'playing') { e.preventDefault(); setPaused(!paused); return; }
-  if (paused) return;
-  if (k === 'l' && gameState === 'playing') gainExp(Math.max(1, player.expToNext - player.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
-  if (!showInventory && gameState === 'playing') {
+  if (k === 'p' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
+  if (game.paused) return;
+  if (k === 'l' && game.gameState === 'playing') gainExp(Math.max(1, player.expToNext - player.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
+  if (!showInventory && game.gameState === 'playing') {
     if (k === '1') tryDrinkPotion('heal');
     if (k === '2') tryDrinkPotion('mana');
   }
   // 슬롯1 = Space(길게 누르면 계속 시전), 슬롯2 = E(길게)
   if (k === ' ') {
     e.preventDefault();
-    if (gameState !== 'playing') { resetGame(); }
+    if (game.gameState !== 'playing') { resetGame(); }
     else if (!holdSlot1) { holdSlot1 = true; SKILLS[player.slot1].try(); }
   }
   if (k === 'e') {
-    if (gameState !== 'playing') { resetGame(); }
+    if (game.gameState !== 'playing') { resetGame(); }
     else if (!holdSlot2) { holdSlot2 = true; SKILLS[player.slot2].try(); }
   }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
-  if (k === 'q') { if (gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
-  if (k === 'r') { if (gameState !== 'playing') resetGame(); else cycleSkillSlot(2); }
+  if (k === 'q') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
+  if (k === 'r') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(2); }
   if (k === 'i') setInventoryOpen(!showInventory);
   if (showInventory && k >= '1' && k <= '7') {
     tryUpgradeSlot(k.charCodeAt(0) - '1'.charCodeAt(0));
@@ -740,8 +624,8 @@ window.addEventListener('keyup', (e) => {
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 canvas.addEventListener('pointerdown', (e) => {
   if (showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
-  if (gameState !== 'playing') { resetGame(); return; }
-  if (paused) return;
+  if (game.gameState !== 'playing') { resetGame(); return; }
+  if (game.paused) return;
   if (e.button === 2) { if (!holdSlot2) { holdSlot2 = true; SKILLS[player.slot2].try(); } }
   else { if (!holdSlot1) { holdSlot1 = true; SKILLS[player.slot1].try(); } }
 });
@@ -790,8 +674,8 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 function pressAction(fn) {
-  if (gameState !== 'playing') { resetGame(); return; }
-  if (paused) return;
+  if (game.gameState !== 'playing') { resetGame(); return; }
+  if (game.paused) return;
   fn();
 }
 
@@ -842,8 +726,8 @@ function bindHoldSlot(slotId, slotNum) {
   const skillKey = () => (slotNum === 1 ? player.slot1 : player.slot2);
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    if (gameState !== 'playing') { resetGame(); return; }
-    if (paused) return;
+    if (game.gameState !== 'playing') { resetGame(); return; }
+    if (game.paused) return;
     setHold(true);
     SKILLS[skillKey()].try();
   });
@@ -858,8 +742,8 @@ function bindCycle(id, slotNum) {
   document.getElementById(id).addEventListener('pointerdown', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (gameState !== 'playing') { resetGame(); return; }
-    if (paused) return;
+    if (game.gameState !== 'playing') { resetGame(); return; }
+    if (game.paused) return;
     cycleSkillSlot(slotNum);
   });
 }
@@ -872,7 +756,7 @@ bindCycle('slot2-cycle', 2);
     pressAction(() => tryDrinkPotion(kind));
   });
 });
-document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); setPaused(!paused); });
+document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); setPaused(!game.paused); });
 document.getElementById('btn-full').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
 document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); setInventoryOpen(!showInventory); });
 
@@ -1075,7 +959,7 @@ function tryPlayerAttack() {
 
   let landed = false;
   const atkRange = getWeaponRange();
-  cows.forEach((c) => {
+  game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     // 특정 지점(오프셋) 대신 몸 중심 + 몸집 반경으로 판정 - 접근 방향과 무관하게 몸 전체가 피격 범위가 됨
     const dx = c.x - player.x, dy = c.y - player.y;
@@ -1093,23 +977,23 @@ function killCow(c) {
   c.state = 'dead';
   c.deadTimer = 0.3;
   World.remove(world, c.body);
-  kills++;
+  game.kills++;
   gainExp((MONSTERS[c.kind] || MONSTERS.normal).exp);
   spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
   if (c.kind === 'cold') spawnColdNova(c.x, c.y);
   if (c.kind === 'exploder') {
     spawnShockwave(c.x, c.y, EXPLODER_BLAST_RADIUS, '#ff5b3d');
     spawnHitParticles(c.x, c.y, '#ff8a3d', 14);
-    shake = Math.min(shake + 7, 12);
-    impactFlash = Math.max(impactFlash, 0.10);
+    game.shake = Math.min(game.shake + 7, 12);
+    game.impactFlash = Math.max(game.impactFlash, 0.10);
     if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= EXPLODER_BLAST_RADIUS) {
       hitPlayer(c.x, c.y, 6);
     }
   }
   if (c.kind === 'boss') {
-    gameState = 'victory';
+    game.gameState = 'victory';
     recordRun('victory');
-    shake = Math.min(shake + 12, 12);
+    game.shake = Math.min(game.shake + 12, 12);
     spawnShockwave(c.x, c.y, 220, '#c98bef');
     dropLoot(c.x, c.y, true, 4);
   } else if (c.kind !== 'normal') {
@@ -1131,7 +1015,7 @@ function gainExp(amount) {
     Object.keys(SKILL_UNLOCK_LEVEL).forEach((id) => {
       if (SKILL_UNLOCK_LEVEL[id] === player.level) floatText(player.x, player.y - 74, `새 스킬 해금: ${SKILLS[id].label}`, '#9be39b');
     });
-    shake = Math.min(shake + 5, 12);
+    game.shake = Math.min(game.shake + 5, 12);
   }
   if (player.level >= MAX_LEVEL) player.exp = Math.min(player.exp, player.expToNext);
 }
@@ -1153,7 +1037,7 @@ function spawnColdNova(x, y) {
 
 function bossSlam(c) {
   spawnShockwave(c.x, c.y, BOSS_SLAM_RADIUS, '#b57bd6');
-  shake = Math.min(shake + 6, 12);
+  game.shake = Math.min(game.shake + 6, 12);
   if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= BOSS_SLAM_RADIUS) {
     hitPlayer(c.x, c.y, 6);
   }
@@ -1163,8 +1047,8 @@ function damageCow(c) {
   c.flash = 0.12;
   applyKnockback(c.body, player.x, player.y, 7);
   c.knockback = 0.18;
-  shake = Math.min(shake + 4, 10);
-  hitstop = 4;
+  game.shake = Math.min(game.shake + 4, 10);
+  game.hitstop = 4;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
   const dmg = BASE_DAMAGE + player.attackBonus + player.gearAtkPower;
@@ -1172,7 +1056,7 @@ function damageCow(c) {
   c.hp -= dmg;
   if (c.hp <= 0 && c.state !== 'dead') {
     killCow(c);
-    shake = Math.min(shake + 6, 12);
+    game.shake = Math.min(game.shake + 6, 12);
   }
 }
 
@@ -1199,14 +1083,14 @@ function hitPlayer(fromX, fromY, dmg = 3) {
   player.flash = 0.14;
   applyKnockback(player.body, fromX, fromY, blocked ? 3 : 6);
   player.knockback = blocked ? 0.1 : 0.22;
-  shake = Math.min(shake + (blocked ? 3 : 6), 12);
-  hitstop = blocked ? 0 : 5;
+  game.shake = Math.min(game.shake + (blocked ? 3 : 6), 12);
+  game.hitstop = blocked ? 0 : 5;
   spawnHitParticles(player.x, player.y, PALETTE.eye, blocked ? 4 : 8);
 
   if (player.hp <= 0) {
     player.hp = 0;
     player.alive = false;
-    gameState = 'gameover';
+    game.gameState = 'gameover';
     recordRun('gameover');
     Body.setVelocity(player.body, { x: 0, y: 0 });
   }
@@ -1218,8 +1102,8 @@ function tryWarCry() {
   player.mana -= WARCRY_MANA_COST;
   player.warcryCooldown = WARCRY_COOLDOWN;
   spawnShockwave(player.x, player.y, WARCRY_RADIUS, '#e8a33d');
-  shake = Math.min(shake + 7, 12);
-  cows.forEach((c) => {
+  game.shake = Math.min(game.shake + 7, 12);
+  game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (Math.hypot(c.x - player.x, c.y - player.y) <= WARCRY_RADIUS) warCryHitCow(c);
   });
@@ -1237,15 +1121,15 @@ function tryWhirlwind() {
   if (!player.alive || player.whirlwindCooldown > 0 || player.whirlwindTimer > 0 || player.leapTimer > 0 || player.rushTimer > 0 || player.smashTimer > 0) return;
   if (player.mana < WHIRLWIND_MANA_COST) return;
   player.mana -= WHIRLWIND_MANA_COST;
-  cows.forEach((c) => { c.whirlHitCd = 0; });
+  game.cows.forEach((c) => { c.whirlHitCd = 0; });
   player.whirlwindTimer = WHIRLWIND_DURATION;
   player.whirlwindCooldown = WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION;
-  shake = Math.min(shake + 5, 12);
+  game.shake = Math.min(game.shake + 5, 12);
 }
 
 function updateWhirlwind(dt) {
   player.whirlAngle += dt * 26;
-  cows.forEach((c) => {
+  game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (c.whirlHitCd > 0) c.whirlHitCd -= dt;
     if (c.whirlHitCd <= 0 && Math.hypot(c.x - player.x, c.y - player.y) <= WHIRLWIND_RADIUS) {
@@ -1289,7 +1173,7 @@ function tryLeap() {
   ty = Math.min(Math.max(ty, PEN.y + margin), PEN.y + PEN.size - margin);
   player.leapTo.x = tx;
   player.leapTo.y = ty;
-  shake = Math.min(shake + 3, 12);
+  game.shake = Math.min(game.shake + 3, 12);
 }
 
 function updateLeap(dt) {
@@ -1311,8 +1195,8 @@ function updateLeap(dt) {
 
 function leapLand() {
   spawnShockwave(player.x, player.y, LEAP_RADIUS + 20, '#c9b48a');
-  shake = Math.min(shake + 8, 12);
-  cows.forEach((c) => {
+  game.shake = Math.min(game.shake + 8, 12);
+  game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (Math.hypot(c.x - player.x, c.y - player.y) <= LEAP_RADIUS) leapHitCow(c);
   });
@@ -1337,16 +1221,15 @@ function leapHitCow(c) {
 // 함성 충격파 시각 효과
 // ===========================================================
 // 버닝소울이 지나간 자리에 남기는 불바닥 - 밟고 있으면 주기적으로 피해
-let hazards = [];
 function spawnFireHazard(x, y) {
-  hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0 });
+  game.hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0 });
 }
 function updateHazards(dt) {
-  for (let i = hazards.length - 1; i >= 0; i--) {
-    const h = hazards[i];
+  for (let i = game.hazards.length - 1; i >= 0; i--) {
+    const h = game.hazards[i];
     h.life -= dt;
     h.tickTimer -= dt;
-    if (h.life <= 0) { hazards.splice(i, 1); continue; }
+    if (h.life <= 0) { game.hazards.splice(i, 1); continue; }
     if (player.alive && h.tickTimer <= 0 && Math.hypot(player.x - h.x, player.y - h.y) <= h.r) {
       hitPlayer(h.x, h.y);
       h.tickTimer = 0.6;
@@ -1355,7 +1238,7 @@ function updateHazards(dt) {
   }
 }
 function drawHazards(ctx) {
-  hazards.forEach((h) => {
+  game.hazards.forEach((h) => {
     const alpha = Math.min(1, h.life / h.maxLife) * (0.35 + Math.sin(performance.now() / 90 + h.x) * 0.08);
     ctx.save();
     ctx.globalAlpha = Math.max(0, alpha);
@@ -1372,18 +1255,17 @@ function drawHazards(ctx) {
 }
 
 // 번개카우가 쏘는 전기 줄기 - 아주 짧게 번쩍이는 시각 효과
-let lightningBolts = [];
 function spawnLightningBolt(x1, y1, x2, y2) {
-  lightningBolts.push({ x1, y1, x2, y2, life: 0.18, maxLife: 0.18 });
+  game.lightningBolts.push({ x1, y1, x2, y2, life: 0.18, maxLife: 0.18 });
 }
 function updateLightningBolts(dt) {
-  for (let i = lightningBolts.length - 1; i >= 0; i--) {
-    lightningBolts[i].life -= dt;
-    if (lightningBolts[i].life <= 0) lightningBolts.splice(i, 1);
+  for (let i = game.lightningBolts.length - 1; i >= 0; i--) {
+    game.lightningBolts[i].life -= dt;
+    if (game.lightningBolts[i].life <= 0) game.lightningBolts.splice(i, 1);
   }
 }
 function drawLightningBolts(ctx) {
-  lightningBolts.forEach((b) => {
+  game.lightningBolts.forEach((b) => {
     const alpha = Math.max(0, b.life / b.maxLife);
     const dx = b.x2 - b.x1, dy = b.y2 - b.y1;
     const dist = Math.hypot(dx, dy) || 1;
@@ -1410,14 +1292,13 @@ function drawLightningBolts(ctx) {
   });
 }
 
-let shockwaves = [];
 function spawnShockwave(x, y, maxRadius, color) {
-  shockwaves.push({ x, y, maxRadius, age: 0, duration: 0.45, color });
+  game.shockwaves.push({ x, y, maxRadius, age: 0, duration: 0.45, color });
 }
 function updateShockwaves(dt) {
-  for (let i = shockwaves.length - 1; i >= 0; i--) {
-    shockwaves[i].age += dt;
-    if (shockwaves[i].age >= shockwaves[i].duration) shockwaves.splice(i, 1);
+  for (let i = game.shockwaves.length - 1; i >= 0; i--) {
+    game.shockwaves[i].age += dt;
+    if (game.shockwaves[i].age >= game.shockwaves[i].duration) game.shockwaves.splice(i, 1);
   }
 }
 function hexToRgba(hex, alpha) {
@@ -1428,7 +1309,7 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 function drawShockwaves(ctx) {
-  shockwaves.forEach((s) => {
+  game.shockwaves.forEach((s) => {
     const t = s.age / s.duration;
     const r = Math.max(s.maxRadius * t, 1);
     const alpha = 1 - t;
@@ -1480,8 +1361,6 @@ function drawSkillIcon(ctx, x, y, label, color, cooldownFrac) {
 // ===========================================================
 // 소비 아이템 드롭/픽업 시스템
 // ===========================================================
-let items = [];
-let floatTexts = [];
 
 class Item {
   constructor(x, y, type, gearData = null) {
@@ -1502,15 +1381,15 @@ function dropLoot(x, y, guaranteed, count) {
     const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
 
     if (Math.random() < (guaranteed ? 0.5 : GEAR_DROP_CHANCE)) {
-      items.push(new Item(px, py, 'gear', rollGearItem()));
+      game.items.push(new Item(px, py, 'gear', rollGearItem()));
       continue;
     }
     if (Math.random() < (guaranteed ? 0.35 : MATERIAL_DROP_CHANCE)) {
-      items.push(new Item(px, py, 'material'));
+      game.items.push(new Item(px, py, 'material'));
       continue;
     }
     if (!guaranteed && Math.random() > 0.20) continue;
-    items.push(new Item(px, py, rollConsumableType()));
+    game.items.push(new Item(px, py, rollConsumableType()));
   }
 }
 
@@ -1693,12 +1572,12 @@ function recalcGearStats() {
 }
 
 function updateItems(dt) {
-  for (let i = items.length - 1; i >= 0; i--) {
-    const it = items[i];
+  for (let i = game.items.length - 1; i >= 0; i--) {
+    const it = game.items[i];
     if (it.spawnT < 1) it.spawnT = Math.min(it.spawnT + dt * 6, 1);
     it.life -= dt;
     if (it.warnCd > 0) it.warnCd -= dt;
-    if (it.life <= 0) { items.splice(i, 1); continue; }
+    if (it.life <= 0) { game.items.splice(i, 1); continue; }
     if (player.alive) {
       const d = Math.hypot(player.x - it.x, player.y - it.y);
       if (d <= player.r + 16) {
@@ -1727,8 +1606,8 @@ function updateItems(dt) {
           applyItem(it.type);
           spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
         }
-        shake = Math.min(shake + 2, 12);
-        items.splice(i, 1);
+        game.shake = Math.min(game.shake + 2, 12);
+        game.items.splice(i, 1);
       }
     }
   }
@@ -1795,7 +1674,7 @@ function groundLabelForGear(gear) {
 }
 
 function drawItems(ctx, t) {
-  items.forEach((it) => {
+  game.items.forEach((it) => {
     const isGear = it.type === 'gear';
     const isMaterial = it.type === 'material';
     const label = isGear ? groundLabelForGear(it.gearData) : isMaterial ? '재료' : (POTION_LABEL[it.type] || '물약');
@@ -1836,24 +1715,24 @@ function drawItems(ctx, t) {
 }
 
 function floatText(x, y, text, color) {
-  floatTexts.push({ x, y, text, color, life: 0.8, maxLife: 0.8, big: false });
+  game.floatTexts.push({ x, y, text, color, life: 0.8, maxLife: 0.8, big: false });
 }
 function spawnDamageNumber(x, y, text, color) {
-  floatTexts.push({
+  game.floatTexts.push({
     x: x + (Math.random() - 0.5) * 16, y, text, color,
     life: 0.65, maxLife: 0.65, big: true
   });
 }
 function updateFloatTexts(dt) {
-  for (let i = floatTexts.length - 1; i >= 0; i--) {
-    floatTexts[i].life -= dt;
-    floatTexts[i].y -= dt * (floatTexts[i].big ? 36 : 28);
-    if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
+  for (let i = game.floatTexts.length - 1; i >= 0; i--) {
+    game.floatTexts[i].life -= dt;
+    game.floatTexts[i].y -= dt * (game.floatTexts[i].big ? 36 : 28);
+    if (game.floatTexts[i].life <= 0) game.floatTexts.splice(i, 1);
   }
 }
 function drawFloatTexts(ctx) {
   ctx.textAlign = 'center';
-  floatTexts.forEach((f) => {
+  game.floatTexts.forEach((f) => {
     const t = 1 - f.life / f.maxLife;
     const pop = f.big ? (t < 0.2 ? 1 + Math.sin((t / 0.2) * Math.PI / 2) * 0.4 : 1) : 1;
     ctx.font = f.big ? `bold ${Math.round(17 * pop)}px sans-serif` : 'bold 14px sans-serif';
@@ -2413,7 +2292,7 @@ function emitMoveReaction(dirX, dirY, strength = 1) {
   spawnHitParticles(px, py, MOVE_DUST_COLOR, strength > 0.8 ? 5 : 3);
   player.moveReaction = Math.max(player.moveReaction, strength);
   player.moveFxCooldown = strength > 0.8 ? 0.11 : 0.16;
-  shake = Math.min(shake + 0.55 * strength, 12);
+  game.shake = Math.min(game.shake + 0.55 * strength, 12);
 }
 
 // ===========================================================
@@ -2452,7 +2331,7 @@ function tryRush() {
   Body.setVelocity(player.body, { x: 0, y: 0 });
   emitMoveReaction(-dx, -dy, 1);
   spawnShockwave(player.x, player.y, 34, '#ff8a4d');
-  impactFlash = Math.max(impactFlash, 0.08);
+  game.impactFlash = Math.max(game.impactFlash, 0.08);
 }
 
 function updateRush(dt) {
@@ -2469,7 +2348,7 @@ function updateRush(dt) {
   const fx = Math.cos(player.facing), fy = Math.sin(player.facing);
   if (Math.random() < 0.42) spawnHitParticles(nx - fx * 10, ny - fy * 10 + 8, '#d7b18c', 1);
 
-  cows.forEach((c) => {
+  game.cows.forEach((c) => {
     if (c.state === 'dead' || player.rushHitSet.has(c)) return;
     if (Math.hypot(c.x - nx, c.y - ny) <= RUSH_HIT_RADIUS + getCowHitRadius(c)) {
       player.rushHitSet.add(c);
@@ -2481,8 +2360,8 @@ function updateRush(dt) {
     player.rushTimer = 0;
     spawnShockwave(player.x, player.y, 46, '#ff8a4d');
     spawnHitParticles(player.x, player.y, '#e7c8a4', 7);
-    shake = Math.min(shake + 4, 12);
-    impactFlash = Math.max(impactFlash, 0.07);
+    game.shake = Math.min(game.shake + 4, 12);
+    game.impactFlash = Math.max(game.impactFlash, 0.07);
   }
 }
 
@@ -2508,11 +2387,11 @@ function updateGroundSmash(dt) {
     player.smashHitDone = true;
     spawnShockwave(player.x, player.y, SMASH_RADIUS + 28, '#ffc857');
     spawnHitParticles(player.x, player.y + 8, '#e5d0a1', 18);
-    shake = Math.min(shake + 10, 12);
-    hitstop = Math.max(hitstop, 4);
-    impactFlash = Math.max(impactFlash, 0.18);
+    game.shake = Math.min(game.shake + 10, 12);
+    game.hitstop = Math.max(game.hitstop, 4);
+    game.impactFlash = Math.max(game.impactFlash, 0.18);
 
-    cows.forEach((c) => {
+    game.cows.forEach((c) => {
       if (c.state === 'dead') return;
       if (Math.hypot(c.x - player.x, c.y - player.y) <= SMASH_RADIUS + getCowHitRadius(c)) {
         skillDamageCow(c, BASE_DAMAGE + SMASH_DAMAGE_BONUS, 11, '#ffd36a');
@@ -2559,7 +2438,7 @@ function cycleSkillSlot(slotNum) {
 }
 
 function updateSkillSlots() {
-  if (gameState !== 'playing' || paused || showInventory) return;
+  if (game.gameState !== 'playing' || game.paused || showInventory) return;
   if (holdSlot1) SKILLS[player.slot1].try();
   if (holdSlot2) SKILLS[player.slot2].try();
 }
@@ -2657,7 +2536,7 @@ class Cow {
       this.healCooldown -= dt;
       if (this.healCooldown <= 0) {
         let target = null, worstRatio = 1;
-        cows.forEach((c) => {
+        game.cows.forEach((c) => {
           if (c === this || c.state === 'dead') return;
           if (Math.hypot(c.x - this.x, c.y - this.y) > 170) return;
           const ratio = c.hp / c.maxHp;
@@ -3095,8 +2974,8 @@ function drawHUD() {
   ctx.fillStyle = '#dfe9d8';
   ctx.font = '15px monospace';
   ctx.textAlign = 'center';
-  const remaining = cows.filter((c) => c.state !== 'dead').length;
-  ctx.fillText(`웨이브 ${wave}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
+  const remaining = game.cows.filter((c) => c.state !== 'dead').length;
+  ctx.fillText(`웨이브 ${game.wave}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
   ctx.textAlign = 'left';
 
   drawStatReadout(ctx, expY + 50);
@@ -3109,16 +2988,16 @@ function drawHUD() {
     ctx.textAlign = 'left';
   }
 
-  if (cows.length === 0 && gameState === 'playing') {
+  if (game.cows.length === 0 && game.gameState === 'playing') {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`웨이브 ${wave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(`웨이브 ${game.wave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
     ctx.textAlign = 'left';
   }
 
-  if (gameState === 'gameover') overlay('GAME OVER', `${wave}웨이브까지 생존 - 클릭 또는 Space/R로 다시 시작`);
-  if (gameState === 'victory') overlay('VICTORY!', '카우킹 처치! 클릭 또는 Space/R로 다시 시작');
+  if (game.gameState === 'gameover') overlay('GAME OVER', `${game.wave}웨이브까지 생존 - 클릭 또는 Space/R로 다시 시작`);
+  if (game.gameState === 'victory') overlay('VICTORY!', '카우킹 처치! 클릭 또는 Space/R로 다시 시작');
 }
 
 function drawResourceOrb(ctx, cx, cy, r, frac, colorTop, colorBottom) {
@@ -3175,15 +3054,10 @@ function overlay(title, sub) {
 // ===========================================================
 // 게임 상태 초기화
 // ===========================================================
-let cows = [];
-let kills = 0;
-let gameState = 'playing';
-let wave = 0;
-let waveTransition = 0;
 
 function pickCowKind() {
-  if (wave < ELITE_MIN_WAVE) return 'normal';
-  const eliteChance = Math.min(ELITE_CHANCE_BASE + wave * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX);
+  if (game.wave < ELITE_MIN_WAVE) return 'normal';
+  const eliteChance = Math.min(ELITE_CHANCE_BASE + game.wave * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX);
   if (Math.random() < eliteChance) {
     return ELITE_KINDS[Math.floor(Math.random() * ELITE_KINDS.length)];
   }
@@ -3191,32 +3065,32 @@ function pickCowKind() {
 }
 
 function startNextWave() {
-  wave++;
-  waveBannerTimer = 1.6;
-  if (wave === BOSS_WAVE) {
-    cows.push(new Cow(1.0, 'boss'));
-    for (let i = 0; i < 4; i++) cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, 'normal'));
+  game.wave++;
+  game.waveBannerTimer = 1.6;
+  if (game.wave === BOSS_WAVE) {
+    game.cows.push(new Cow(1.0, 'boss'));
+    for (let i = 0; i < 4; i++) game.cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, 'normal'));
     return;
   }
-  const size = 6 + wave * 4; // 웨이브가 지날수록 순차적으로 마리 수 증가 (난이도 상향)
+  const size = 6 + game.wave * 4; // 웨이브가 지날수록 순차적으로 마리 수 증가 (난이도 상향)
   for (let i = 0; i < size; i++) {
-    cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, pickCowKind()));
+    game.cows.push(new Cow((1.05 + Math.random() * 0.5) * 0.3, pickCowKind()));
   }
 }
 
 function resetGame() {
-  paused = false;
-  runRecorded = false;
+  game.paused = false;
+  game.runRecorded = false;
   const pb = document.getElementById('btn-pause');
   if (pb) pb.textContent = 'Ⅱ';
 
-  cows.forEach((c) => { if (c.body) World.remove(world, c.body); });
-  cows = [];
-  wave = 0;
+  game.cows.forEach((c) => { if (c.body) World.remove(world, c.body); });
+  game.cows = [];
+  game.wave = 0;
   // 시작 직후 적이 튀어나오지 않도록 준비 시간을 둠 - 이후 웨이브 사이엔 기존 WAVE_GAP 사용
-  waveTransition = FIRST_WAVE_DELAY;
-  waveBannerTimer = 0;
-  demoTipTimer = 5.0;
+  game.waveTransition = FIRST_WAVE_DELAY;
+  game.waveBannerTimer = 0;
+  game.demoTipTimer = 5.0;
 
   Body.setPosition(player.body, { x: PEN.x + PEN.size / 2, y: PEN.y + PEN.size / 2 });
   Body.setVelocity(player.body, { x: 0, y: 0 });
@@ -3295,16 +3169,16 @@ function resetGame() {
   player.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
   player.maxMana = MAX_MANA;
 
-  particles = [];
-  shockwaves = [];
-  hazards = [];
-  lightningBolts = [];
-  items = [];
-  floatTexts = [];
-  shake = 0;
-  hitstop = 0;
-  impactFlash = 0;
-  kills = 0;
+  game.particles = [];
+  game.shockwaves = [];
+  game.hazards = [];
+  game.lightningBolts = [];
+  game.items = [];
+  game.floatTexts = [];
+  game.shake = 0;
+  game.hitstop = 0;
+  game.impactFlash = 0;
+  game.kills = 0;
   player.slot1 = 'attack';
   player.slot2 = 'warcry';
   holdSlot1 = false;
@@ -3317,49 +3191,38 @@ function resetGame() {
   if (s2label) s2label.textContent = SKILLS[player.slot2].label;
   if (s1el) s1el.style.background = SKILLS[player.slot1].color;
   if (s2el) s2el.style.background = SKILLS[player.slot2].color;
-  gameState = 'playing';
+  game.gameState = 'playing';
 }
-resetGame();
-// 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌
-gameState = 'title';
-initTitleScene();
-document.body.classList.add('title-mode');
 
-// ===========================================================
-// 고정 타임스텝 루프 (물리 안정성을 위해 dt를 항상 1/60으로 고정)
-// ===========================================================
-const STEP_MS = 1000 / 60;
-let accumulator = 0;
-let lastTime = performance.now();
 
 function fixedUpdate(dt) {
-  if (gameState === 'title') {
+  if (game.gameState === 'title') {
     updateTitleScene(dt);
     updateParticles(dt);
-    if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt * 2.8);
+    if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
     return;
   }
   if (showInventory) {
     // 장비창을 보는 동안은 전투/이동을 전부 멈춤 - 감정 진행만은 메뉴 안의 행동이라 계속 흐름
     updateIdentify(dt);
     updateParticles(dt);
-    if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt * 2.8);
+    if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
     return;
   }
-  if (paused) return;
-  if (hitstop > 0) { hitstop--; return; }
-  if (gameState === 'playing') {
+  if (game.paused) return;
+  if (game.hitstop > 0) { game.hitstop--; return; }
+  if (game.gameState === 'playing') {
     updatePlayer(dt);
     updateSkillSlots();
-    cows.forEach((c) => c.update(dt));
-    for (let i = cows.length - 1; i >= 0; i--) {
-      if (cows[i].state === 'dead' && cows[i].deadTimer <= 0) cows.splice(i, 1);
+    game.cows.forEach((c) => c.update(dt));
+    for (let i = game.cows.length - 1; i >= 0; i--) {
+      if (game.cows[i].state === 'dead' && game.cows[i].deadTimer <= 0) game.cows.splice(i, 1);
     }
-    if (cows.length === 0) {
-      waveTransition -= dt;
-      if (waveTransition <= 0) {
+    if (game.cows.length === 0) {
+      game.waveTransition -= dt;
+      if (game.waveTransition <= 0) {
         startNextWave();
-        waveTransition = WAVE_GAP;
+        game.waveTransition = WAVE_GAP;
       }
     }
     updateItems(dt);
@@ -3370,17 +3233,17 @@ function fixedUpdate(dt) {
   updateHazards(dt);
   updateLightningBolts(dt);
   updateFloatTexts(dt);
-  if (waveBannerTimer > 0) waveBannerTimer = Math.max(0, waveBannerTimer - dt);
-  if (demoTipTimer > 0) demoTipTimer = Math.max(0, demoTipTimer - dt);
-  if (shake > 0) shake = Math.max(0, shake - dt * 40);
-  if (impactFlash > 0) impactFlash = Math.max(0, impactFlash - dt * 2.8);
+  if (game.waveBannerTimer > 0) game.waveBannerTimer = Math.max(0, game.waveBannerTimer - dt);
+  if (game.demoTipTimer > 0) game.demoTipTimer = Math.max(0, game.demoTipTimer - dt);
+  if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 40);
+  if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
 }
 
 function render(t) {
   ctx.fillStyle = '#0c1f10';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const titleMode = gameState === 'title';
+  const titleMode = game.gameState === 'title';
   document.body.classList.toggle('title-mode', titleMode);
   if (titleMode) {
     ctx.save();
@@ -3393,12 +3256,12 @@ function render(t) {
   }
 
   ctx.save();
-  if (shake > 0) {
-    ctx.translate((Math.random() - 0.5) * shake * 2, (Math.random() - 0.5) * shake * 2);
+  if (game.shake > 0) {
+    ctx.translate((Math.random() - 0.5) * game.shake * 2, (Math.random() - 0.5) * game.shake * 2);
   }
   drawPen();
   drawHazards(ctx);
-  const drawables = cows.map((c) => ({ y: c.y, fn: () => c.draw(ctx, t) }));
+  const drawables = game.cows.map((c) => ({ y: c.y, fn: () => c.draw(ctx, t) }));
   drawables.push({ y: player.y, fn: () => drawPlayer(ctx, t) });
   drawables.sort((a, b) => a.y - b.y).forEach((d) => d.fn());
   drawItems(ctx, t);
@@ -3416,11 +3279,11 @@ function render(t) {
   updateSkillButtonsUI();
   updatePotionButtonsUI();
   if (showInventory) drawInventoryPanel(ctx);
-  if (paused) drawPauseOverlay();
+  if (game.paused) drawPauseOverlay();
 
-  if (impactFlash > 0) {
+  if (game.impactFlash > 0) {
     ctx.save();
-    ctx.globalAlpha = Math.min(0.20, impactFlash);
+    ctx.globalAlpha = Math.min(0.20, game.impactFlash);
     ctx.fillStyle = '#fff0bf';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
@@ -3973,18 +3836,22 @@ function updateSkillButtonsUI() {
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
 }
 
-function loop(now) {
-  let frameTime = now - lastTime;
-  lastTime = now;
-  if (frameTime > 250) frameTime = 250;
-  accumulator += frameTime;
+// ===========================================================
+// 부트 - 순서 중요: 캔버스/벽 → 플레이어 바디 → 초기화 → 타이틀 → 루프
+// ===========================================================
+function boot() {
+  resize();
+  window.addEventListener('resize', resize);
+  player.body = Bodies.circle(0, 0, 17, { frictionAir: 0.15, friction: 0, restitution: 0.1, label: 'player' });
+  Body.setInertia(player.body, Infinity);
+  World.add(world, player.body);
 
-  while (accumulator >= STEP_MS) {
-    fixedUpdate(STEP_MS / 1000);
-    accumulator -= STEP_MS;
-  }
+  resetGame();
+  // 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌
+  game.gameState = 'title';
+  initTitleScene();
+  document.body.classList.add('title-mode');
 
-  render(now / 1000);
-  requestAnimationFrame(loop);
+  startLoop(fixedUpdate, render);
 }
-requestAnimationFrame(loop);
+boot();
