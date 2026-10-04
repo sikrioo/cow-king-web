@@ -1,6 +1,6 @@
 // 이펙트 생성/갱신 (파티클·불바닥·번개·충격파·떠오르는 글자·이동 반응·메뉴 안내) - 그리기는 render/fx.js
 import { MOVE_DUST_COLOR } from '../data/balance.js';
-import { game, ui, player } from '../state.js';
+import { game, ui } from '../state.js';
 
 export function spawnHitParticles(x, y, color, count) {
   for (let i = 0; i < count; i++) {
@@ -23,12 +23,12 @@ export function updateParticles(dt) {
 }
 
 export function emitMoveReaction(dirX, dirY, strength = 1) {
-  if (player.moveFxCooldown > 0) return;
-  const px = player.x - dirX * player.r * 0.35;
-  const py = player.y - dirY * player.r * 0.20 + player.r * 0.55;
+  if (game.hero.moveFxCooldown > 0) return;
+  const px = game.hero.x - dirX * game.hero.r * 0.35;
+  const py = game.hero.y - dirY * game.hero.r * 0.20 + game.hero.r * 0.55;
   spawnHitParticles(px, py, MOVE_DUST_COLOR, strength > 0.8 ? 5 : 3);
-  player.moveReaction = Math.max(player.moveReaction, strength);
-  player.moveFxCooldown = strength > 0.8 ? 0.11 : 0.16;
+  game.hero.moveReaction = Math.max(game.hero.moveReaction, strength);
+  game.hero.moveFxCooldown = strength > 0.8 ? 0.11 : 0.16;
   game.shake = Math.min(game.shake + 0.55 * strength, 12);
 }
 

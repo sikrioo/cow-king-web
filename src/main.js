@@ -10,9 +10,9 @@ import {
 import { SKILL_UNLOCK_LEVEL } from './data/skills.js';
 import { canvas, resize } from './core/context.js';
 import { STEP_MS, startLoop } from './core/loop.js';
-import { Engine, World, Bodies, Body, engine, world, PEN } from './core/physics.js';
-import { game, ui, input, player } from './state.js';
-import { updatePlayer } from './entities/hero.js';
+import { Engine, World, Body, engine, world, PEN } from './core/physics.js';
+import { game, ui, input } from './state.js';
+import { createHero, updatePlayer } from './entities/hero.js';
 import { Monster } from './entities/monster.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
@@ -126,7 +126,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (k === 'p' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
   if (game.paused) return;
-  if (k === 'l' && game.gameState === 'playing') gainExp(Math.max(1, player.expToNext - player.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
+  if (k === 'l' && game.gameState === 'playing') gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
   if (!ui.showInventory && game.gameState === 'playing') {
     if (k === '1') tryDrinkPotion('heal');
     if (k === '2') tryDrinkPotion('mana');
@@ -135,11 +135,11 @@ window.addEventListener('keydown', (e) => {
   if (k === ' ') {
     e.preventDefault();
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[player.slot1].try(); }
+    else if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); }
   }
   if (k === 'e') {
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[player.slot2].try(); }
+    else if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); }
   }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (k === 'q') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
@@ -165,8 +165,8 @@ canvas.addEventListener('pointerdown', (e) => {
   if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
   if (game.gameState !== 'playing') { resetGame(); return; }
   if (game.paused) return;
-  if (e.button === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[player.slot2].try(); } }
-  else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[player.slot1].try(); } }
+  if (e.button === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); } }
+  else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); } }
 });
 window.addEventListener('pointerup', (e) => {
   if (e.button === 2) input.holdSlot2 = false;
@@ -261,7 +261,7 @@ joyBase.addEventListener('pointercancel', (e) => { if (e.pointerId === input.joy
 function bindHoldSlot(slotId, slotNum) {
   const el = document.getElementById(slotId);
   const setHold = slotNum === 1 ? (v) => { input.holdSlot1 = v; } : (v) => { input.holdSlot2 = v; };
-  const skillKey = () => (slotNum === 1 ? player.slot1 : player.slot2);
+  const skillKey = () => (slotNum === 1 ? game.hero.slot1 : game.hero.slot2);
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     if (game.gameState !== 'playing') { resetGame(); return; }
@@ -371,69 +371,69 @@ function resetGame() {
   game.waveBannerTimer = 0;
   game.demoTipTimer = 5.0;
 
-  Body.setPosition(player.body, { x: PEN.x + PEN.size / 2, y: PEN.y + PEN.size / 2 });
-  Body.setVelocity(player.body, { x: 0, y: 0 });
-  player.hp = player.maxHp;
-  player.mana = player.maxMana;
-  player.stamina = player.maxStamina;
-  player.running = false;
-  player.invuln = 0;
-  player.attackTimer = 0;
-  player.attackCooldown = 0;
-  player.currentAttackDuration = ATTACK_DURATION;
-  player.combo = 0;
-  player.comboTimer = 0;
-  player.knockback = 0;
-  player.flash = 0;
-  player.alive = true;
-  player.warcryCooldown = 0;
-  player.whirlwindTimer = 0;
-  player.whirlwindCooldown = 0;
-  player.whirlAngle = 0;
-  player.leapTimer = 0;
-  player.leapCooldown = 0;
-  player.rushTimer = 0;
-  player.rushCooldown = 0;
-  player.rushHitSet = null;
-  player.smashTimer = 0;
-  player.smashCooldown = 0;
-  player.smashHitDone = false;
-  player.moveOffsetX = 0;
-  player.moveOffsetY = 0;
-  player.moveOffsetVX = 0;
-  player.moveOffsetVY = 0;
-  player.moveLean = 0;
-  player.moveLeanV = 0;
-  player.moveFxCooldown = 0;
-  player.moveReaction = 0;
-  player.moveSpeedN = 0;
-  player.moveInputActive = false;
-  player.moveStep = 0;
-  player.slowTimer = 0;
-  player.bonusMaxHp = 0;
-  player.vitalityTimer = 0;
-  player.speedMult = 1;
-  player.speedBuffTimer = 0;
-  player.attackBonus = 0;
-  player.attackBuffTimer = 0;
-  player.defenseChance = 0;
-  player.defenseBuffTimer = 0;
-  player.equipment = { armor: null, weaponMain: null, weaponOff: null, greaves: null, boots: null, accessory1: null, accessory2: null };
-  player.gearAtkSpeed = 0;
-  player.gearAtkPower = 0;
-  player.gearDefense = 0;
-  player.gearEvasion = 0;
-  player.gearSpeedMult = 1;
-  player.gearMaxHp = 0;
-  player.gearMaxMana = 0;
-  player.materials = 0;
-  player.inventory = [];
-  player.potions = { heal: 2, mana: 2 };
-  player.potionCd = { heal: 0, mana: 0 };
+  Body.setPosition(game.hero.body, { x: PEN.x + PEN.size / 2, y: PEN.y + PEN.size / 2 });
+  Body.setVelocity(game.hero.body, { x: 0, y: 0 });
+  game.hero.hp = game.hero.maxHp;
+  game.hero.mana = game.hero.maxMana;
+  game.hero.stamina = game.hero.maxStamina;
+  game.hero.running = false;
+  game.hero.invuln = 0;
+  game.hero.attackTimer = 0;
+  game.hero.attackCooldown = 0;
+  game.hero.currentAttackDuration = ATTACK_DURATION;
+  game.hero.combo = 0;
+  game.hero.comboTimer = 0;
+  game.hero.knockback = 0;
+  game.hero.flash = 0;
+  game.hero.alive = true;
+  game.hero.warcryCooldown = 0;
+  game.hero.whirlwindTimer = 0;
+  game.hero.whirlwindCooldown = 0;
+  game.hero.whirlAngle = 0;
+  game.hero.leapTimer = 0;
+  game.hero.leapCooldown = 0;
+  game.hero.rushTimer = 0;
+  game.hero.rushCooldown = 0;
+  game.hero.rushHitSet = null;
+  game.hero.smashTimer = 0;
+  game.hero.smashCooldown = 0;
+  game.hero.smashHitDone = false;
+  game.hero.moveOffsetX = 0;
+  game.hero.moveOffsetY = 0;
+  game.hero.moveOffsetVX = 0;
+  game.hero.moveOffsetVY = 0;
+  game.hero.moveLean = 0;
+  game.hero.moveLeanV = 0;
+  game.hero.moveFxCooldown = 0;
+  game.hero.moveReaction = 0;
+  game.hero.moveSpeedN = 0;
+  game.hero.moveInputActive = false;
+  game.hero.moveStep = 0;
+  game.hero.slowTimer = 0;
+  game.hero.bonusMaxHp = 0;
+  game.hero.vitalityTimer = 0;
+  game.hero.speedMult = 1;
+  game.hero.speedBuffTimer = 0;
+  game.hero.attackBonus = 0;
+  game.hero.attackBuffTimer = 0;
+  game.hero.defenseChance = 0;
+  game.hero.defenseBuffTimer = 0;
+  game.hero.equipment = { armor: null, weaponMain: null, weaponOff: null, greaves: null, boots: null, accessory1: null, accessory2: null };
+  game.hero.gearAtkSpeed = 0;
+  game.hero.gearAtkPower = 0;
+  game.hero.gearDefense = 0;
+  game.hero.gearEvasion = 0;
+  game.hero.gearSpeedMult = 1;
+  game.hero.gearMaxHp = 0;
+  game.hero.gearMaxMana = 0;
+  game.hero.materials = 0;
+  game.hero.inventory = [];
+  game.hero.potions = { heal: 2, mana: 2 };
+  game.hero.potionCd = { heal: 0, mana: 0 };
   giveStarterGear(); // gear 보너스 초기화 이후에 호출해야 장착 효과가 덮어써지지 않음
   giveTestStash(); // 장비 교체 테스트용 - 무기 종류별 1개 + 방패 + 양손무기를 가방에 바로 지급
-  player.hp = player.maxHp + player.gearMaxHp;
-  player.mana = player.maxMana + player.gearMaxMana;
+  game.hero.hp = game.hero.maxHp + game.hero.gearMaxHp;
+  game.hero.mana = game.hero.maxMana + game.hero.gearMaxMana;
   ui.identifyingItem = null;
   ui.identifyTimer = 0;
   ui.selectedInvIndex = null;
@@ -441,12 +441,12 @@ function resetGame() {
   ui.invPanelTab = 'equip';
   ui.invToast = null;
   ui.invReveal = null;
-  player.level = 1;
-  player.exp = 0;
-  player.expToNext = expForLevel(1);
-  player.statPoints = 0;
-  player.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
-  player.maxMana = MAX_MANA;
+  game.hero.level = 1;
+  game.hero.exp = 0;
+  game.hero.expToNext = expForLevel(1);
+  game.hero.statPoints = 0;
+  game.hero.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
+  game.hero.maxMana = MAX_MANA;
 
   game.particles = [];
   game.shockwaves = [];
@@ -458,18 +458,18 @@ function resetGame() {
   game.hitstop = 0;
   game.impactFlash = 0;
   game.kills = 0;
-  player.slot1 = 'attack';
-  player.slot2 = 'warcry';
+  game.hero.slot1 = 'attack';
+  game.hero.slot2 = 'warcry';
   input.holdSlot1 = false;
   input.holdSlot2 = false;
   const s1label = document.getElementById('slot1-label');
   const s2label = document.getElementById('slot2-label');
   const s1el = document.getElementById('slot1');
   const s2el = document.getElementById('slot2');
-  if (s1label) s1label.textContent = SKILLS[player.slot1].label;
-  if (s2label) s2label.textContent = SKILLS[player.slot2].label;
-  if (s1el) s1el.style.background = SKILLS[player.slot1].color;
-  if (s2el) s2el.style.background = SKILLS[player.slot2].color;
+  if (s1label) s1label.textContent = SKILLS[game.hero.slot1].label;
+  if (s2label) s2label.textContent = SKILLS[game.hero.slot2].label;
+  if (s1el) s1el.style.background = SKILLS[game.hero.slot1].color;
+  if (s2el) s2el.style.background = SKILLS[game.hero.slot2].color;
   game.gameState = 'playing';
 }
 
@@ -531,8 +531,8 @@ const INV_TABS = [
 
 // 가방에서 상세정보로 보여줄 칸: 클릭해서 고정한 것이 우선, 없으면 마우스가 올라가 있는 것
 function getInvViewIndex() {
-  if (ui.selectedInvIndex !== null && player.inventory[ui.selectedInvIndex]) return ui.selectedInvIndex;
-  if (ui.hoverInvIndex !== null && player.inventory[ui.hoverInvIndex]) return ui.hoverInvIndex;
+  if (ui.selectedInvIndex !== null && game.hero.inventory[ui.selectedInvIndex]) return ui.selectedInvIndex;
+  if (ui.hoverInvIndex !== null && game.hero.inventory[ui.hoverInvIndex]) return ui.hoverInvIndex;
   return null;
 }
 
@@ -558,7 +558,7 @@ function wrapStatLines(ctx, stats, maxW) {
 
 function getCompareItemForGear(it) {
   if (!it || it === 'LOCKED') return null;
-  const eq = player.equipment;
+  const eq = game.hero.equipment;
   if (it.category === 'weapon') return eq.weaponMain && eq.weaponMain !== 'LOCKED' ? eq.weaponMain : null;
   if (it.category === 'shield') return eq.weaponOff && eq.weaponOff !== 'LOCKED' && eq.weaponOff.category === 'shield' ? eq.weaponOff : null;
   if (it.category === 'accessory') return eq.accessory1 || eq.accessory2 || null;
@@ -595,7 +595,7 @@ function drawInventoryPanel(ctx) {
   ctx.textAlign = 'right';
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#ffe066';
-  ctx.fillText(`재료 ${player.materials}개`, x + w - 16, y + 24);
+  ctx.fillText(`재료 ${game.hero.materials}개`, x + w - 16, y + 24);
   if (ui.invToast && performance.now() < ui.invToast.until) {
     ctx.font = 'bold 11px sans-serif';
     ctx.fillStyle = ui.invToast.color;
@@ -648,7 +648,7 @@ function drawEquipTab(ctx, x, startRow, w) {
   const textX = x + 92;
   const maxW = w - 92 - 16;
   GEAR_SLOTS.forEach((slot) => {
-    const it = player.equipment[slot];
+    const it = game.hero.equipment[slot];
     const label = (slot === 'weaponOff' && it && it !== 'LOCKED' && it.category === 'shield') ? '방패' : GEAR_SLOT_LABEL[slot];
     ctx.textAlign = 'left';
     ctx.font = 'bold 11px sans-serif';
@@ -689,12 +689,12 @@ function drawEquipTab(ctx, x, startRow, w) {
   row += 17;
 
   const bonus = [
-    ['공격속도', `+${Math.round(player.gearAtkSpeed * 100)}%`],
-    ['공격력', `+${player.gearAtkPower}`],
-    ['방어(블락)', `+${Math.round(player.gearDefense * 100)}%`],
-    ['회피율', `+${Math.round(player.gearEvasion * 100)}%`],
-    ['이동속도', `+${Math.round((player.gearSpeedMult - 1) * 100)}%`],
-    ['체력/마나', `+${player.gearMaxHp}/+${player.gearMaxMana}`]
+    ['공격속도', `+${Math.round(game.hero.gearAtkSpeed * 100)}%`],
+    ['공격력', `+${game.hero.gearAtkPower}`],
+    ['방어(블락)', `+${Math.round(game.hero.gearDefense * 100)}%`],
+    ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
+    ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],
+    ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`]
   ];
   const colW = (w - 32) / 2;
   ctx.font = '10px sans-serif';
@@ -716,19 +716,19 @@ function drawStatsTab(ctx, x, startRow, w) {
   ctx.textAlign = 'left';
   ctx.font = 'bold 13px sans-serif';
   ctx.fillStyle = '#ffe066';
-  ctx.fillText(`Lv.${player.level}  (EXP ${player.exp}/${player.level >= MAX_LEVEL ? 'MAX' : player.expToNext})`, x + 16, row);
+  ctx.fillText(`Lv.${game.hero.level}  (EXP ${game.hero.exp}/${game.hero.level >= MAX_LEVEL ? 'MAX' : game.hero.expToNext})`, x + 16, row);
   row += 19;
   ctx.font = 'bold 12px sans-serif';
-  ctx.fillStyle = player.statPoints > 0 ? '#ffe066' : '#8a9a8a';
-  ctx.fillText(`여유 포인트: ${player.statPoints}`, x + 16, row);
+  ctx.fillStyle = game.hero.statPoints > 0 ? '#ffe066' : '#8a9a8a';
+  ctx.fillText(`여유 포인트: ${game.hero.statPoints}`, x + 16, row);
   row += 24;
 
   const statOrder = ['atkPower', 'defense', 'evasion', 'atkSpeed', 'moveSpeed', 'health', 'mana'];
   const keyByStat = {};
   Object.entries(LEVEL_STAT_KEYS).forEach(([k, v]) => { keyByStat[v] = k; });
   statOrder.forEach((sk) => {
-    const pts = player.levelStats[sk] || 0;
-    const canSpend = player.statPoints > 0;
+    const pts = game.hero.levelStats[sk] || 0;
+    const canSpend = game.hero.statPoints > 0;
     ctx.textAlign = 'left';
     ctx.font = '12px sans-serif';
     ctx.fillStyle = '#dfe9d8';
@@ -736,7 +736,7 @@ function drawStatsTab(ctx, x, startRow, w) {
 
     const btn = { x: x + w - 16 - 36, y: row - 17, w: 36, h: 24 };
     ui.invButtons.push({ ...btn, fn: () => {
-      if (player.statPoints <= 0) { showInvToast('여유 포인트가 없어', '#ff8a80'); return; }
+      if (game.hero.statPoints <= 0) { showInvToast('여유 포인트가 없어', '#ff8a80'); return; }
       trySpendStatPoint(sk);
       showInvToast(`${STAT_DEF[sk].label} +1`, '#ffe066');
     } });
@@ -789,20 +789,20 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
   ctx.textAlign = 'left';
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#ffe066';
-  ctx.fillText(`가방 (${player.inventory.length}/${INVENTORY_SIZE})`, x + 16, startRow);
+  ctx.fillText(`가방 (${game.hero.inventory.length}/${INVENTORY_SIZE})`, x + 16, startRow);
   ctx.textAlign = 'right';
   ctx.font = '10px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.fillText('클릭하면 고정 · 올려두면 미리보기', x + w - 16, startRow);
   ctx.textAlign = 'left';
 
-  if (ui.selectedInvIndex !== null && !player.inventory[ui.selectedInvIndex]) ui.selectedInvIndex = null;
-  if (ui.hoverInvIndex !== null && !player.inventory[ui.hoverInvIndex]) ui.hoverInvIndex = null;
+  if (ui.selectedInvIndex !== null && !game.hero.inventory[ui.selectedInvIndex]) ui.selectedInvIndex = null;
+  if (ui.hoverInvIndex !== null && !game.hero.inventory[ui.hoverInvIndex]) ui.hoverInvIndex = null;
 
   const cols = 2, gapX = 6, gapY = 3, rowH = 24;
   const colW = (w - 32 - gapX) / cols;
   const listTop = startRow + 10;
-  const count = player.inventory.length;
+  const count = game.hero.inventory.length;
   const rows = Math.max(1, Math.ceil(count / cols));
 
   if (count === 0) {
@@ -810,7 +810,7 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
     ctx.fillStyle = 'rgba(255,255,255,0.35)';
     ctx.fillText('가방이 비어 있어', x + 16, listTop + 16);
   }
-  player.inventory.forEach((g, i) => {
+  game.hero.inventory.forEach((g, i) => {
     const cx = x + 16 + (i % cols) * (colW + gapX);
     const cy = listTop + Math.floor(i / cols) * (rowH + gapY);
     const pinned = i === ui.selectedInvIndex;
@@ -860,7 +860,7 @@ function drawBagDetail(ctx, x, top, w, bottom) {
     ctx.fillText('아이템을 누르면 옵션이 여기에 고정돼.', x + 16, top + 8);
     return;
   }
-  const sel = player.inventory[idx];
+  const sel = game.hero.inventory[idx];
   let y = top + 10;
 
   // 방금 감정된 아이템이면 등급색으로 잠깐 번쩍임
@@ -960,12 +960,12 @@ function drawBagDetail(ctx, x, top, w, bottom) {
   }
 
   if (pinned) {
-    const eq = player.equipment;
+    const eq = game.hero.equipment;
     let label = '장착하기';
     if (sel.category === 'weapon' && sel.handedness === 'two' && eq.weaponOff && eq.weaponOff !== 'LOCKED') label = '장착하기 (보조손 장비 해제)';
     if (sel.category === 'shield' && eq.weaponMain && eq.weaponMain !== 'LOCKED' && eq.weaponMain.handedness === 'two') label = '장착하기 (양손무기 해제)';
     addButton(label, () => {
-      const g = player.inventory[ui.selectedInvIndex];
+      const g = game.hero.inventory[ui.selectedInvIndex];
       if (!g) return;
       const name = gearDisplayName(g);
       equipFromInventory(ui.selectedInvIndex);
@@ -993,7 +993,7 @@ function drawUpgradeTab(ctx, x, startRow, w) {
   row += 22;
 
   GEAR_SLOTS.forEach((slot, i) => {
-    const it = player.equipment[slot];
+    const it = game.hero.equipment[slot];
     ctx.textAlign = 'left';
     ctx.font = 'bold 10px sans-serif';
     ctx.fillStyle = '#a8b8a0';
@@ -1010,14 +1010,14 @@ function drawUpgradeTab(ctx, x, startRow, w) {
       const rDef = RARITY_DEF[it.rarity];
       ctx.fillStyle = rDef.color;
       ctx.fillText(fitText(ctx, `[${rDef.label}] ${gearDisplayName(it)}${it.upgradeLevel > 0 ? ` +${it.upgradeLevel}` : ''}`, w - 32 - 80), x + 16, row + 14);
-      const canTry = player.materials >= 1;
+      const canTry = game.hero.materials >= 1;
       const btn = { x: x + w - 16 - 66, y: row - 8, w: 66, h: 28 };
       ui.invButtons.push({ ...btn, fn: () => {
-        const cur = player.equipment[slot];
+        const cur = game.hero.equipment[slot];
         if (!cur || cur === 'LOCKED') return;
-        const before = cur.upgradeLevel || 0, mats = player.materials;
+        const before = cur.upgradeLevel || 0, mats = game.hero.materials;
         tryUpgradeSlot(i);
-        if (player.materials === mats) showInvToast('재료 부족', '#ff8a80');
+        if (game.hero.materials === mats) showInvToast('재료 부족', '#ff8a80');
         else if ((cur.upgradeLevel || 0) > before) showInvToast(`강화 성공! +${cur.upgradeLevel}`, RARITY_DEF[cur.rarity].color);
         else showInvToast('강화 실패…', '#bbb');
       } });
@@ -1046,16 +1046,16 @@ const potCnt = { heal: document.getElementById('pot-heal-cnt'), mana: document.g
 const potEl = { heal: document.getElementById('pot-heal'), mana: document.getElementById('pot-mana') };
 function updatePotionButtonsUI() {
   ['heal', 'mana'].forEach((k) => {
-    potCd[k].style.height = `${Math.max(0, Math.min(1, player.potionCd[k] / POTION_COOLDOWN)) * 100}%`;
-    potCnt[k].textContent = `${player.potions[k]}개`; // 'x2'는 배수처럼 읽혀서 '2개'로 표시
-    potEl[k].style.opacity = player.potions[k] > 0 ? '1' : '0.5';
+    potCd[k].style.height = `${Math.max(0, Math.min(1, game.hero.potionCd[k] / POTION_COOLDOWN)) * 100}%`;
+    potCnt[k].textContent = `${game.hero.potions[k]}개`; // 'x2'는 배수처럼 읽혀서 '2개'로 표시
+    potEl[k].style.opacity = game.hero.potions[k] > 0 ? '1' : '0.5';
   });
 }
 
 const cdSlot1 = document.querySelector('#slot1 .cd');
 const cdSlot2 = document.querySelector('#slot2 .cd');
 function updateSkillButtonsUI() {
-  const s1 = SKILLS[player.slot1], s2 = SKILLS[player.slot2];
+  const s1 = SKILLS[game.hero.slot1], s2 = SKILLS[game.hero.slot2];
   cdSlot1.style.height = `${Math.max(0, Math.min(1, s1.cd() / s1.cdMax())) * 100}%`;
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
 }
@@ -1066,9 +1066,7 @@ function updateSkillButtonsUI() {
 function boot() {
   resize();
   window.addEventListener('resize', resize);
-  player.body = Bodies.circle(0, 0, 17, { frictionAir: 0.15, friction: 0, restitution: 0.1, label: 'player' });
-  Body.setInertia(player.body, Infinity);
-  World.add(world, player.body);
+  game.hero = createHero();
 
   resetGame();
   // 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌

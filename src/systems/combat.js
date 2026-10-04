@@ -6,7 +6,7 @@ import {
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { World, Body, world } from '../core/physics.js';
-import { game, player } from '../state.js';
+import { game } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { recordRun } from '../save.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
@@ -19,39 +19,39 @@ export function getCowHitRadius(c) {
 }
 
 export function getWeaponRange() {
-  const w = player.equipment.weaponMain;
+  const w = game.hero.equipment.weaponMain;
   if (w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined) return WEAPON_RANGE[w.variant];
   return ATTACK_RANGE;
 }
 
 export function getAttackArc() {
-  const off = player.equipment.weaponOff;
+  const off = game.hero.equipment.weaponOff;
   const dualWield = off && off !== 'LOCKED' && off.category === 'weapon';
   return dualWield ? ATTACK_ARC : ATTACK_ARC_SINGLE;
 }
 
 export function registerComboHit() {
-  player.combo++;
-  player.comboTimer = COMBO_WINDOW;
+  game.hero.combo++;
+  game.hero.comboTimer = COMBO_WINDOW;
 }
 
 export function tryPlayerAttack() {
-  if (!player.alive || player.attackCooldown > 0 || player.whirlwindTimer > 0 || player.leapTimer > 0 || player.rushTimer > 0 || player.smashTimer > 0) return;
-  const comboBonus = Math.min(player.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
-  const spdMul = Math.max(1 - Math.min(player.gearAtkSpeed, 0.7) - comboBonus, 0.25);
-  player.currentAttackDuration = ATTACK_DURATION * spdMul;
-  player.attackTimer = player.currentAttackDuration;
-  player.attackCooldown = ATTACK_COOLDOWN * spdMul;
+  if (!game.hero.alive || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
+  const comboBonus = Math.min(game.hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
+  const spdMul = Math.max(1 - Math.min(game.hero.gearAtkSpeed, 0.7) - comboBonus, 0.25);
+  game.hero.currentAttackDuration = ATTACK_DURATION * spdMul;
+  game.hero.attackTimer = game.hero.currentAttackDuration;
+  game.hero.attackCooldown = ATTACK_COOLDOWN * spdMul;
 
   let landed = false;
   const atkRange = getWeaponRange();
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     // 특정 지점(오프셋) 대신 몸 중심 + 몸집 반경으로 판정 - 접근 방향과 무관하게 몸 전체가 피격 범위가 됨
-    const dx = c.x - player.x, dy = c.y - player.y;
+    const dx = c.x - game.hero.x, dy = c.y - game.hero.y;
     const dist = Math.hypot(dx, dy);
     if (dist > atkRange + getCowHitRadius(c)) return;
-    let diff = Math.abs(Math.atan2(dy, dx) - player.facing);
+    let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
     if (diff < getAttackArc() / 2) { damageCow(c); landed = true; }
   });
@@ -74,28 +74,28 @@ export function killCow(c) {
 
 export function spawnColdNova(x, y) {
   spawnShockwave(x, y, 90, '#9fd8ff');
-  if (player.alive && Math.hypot(player.x - x, player.y - y) <= 90) {
-    player.slowTimer = 2.5;
+  if (game.hero.alive && Math.hypot(game.hero.x - x, game.hero.y - y) <= 90) {
+    game.hero.slowTimer = 2.5;
   }
 }
 
 export function bossSlam(c) {
   spawnShockwave(c.x, c.y, BOSS_SLAM_RADIUS, '#b57bd6');
   game.shake = Math.min(game.shake + 6, 12);
-  if (player.alive && Math.hypot(player.x - c.x, player.y - c.y) <= BOSS_SLAM_RADIUS) {
+  if (game.hero.alive && Math.hypot(game.hero.x - c.x, game.hero.y - c.y) <= BOSS_SLAM_RADIUS) {
     hitPlayer(c.x, c.y, 6);
   }
 }
 
 export function damageCow(c) {
   c.flash = 0.12;
-  applyKnockback(c.body, player.x, player.y, 7);
+  applyKnockback(c.body, game.hero.x, game.hero.y, 7);
   c.knockback = 0.18;
   game.shake = Math.min(game.shake + 4, 10);
   game.hitstop = 4;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
-  const dmg = BASE_DAMAGE + player.attackBonus + player.gearAtkPower;
+  const dmg = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   if (c.hp <= 0 && c.state !== 'dead') {
@@ -105,38 +105,38 @@ export function damageCow(c) {
 }
 
 export function hitPlayer(fromX, fromY, dmg = 3) {
-  if (!player.alive || player.invuln > 0) return;
+  if (!game.hero.alive || game.hero.invuln > 0) return;
 
-  const totalEvasion = Math.min(BASE_EVASION + player.gearEvasion, 0.75);
+  const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
   if (Math.random() < totalEvasion) {
-    spawnDamageNumber(player.x, player.y - 34, 'MISS', '#8fe8ff');
-    player.invuln = 0.25;
+    spawnDamageNumber(game.hero.x, game.hero.y - 34, 'MISS', '#8fe8ff');
+    game.hero.invuln = 0.25;
     return;
   }
 
-  const totalBlock = Math.min(BASE_BLOCK + player.defenseChance + player.gearDefense, 0.85);
+  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
   const blocked = Math.random() < totalBlock;
   if (!blocked) {
-    player.hp -= dmg;
-    spawnDamageNumber(player.x, player.y - 34, `-${dmg}`, '#ff5b52');
+    game.hero.hp -= dmg;
+    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${dmg}`, '#ff5b52');
   } else {
-    spawnDamageNumber(player.x, player.y - 34, 'BLOCK', '#8fd0ff');
+    spawnDamageNumber(game.hero.x, game.hero.y - 34, 'BLOCK', '#8fd0ff');
   }
 
-  player.invuln = 0.55; // 기존 0.8 → 0.55, 여러 마리에게 둘러싸였을 때 실제로 더 아프게
-  player.flash = 0.14;
-  applyKnockback(player.body, fromX, fromY, blocked ? 3 : 6);
-  player.knockback = blocked ? 0.1 : 0.22;
+  game.hero.invuln = 0.55; // 기존 0.8 → 0.55, 여러 마리에게 둘러싸였을 때 실제로 더 아프게
+  game.hero.flash = 0.14;
+  applyKnockback(game.hero.body, fromX, fromY, blocked ? 3 : 6);
+  game.hero.knockback = blocked ? 0.1 : 0.22;
   game.shake = Math.min(game.shake + (blocked ? 3 : 6), 12);
   game.hitstop = blocked ? 0 : 5;
-  spawnHitParticles(player.x, player.y, PALETTE.eye, blocked ? 4 : 8);
+  spawnHitParticles(game.hero.x, game.hero.y, PALETTE.eye, blocked ? 4 : 8);
 
-  if (player.hp <= 0) {
-    player.hp = 0;
-    player.alive = false;
+  if (game.hero.hp <= 0) {
+    game.hero.hp = 0;
+    game.hero.alive = false;
     game.gameState = 'gameover';
     recordRun('gameover');
-    Body.setVelocity(player.body, { x: 0, y: 0 });
+    Body.setVelocity(game.hero.body, { x: 0, y: 0 });
   }
 }
 
@@ -146,10 +146,10 @@ export function updateHazards(dt) {
     h.life -= dt;
     h.tickTimer -= dt;
     if (h.life <= 0) { game.hazards.splice(i, 1); continue; }
-    if (player.alive && h.tickTimer <= 0 && Math.hypot(player.x - h.x, player.y - h.y) <= h.r) {
+    if (game.hero.alive && h.tickTimer <= 0 && Math.hypot(game.hero.x - h.x, game.hero.y - h.y) <= h.r) {
       hitPlayer(h.x, h.y);
       h.tickTimer = 0.6;
-      if (Math.random() < 0.4) spawnHitParticles(player.x, player.y - 10, '#ff7a1a', 3);
+      if (Math.random() < 0.4) spawnHitParticles(game.hero.x, game.hero.y - 10, '#ff7a1a', 3);
     }
   }
 }
@@ -157,9 +157,9 @@ export function updateHazards(dt) {
 export function skillDamageCow(c, bonusDamage, knockForce, color) {
   if (!c || c.state === 'dead') return;
   c.flash = 0.13;
-  applyKnockback(c.body, player.x, player.y, knockForce);
+  applyKnockback(c.body, game.hero.x, game.hero.y, knockForce);
   c.knockback = Math.max(c.knockback || 0, 0.22);
-  const dmg = Math.max(1, bonusDamage + player.attackBonus + player.gearAtkPower);
+  const dmg = Math.max(1, bonusDamage + game.hero.attackBonus + game.hero.gearAtkPower);
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, color || '#fff');
   spawnHitParticles(c.x, c.y, color || PALETTE.hide, 8);
   c.hp -= dmg;

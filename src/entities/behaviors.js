@@ -14,7 +14,7 @@ import {
 } from '../data/balance.js';
 import { distToSegment, getHitPoint } from '../util.js';
 import { Body } from '../core/physics.js';
-import { game, player } from '../state.js';
+import { game } from '../state.js';
 import { recordRun } from '../save.js';
 import { killCow, spawnColdNova, bossSlam, hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnFireHazard, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
@@ -124,7 +124,7 @@ export const behaviors = {
     // 근접하지 않고 플레이어가 가까이 오면 뒷걸음질쳐서 거리를 유지 (후방 지원형)
     steer(m, dxP, dyP, distP, auraMult) {
       const kiteDistance = 130;
-      if (player.alive && distP < kiteDistance && distP > 0.001) {
+      if (game.hero.alive && distP < kiteDistance && distP > 0.001) {
         m.state = 'walk';
         Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
         m.facing = dxP > 0 ? -1 : 1; // 물러나면서도 플레이어 쪽을 바라봄
@@ -160,7 +160,7 @@ export const behaviors = {
           const boltEndY = m.y + Math.sin(aimAngle) * ZAP_BEAM_LENGTH;
           spawnLightningBolt(m.x, m.y, boltEndX, boltEndY);
           spawnHitParticles(m.x, m.y, '#fff066', 5);
-          if (player.alive && distToSegment(player.x, player.y, m.x, m.y, boltEndX, boltEndY) <= ZAP_BEAM_WIDTH) {
+          if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, m.x, m.y, boltEndX, boltEndY) <= ZAP_BEAM_WIDTH) {
             hitPlayer(m.x, m.y, 6);
           }
           m.zapCooldown = ZAP_COOLDOWN;
@@ -168,9 +168,9 @@ export const behaviors = {
         }
         return true;
       }
-      if (m.zapCooldown <= 0 && player.alive && Math.hypot(player.x - m.x, player.y - m.y) <= ZAP_RANGE) {
-        m.zapTargetX = player.x;
-        m.zapTargetY = player.y;
+      if (m.zapCooldown <= 0 && game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= ZAP_RANGE) {
+        m.zapTargetX = game.hero.x;
+        m.zapTargetY = game.hero.y;
         m.setState('zapping', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
         return true;
@@ -179,7 +179,7 @@ export const behaviors = {
     },
     steer(m, dxP, dyP, distP, auraMult) {
       // 사정거리 밖이면 들어올 때까지 접근함 (너무 멀면 영영 못 쏘니까)
-      if (player.alive && distP > ZAP_RANGE && distP < m.aggroRange) {
+      if (game.hero.alive && distP > ZAP_RANGE && distP < m.aggroRange) {
         m.state = 'walk';
         Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
         if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
@@ -187,7 +187,7 @@ export const behaviors = {
       }
       // 근접하지 않고 플레이어가 가까이 오면 뒷걸음질쳐서 거리를 유지 (원거리형)
       const kiteDistance = 170;
-      if (player.alive && distP < kiteDistance && distP > 0.001) {
+      if (game.hero.alive && distP < kiteDistance && distP > 0.001) {
         m.state = 'walk';
         Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
         m.facing = dxP > 0 ? -1 : 1; // 물러나면서도 플레이어 쪽을 바라봄
@@ -225,7 +225,7 @@ export const behaviors = {
           killCow(m);
         }
         return true; // 터지기 전까지는 매 프레임 여기서 끝 - 아래 일반 AI가 상태를 덮어쓰지 않게 함
-      } else if (player.alive && Math.hypot(player.x - m.x, player.y - m.y) <= EXPLODER_FUSE_RANGE) {
+      } else if (game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= EXPLODER_FUSE_RANGE) {
         m.setState('fusing', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
         return true;
@@ -237,7 +237,7 @@ export const behaviors = {
       spawnHitParticles(m.x, m.y, '#ff8a3d', 14);
       game.shake = Math.min(game.shake + 7, 12);
       game.impactFlash = Math.max(game.impactFlash, 0.10);
-      if (player.alive && Math.hypot(player.x - m.x, player.y - m.y) <= EXPLODER_BLAST_RADIUS) {
+      if (game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= EXPLODER_BLAST_RADIUS) {
         hitPlayer(m.x, m.y, 6);
       }
       return false;
@@ -283,7 +283,7 @@ export const behaviors = {
         Body.setVelocity(m.body, { x: 0, y: 0 });
         m.x = nx; m.y = ny;
 
-        if (!m.chargeHitDone && player.alive && Math.hypot(player.x - nx, player.y - ny) < CHARGE_WIDTH) {
+        if (!m.chargeHitDone && game.hero.alive && Math.hypot(game.hero.x - nx, game.hero.y - ny) < CHARGE_WIDTH) {
           hitPlayer(nx, ny, 6);
           m.chargeHitDone = true;
         }
@@ -303,10 +303,10 @@ export const behaviors = {
         return true;
       }
 
-      if (m.chargeCooldownTimer <= 0 && player.alive) {
-        const dToPlayer = Math.hypot(player.x - m.x, player.y - m.y);
+      if (m.chargeCooldownTimer <= 0 && game.hero.alive) {
+        const dToPlayer = Math.hypot(game.hero.x - m.x, game.hero.y - m.y);
         if (dToPlayer <= CHARGE_RANGE && dToPlayer > 40) {
-          const ang = Math.atan2(player.y - m.y, player.x - m.x);
+          const ang = Math.atan2(game.hero.y - m.y, game.hero.x - m.x);
           m.chargeDir = { x: Math.cos(ang), y: Math.sin(ang) };
           m.chargeTarget = clampToPen(m.x + m.chargeDir.x * CHARGE_DISTANCE, m.y + m.chargeDir.y * CHARGE_DISTANCE, m.r + 6);
           m.facing = m.chargeDir.x >= 0 ? 1 : -1;

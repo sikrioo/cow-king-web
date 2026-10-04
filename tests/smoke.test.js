@@ -110,7 +110,7 @@ async function runModularZoo(seed) {
     const state = await import('../src/state.js');
     const { Monster } = await import('../src/entities/monster.js');
     const { killCow } = await import('../src/systems/combat.js');
-    return runZoo(env, seed, () => ({ game: state.game, ui: state.ui, player: state.player }),
+    return runZoo(env, seed, () => ({ game: state.game, ui: state.ui, player: state.game.hero }),
       (k) => { state.game.cows.push(new Monster(0.4, k)); },
       () => { state.game.cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); });
   } finally {
@@ -124,7 +124,7 @@ async function runModular(seed) {
     vi.resetModules();
     await import('../src/main.js');
     const state = await import('../src/state.js');
-    return runScenario(env, seed, () => ({ game: state.game, ui: state.ui, player: state.player }));
+    return runScenario(env, seed, () => ({ game: state.game, ui: state.ui, player: state.game.hero }));
   } finally {
     env.restore();
   }

@@ -2,7 +2,7 @@
 // 종류별 수치는 data/monsters.js, 특수 행동은 entities/behaviors.js 훅 (this.behavior)
 import { MONSTERS } from '../data/monsters.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
-import { player } from '../state.js';
+import { game } from '../state.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
 import { randomPointInPen } from '../world/arena.js';
@@ -100,9 +100,9 @@ export class Monster {
     this.stateElapsed += dt;
     const auraMult = getAuraSpeedMult(this);
 
-    const dxP = player.x - this.x, dyP = player.y - this.y;
+    const dxP = game.hero.x - this.x, dyP = game.hero.y - this.y;
     const distP = Math.hypot(dxP, dyP);
-    const playerNear = player.alive && distP < this.aggroRange;
+    const playerNear = game.hero.alive && distP < this.aggroRange;
 
     // 종류별 이동 규칙 (번개: 사거리 밖이면 접근 + 가까우면 후퇴, 주술사: 가까우면 후퇴)
     if (b && b.steer && b.steer(this, dxP, dyP, distP, auraMult)) return;

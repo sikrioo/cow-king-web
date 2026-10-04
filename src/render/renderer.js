@@ -1,6 +1,6 @@
 // 한 프레임 그리기 순서 (여기 순서가 곧 화면 겹침 순서)
 import { canvas, ctx } from '../core/context.js';
-import { game, ui, player } from '../state.js';
+import { game, ui } from '../state.js';
 import { drawPen } from './arena.js';
 import { drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
 import { drawPlayer } from './heroSprites.js';
@@ -35,7 +35,7 @@ export function render(t, hooks) {
   drawPen();
   drawHazards(ctx);
   const drawables = game.cows.map((c) => ({ y: c.y, fn: () => drawMonster(c, ctx, t) }));
-  drawables.push({ y: player.y, fn: () => drawPlayer(ctx, t) });
+  drawables.push({ y: game.hero.y, fn: () => drawPlayer(ctx, t) });
   drawables.sort((a, b) => a.y - b.y).forEach((d) => d.fn());
   drawItems(ctx, t);
   drawParticles(ctx);

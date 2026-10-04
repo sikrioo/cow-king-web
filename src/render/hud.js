@@ -5,40 +5,40 @@ import {
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
 import { canvas, ctx } from '../core/context.js';
-import { game, player } from '../state.js';
+import { game } from '../state.js';
 
 export function drawComboCounter(ctx) {
-  if (player.combo < 2 || !player.alive) return;
-  const comboColor = player.combo >= 20 ? '#ff3b30' : player.combo >= 10 ? '#ff8c1a' : player.combo >= 5 ? '#ffe066' : '#dfe9d8';
-  const pulse = 1 + Math.min(player.comboTimer / COMBO_WINDOW, 1) * 0.06 * Math.sin(performance.now() / 60);
-  const size = Math.min(16 + player.combo * 0.6, 34) * pulse;
+  if (game.hero.combo < 2 || !game.hero.alive) return;
+  const comboColor = game.hero.combo >= 20 ? '#ff3b30' : game.hero.combo >= 10 ? '#ff8c1a' : game.hero.combo >= 5 ? '#ffe066' : '#dfe9d8';
+  const pulse = 1 + Math.min(game.hero.comboTimer / COMBO_WINDOW, 1) * 0.06 * Math.sin(performance.now() / 60);
+  const size = Math.min(16 + game.hero.combo * 0.6, 34) * pulse;
 
   ctx.save();
-  ctx.translate(player.x, player.y - player.r - 34);
+  ctx.translate(game.hero.x, game.hero.y - game.hero.r - 34);
   ctx.textAlign = 'center';
   ctx.font = `bold ${size}px sans-serif`;
   ctx.lineWidth = 3;
   ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-  ctx.strokeText(`${player.combo} COMBO`, 0, 0);
+  ctx.strokeText(`${game.hero.combo} COMBO`, 0, 0);
   ctx.fillStyle = comboColor;
-  ctx.fillText(`${player.combo} COMBO`, 0, 0);
+  ctx.fillText(`${game.hero.combo} COMBO`, 0, 0);
 
   // 콤보 유지 시간 게이지
   const gw = 46;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(-gw / 2, 8, gw, 3);
   ctx.fillStyle = comboColor;
-  ctx.fillRect(-gw / 2, 8, gw * Math.max(0, player.comboTimer / COMBO_WINDOW), 3);
+  ctx.fillRect(-gw / 2, 8, gw * Math.max(0, game.hero.comboTimer / COMBO_WINDOW), 3);
   ctx.restore();
   ctx.textAlign = 'left';
 }
 
 export function drawBuffIcons(ctx) {
   const buffs = [];
-  if (player.vitalityTimer > 0) buffs.push({ color: ITEM_STYLE.vitality.color, frac: player.vitalityTimer / VITALITY_DURATION });
-  if (player.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: player.speedBuffTimer / SPEED_BUFF_DURATION });
-  if (player.attackBuffTimer > 0) buffs.push({ color: ITEM_STYLE.attack.color, frac: player.attackBuffTimer / ATTACK_BUFF_DURATION });
-  if (player.defenseBuffTimer > 0) buffs.push({ color: ITEM_STYLE.defense.color, frac: player.defenseBuffTimer / DEFENSE_BUFF_DURATION });
+  if (game.hero.vitalityTimer > 0) buffs.push({ color: ITEM_STYLE.vitality.color, frac: game.hero.vitalityTimer / VITALITY_DURATION });
+  if (game.hero.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: game.hero.speedBuffTimer / SPEED_BUFF_DURATION });
+  if (game.hero.attackBuffTimer > 0) buffs.push({ color: ITEM_STYLE.attack.color, frac: game.hero.attackBuffTimer / ATTACK_BUFF_DURATION });
+  if (game.hero.defenseBuffTimer > 0) buffs.push({ color: ITEM_STYLE.defense.color, frac: game.hero.defenseBuffTimer / DEFENSE_BUFF_DURATION });
   if (!buffs.length) return;
   const size = 16, gap = 4;
   const startX = canvas.width / 2 - (buffs.length * (size + gap)) / 2;
@@ -56,10 +56,10 @@ export function drawBuffIcons(ctx) {
 }
 
 export function drawStatReadout(ctx, y) {
-  const totalAtk = BASE_DAMAGE + player.attackBonus + player.gearAtkPower;
-  const totalBlock = Math.min(BASE_BLOCK + player.defenseChance + player.gearDefense, 0.85);
-  const totalEvasion = Math.min(BASE_EVASION + player.gearEvasion, 0.75);
-  const totalSpeedPct = Math.round((player.gearSpeedMult * player.speedMult - 1) * 100);
+  const totalAtk = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
+  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
+  const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
+  const totalSpeedPct = Math.round((game.hero.gearSpeedMult * game.hero.speedMult - 1) * 100);
 
   const stats = [
     { label: '공격력', value: `${totalAtk}`, color: '#ff8a3d' },
@@ -87,8 +87,8 @@ export function drawHUD() {
   const hpX = orbR + 14, hpY = orbR + 14;
   const manaX = canvas.width - orbR - 14, manaY = orbR + 14;
 
-  drawResourceOrb(ctx, hpX, hpY, orbR, player.hp / (player.maxHp + player.bonusMaxHp + player.gearMaxHp), '#ff8a75', '#7a1d12');
-  drawResourceOrb(ctx, manaX, manaY, orbR, player.mana / player.maxMana, '#8fd0ff', '#173a63');
+  drawResourceOrb(ctx, hpX, hpY, orbR, game.hero.hp / (game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp), '#ff8a75', '#7a1d12');
+  drawResourceOrb(ctx, manaX, manaY, orbR, game.hero.mana / game.hero.maxMana, '#8fd0ff', '#173a63');
 
   // 레벨 뱃지 (체력 오브 우하단)
   const lvR = 15;
@@ -102,16 +102,16 @@ export function drawHUD() {
   ctx.font = 'bold 11px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`${player.level}`, lvX, lvY + 1);
+  ctx.fillText(`${game.hero.level}`, lvX, lvY + 1);
   ctx.textBaseline = 'alphabetic';
 
   const barW = 180, barH = 12;
   const barX = canvas.width / 2 - barW / 2, barY = 16;
-  drawStaminaBar(ctx, barX, barY, barW, barH, player.stamina / player.maxStamina);
+  drawStaminaBar(ctx, barX, barY, barW, barH, game.hero.stamina / game.hero.maxStamina);
 
   // 경험치 바
   const expY = barY + barH + 4;
-  const expFrac = player.level >= MAX_LEVEL ? 1 : player.exp / player.expToNext;
+  const expFrac = game.hero.level >= MAX_LEVEL ? 1 : game.hero.exp / game.hero.expToNext;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(barX, expY, barW, 5);
   ctx.fillStyle = '#ffe066';
@@ -128,11 +128,11 @@ export function drawHUD() {
 
   drawStatReadout(ctx, expY + 50);
 
-  if (player.statPoints > 0) {
+  if (game.hero.statPoints > 0) {
     ctx.fillStyle = `rgba(255,224,102,${0.6 + Math.sin(performance.now() / 200) * 0.4})`;
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`스탯 포인트 ${player.statPoints}개 보유! (I 눌러서 분배)`, canvas.width / 2, expY + 70);
+    ctx.fillText(`스탯 포인트 ${game.hero.statPoints}개 보유! (I 눌러서 분배)`, canvas.width / 2, expY + 70);
     ctx.textAlign = 'left';
   }
 
