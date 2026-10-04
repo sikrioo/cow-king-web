@@ -1,7 +1,7 @@
 // 물약: 보관 물약 마시기(생명/마나), 바닥 소모품 효과(applyItem)
 import {
   VITALITY_DURATION, SPEED_BUFF_DURATION, VITALITY_BONUS_HP, ATTACK_BUFF_BONUS, ATTACK_BUFF_DURATION,
-  DEFENSE_BUFF_DURATION, LEGACY_ROUND, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT
+  DEFENSE_BUFF_DURATION, POTION_COOLDOWN, POTION_HEAL_RATIO, POTION_MANA_AMOUNT
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
 import { game } from '../state.js';
@@ -18,7 +18,7 @@ export function tryDrinkPotion(kind) {
   if (kind === 'heal') {
     const maxHp = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
     if (game.hero.hp >= maxHp) { floatText(game.hero.x, game.hero.y - 40, '체력이 가득 차 있어', '#999'); return; }
-    const amount = Math.max(1, Math.ceil(maxHp * POTION_HEAL_RATIO / LEGACY_ROUND) * LEGACY_ROUND);
+    const amount = Math.max(1, Math.ceil(maxHp * POTION_HEAL_RATIO));
     game.hero.hp = Math.min(maxHp, game.hero.hp + amount);
     floatText(game.hero.x, game.hero.y - 40, `+${amount} HP`, color);
   } else {

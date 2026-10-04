@@ -1,7 +1,7 @@
 // 장비: 굴리기(등급/옵션), 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
-  MAX_MANA, LEVEL_STAT_PER_POINT, LEGACY_ROUND, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
+  MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
 } from '../data/balance.js';
 import {
   GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
@@ -73,7 +73,8 @@ export function rollGearItem(opts = {}) {
   const stats = {};
   chosen.forEach((k) => {
     const d = STAT_DEF[k];
-    stats[k] = (d.min + Math.random() * (d.max - d.min)) * rDef.mult;
+    const v = (d.min + Math.random() * (d.max - d.min)) * rDef.mult;
+    stats[k] = d.flat ? Math.round(v) : v; // 고정 수치 옵션(공격력/체력/마나)은 정수
   });
   let variant = opts.variant || null;
   if (!variant) {
@@ -192,7 +193,7 @@ export function tryUpgradeSlot(slotIndex) {
   if (Math.random() < UPGRADE_SUCCESS_CHANCE) {
     const statKeys = Object.keys(it.stats);
     const k = statKeys[Math.floor(Math.random() * statKeys.length)];
-    it.stats[k] *= 1.25;
+    it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * 1.25) : it.stats[k] * 1.25;
     it.upgradeLevel = (it.upgradeLevel || 0) + 1;
     recalcGearStats();
     floatText(game.hero.x, game.hero.y - 40, `${GEAR_SLOT_LABEL[slot]} 업그레이드 성공 +${it.upgradeLevel}`, RARITY_DEF[it.rarity].color);
@@ -226,11 +227,11 @@ export function recalcGearStats() {
 
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;
-  game.hero.gearAtkPower = Math.round(atkPower / LEGACY_ROUND) * LEGACY_ROUND;
+  game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
   game.hero.gearSpeedMult = 1 + moveSpeed;
-  game.hero.gearMaxHp = Math.round(health / LEGACY_ROUND) * LEGACY_ROUND;
+  game.hero.gearMaxHp = Math.round(health);
   game.hero.gearMaxMana = Math.round(mana);
 
   const newEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;

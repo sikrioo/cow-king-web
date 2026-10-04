@@ -96,8 +96,6 @@ export const LEVEL_STAT_PER_POINT = { atkPower: 2, defense: 0.01, evasion: 0.01,
 export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana' };
 
 // --- 아이템 (가방/감정/강화/드랍)
-// 1단계 임시: 공격력/체력 합계와 물약 회복량을 레거시와 같은 단위(10)로 반올림 → 2단계에서 1 단위로
-export const LEGACY_ROUND = 10;
 export const INVENTORY_SIZE = 20;
 export const IDENTIFY_DURATION = 0.8;
 export const UPGRADE_SUCCESS_CHANCE = 0.65;

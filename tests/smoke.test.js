@@ -1,14 +1,13 @@
-// 스모크 + 동등성: 레거시(legacy/cow_pen.html)와 새 모듈 코드를 같은 시드·같은 입력으로 돌려서
-// 300프레임마다 찍은 상태 지문이 처음부터 끝까지 같아야 한다. (예외/NaN이 없어야 하는 것은 기본 - 그리기에 NaN이 들어가면 ctx 스텁이 throw)
-// 그리기 호출 해시 비교는 v1-modular 이후 의도적인 화면 변경(HUD/도움말)을 시작하면서 뺐다 - 게임플레이(상태)는 계속 레거시와 같아야 함
-// 입력 시나리오는 legacy/tools/smoke.cjs와 동일: 타이틀 → 시작 → 약 150초 무작위 입력(이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사)
+// 스모크 + 회귀: 같은 시드·같은 입력으로 게임을 돌려 300프레임마다 찍은 상태 지문을 스냅샷(__snapshots__/)과 비교한다.
+// - 예외/NaN이 없어야 함 (그리기에 NaN이 들어가면 ctx 스텁이 throw)
+// - 체력은 항상 정수 (×10 정수화 이후 규칙)
+// 이력: v1-modular까지는 레거시(legacy/cow_pen.html)와 같은 입력으로 나란히 돌려 상태+그리기가 똑같은지 비교했고,
+//      ×10 정수화 1단계까지 레거시와 상태가 같음을 확인한 뒤(커밋 9ec9ee6) 2단계(1 단위 정수)부터 이 스냅샷이 기준.
+// 동작을 **의도적으로** 바꿨을 때만 사용자 확인 후 `npx vitest run -u`로 스냅샷 갱신. 의도하지 않은 불일치는 코드를 되돌린다.
+// 시나리오: 일반(타이틀 → 시작 → 약 150초 무작위 입력: 이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사), 몬스터 11종, 모바일 버튼/조이스틱
 import { describe, it, expect, vi } from 'vitest';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { installBrowserEnv, runLegacyHtml, mulberry32 } from './helpers/browserEnv.js';
-import { LEGACY_HP_SCALE } from './golden.overrides.js';
+import { installBrowserEnv, mulberry32 } from './helpers/browserEnv.js';
 
-const LEGACY_HTML = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../legacy/cow_pen.html');
 
 const FRAMES = 9000;
 const CHECK_EVERY = 300;
@@ -16,14 +15,14 @@ const SEEDS = [1234, 777, 42];
 
 const r4 = (v) => (typeof v === 'number' ? +v.toFixed(4) : v);
 // view = { game, ui, player } → 비교용 지문 (레거시/새 코드 공통)
-// hpScale: 레거시는 체력/피해 단위가 1/10이라 ×10 해서 비교
-function fingerprint({ game, ui, player, hpScale = 1 }) {
+// view = { game, ui, player } → 비교용 지문
+function fingerprint({ game, ui, player }) {
   return {
     gameState: game.gameState, paused: game.paused, wave: game.wave, waveTransition: r4(game.waveTransition), kills: game.kills,
-    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0) * hpScale), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
+    cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
     items: game.items.length, particles: game.particles.length, floatTexts: game.floatTexts.length,
     hazards: game.hazards.length, bolts: game.lightningBolts.length, shockwaves: game.shockwaves.length, shake: r4(game.shake),
-    level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp * hpScale), mana: r4(player.mana), stamina: r4(player.stamina),
+    level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp), mana: r4(player.mana), stamina: r4(player.stamina),
     x: r4(player.x), y: r4(player.y), alive: player.alive, inventory: player.inventory.length, materials: player.materials,
     potions: JSON.stringify(player.potions), slots: player.slot1 + '/' + player.slot2,
     showInventory: ui.showInventory, invPanelTab: ui.invPanelTab, selectedInvIndex: ui.selectedInvIndex, hoverInvIndex: ui.hoverInvIndex,
@@ -124,20 +123,6 @@ function runMobile(env, seed, view) {
   return prints;
 }
 
-function runLegacy(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });';
-  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
-  return runScenario(env, seed, () => env.sandbox.__view());
-}
-
-function runLegacyZoo(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });'
-    + 'globalThis.__spawn = (k) => { cows.push(new Cow(0.4, k)); };'
-    + "globalThis.__killAll = () => { cows.forEach((c) => { if (c.state !== 'dead') killCow(c); }); };";
-  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
-  return runZoo(env, seed, () => env.sandbox.__view(), (k) => env.sandbox.__spawn(k), () => env.sandbox.__killAll());
-}
-
 async function runModularZoo(seed) {
   const env = installBrowserEnv({ seed });
   try {
@@ -152,12 +137,6 @@ async function runModularZoo(seed) {
   } finally {
     env.restore();
   }
-}
-
-function runLegacyMobile(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player, hpScale: ' + LEGACY_HP_SCALE + ' });';
-  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
-  return runMobile(env, seed, () => env.sandbox.__view());
 }
 
 async function runModularMobile(seed) {
@@ -184,37 +163,36 @@ async function runModular(seed) {
   }
 }
 
-describe('smoke: 레거시와 동일하게 동작', () => {
+const allHpInteger = (prints) => prints.every((p) => Number.isInteger(p.hp) && Number.isInteger(p.cowHp));
+
+describe('smoke: 일반 플레이', () => {
   for (const seed of SEEDS) {
-    it(`seed ${seed}: ${FRAMES}프레임 동안 예외 없음 + 상태 지문이 레거시와 같음`, async () => {
-      const legacy = runLegacy(seed);
-      const modular = await runModular(seed);
-      expect(modular.length).toBe(legacy.length);
-      for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]); // 처음 어긋난 지점에서 멈춤
+    it(`seed ${seed}: ${FRAMES}프레임 동안 예외 없음 + 스냅샷과 같음`, async () => {
+      const prints = await runModular(seed);
+      expect(allHpInteger(prints), '체력은 정수').toBe(true);
+      expect(prints).toMatchSnapshot();
     }, 120000);
   }
 });
 
-describe('smoke: 몬스터 11종 특수 행동/처치가 레거시와 동일', () => {
+describe('smoke: 몬스터 11종 특수 행동/처치', () => {
   for (const seed of [5, 99]) {
     it(`zoo seed ${seed}`, async () => {
-      const legacy = runLegacyZoo(seed);
-      const modular = await runModularZoo(seed);
-      expect(modular.length).toBe(legacy.length);
-      for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]);
-      expect(legacy[legacy.length - 1].gameState).toBe('victory'); // 보스 처치까지 실제로 경유했는지
+      const prints = await runModularZoo(seed);
+      expect(prints[prints.length - 1].gameState).toBe('victory'); // 보스 처치까지 실제로 경유했는지
+      expect(allHpInteger(prints), '체력은 정수').toBe(true);
+      expect(prints).toMatchSnapshot();
     }, 120000);
   }
 });
 
-describe('smoke: 모바일 버튼/조이스틱 조작이 레거시와 동일', () => {
+describe('smoke: 모바일 버튼/조이스틱 조작', () => {
   for (const seed of [3, 2024]) {
     it(`mobile seed ${seed}`, async () => {
-      const legacy = runLegacyMobile(seed);
-      const modular = await runModularMobile(seed);
-      expect(modular.length).toBe(legacy.length);
-      for (let i = 0; i < legacy.length; i++) expect(modular[i]).toEqual(legacy[i]);
-      expect(legacy.some((p) => p.kills > 0), '전투가 실제로 일어났는지').toBe(true);
+      const prints = await runModularMobile(seed);
+      expect(prints.some((p) => p.kills > 0), '전투가 실제로 일어났는지').toBe(true);
+      expect(allHpInteger(prints), '체력은 정수').toBe(true);
+      expect(prints).toMatchSnapshot();
     }, 120000);
   }
 });
