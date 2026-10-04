@@ -1,14 +1,11 @@
 // 스모크 + 동등성: 레거시(legacy/cow_pen.html)와 새 모듈 코드를 같은 시드·같은 입력으로 돌려서
-// 300프레임마다 찍은 상태 지문이 처음부터 끝까지 같아야 한다. (예외/NaN이 없어야 하는 것은 기본)
+// 300프레임마다 찍은 상태 지문(+50프레임마다 샘플링한 그리기 호출 해시)이 처음부터 끝까지 같아야 한다. (예외/NaN이 없어야 하는 것은 기본)
 // 입력 시나리오는 legacy/tools/smoke.cjs와 동일: 타이틀 → 시작 → 약 150초 무작위 입력(이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사)
 import { describe, it, expect, vi } from 'vitest';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { installBrowserEnv, mulberry32 } from './helpers/browserEnv.js';
+import { installBrowserEnv, runLegacyHtml, mulberry32 } from './helpers/browserEnv.js';
 
-const require = createRequire(import.meta.url);
-const { createSandbox } = require('../legacy/tools/_sandbox.cjs');
 const LEGACY_HTML = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../legacy/cow_pen.html');
 
 const FRAMES = 9000;
@@ -61,14 +58,14 @@ function runScenario(env, seed, view) {
     }
     if (i === 4400 || i === 7300) { env.key('i'); invOpen = false; }
     env.frame(1);
-    if ((i + 1) % CHECK_EVERY === 0) prints.push({ frame: i + 1, ...fingerprint(view()) });
+    if ((i + 1) % CHECK_EVERY === 0) prints.push({ frame: i + 1, draw: env.drawHash, ...fingerprint(view()) });
   }
   return prints;
 }
 
 function runLegacy(seed) {
   const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
-  const env = createSandbox({ htmlPath: LEGACY_HTML, footer, seed });
+  const env = runLegacyHtml({ htmlPath: LEGACY_HTML, footer, seed });
   return runScenario(env, seed, () => env.sandbox.__view());
 }
 
