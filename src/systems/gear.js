@@ -80,7 +80,13 @@ export function rollGearItem(opts = {}) {
     if (category === 'weapon') variant = WEAPON_VARIANTS[Math.floor(Math.random() * WEAPON_VARIANTS.length)];
     else if (category === 'accessory') variant = ACCESSORY_VARIANTS[Math.floor(Math.random() * ACCESSORY_VARIANTS.length)];
   }
-  return { category, handedness, rarity, stats, upgradeLevel: 0, identified: !!opts.identified, variant };
+  return { category, handedness, rarity, stats, upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
+}
+
+// 아이템 고유 번호 - 장비는 메서드 없는 순수 데이터(JSON 직렬화 가능) + uid (트레이드/저장 대비)
+export function nextItemUid() {
+  game.itemSeq += 1;
+  return game.itemSeq;
 }
 
 export function equipItem(gear, opts = {}) {

@@ -21,7 +21,8 @@ export const game = {
   demoTipTimer: 0,
   runRecorded: false,
   releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 },
-  hero: null // 주인공 - boot()에서 createHero()로 생성 (entities/hero.js)
+  hero: null, // 주인공 - boot()에서 createHero()로 생성 (entities/hero.js)
+  itemSeq: 0 // 아이템 uid 발급 카운터 (새 게임에서도 이어서 증가 - 한 실행 안에서 uid가 겹치지 않게)
 };
 
 // 화면/메뉴 상태 (장비창 탭·선택·클릭 영역, 타이틀 연출, 감정 진행)
