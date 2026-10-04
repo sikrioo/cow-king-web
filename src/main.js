@@ -6,7 +6,7 @@ import {
   LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
   RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
   SMASH_DAMAGE_BONUS, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL, MOVE_REVERSE_ACCEL, MOVE_BRAKE,
-  MOVE_FACING_RESPONSE, MOVE_DUST_COLOR, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA, STAMINA_DRAIN,
+  MOVE_FACING_RESPONSE, MOVE_DUST_COLOR, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, STAMINA_DRAIN,
   STAMINA_REGEN, COMBO_WINDOW, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION,
   VITALITY_DURATION, SPEED_BUFF_DURATION, ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL,
   POINTS_PER_LEVEL, expForLevel, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, INVENTORY_SIZE, IDENTIFY_DURATION,
@@ -17,39 +17,22 @@ import {
   ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
 } from './data/balance.js';
 import {
+  ITEM_STYLE, POTION_LABEL, GEAR_SLOTS, GEAR_SLOT_LABEL, GEAR_CATEGORY_LABEL, GEAR_VARIANT_LABEL,
+  WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
+} from './data/items.js';
+import {
   MONSTERS, FLASH_COLORS, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE,
   ELITE_CHANCE_MAX
 } from './data/monsters.js';
-import {
-  ITEM_STYLE, POTION_LABEL, GEAR_SLOTS, GEAR_SLOT_LABEL, GEAR_CATEGORY_LABEL, GEAR_VARIANT_LABEL,
-  WEAPON_VARIANTS, ACCESSORY_VARIANTS, GEAR_CATEGORY_COLOR, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
-} from './data/items.js';
-import {
-  SKILL_ORDER, SKILL_META, SKILL_UNLOCK_LEVEL
-} from './data/skills.js';
+import { PALETTE } from './data/palette.js';
+import { SKILL_ORDER, SKILL_META, SKILL_UNLOCK_LEVEL } from './data/skills.js';
+import { RELEASE_VERSION } from './config.js';
+import { clamp01, lerpAngle, easeOutCubic, moveToward2D, distToSegment, getHitPoint, hexToRgba } from './util.js';
 import { canvas, ctx, resize } from './core/context.js';
-import { engine, world, PEN } from './core/physics.js';
 import { STEP_MS, startLoop } from './core/loop.js';
+import { engine, world, PEN } from './core/physics.js';
 import { game, ui, input, player } from './state.js';
 const { Engine, World, Bodies, Body } = Matter;
-
-const PALETTE = {
-  hide:    '#8a5a3c',
-  horn:    '#e6dcc0',
-  snout:   '#c9a887',
-  dark:    '#3d2b1f',
-  eye:     '#ff3b30',
-  shaft:   '#5b3a22',
-  blade:   '#b9c2c9',
-  shadow:  'rgba(0,0,0,0.28)',
-  ground:  '#3a6b3f',
-  fence:   '#5b3a22',
-  post:    '#3d2b1f',
-  player:  '#c17a4d',
-  playerFur: '#c9b48a',
-  hpFull:  '#e74c3c',
-  hpEmpty: 'rgba(255,255,255,0.15)'
-};
 
 // ===========================================================
 // 카우 드로잉 (뿔/헬버드 - 기존과 동일)
@@ -200,35 +183,6 @@ function clampToPen(x, y, margin) {
   };
 }
 
-// 보스는 몸통 중앙의 보석(타격점)을 맞춰야 데미지가 들어감 - 몸이 워낙 커서 어디를 때려야 할지
-// 명확하게 하기 위함. 일반 카우는 그냥 자기 중심좌표 그대로 반환.
-function getHitPoint(c) {
-  if (c.kind === 'boss') return { x: c.x, y: c.y - 40 * c.scale };
-  return { x: c.x, y: c.y };
-}
-
-function moveToward2D(cx, cy, tx, ty, maxDelta) {
-  const dx = tx - cx, dy = ty - cy;
-  const d = Math.hypot(dx, dy);
-  if (d <= maxDelta || d === 0) return { x: tx, y: ty };
-  return { x: cx + (dx / d) * maxDelta, y: cy + (dy / d) * maxDelta };
-}
-function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-function lerpAngle(a, b, t) {
-  const diff = Math.atan2(Math.sin(b - a), Math.cos(b - a));
-  return a + diff * t;
-}
-function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-// 점(px,py)과 선분(x1,y1)-(x2,y2) 사이의 최단 거리 - 번개 빔처럼 "지나가는" 피격판정에 사용
-function distToSegment(px, py, x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
-  const lenSq = dx * dx + dy * dy;
-  let t = lenSq > 0 ? ((px - x1) * dx + (py - y1) * dy) / lenSq : 0;
-  t = Math.max(0, Math.min(1, t));
-  const cx = x1 + t * dx, cy = y1 + t * dy;
-  return Math.hypot(px - cx, py - cy);
-}
-
 function getCowHitRadius(c) {
   if (c.kind === 'boss') return c.r * 0.95;
   return c.r * 0.58;
@@ -250,7 +204,6 @@ function getAuraSpeedMult(cow) {
 // ===========================================================
 // 타이틀 화면 / 일시정지 / 로컬 기록 - 다른 에이전트의 릴리즈 버전에서 이식
 // ===========================================================
-const RELEASE_VERSION = '1.2.0-merged';
 const SAVE_KEY = 'cowking_release_meta_v1';
 try {
   const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
@@ -1285,13 +1238,6 @@ function updateShockwaves(dt) {
     game.shockwaves[i].age += dt;
     if (game.shockwaves[i].age >= game.shockwaves[i].duration) game.shockwaves.splice(i, 1);
   }
-}
-function hexToRgba(hex, alpha) {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
 }
 function drawShockwaves(ctx) {
   game.shockwaves.forEach((s) => {
