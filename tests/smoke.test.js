@@ -16,8 +16,8 @@ const CHECK_EVERY = 300;
 const SEEDS = [1234, 777, 42];
 
 const r4 = (v) => (typeof v === 'number' ? +v.toFixed(4) : v);
-// view = { game, player } → 비교용 지문 (레거시/새 코드 공통)
-function fingerprint({ game, player }) {
+// view = { game, ui, player } → 비교용 지문 (레거시/새 코드 공통)
+function fingerprint({ game, ui, player }) {
   return {
     gameState: game.gameState, paused: game.paused, wave: game.wave, waveTransition: r4(game.waveTransition), kills: game.kills,
     cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
@@ -25,7 +25,10 @@ function fingerprint({ game, player }) {
     hazards: game.hazards.length, bolts: game.lightningBolts.length, shockwaves: game.shockwaves.length, shake: r4(game.shake),
     level: player.level, exp: player.exp, statPoints: player.statPoints, hp: r4(player.hp), mana: r4(player.mana), stamina: r4(player.stamina),
     x: r4(player.x), y: r4(player.y), alive: player.alive, inventory: player.inventory.length, materials: player.materials,
-    potions: JSON.stringify(player.potions), slots: player.slot1 + '/' + player.slot2
+    potions: JSON.stringify(player.potions), slots: player.slot1 + '/' + player.slot2,
+    showInventory: ui.showInventory, invPanelTab: ui.invPanelTab, selectedInvIndex: ui.selectedInvIndex, hoverInvIndex: ui.hoverInvIndex,
+    invButtons: ui.invButtons.length, titleCows: ui.titleCows.length, identifying: ui.identifyingItem !== null, identifyTimer: r4(ui.identifyTimer),
+    equipped: Object.values(player.equipment).map((g) => (g === null ? '-' : g === 'LOCKED' ? 'L' : g.variant || g.category)).join(',')
   };
 }
 
@@ -64,7 +67,7 @@ function runScenario(env, seed, view) {
 }
 
 function runLegacy(seed) {
-  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, player });';
+  const footer = 'globalThis.__view = () => ({ game: { gameState, paused, wave, waveTransition, kills, cows, items, particles, floatTexts, hazards, lightningBolts, shockwaves, shake }, ui: { showInventory, invPanelTab, selectedInvIndex, hoverInvIndex, invButtons, titleCows, identifyingItem, identifyTimer }, player });';
   const env = createSandbox({ htmlPath: LEGACY_HTML, footer, seed });
   return runScenario(env, seed, () => env.sandbox.__view());
 }
@@ -75,7 +78,7 @@ async function runModular(seed) {
     vi.resetModules();
     await import('../src/main.js');
     const state = await import('../src/state.js');
-    return runScenario(env, seed, () => ({ game: state.game, player: state.player }));
+    return runScenario(env, seed, () => ({ game: state.game, ui: state.ui, player: state.player }));
   } finally {
     env.restore();
   }

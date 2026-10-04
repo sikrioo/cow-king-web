@@ -24,6 +24,23 @@ export const game = {
   releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 }
 };
 
+// 화면/메뉴 상태 (장비창 탭·선택·클릭 영역, 타이틀 연출, 감정 진행)
+export const ui = {
+  showInventory: false,
+  invPanelTab: 'equip', // 'equip' | 'stats' | 'bag' | 'upgrade'
+  selectedInvIndex: null, // 클릭해서 고정한 가방 칸
+  hoverInvIndex: null, // 마우스를 올려둔 가방 칸(미리보기용)
+  invSlotRects: [],
+  invTabRects: {},
+  invButtons: [], // 그릴 때마다 채워지는 클릭 버튼 목록 {x,y,w,h,fn}
+  invToast: null, // 메뉴 안에서 잠깐 보여주는 안내 {text,color,until}
+  invReveal: null, // 방금 감정된 아이템 강조 {item,color,until}
+  titleCows: [],
+  titleTime: 0,
+  identifyingItem: null, // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
+  identifyTimer: 0
+};
+
 // 주인공 (Step 5에서 entities/hero.js의 createHero로 옮길 예정)
 export const player = {
   body: null, // boot()에서 생성

@@ -30,7 +30,7 @@ import {
 import { canvas, ctx, resize } from './core/context.js';
 import { engine, world, PEN } from './core/physics.js';
 import { STEP_MS, startLoop } from './core/loop.js';
-import { game, player } from './state.js';
+import { game, ui, player } from './state.js';
 const { Engine, World, Bodies, Body } = Matter;
 
 const PALETTE = {
@@ -281,16 +281,14 @@ async function toggleFullscreen() {
   } catch (_) {}
 }
 
-let titleCows = [];
-let titleTime = 0;
 
 function initTitleScene() {
-  titleCows = [];
+  ui.titleCows = [];
   const count = Math.max(7, Math.min(12, Math.round(PEN.size / 70)));
   for (let i = 0; i < count; i++) {
     const p = randomPointInPen(0.10);
     const a = Math.random() * Math.PI * 2;
-    titleCows.push({
+    ui.titleCows.push({
       x: p.x, y: p.y,
       vx: Math.cos(a) * (10 + Math.random() * 14),
       vy: Math.sin(a) * (8 + Math.random() * 12),
@@ -301,13 +299,13 @@ function initTitleScene() {
   }
 }
 function updateTitleScene(dt) {
-  titleTime += dt;
-  if (!titleCows.length) initTitleScene();
+  ui.titleTime += dt;
+  if (!ui.titleCows.length) initTitleScene();
   const minX = PEN.x + 34, maxX = PEN.x + PEN.size - 34;
   const minY = PEN.y + 40, maxY = PEN.y + PEN.size - 32;
-  titleCows.forEach((c, i) => {
-    c.vx += Math.sin(titleTime * 0.7 + c.phase + i) * 2.2 * dt;
-    c.vy += Math.cos(titleTime * 0.6 + c.phase * 1.3) * 1.8 * dt;
+  ui.titleCows.forEach((c, i) => {
+    c.vx += Math.sin(ui.titleTime * 0.7 + c.phase + i) * 2.2 * dt;
+    c.vy += Math.cos(ui.titleTime * 0.6 + c.phase * 1.3) * 1.8 * dt;
     const sp = Math.hypot(c.vx, c.vy) || 1;
     const maxSp = 24;
     if (sp > maxSp) { c.vx = c.vx / sp * maxSp; c.vy = c.vy / sp * maxSp; }
@@ -318,7 +316,7 @@ function updateTitleScene(dt) {
   });
 }
 function drawTitleScene(t) {
-  const sorted = [...titleCows].sort((a, b) => a.y - b.y);
+  const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);
   sorted.forEach((c) => drawCow(ctx, c.x, c.y, c.scale, 'walk', t + c.phase, c.facing, 0));
   ctx.save();
   ctx.globalAlpha = 0.28;
@@ -373,7 +371,7 @@ function drawTitleOverlay(t) {
   ctx.textAlign = 'left';
 }
 function drawStartCountdown() {
-  if (game.gameState !== 'playing' || showInventory || game.wave !== 0 || game.cows.length !== 0 || game.waveTransition <= 0) return;
+  if (game.gameState !== 'playing' || ui.showInventory || game.wave !== 0 || game.cows.length !== 0 || game.waveTransition <= 0) return;
   const remain = Math.max(0, game.waveTransition);
   const number = Math.ceil(remain);
   ctx.save();
@@ -390,7 +388,7 @@ function drawStartCountdown() {
   ctx.restore();
 }
 function drawWavePresentation(t) {
-  if (game.waveBannerTimer <= 0 || game.gameState !== 'playing' || showInventory) return;
+  if (game.waveBannerTimer <= 0 || game.gameState !== 'playing' || ui.showInventory) return;
   const a = Math.min(1, game.waveBannerTimer * 2.2) * Math.min(1, (1.6 - game.waveBannerTimer) * 3.0 + 1);
   const boss = game.wave === BOSS_WAVE;
   ctx.save();
@@ -408,7 +406,7 @@ function drawWavePresentation(t) {
   ctx.restore();
 }
 function drawDemoTip() {
-  if (game.demoTipTimer <= 0 || game.gameState !== 'playing' || showInventory) return;
+  if (game.demoTipTimer <= 0 || game.gameState !== 'playing' || ui.showInventory) return;
   const alpha = Math.min(1, game.demoTipTimer) * Math.min(1, (5.0 - game.demoTipTimer) * 2 + 1);
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
@@ -502,37 +500,27 @@ function gearDisplayName(gear) {
 // ===========================================================
 
 // 장비창 UI 상호작용 상태 (탭/선택/히트박스) - 마우스 호버와 모바일 탭을 동일하게 처리
-let invPanelTab = 'equip'; // 'equip' | 'stats' | 'bag' | 'upgrade'
-let selectedInvIndex = null; // 클릭해서 고정한 가방 칸
-let hoverInvIndex = null;    // 마우스를 올려둔 가방 칸(미리보기용)
-let invSlotRects = [];
-let invTabRects = {};
-let invButtons = [];         // 그릴 때마다 채워지는 클릭 버튼 목록 {x,y,w,h,fn}
-let invToast = null;         // 메뉴 안에서 잠깐 보여주는 안내 {text,color,until}
-let invReveal = null;        // 방금 감정된 아이템 강조 {item,color,until}
 
 // ===========================================================
 // 아이템 감정(식별) 시스템 - 드랍된 장비는 전부 미감정 상태로 시작
 // ===========================================================
-let identifyingItem = null; // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
-let identifyTimer = 0;
 
 function tryIdentify(index) {
-  if (identifyingItem !== null) return; // 이미 감정 중이면 중복 시작 방지
+  if (ui.identifyingItem !== null) return; // 이미 감정 중이면 중복 시작 방지
   const gear = player.inventory[index];
   if (!gear || gear.identified) return;
-  identifyingItem = gear;
-  identifyTimer = IDENTIFY_DURATION;
+  ui.identifyingItem = gear;
+  ui.identifyTimer = IDENTIFY_DURATION;
 }
 
 function updateIdentify(dt) {
-  if (identifyingItem === null) return;
-  if (!player.inventory.includes(identifyingItem)) { identifyingItem = null; return; } // 중간에 사라진 경우
-  identifyTimer -= dt;
-  if (identifyTimer <= 0) {
-    identifyingItem.identified = true;
-    revealIdentifiedGear(identifyingItem);
-    identifyingItem = null;
+  if (ui.identifyingItem === null) return;
+  if (!player.inventory.includes(ui.identifyingItem)) { ui.identifyingItem = null; return; } // 중간에 사라진 경우
+  ui.identifyTimer -= dt;
+  if (ui.identifyTimer <= 0) {
+    ui.identifyingItem.identified = true;
+    revealIdentifiedGear(ui.identifyingItem);
+    ui.identifyingItem = null;
   }
 }
 
@@ -551,7 +539,7 @@ function revealIdentifiedGear(gear) {
   }
   // 메뉴가 월드를 덮고 있어서 월드 연출은 안 보이니, 메뉴 안에서도 등급색 번쩍임 + 안내를 보여줌
   showInvToast(gear.rarity === 'legendary' ? '전설 등급 발견!' : `[${rDef.label}] 감정 완료`, rDef.color);
-  invReveal = { item: gear, color: rDef.color, until: performance.now() + 1100 };
+  ui.invReveal = { item: gear, color: rDef.color, until: performance.now() + 1100 };
 }
 
 function rollRarity() {
@@ -565,10 +553,9 @@ function rollRarity() {
 
 
 const keys = {};
-let showInventory = false;
 function setInventoryOpen(open) {
-  showInventory = open;
-  if (!open) { selectedInvIndex = null; hoverInvIndex = null; }
+  ui.showInventory = open;
+  if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; }
   const dim = open ? '0.15' : '1';
   const pe = open ? 'none' : 'auto';
   ['joystick-base', 'action-buttons', 'potion-buttons'].forEach((id) => {
@@ -582,13 +569,13 @@ window.addEventListener('keydown', (e) => {
   keys[k] = true;
   if (k === 'escape') {
     e.preventDefault();
-    if (showInventory) { setInventoryOpen(false); return; }
+    if (ui.showInventory) { setInventoryOpen(false); return; }
     if (game.gameState === 'playing') { setPaused(!game.paused); return; }
   }
   if (k === 'p' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
   if (game.paused) return;
   if (k === 'l' && game.gameState === 'playing') gainExp(Math.max(1, player.expToNext - player.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
-  if (!showInventory && game.gameState === 'playing') {
+  if (!ui.showInventory && game.gameState === 'playing') {
     if (k === '1') tryDrinkPotion('heal');
     if (k === '2') tryDrinkPotion('mana');
   }
@@ -605,11 +592,11 @@ window.addEventListener('keydown', (e) => {
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (k === 'q') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
   if (k === 'r') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(2); }
-  if (k === 'i') setInventoryOpen(!showInventory);
-  if (showInventory && k >= '1' && k <= '7') {
+  if (k === 'i') setInventoryOpen(!ui.showInventory);
+  if (ui.showInventory && k >= '1' && k <= '7') {
     tryUpgradeSlot(k.charCodeAt(0) - '1'.charCodeAt(0));
   }
-  if (showInventory && LEVEL_STAT_KEYS[k]) {
+  if (ui.showInventory && LEVEL_STAT_KEYS[k]) {
     trySpendStatPoint(LEVEL_STAT_KEYS[k]);
   }
 });
@@ -623,7 +610,7 @@ window.addEventListener('keyup', (e) => {
 // 좌클릭(또는 터치) = 슬롯1 길게 누르기, 우클릭 = 슬롯2 길게 누르기
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 canvas.addEventListener('pointerdown', (e) => {
-  if (showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
+  if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
   if (game.gameState !== 'playing') { resetGame(); return; }
   if (game.paused) return;
   if (e.button === 2) { if (!holdSlot2) { holdSlot2 = true; SKILLS[player.slot2].try(); } }
@@ -633,7 +620,7 @@ window.addEventListener('pointerup', (e) => {
   if (e.button === 2) holdSlot2 = false;
   else holdSlot1 = false;
 });
-canvas.addEventListener('pointerleave', () => { holdSlot1 = false; holdSlot2 = false; hoverInvIndex = null; });
+canvas.addEventListener('pointerleave', () => { holdSlot1 = false; holdSlot2 = false; ui.hoverInvIndex = null; });
 
 function pointInRect(px, py, r) {
   return r && px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
@@ -641,32 +628,32 @@ function pointInRect(px, py, r) {
 
 function invPanelHandlePoint(mx, my) {
   for (const tab of INV_TABS) {
-    const r = invTabRects[tab.key];
-    if (r && pointInRect(mx, my, r)) { invPanelTab = tab.key; hoverInvIndex = null; return; }
+    const r = ui.invTabRects[tab.key];
+    if (r && pointInRect(mx, my, r)) { ui.invPanelTab = tab.key; ui.hoverInvIndex = null; return; }
   }
-  for (const b of invButtons) {
+  for (const b of ui.invButtons) {
     if (pointInRect(mx, my, b)) { b.fn(); return; }
   }
-  if (invPanelTab === 'bag') {
-    const hit = invSlotRects.find((r) => pointInRect(mx, my, r));
+  if (ui.invPanelTab === 'bag') {
+    const hit = ui.invSlotRects.find((r) => pointInRect(mx, my, r));
     // 클릭하면 그 칸을 고정, 같은 칸을 다시 누르면 고정 해제 - 마우스를 옮겨도 선택이 바뀌지 않음
-    if (hit) selectedInvIndex = (selectedInvIndex === hit.index) ? null : hit.index;
+    if (hit) ui.selectedInvIndex = (ui.selectedInvIndex === hit.index) ? null : hit.index;
   }
 }
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!showInventory) return;
+  if (!ui.showInventory) return;
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-  if (invPanelTab === 'bag') {
-    const hit = invSlotRects.find((r) => pointInRect(mx, my, r));
-    hoverInvIndex = hit ? hit.index : null; // 올려두기만 하면 미리보기 - 고정(selectedInvIndex)은 건드리지 않음
+  if (ui.invPanelTab === 'bag') {
+    const hit = ui.invSlotRects.find((r) => pointInRect(mx, my, r));
+    ui.hoverInvIndex = hit ? hit.index : null; // 올려두기만 하면 미리보기 - 고정(selectedInvIndex)은 건드리지 않음
   } else {
-    hoverInvIndex = null;
+    ui.hoverInvIndex = null;
   }
 });
 canvas.addEventListener('pointerdown', (e) => {
-  if (!showInventory) return;
+  if (!ui.showInventory) return;
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left, my = e.clientY - rect.top;
@@ -758,7 +745,7 @@ bindCycle('slot2-cycle', 2);
 });
 document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); setPaused(!game.paused); });
 document.getElementById('btn-full').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
-document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); setInventoryOpen(!showInventory); });
+document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); setInventoryOpen(!ui.showInventory); });
 
 function updatePlayer(dt) {
   player.x = player.body.position.x;
@@ -1507,7 +1494,7 @@ function equipFromInventory(index) {
   replaced.forEach((old) => {
     if (old && old !== 'LOCKED' && player.inventory.length < INVENTORY_SIZE) player.inventory.push(old);
   });
-  selectedInvIndex = null;
+  ui.selectedInvIndex = null;
 }
 
 function tryUpgradeSlot(slotIndex) {
@@ -2438,7 +2425,7 @@ function cycleSkillSlot(slotNum) {
 }
 
 function updateSkillSlots() {
-  if (game.gameState !== 'playing' || game.paused || showInventory) return;
+  if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
   if (holdSlot1) SKILLS[player.slot1].try();
   if (holdSlot2) SKILLS[player.slot2].try();
 }
@@ -3155,13 +3142,13 @@ function resetGame() {
   giveTestStash(); // 장비 교체 테스트용 - 무기 종류별 1개 + 방패 + 양손무기를 가방에 바로 지급
   player.hp = player.maxHp + player.gearMaxHp;
   player.mana = player.maxMana + player.gearMaxMana;
-  identifyingItem = null;
-  identifyTimer = 0;
-  selectedInvIndex = null;
-  hoverInvIndex = null;
-  invPanelTab = 'equip';
-  invToast = null;
-  invReveal = null;
+  ui.identifyingItem = null;
+  ui.identifyTimer = 0;
+  ui.selectedInvIndex = null;
+  ui.hoverInvIndex = null;
+  ui.invPanelTab = 'equip';
+  ui.invToast = null;
+  ui.invReveal = null;
   player.level = 1;
   player.exp = 0;
   player.expToNext = expForLevel(1);
@@ -3202,7 +3189,7 @@ function fixedUpdate(dt) {
     if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
     return;
   }
-  if (showInventory) {
+  if (ui.showInventory) {
     // 장비창을 보는 동안은 전투/이동을 전부 멈춤 - 감정 진행만은 메뉴 안의 행동이라 계속 흐름
     updateIdentify(dt);
     updateParticles(dt);
@@ -3278,7 +3265,7 @@ function render(t) {
   drawHUD();
   updateSkillButtonsUI();
   updatePotionButtonsUI();
-  if (showInventory) drawInventoryPanel(ctx);
+  if (ui.showInventory) drawInventoryPanel(ctx);
   if (game.paused) drawPauseOverlay();
 
   if (game.impactFlash > 0) {
@@ -3302,13 +3289,13 @@ const INV_TABS = [
 ];
 
 function showInvToast(text, color = '#ffe066') {
-  invToast = { text, color, until: performance.now() + 1600 };
+  ui.invToast = { text, color, until: performance.now() + 1600 };
 }
 
 // 가방에서 상세정보로 보여줄 칸: 클릭해서 고정한 것이 우선, 없으면 마우스가 올라가 있는 것
 function getInvViewIndex() {
-  if (selectedInvIndex !== null && player.inventory[selectedInvIndex]) return selectedInvIndex;
-  if (hoverInvIndex !== null && player.inventory[hoverInvIndex]) return hoverInvIndex;
+  if (ui.selectedInvIndex !== null && player.inventory[ui.selectedInvIndex]) return ui.selectedInvIndex;
+  if (ui.hoverInvIndex !== null && player.inventory[ui.hoverInvIndex]) return ui.hoverInvIndex;
   return null;
 }
 
@@ -3356,9 +3343,9 @@ function drawInventoryPanel(ctx) {
   ctx.lineWidth = 2;
   ctx.strokeRect(x, y, w, h);
 
-  invSlotRects = [];
-  invTabRects = {};
-  invButtons = [];
+  ui.invSlotRects = [];
+  ui.invTabRects = {};
+  ui.invButtons = [];
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
 
@@ -3372,10 +3359,10 @@ function drawInventoryPanel(ctx) {
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#ffe066';
   ctx.fillText(`재료 ${player.materials}개`, x + w - 16, y + 24);
-  if (invToast && performance.now() < invToast.until) {
+  if (ui.invToast && performance.now() < ui.invToast.until) {
     ctx.font = 'bold 11px sans-serif';
-    ctx.fillStyle = invToast.color;
-    ctx.fillText(invToast.text, x + w - 16, y + 41);
+    ctx.fillStyle = ui.invToast.color;
+    ctx.fillText(ui.invToast.text, x + w - 16, y + 41);
   }
   ctx.textAlign = 'left';
 
@@ -3383,8 +3370,8 @@ function drawInventoryPanel(ctx) {
   const tabW = (w - 32 - tabGap * (INV_TABS.length - 1)) / INV_TABS.length;
   INV_TABS.forEach((tab, i) => {
     const r = { x: x + 16 + i * (tabW + tabGap), y: tabY, w: tabW, h: tabH };
-    invTabRects[tab.key] = r;
-    const active = invPanelTab === tab.key;
+    ui.invTabRects[tab.key] = r;
+    const active = ui.invPanelTab === tab.key;
     ctx.fillStyle = active ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.06)';
     ctx.fillRect(r.x, r.y, r.w, r.h);
     ctx.strokeStyle = active ? '#ffe066' : 'rgba(255,255,255,0.25)';
@@ -3406,9 +3393,9 @@ function drawInventoryPanel(ctx) {
   ctx.beginPath();
   ctx.rect(x + 2, contentTop - 12, w - 4, y + h - contentTop + 10);
   ctx.clip();
-  if (invPanelTab === 'equip') drawEquipTab(ctx, x, contentTop, w);
-  else if (invPanelTab === 'stats') drawStatsTab(ctx, x, contentTop, w);
-  else if (invPanelTab === 'bag') drawBagTab(ctx, x, contentTop, w, bottom);
+  if (ui.invPanelTab === 'equip') drawEquipTab(ctx, x, contentTop, w);
+  else if (ui.invPanelTab === 'stats') drawStatsTab(ctx, x, contentTop, w);
+  else if (ui.invPanelTab === 'bag') drawBagTab(ctx, x, contentTop, w, bottom);
   else drawUpgradeTab(ctx, x, contentTop, w);
   ctx.restore();
 }
@@ -3511,7 +3498,7 @@ function drawStatsTab(ctx, x, startRow, w) {
     ctx.fillText(`[${keyByStat[sk].toUpperCase()}] ${STAT_DEF[sk].label}`, x + 16, row);
 
     const btn = { x: x + w - 16 - 36, y: row - 17, w: 36, h: 24 };
-    invButtons.push({ ...btn, fn: () => {
+    ui.invButtons.push({ ...btn, fn: () => {
       if (player.statPoints <= 0) { showInvToast('여유 포인트가 없어', '#ff8a80'); return; }
       trySpendStatPoint(sk);
       showInvToast(`${STAT_DEF[sk].label} +1`, '#ffe066');
@@ -3572,8 +3559,8 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
   ctx.fillText('클릭하면 고정 · 올려두면 미리보기', x + w - 16, startRow);
   ctx.textAlign = 'left';
 
-  if (selectedInvIndex !== null && !player.inventory[selectedInvIndex]) selectedInvIndex = null;
-  if (hoverInvIndex !== null && !player.inventory[hoverInvIndex]) hoverInvIndex = null;
+  if (ui.selectedInvIndex !== null && !player.inventory[ui.selectedInvIndex]) ui.selectedInvIndex = null;
+  if (ui.hoverInvIndex !== null && !player.inventory[ui.hoverInvIndex]) ui.hoverInvIndex = null;
 
   const cols = 2, gapX = 6, gapY = 3, rowH = 24;
   const colW = (w - 32 - gapX) / cols;
@@ -3589,8 +3576,8 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
   player.inventory.forEach((g, i) => {
     const cx = x + 16 + (i % cols) * (colW + gapX);
     const cy = listTop + Math.floor(i / cols) * (rowH + gapY);
-    const pinned = i === selectedInvIndex;
-    const hovered = i === hoverInvIndex;
+    const pinned = i === ui.selectedInvIndex;
+    const hovered = i === ui.hoverInvIndex;
     ctx.fillStyle = pinned ? 'rgba(255,224,102,0.22)' : hovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.05)';
     ctx.fillRect(cx, cy, colW, rowH);
     ctx.strokeStyle = pinned ? '#ffe066' : 'rgba(255,255,255,0.16)';
@@ -3603,7 +3590,7 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
       text = `[${rDef.label}] ${gearDisplayName(g)}${g.upgradeLevel > 0 ? ` +${g.upgradeLevel}` : ''}`;
       color = rDef.color;
     } else {
-      text = `${identifyingItem === g ? '감정 중… ' : '미감정 '}${gearDisplayName(g)}`;
+      text = `${ui.identifyingItem === g ? '감정 중… ' : '미감정 '}${gearDisplayName(g)}`;
       color = '#a9a9a9';
     }
     ctx.font = '11px sans-serif';
@@ -3611,12 +3598,12 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
     ctx.textBaseline = 'middle';
     ctx.fillText(fitText(ctx, text, colW - 14), cx + 7, cy + rowH / 2 + 1);
     ctx.textBaseline = 'alphabetic';
-    if (identifyingItem === g) {
-      const prog = 1 - Math.max(identifyTimer, 0) / IDENTIFY_DURATION;
+    if (ui.identifyingItem === g) {
+      const prog = 1 - Math.max(ui.identifyTimer, 0) / IDENTIFY_DURATION;
       ctx.fillStyle = 'rgba(255,224,102,0.85)';
       ctx.fillRect(cx + 1, cy + rowH - 3, (colW - 2) * prog, 2);
     }
-    invSlotRects.push({ x: cx, y: cy, w: colW, h: rowH, index: i });
+    ui.invSlotRects.push({ x: cx, y: cy, w: colW, h: rowH, index: i });
   });
 
   const detailTop = listTop + rows * (rowH + gapY) + 10;
@@ -3628,7 +3615,7 @@ function drawBagTab(ctx, x, startRow, w, bottom) {
 
 function drawBagDetail(ctx, x, top, w, bottom) {
   const idx = getInvViewIndex();
-  const pinned = idx !== null && idx === selectedInvIndex;
+  const pinned = idx !== null && idx === ui.selectedInvIndex;
   ctx.textAlign = 'left';
   if (idx === null) {
     ctx.font = '11px sans-serif';
@@ -3640,11 +3627,11 @@ function drawBagDetail(ctx, x, top, w, bottom) {
   let y = top + 10;
 
   // 방금 감정된 아이템이면 등급색으로 잠깐 번쩍임
-  if (invReveal && invReveal.item === sel && performance.now() < invReveal.until) {
-    const p = (invReveal.until - performance.now()) / 1100;
+  if (ui.invReveal && ui.invReveal.item === sel && performance.now() < ui.invReveal.until) {
+    const p = (ui.invReveal.until - performance.now()) / 1100;
     ctx.save();
     ctx.globalAlpha = Math.max(0, Math.min(1, p)) * 0.35;
-    ctx.fillStyle = invReveal.color;
+    ctx.fillStyle = ui.invReveal.color;
     ctx.fillRect(x + 8, top - 6, w - 16, bottom - top + 6);
     ctx.restore();
   }
@@ -3653,7 +3640,7 @@ function drawBagDetail(ctx, x, top, w, bottom) {
   const addButton = (label, fn, enabled = true) => {
     const bx = x + 16, bw = w - 32;
     const by = Math.max(bottom - btnH, y + 6);
-    invButtons.push({ x: bx, y: by, w: bw, h: btnH, fn });
+    ui.invButtons.push({ x: bx, y: by, w: bw, h: btnH, fn });
     ctx.fillStyle = enabled ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.08)';
     ctx.fillRect(bx, by, bw, btnH);
     ctx.strokeStyle = enabled ? '#ffe066' : 'rgba(255,255,255,0.3)';
@@ -3685,9 +3672,9 @@ function drawBagDetail(ctx, x, top, w, bottom) {
     ctx.fillText('감정 전에는 장착할 수 없어.', x + 16, y);
     y += 15;
     if (pinned) {
-      const identifying = identifyingItem === sel;
+      const identifying = ui.identifyingItem === sel;
       const dots = identifying ? '.'.repeat(1 + Math.floor((performance.now() / 300) % 3)) : '';
-      addButton(identifying ? `감정 중${dots}` : '감정하기', () => tryIdentify(selectedInvIndex), !identifying);
+      addButton(identifying ? `감정 중${dots}` : '감정하기', () => tryIdentify(ui.selectedInvIndex), !identifying);
     } else {
       hintLine('클릭해서 고정하면 감정할 수 있어');
     }
@@ -3741,12 +3728,12 @@ function drawBagDetail(ctx, x, top, w, bottom) {
     if (sel.category === 'weapon' && sel.handedness === 'two' && eq.weaponOff && eq.weaponOff !== 'LOCKED') label = '장착하기 (보조손 장비 해제)';
     if (sel.category === 'shield' && eq.weaponMain && eq.weaponMain !== 'LOCKED' && eq.weaponMain.handedness === 'two') label = '장착하기 (양손무기 해제)';
     addButton(label, () => {
-      const g = player.inventory[selectedInvIndex];
+      const g = player.inventory[ui.selectedInvIndex];
       if (!g) return;
       const name = gearDisplayName(g);
-      equipFromInventory(selectedInvIndex);
-      selectedInvIndex = null;
-      hoverInvIndex = null;
+      equipFromInventory(ui.selectedInvIndex);
+      ui.selectedInvIndex = null;
+      ui.hoverInvIndex = null;
       showInvToast(`${name} 장착`, '#9be39b');
     });
   } else {
@@ -3788,7 +3775,7 @@ function drawUpgradeTab(ctx, x, startRow, w) {
       ctx.fillText(fitText(ctx, `[${rDef.label}] ${gearDisplayName(it)}${it.upgradeLevel > 0 ? ` +${it.upgradeLevel}` : ''}`, w - 32 - 80), x + 16, row + 14);
       const canTry = player.materials >= 1;
       const btn = { x: x + w - 16 - 66, y: row - 8, w: 66, h: 28 };
-      invButtons.push({ ...btn, fn: () => {
+      ui.invButtons.push({ ...btn, fn: () => {
         const cur = player.equipment[slot];
         if (!cur || cur === 'LOCKED') return;
         const before = cur.upgradeLevel || 0, mats = player.materials;
