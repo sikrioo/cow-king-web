@@ -1,8 +1,9 @@
 // 몬스터(카우) 그리기 - 상태를 읽기만 함
 import { MONSTERS, FLASH_COLORS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
+import { drawMonsterWeapon } from './monsterWeapons.js';
 
-export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null) {
+export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd') {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
   const hornColor  = colors ? colors.horn  : PALETTE.horn;
   const snoutColor = colors ? colors.snout : PALETTE.snout;
@@ -23,7 +24,7 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  drawHalberd(ctx, 18 + poke * 16, -38, poke);
+  drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
 
   ctx.fillStyle = hideColor;
   ctx.beginPath();
@@ -85,31 +86,6 @@ export function drawHorn(ctx, side, color) {
   ctx.restore();
 }
 
-export function drawHalberd(ctx, x, y, poke = 0) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-Math.PI / 4 + poke * (Math.PI / 4));
-
-  ctx.strokeStyle = PALETTE.shaft;
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-42, 0);
-  ctx.lineTo(58, 0);
-  ctx.stroke();
-
-  ctx.fillStyle = PALETTE.blade;
-  ctx.beginPath();
-  ctx.moveTo(66, 0);
-  ctx.lineTo(48, 14);
-  ctx.lineTo(38, 0);
-  ctx.lineTo(48, -14);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.restore();
-}
-
 // 몬스터 그리기 (예전 Cow.draw - this → c)
 export function drawMonster(c, ctx, t) {
   if (c.state === 'dead') {
@@ -120,7 +96,7 @@ export function drawMonster(c, ctx, t) {
     const p = c.deadPos;
     ctx.save();
     ctx.globalAlpha = fade;
-    drawCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0);
+    drawCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0, null, c.weapon);
     ctx.restore();
     return;
   }
@@ -149,7 +125,7 @@ export function drawMonster(c, ctx, t) {
 
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors);
+  drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon);
   ctx.restore();
 
   if (c.state === 'attack' && c.attackingPlayer && c.stateElapsed < 0.16) {

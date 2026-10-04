@@ -27,6 +27,7 @@ npm test         # 자동 테스트 (Vitest)
 | 캐릭터 메뉴 (장비/스탯/가방/강화) | I | 장비 버튼 |
 | 메뉴에서 강화 / 스탯 투자 | 1~7 / Z~M | 화면 버튼 |
 | 일시정지 | P, ESC | Ⅱ 버튼 |
+| 조작 도움말 | H | 도움말 버튼 |
 | 레벨 업 (테스트용) | L | - |
 
 사망하거나 승리한 뒤에는 아무 행동 키나 누르면 다시 시작합니다. 최고 기록은 브라우저에 저장됩니다.
@@ -54,6 +55,7 @@ docs/               리팩토링 지시서, 동작 기준, 레거시 코드 지�
 
 자주 하는 확장:
 - **몬스터 추가**: `src/data/monsters.js`에 항목 하나. 특수 행동이 있으면 `src/entities/behaviors.js`에 훅 하나.
+- **몬스터 무기 추가**: `src/render/monsterWeapons.js`에 그림 함수 하나 + `src/data/monsters.js`의 `MONSTER_WEAPONS` 목록
 - **아이템 표시 변경**: `src/ui/itemView.js`
 - **드랍 확률**: `src/data/drops.js`
 - **스킬 해금 규칙**: `src/systems/progression.js`의 `isSkillUnlocked`

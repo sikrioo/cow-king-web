@@ -1,6 +1,6 @@
 // 몬스터 공통: 물리 바디 + 일반 AI(스턴/넉백 → 추격·근접 공격 → 대기/배회)
 // 종류별 수치는 data/monsters.js, 특수 행동은 entities/behaviors.js 훅 (this.behavior)
-import { MONSTERS } from '../data/monsters.js';
+import { MONSTERS, weaponFor } from '../data/monsters.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
 import { game } from '../state.js';
 import { TEAM_MONSTER } from './actor.js';
@@ -31,6 +31,7 @@ export class Monster {
     this.stateElapsed = 0;
     this.facing = 1;
     this.phase = Math.random() * 10;
+    this.weapon = weaponFor(kind, this.phase); // 그림용 - 난수 소비 없음
     this.speed = (34 + Math.random() * 18) * speedMul;
     this.hp = hp;
     this.maxHp = hp;

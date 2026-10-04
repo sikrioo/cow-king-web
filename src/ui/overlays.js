@@ -1,5 +1,6 @@
 // 화면 오버레이 (타이틀/카운트다운/웨이브 배너/팁/일시정지)
 import { BOSS_WAVE } from '../data/balance.js';
+import { weaponFor } from '../data/monsters.js';
 import { RELEASE_VERSION } from '../config.js';
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
@@ -8,11 +9,11 @@ import { PEN } from '../world/arena.js';
 
 export function drawTitleScene(t) {
   const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);
-  sorted.forEach((c) => drawCow(ctx, c.x, c.y, c.scale, 'walk', t + c.phase, c.facing, 0));
+  sorted.forEach((c) => drawCow(ctx, c.x, c.y, c.scale, 'walk', t + c.phase, c.facing, 0, null, weaponFor('normal', c.phase)));
   ctx.save();
   ctx.globalAlpha = 0.28;
   drawCow(ctx, canvas.width * 0.5, PEN.y + PEN.size * 0.36, 0.74, 'idle', t, 1, 0,
-    { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' });
+    { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' }, weaponFor('boss', 0));
   ctx.restore();
 }
 

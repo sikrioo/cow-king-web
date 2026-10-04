@@ -32,6 +32,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 ## 확장할 때 고칠 곳
 - 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph…)엔 매 틱 true.
+- 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS`. 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
 - 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
@@ -53,7 +54,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 
 ## 자주 밟는 함정
 - 초기화 순서: 모듈 로드 중 아무것도 실행하지 않는다. 부팅·리스너 등록은 `boot()`에서. 주인공 바디는 벽 다음에 생성.
-- 그리기에서 `Math.random()`을 쓰는 곳이 있다(화면 흔들림, 번개 충전 스파크) - 그리기 순서를 바꾸면 게임 난수 순서도 바뀐다.
+- 그리기에서 `Math.random()`을 쓰는 곳이 있다(화면 흔들림, 번개 충전 스파크) - 그리기 순서를 바꾸면 게임 난수 순서도 바뀐다. 새 그리기 코드에서는 `Math.random()`을 쓰지 말 것.
+- 키는 `input.keyOf(e)`로 읽는다(글자/숫자는 e.code) - 한글 입력 상태에서도 동작해야 함.
 - 캔버스 `textAlign` 등 상태 누수: 그리기 블록마다 `ctx.save()/restore()`.
 - 감정 대상은 인덱스가 아니라 객체 참조. 메뉴 클릭 영역은 그릴 때마다 재등록, 입력은 직전 프레임 영역 사용.
 - 히트 판정은 몬스터 중심 + `getCowHitRadius`. `hitPlayer` 무적시간이 지속 피해 틱을 제한한다.

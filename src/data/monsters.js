@@ -15,6 +15,26 @@ export const MONSTERS = {
   shocker:  { hp: 6,  dmg: 3, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 30,  ring: '#fff066', colors: { hide: '#8a7a2e', horn: '#fffde0', snout: '#4a4015', eye: '#fff9b0' } },
   boss:     { hp: 78, dmg: 3, scaleMul: 2.7, speedMul: 0.85, aggroMul: 1,   exp: 400, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
 };
+// 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
+export const MONSTER_WEAPONS = {
+  normal:   ['halberd', 'pitchfork', 'club', 'axe', 'spear'],
+  tough:    ['hammer', 'axe'],
+  fast:     ['cleaver', 'spear'],
+  cold:     ['spear', 'halberd'],
+  charger:  ['spear'],
+  fanatic:  ['cleaver', 'axe'],
+  burning:  ['torch'],
+  exploder: ['club'],
+  shaman:   ['staff'],
+  shocker:  ['rod'],
+  boss:     ['hammer']
+};
+// 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
+export function weaponFor(kind, seed) {
+  const list = MONSTER_WEAPONS[kind] || MONSTER_WEAPONS.normal;
+  return list[Math.floor(Math.abs(seed) * 7919) % list.length];
+}
+
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
 
 // 엘리트 풀 - 웨이브 ELITE_MIN_WAVE부터 eliteChance = min(BASE + wave * PER_WAVE, MAX) 확률로 이 중 하나가 균등하게 뽑힘
