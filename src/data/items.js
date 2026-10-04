@@ -7,9 +7,9 @@ export const ITEM_STYLE = {
   vitality: { color: '#ffd34d', label: '체력' },
   speed:    { color: '#5be0c9', label: '속도' },
   attack:   { color: '#ff8a3d', label: '공격' },
-  defense:  { color: '#6fb3ff', label: '방어' }
+  defense:  { color: '#6fb3ff', label: '블락' }
 };
-export const POTION_LABEL = { heal: '생명물약', mana: '마나물약', speed: '속도물약', attack: '공격물약', defense: '방어물약', vitality: '체력물약' };
+export const POTION_LABEL = { heal: '생명물약', mana: '마나물약', speed: '속도물약', attack: '공격물약', defense: '블락물약', vitality: '체력물약' };
 
 // --- 장비 (갑옷/무기/각반/신발/장신구2)
 export const GEAR_SLOTS = ['armor', 'weaponMain', 'weaponOff', 'greaves', 'boots', 'accessory1', 'accessory2'];
@@ -27,10 +27,11 @@ export const ACCESSORY_VARIANTS = ['amulet', 'ring', 'charm'];
 export const GEAR_CATEGORY_COLOR = { armor: '#c9a227', weapon: '#e05b4d', greaves: '#7fa8c9', boots: '#8fbf6b', accessory: '#c07fe0' };
 
 // --- 옵션 범위
+// defense = 블락률(피격 시 데미지를 통째로 막을 확률). 키 이름은 골든 호환 때문에 유지 - 피해 감소 방어력은 별도 키로 추가 예정
 export const STAT_DEF = {
   atkSpeed:  { label: '공격속도', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
   atkPower:  { label: '공격력',   min: 1,    max: 3,    fmt: (v) => `+${Math.round(v)}` },
-  defense:   { label: '방어력(블락)', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
+  defense:   { label: '블락률', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
   evasion:   { label: '회피율',   min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   health:    { label: '체력',     min: 1,    max: 3,    fmt: (v) => `+${Math.round(v)}` },

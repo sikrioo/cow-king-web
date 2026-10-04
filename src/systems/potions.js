@@ -49,6 +49,6 @@ export function applyItem(type) {
   } else if (type === 'defense') {
     game.hero.defenseChance = 0.5;
     game.hero.defenseBuffTimer = DEFENSE_BUFF_DURATION;
-    floatText(game.hero.x, game.hero.y - 40, '방어력 UP', ITEM_STYLE.defense.color);
+    floatText(game.hero.x, game.hero.y - 40, '블락률 UP', ITEM_STYLE.defense.color);
   }
 }

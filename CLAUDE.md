@@ -35,6 +35,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 - 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS`. 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
 - 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
+- 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지. 피해를 줄이는 방어력은 아직 없음(기획 중).
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 
 ## 규칙
@@ -49,7 +50,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 ## 테스트
 - `tests/smoke.test.js`: 레거시 HTML과 새 코드를 같은 시드·같은 입력으로 돌려 **상태 지문 + 캔버스 그리기 호출 해시**가 같은지 비교(일반/몬스터 11종/모바일 시나리오).
   → **의도적으로 게임플레이·화면을 바꾸는 작업을 하면 이 테스트는 깨지는 게 정상이다.** 그때는 테스트를 몰래 고치지 말고, 사용자와 상의해 비교 기준을 바꾸거나(예: `v1-modular` 동작을 새 기준으로) 예외/NaN 검사만 남기는 식으로 정리한다.
-- `tests/baseline.*.test.js`: `docs/baseline.golden.json`과 비교. 동작을 바꾸지 않는 작업에서 불일치가 나면 코드를 되돌린다(테스트 수정 금지). 의도적인 밸런스 변경이면 사용자 확인 후 골든 갱신 방법을 함께 정한다 (`legacy/tools/baseline.cjs`는 레거시 파일만 읽음).
+- `tests/baseline.*.test.js`: `docs/baseline.golden.json`과 비교. 동작을 바꾸지 않는 작업에서 불일치가 나면 코드를 되돌린다(테스트 수정 금지). 사용자가 결정한 **의도적 변경**은 골든 파일을 고치지 말고 `tests/golden.overrides.js`에 경로·값·이유·날짜를 추가한다 (골든은 레거시 기록으로 유지 → `legacy/tools/baseline.cjs --check`도 계속 통과).
 - 테스트용 기능 `L`키 레벨업, `giveTestStash()`는 나중에 제거 예정(유지 중).
 
 ## 자주 밟는 함정

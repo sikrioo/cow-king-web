@@ -1,7 +1,10 @@
 // 골든(docs/baseline.golden.json)의 exact 키 중 data 모듈만으로 계산 가능한 것을 비교한다.
 // 기대값은 골든 JSON에서만 읽는다 (숫자를 테스트에 복사하지 말 것). 계산식은 legacy/tools/baseline.cjs와 같게.
 import { describe, it, expect } from 'vitest';
-import golden from '../docs/baseline.golden.json';
+import goldenRaw from '../docs/baseline.golden.json';
+import { applyOverrides } from './golden.overrides.js';
+
+const golden = applyOverrides(goldenRaw); // 의도적으로 바꾼 값은 tests/golden.overrides.js
 import { MONSTERS } from '../src/data/monsters.js';
 import { SKILL_UNLOCK_LEVEL } from '../src/data/skills.js';
 import { RARITY_DEF, STAT_DEF } from '../src/data/items.js';

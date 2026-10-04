@@ -56,7 +56,7 @@ export function drawEquipTab(ctx, x, startRow, w) {
   const bonus = [
     ['공격속도', `+${Math.round(game.hero.gearAtkSpeed * 100)}%`],
     ['공격력', `+${game.hero.gearAtkPower}`],
-    ['방어(블락)', `+${Math.round(game.hero.gearDefense * 100)}%`],
+    ['블락률', `+${Math.round(game.hero.gearDefense * 100)}%`],
     ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
     ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],
     ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`]

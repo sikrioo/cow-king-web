@@ -1,7 +1,10 @@
 // 골든(docs/baseline.golden.json)의 규칙 판정 키(exact)와 드랍/등급 분포(statistical)를 새 모듈 코드로 계산해 비교한다.
 // 절차·순서·시드는 legacy/tools/baseline.cjs와 같게 (기대값은 골든 JSON에서만 읽음 - 숫자를 테스트에 복사하지 말 것)
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import golden from '../docs/baseline.golden.json';
+import goldenRaw from '../docs/baseline.golden.json';
+import { applyOverrides } from './golden.overrides.js';
+
+const golden = applyOverrides(goldenRaw); // 의도적으로 바꾼 값은 tests/golden.overrides.js
 import { installBrowserEnv } from './helpers/browserEnv.js';
 
 const BASELINE_SEED = 20240601; // legacy/tools/baseline.cjs와 같은 시드
