@@ -91,6 +91,8 @@ beforeAll(async () => {
 
     // 6) 휠윈드: 4마리를 반경 안에 가둔 최악 조건에서의 사망 시점
     fresh(); hero().level = 5; hero().attackBonus = 0; hero().gearAtkPower = 0;
+    // 무기 피해는 범위 굴림(2026-10-05 무기 기본 속성)이라 틱 판정만 보도록 레거시 기본 피해 30으로 고정
+    hero().weaponStats = { main: { min: 30, max: 30, interval: 0.4 }, off: null };
     const cx = PEN.x + PEN.size / 2, cy = PEN.y + PEN.size / 2;
     Body.setPosition(hero().body, { x: cx, y: cy }); hero().x = cx; hero().y = cy;
     const offs = [[30, 0], [-30, 0], [0, 30], [0, -30]];

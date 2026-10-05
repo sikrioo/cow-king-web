@@ -15,7 +15,8 @@ import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
 import { startNextWave } from './systems/waves.js';
 import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
-import { PEN, randomPointInPen } from './world/arena.js';
+import { PEN } from './world/arena.js';
+import { viewSize } from './world/camera.js';
 
 export function resetGame() {
   game.paused = false;
@@ -147,11 +148,19 @@ export function setPaused(v) {
   if (pb) pb.textContent = game.paused ? '▶' : 'Ⅱ';
 }
 
+// 타이틀 소들이 돌아다니는 영역: 목장 가운데의 화면에 보이는 만큼
+function titleArea() {
+  const v = viewSize();
+  const w = Math.min(v.w, PEN.size), h = Math.min(v.h, PEN.size);
+  return { x: PEN.x + (PEN.size - w) / 2, y: PEN.y + (PEN.size - h) / 2, w, h };
+}
+
 export function initTitleScene() {
   ui.titleCows = [];
-  const count = Math.max(7, Math.min(12, Math.round(PEN.size / 70)));
+  const area = titleArea();
+  const count = Math.max(7, Math.min(12, Math.round(Math.min(area.w, area.h) / 70)));
   for (let i = 0; i < count; i++) {
-    const p = randomPointInPen(0.10);
+    const p = { x: area.x + area.w * (0.1 + Math.random() * 0.8), y: area.y + area.h * (0.1 + Math.random() * 0.8) };
     const a = Math.random() * Math.PI * 2;
     ui.titleCows.push({
       x: p.x, y: p.y,
@@ -167,8 +176,9 @@ export function initTitleScene() {
 export function updateTitleScene(dt) {
   ui.titleTime += dt;
   if (!ui.titleCows.length) initTitleScene();
-  const minX = PEN.x + 34, maxX = PEN.x + PEN.size - 34;
-  const minY = PEN.y + 40, maxY = PEN.y + PEN.size - 32;
+  const area = titleArea();
+  const minX = area.x + 34, maxX = area.x + area.w - 34;
+  const minY = area.y + 40, maxY = area.y + area.h - 32;
   ui.titleCows.forEach((c, i) => {
     c.vx += Math.sin(ui.titleTime * 0.7 + c.phase + i) * 2.2 * dt;
     c.vy += Math.cos(ui.titleTime * 0.6 + c.phase * 1.3) * 1.8 * dt;

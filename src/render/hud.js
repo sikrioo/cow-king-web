@@ -7,6 +7,7 @@ import { ITEM_STYLE } from '../data/items.js';
 import { canvas, ctx } from '../core/context.js';
 import { game } from '../state.js';
 import { attacksPerSecond } from '../util.js';
+import { drawMinimap, minimapSize } from './minimap.js';
 
 export function drawComboCounter(ctx) {
   if (game.hero.combo < 2 || !game.hero.alive) return;
@@ -80,7 +81,7 @@ export function drawStatReadout(ctx) {
   const w = 128, rowH = 19, pad = 8;
   const panelH = pad * 2 + rowH * stats.length - 4;
   const x = canvas.width - w - 10;
-  const y = 14 + 38 * 2 + 14; // 마나 구슬(지름 76, 위 여백 14) 아래
+  const y = 14 + 38 * 2 + 14 + minimapSize() + 8; // 마나 구슬(지름 76, 위 여백 14) → 미니맵 아래
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.42)';
   ctx.fillRect(x, y, w, panelH);
@@ -148,6 +149,8 @@ export function drawHUD() {
   ctx.fillText(`웨이브 ${game.wave}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
   ctx.textAlign = 'left';
 
+  const mm = minimapSize();
+  drawMinimap(ctx, canvas.width - mm - 10, 14 + 38 * 2 + 14);
   drawStatReadout(ctx);
 
   if (game.hero.statPoints > 0) {

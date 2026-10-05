@@ -6,6 +6,8 @@ import { drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFlo
 import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
+import { applyCamera, updateCamera, inView } from '../world/camera.js';
+import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
 import { updatePotionButtonsUI, updateSkillButtonsUI, syncTitleModeClass } from '../ui/dom.js';
 import { drawInventoryPanel } from '../ui/menu/panel.js';
@@ -20,7 +22,9 @@ export function render(t) {
   const titleMode = game.gameState === 'title';
   syncTitleModeClass(titleMode);
   if (titleMode) {
+    updateCamera(PEN.x + PEN.size / 2, PEN.y + PEN.size / 2); // 타이틀: 목장 가운데
     ctx.save();
+    applyCamera(ctx);
     drawPen();
     drawTitleScene(t);
     drawParticles(ctx);
@@ -29,13 +33,17 @@ export function render(t) {
     return;
   }
 
+  updateCamera(game.hero.x, game.hero.y);
   ctx.save();
   if (game.shake > 0) {
     ctx.translate((Math.random() - 0.5) * game.shake * 2, (Math.random() - 0.5) * game.shake * 2);
   }
+  ctx.save();
+  applyCamera(ctx); // 여기부터 월드 좌표
   drawPen();
   drawHazards(ctx);
-  const drawables = game.cows.map((c) => ({ y: c.y, fn: () => drawMonster(c, ctx, t) }));
+  // 화면 밖 몬스터는 안 그림 (몬스터 그림은 난수를 쓰지 않으므로 게임 결과에 영향 없음)
+  const drawables = game.cows.filter((c) => inView(c.x, c.y, 160)).map((c) => ({ y: c.y, fn: () => drawMonster(c, ctx, t) }));
   drawables.push({ y: game.hero.y, fn: () => drawPlayer(ctx, t) });
   drawables.sort((a, b) => a.y - b.y).forEach((d) => d.fn());
   drawItems(ctx, t);
@@ -44,6 +52,7 @@ export function render(t) {
   drawLightningBolts(ctx);
   drawFloatTexts(ctx);
   drawComboCounter(ctx);
+  ctx.restore(); // 월드 좌표 끝 - 아래는 화면 좌표
   drawStartCountdown();
   drawWavePresentation(t);
   drawDemoTip();

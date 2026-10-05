@@ -2,7 +2,7 @@
 import { CURRENT_MAP } from '../data/maps.js';
 import { World, Bodies, world } from '../core/physics.js';
 
-// 목장(정사각형 아레나) 위치/크기 - layoutArena()가 채움
+// 목장(정사각형 아레나) 위치/크기 - 화면과 상관없는 고정 크기(data/maps.js), layoutArena()가 채움
 export const PEN = { x: 0, y: 0, size: 0 };
 let wallBodies = [];
 
@@ -19,12 +19,11 @@ export function setupWalls() {
   World.add(world, wallBodies);
 }
 
-// 화면 크기에 맞춰 목장을 가운데 정사각형으로 배치하고 벽을 다시 세움
-export function layoutArena(width, height) {
-  const pad = Math.max(CURRENT_MAP.padMin, Math.min(width, height) * CURRENT_MAP.padRatio);
-  PEN.size = Math.min(width, height) - pad * 2;
-  PEN.x = (width - PEN.size) / 2;
-  PEN.y = (height - PEN.size) / 2;
+// 목장 배치 + 울타리 벽 (부팅 때 한 번, 주인공 바디보다 먼저)
+export function layoutArena() {
+  PEN.size = CURRENT_MAP.size;
+  PEN.x = 0;
+  PEN.y = 0;
   setupWalls();
 }
 

@@ -6,13 +6,14 @@ import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { drawCow } from '../render/monsterSprites.js';
 import { PEN } from '../world/arena.js';
+import { viewSize } from '../world/camera.js';
 
 export function drawTitleScene(t) {
   const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);
   sorted.forEach((c) => drawCow(ctx, c.x, c.y, c.scale, 'walk', t + c.phase, c.facing, 0, null, weaponFor('normal', c.phase)));
   ctx.save();
   ctx.globalAlpha = 0.28;
-  drawCow(ctx, canvas.width * 0.5, PEN.y + PEN.size * 0.36, 0.74, 'idle', t, 1, 0,
+  drawCow(ctx, PEN.x + PEN.size * 0.5, PEN.y + PEN.size * 0.5 - Math.min(viewSize().h, PEN.size) * 0.14, 0.74, 'idle', t, 1, 0,
     { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' }, weaponFor('boss', 0));
   ctx.restore();
 }

@@ -6,10 +6,12 @@ import { game } from '../state.js';
 import { TEAM_MONSTER } from './actor.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
+import { HUNT_SPEED_MULT } from '../data/balance.js';
 import { randomPointInPen } from '../world/arena.js';
 
 export class Monster {
-  constructor(scale, kind = 'normal') {
+  // opts.pos: 생성 위치(없으면 목장 안 무작위), opts.hunt: 웨이브 몬스터 - 주인공을 못 봤어도 주인공 쪽으로 몰려감
+  constructor(scale, kind = 'normal', opts = {}) {
     this.kind = kind;
 
     // 종류별 수치는 data/monsters.js (모르는 종류는 normal 수치)
@@ -17,7 +19,7 @@ export class Monster {
     const { hp, speedMul, aggroMul, scaleMul } = def;
 
     this.scale = scale * scaleMul;
-    const p = randomPointInPen();
+    const p = opts.pos || randomPointInPen();
     const r = 22 * this.scale + 6;
     this.r = r;
     this.body = Bodies.circle(p.x, p.y, r, { frictionAir: 0.25, friction: 0, restitution: 0.1, label: 'cow' });
@@ -58,6 +60,7 @@ export class Monster {
     this.zapTargetX = 0;
     this.zapTargetY = 0;
     this.dmg = def.dmg;
+    this.hunt = !!opts.hunt;
     this.whirlHitCd = 0;
     this.team = TEAM_MONSTER;
     this.behavior = behaviors[kind] || null;
@@ -111,6 +114,15 @@ export class Monster {
     if (b && b.steer && b.steer(this, dxP, dyP, distP, auraMult)) return;
 
     const isRangedKiter = !!(b && b.ranged);
+
+    // 웨이브 몬스터는 넓은 맵에서 주인공 쪽으로 빠르게 몰려옴 (어그로 범위에 들어오면 아래 일반 추격)
+    if (this.hunt && game.hero.alive && !playerNear) {
+      this.state = 'walk';
+      const sp = this.speed * auraMult * HUNT_SPEED_MULT / 60;
+      Body.setVelocity(this.body, { x: (dxP / distP) * sp, y: (dyP / distP) * sp });
+      if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
+      return;
+    }
 
     if (playerNear && distP > this.meleeRange && !isRangedKiter) {
       this.state = 'walk';

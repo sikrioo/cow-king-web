@@ -119,6 +119,15 @@ export const POTION_MANA_AMOUNT = 60;  // 마나 물약: 마나 60 회복
 export const FIRST_WAVE_DELAY = 4.0;
 export const WAVE_GAP = 2.2;
 export const BOSS_WAVE = 6;
+// 웨이브 몬스터: 주인공 주변 링(거리 MIN~MAX)의 2~4곳에서 무리로 생겨 주인공 쪽으로 몰려옴 (넓은 맵)
+export const WAVE_PACKS_MIN = 2;
+export const WAVE_PACKS_MAX = 4;
+export const WAVE_SPAWN_DIST_MIN = 550;
+export const WAVE_SPAWN_DIST_MAX = 800;
+export const WAVE_SPAWN_TOO_CLOSE = 400;  // 맵 끝에 걸려 이보다 가까워지면 다른 방향으로 다시 뽑음
+export const WAVE_PACK_RADIUS = 70;       // 무리 안에서 흩어지는 반경
+export const WAVE_SPAWN_EDGE_MARGIN = 60; // 맵 끝에서 띄우는 거리
+export const HUNT_SPEED_MULT = 2.2;       // 주인공을 아직 못 본(어그로 밖) 웨이브 몬스터의 이동 속도 배율
 
 // --- 몬스터 특수 행동 (보스/돌진/자폭/번개/광신 오라)
 export const BOSS_SLAM_COOLDOWN = 4.5;
