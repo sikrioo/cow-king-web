@@ -1,7 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
+  BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
   BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
@@ -12,6 +12,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { recordRun } from '../save.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot } from './loot.js';
+import { attackSpeedMul } from '../util.js';
 import { gainExp } from './progression.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
@@ -43,8 +44,7 @@ export function registerComboHit() {
 
 export function tryPlayerAttack() {
   if (!game.hero.alive || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
-  const comboBonus = Math.min(game.hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
-  const spdMul = Math.max(1 - Math.min(game.hero.gearAtkSpeed, 0.7) - comboBonus, 0.25);
+  const spdMul = attackSpeedMul(game.hero);
   game.hero.currentAttackDuration = ATTACK_DURATION * spdMul;
   game.hero.attackTimer = game.hero.currentAttackDuration;
   game.hero.attackCooldown = ATTACK_COOLDOWN * spdMul;

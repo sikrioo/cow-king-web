@@ -1,4 +1,16 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
+import { ATTACK_COOLDOWN, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP } from './data/balance.js';
+
+// 기본 공격 속도 배율(작을수록 빠름) - 장비/레벨 공격속도 + 콤보. 공격(combat)과 HUD 표시가 같이 쓴다
+export function attackSpeedMul(hero) {
+  const comboBonus = Math.min(hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
+  return Math.max(1 - Math.min(hero.gearAtkSpeed, 0.7) - comboBonus, 0.25);
+}
+
+// 초당 기본 공격 횟수 (공격 버튼을 누르고 있을 때)
+export function attacksPerSecond(hero) {
+  return 1 / (ATTACK_COOLDOWN * attackSpeedMul(hero));
+}
 
 export function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 

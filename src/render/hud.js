@@ -6,6 +6,7 @@ import {
 import { ITEM_STYLE } from '../data/items.js';
 import { canvas, ctx } from '../core/context.js';
 import { game } from '../state.js';
+import { attacksPerSecond } from '../util.js';
 
 export function drawComboCounter(ctx) {
   if (game.hero.combo < 2 || !game.hero.alive) return;
@@ -65,6 +66,7 @@ export function drawStatReadout(ctx) {
 
   const stats = [
     { label: '공격력', value: `${+totalAtk.toFixed(1)}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
+    { label: '공격속도', value: `${attacksPerSecond(h).toFixed(1)}/초`, color: '#ffb36b', buffed: h.combo > 0 && h.comboTimer > 0 },
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
