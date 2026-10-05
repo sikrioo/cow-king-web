@@ -2,7 +2,10 @@
 
 // --- 기본 공격
 export const ATTACK_DURATION = 0.22;
-export const ATTACK_COOLDOWN = 0.32;
+export const ATTACK_COOLDOWN = 0.40; // 기본 초당 2.5회 (2026-10-05: 0.32 → 0.40, 공속이 너무 빠르다는 피드백)
+// 공격속도: 속도 배율 = 1 + 장비/레벨 공격속도(상한) + 콤보 → "+20%"는 정말 20% 빨라짐. 전체 배율 상한 2배
+export const ATTACK_SPEED_GEAR_CAP = 0.7;
+export const ATTACK_SPEED_MAX_MULT = 2;
 export const ATTACK_RANGE = 50; // 맨손/기본값
 export const WEAPON_RANGE = { sword: 50, axe: 46, mace: 46, dagger: 38, spear: 68 };
 export const ATTACK_ARC = Math.PI * 0.9; // 쌍수(양손 다 무기)일 때 - 두 칼날이 넓게 휩쓺
