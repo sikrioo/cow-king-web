@@ -66,14 +66,14 @@ export function drawStatReadout(ctx) {
 
   const stats = [
     { label: '공격력', value: `${+totalAtk.toFixed(1)}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
-    { label: '공격속도', value: `${attacksPerSecond(h).toFixed(1)}/초`, color: '#ffb36b', buffed: h.combo > 0 && h.comboTimer > 0 },
+    { label: '초당 공격', value: `${attacksPerSecond(h).toFixed(1)}회`, color: '#ffb36b', buffed: h.combo > 0 && h.comboTimer > 0 },
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
     { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 }
   ];
 
-  const w = 118, rowH = 19, pad = 8;
+  const w = 128, rowH = 19, pad = 8;
   const panelH = pad * 2 + rowH * stats.length - 4;
   const x = canvas.width - w - 10;
   const y = 14 + 38 * 2 + 14; // 마나 구슬(지름 76, 위 여백 14) 아래
