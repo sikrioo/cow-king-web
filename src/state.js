@@ -33,6 +33,8 @@ export const ui = {
   invPanelTab: 'equip', // 'equip' | 'stats' | 'bag' | 'upgrade'
   selectedInvIndex: null, // 클릭해서 고정한 가방 칸
   hoverInvIndex: null, // 마우스를 올려둔 가방 칸(미리보기용)
+  selectedEquipSlot: null, // 가방 탭 '착용 중'에서 고정한 슬롯 이름
+  hoverEquipSlot: null,
   invSlotRects: [],
   invTabRects: {},
   invButtons: [], // 그릴 때마다 채워지는 클릭 버튼 목록 {x,y,w,h,fn}

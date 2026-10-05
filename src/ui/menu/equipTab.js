@@ -1,6 +1,5 @@
 // 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비 합산 옵션)
 import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
-import { gearArmor } from '../../systems/gear.js';
 import { game } from '../../state.js';
 import { gearTitle, gearColor } from '../itemView.js';
 import { fitText, wrapStatLines } from './common.js';
@@ -39,7 +38,7 @@ export function drawEquipTab(ctx, x, startRow, w) {
       row += 13;
       ctx.font = '10px sans-serif';
       ctx.fillStyle = '#cfd8c8';
-      wrapStatLines(ctx, it.stats, maxW, gearArmor(it)).forEach((ln) => { ctx.fillText(ln, textX, row); row += 12; });
+      wrapStatLines(ctx, it, maxW).forEach((ln) => { ctx.fillText(ln, textX, row); row += 12; });
       row += 7;
     }
   });

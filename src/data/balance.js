@@ -2,7 +2,7 @@
 
 // --- 기본 공격
 export const ATTACK_DURATION = 0.22;
-export const ATTACK_COOLDOWN = 0.40; // 기본 초당 2.5회 (2026-10-05: 0.32 → 0.40, 공속이 너무 빠르다는 피드백)
+export const ATTACK_COOLDOWN = 0.40; // 맨손 공격 간격(초당 2.5회). 무기는 data/items.js WEAPON_BASE의 aps. 스윙 동작 시간은 ATTACK_DURATION × (간격/이 값)
 // 공격속도: 속도 배율 = 1 + 장비/레벨 공격속도(상한) + 콤보 → "+20%"는 정말 20% 빨라짐. 전체 배율 상한 2배
 export const ATTACK_SPEED_GEAR_CAP = 0.7;
 export const ATTACK_SPEED_MAX_MULT = 2;
@@ -74,7 +74,7 @@ export const COMBO_SPEED_CAP = 0.3;
 // --- 플레이어 기본 전투 수치
 // ★ 전투 수치 스케일: 처음엔 체력/데미지가 1~3이라 +1만 올라도 한 방 → ×3, 이후 방어력/옵션을 정수로 세밀하게 다루려고 다시 ×10.
 //   (체력·피해·스킬 보너스·체력/공격력 옵션을 함께 ×10 - 몇 대에 죽는지는 그대로. 마나와 % 수치는 그대로)
-export const BASE_DAMAGE = 30;
+export const BASE_DAMAGE = 30; // 맨손 피해 (무기는 WEAPON_BASE)
 export const HERO_BASE_HP = 150;
 export const BASE_BLOCK = 0.05;
 export const BASE_EVASION = 0.05;

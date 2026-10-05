@@ -1,7 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
+  BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
   BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
@@ -44,10 +44,13 @@ export function registerComboHit() {
 
 export function tryPlayerAttack() {
   if (!game.hero.alive || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
+  const ws = nextSwingWeapon();
   const spdMul = attackSpeedMul(game.hero);
-  game.hero.currentAttackDuration = ATTACK_DURATION * spdMul;
+  game.hero.currentAttackDuration = ATTACK_DURATION * (ws.interval / ATTACK_COOLDOWN) * spdMul; // 느린 무기는 스윙도 느림
   game.hero.attackTimer = game.hero.currentAttackDuration;
-  game.hero.attackCooldown = ATTACK_COOLDOWN * spdMul;
+  game.hero.attackCooldown = ws.interval * spdMul;
+  game.hero.attackCooldownMax = game.hero.attackCooldown;
+  const dmg = heroHitDamage(ws); // 한 번 휘두를 때 한 번 굴림 (맞은 몬스터 모두 같은 피해)
 
   let landed = false;
   const atkRange = getWeaponRange();
@@ -60,7 +63,7 @@ export function tryPlayerAttack() {
     if (dist > atkRange + getCowHitRadius(c)) return;
     let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
-    if (diff < getAttackArc() / 2) { damageCow(c); landed = true; }
+    if (diff < getAttackArc() / 2) { damageCow(c, dmg); landed = true; }
   });
   if (landed) registerComboHit();
 }
@@ -94,7 +97,26 @@ export function bossSlam(c) {
   }
 }
 
-export function damageCow(c) {
+// 이번 기본 공격에 쓸 무기: 쌍수면 주무기/보조무기를 번갈아
+function nextSwingWeapon() {
+  const ws = game.hero.weaponStats;
+  if (!ws.off) return ws.main;
+  const w = game.hero.offHandNext ? ws.off : ws.main;
+  game.hero.offHandNext = !game.hero.offHandNext;
+  return w;
+}
+
+// 무기 피해 굴림 (min~max 정수)
+export function rollWeaponDamage(ws = game.hero.weaponStats.main) {
+  return ws.min + Math.floor(Math.random() * (ws.max - ws.min + 1));
+}
+
+// 주인공 한 타 피해 = 무기 굴림 + 공격력(장비/레벨) + 공격물약
+export function heroHitDamage(ws = game.hero.weaponStats.main) {
+  return rollWeaponDamage(ws) + game.hero.attackBonus + game.hero.gearAtkPower;
+}
+
+export function damageCow(c, dmg) {
   c.flash = 0.12;
   applyKnockback(c.body, game.hero.x, game.hero.y, 7);
   c.knockback = 0.18;
@@ -102,7 +124,6 @@ export function damageCow(c) {
   game.hitstop = 4;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
-  const dmg = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   if (c.hp <= 0 && c.state !== 'dead') {

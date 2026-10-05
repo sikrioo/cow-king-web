@@ -80,7 +80,7 @@ export function bindInput(actions) {
     if (e.button === 2) input.holdSlot2 = false;
     else input.holdSlot1 = false;
   });
-  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; ui.hoverInvIndex = null; });
+  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
 
   // 메뉴가 열려 있으면 캔버스 포인터는 메뉴로 (호버 미리보기 / 클릭)
   canvas.addEventListener('pointermove', (e) => {

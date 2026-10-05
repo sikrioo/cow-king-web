@@ -24,6 +24,20 @@ export const GEAR_VARIANT_LABEL = {
 };
 export const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear'];
 export const ACCESSORY_VARIANTS = ['amulet', 'ring', 'charm'];
+// 무기 기본 속성 (한손 기준): 피해 min~max, 초당 공격 횟수(aps). 초당 피해는 비슷하게, 느릴수록 한 방이 셈
+// 등급 배율·강화(×1.25)는 피해에만 곱함. 양손은 피해 ×TWO_HAND_DAMAGE_MULT, 속도 ×TWO_HAND_SPEED_MULT
+export const WEAPON_BASE = {
+  dagger: { min: 18, max: 28, aps: 3.3 },
+  sword:  { min: 24, max: 36, aps: 2.5 },
+  spear:  { min: 26, max: 42, aps: 2.2 },
+  axe:    { min: 28, max: 44, aps: 2.1 },
+  mace:   { min: 30, max: 50, aps: 1.9 }
+};
+export const TWO_HAND_DAMAGE_MULT = 1.6;
+export const TWO_HAND_SPEED_MULT = 0.85;
+export const WEAPON_DAMAGE_LABEL = '무기 피해';
+export const WEAPON_SPEED_LABEL = '공격속도';
+
 // 방어구 기본 방어력 (×등급 배율 ×강화). 무기/장신구는 없음
 export const GEAR_BASE_ARMOR = { armor: 60, shield: 40, greaves: 30, boots: 20 };
 export const ARMOR_LABEL = '방어력';

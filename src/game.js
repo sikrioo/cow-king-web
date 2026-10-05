@@ -7,7 +7,7 @@ import { game, ui, input } from './state.js';
 import { updatePlayer } from './entities/hero.js';
 import { updateHazards } from './systems/combat.js';
 import { updateParticles, updateLightningBolts, updateShockwaves, updateFloatTexts } from './systems/fx.js';
-import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot } from './systems/gear.js';
+import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot, unarmedStats } from './systems/gear.js';
 import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint } from './systems/progression.js';
@@ -85,6 +85,9 @@ export function resetGame() {
   game.hero.gearEvasion = 0;
   game.hero.gearArmor = 0;
   game.hero.armorReduction = 0;
+  game.hero.weaponStats = { main: unarmedStats(), off: null };
+  game.hero.offHandNext = false;
+  game.hero.attackCooldownMax = 0;
   game.hero.gearSpeedMult = 1;
   game.hero.gearMaxHp = 0;
   game.hero.gearMaxMana = 0;
@@ -100,6 +103,8 @@ export function resetGame() {
   ui.identifyTimer = 0;
   ui.selectedInvIndex = null;
   ui.hoverInvIndex = null;
+  ui.selectedEquipSlot = null;
+  ui.hoverEquipSlot = null;
   ui.invPanelTab = 'equip';
   ui.invToast = null;
   ui.invReveal = null;

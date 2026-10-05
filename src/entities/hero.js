@@ -10,6 +10,7 @@ import { game, input } from '../state.js';
 import { TEAM_HERO } from './actor.js';
 import { emitMoveReaction } from '../systems/fx.js';
 import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../systems/skills.js';
+import { unarmedStats } from '../systems/gear.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
 export function createHero() {
@@ -54,6 +55,9 @@ export function createHero() {
     gearEvasion: 0,
     gearArmor: 0,
     armorReduction: 0,
+    weaponStats: { main: unarmedStats(), off: null },
+    offHandNext: false, // 쌍수: 다음 기본 공격을 보조무기로
+    attackCooldownMax: 0,
     gearSpeedMult: 1,
     gearMaxHp: 0,
     gearMaxMana: 0,

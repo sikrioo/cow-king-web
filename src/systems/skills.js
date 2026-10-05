@@ -5,14 +5,14 @@ import {
   WHIRLWIND_RADIUS, WHIRLWIND_MANA_COST, WHIRLWIND_TICK, LEAP_DISTANCE, LEAP_DURATION, LEAP_COOLDOWN,
   LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
   RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
-  SMASH_DAMAGE_BONUS, BASE_DAMAGE
+  SMASH_DAMAGE_BONUS
 } from '../data/balance.js';
 import { PALETTE } from '../data/palette.js';
 import { SKILL_ORDER, SKILL_META } from '../data/skills.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow } from './combat.js';
+import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage } from './combat.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
@@ -68,7 +68,7 @@ export function whirlwindHit(c) {
   c.knockback = 0.15;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 5);
 
-  const dmg = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
+  const dmg = heroHitDamage();
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   registerComboHit();
@@ -129,7 +129,7 @@ export function leapHitCow(c) {
   c.knockback = 0.2;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 6);
 
-  const dmg = BASE_DAMAGE + game.hero.attackBonus + game.hero.gearAtkPower;
+  const dmg = heroHitDamage();
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   registerComboHit();
@@ -180,7 +180,7 @@ export function updateRush(dt) {
     if (!canHit(game.hero, c)) return;
     if (Math.hypot(c.x - nx, c.y - ny) <= RUSH_HIT_RADIUS + getCowHitRadius(c)) {
       game.hero.rushHitSet.add(c);
-      skillDamageCow(c, BASE_DAMAGE + RUSH_DAMAGE_BONUS, 8.5, '#ff9b63');
+      skillDamageCow(c, rollWeaponDamage() + RUSH_DAMAGE_BONUS, 8.5, '#ff9b63');
     }
   });
 
@@ -223,7 +223,7 @@ export function updateGroundSmash(dt) {
       if (c.state === 'dead') return;
       if (!canHit(game.hero, c)) return;
       if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= SMASH_RADIUS + getCowHitRadius(c)) {
-        skillDamageCow(c, BASE_DAMAGE + SMASH_DAMAGE_BONUS, 11, '#ffd36a');
+        skillDamageCow(c, rollWeaponDamage() + SMASH_DAMAGE_BONUS, 11, '#ffd36a');
         c.stunTimer = Math.max(c.stunTimer || 0, 0.35);
       }
     });
@@ -233,7 +233,7 @@ export function updateGroundSmash(dt) {
 }
 
 export const SKILLS = {
-  attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(), cd: () => game.hero.attackCooldown,    cdMax: () => ATTACK_COOLDOWN },
+  attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(), cd: () => game.hero.attackCooldown,    cdMax: () => game.hero.attackCooldownMax || ATTACK_COOLDOWN },
   warcry:    { ...SKILL_META.warcry,    try: () => tryWarCry(),       cd: () => game.hero.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN },
   whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => game.hero.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION },
   leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => game.hero.leapCooldown,      cdMax: () => LEAP_COOLDOWN },

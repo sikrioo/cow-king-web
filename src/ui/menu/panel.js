@@ -11,7 +11,7 @@ import { drawUpgradeTab } from './upgradeTab.js';
 
 export function setInventoryOpen(open) {
   ui.showInventory = open;
-  if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; }
+  if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; ui.selectedEquipSlot = null; ui.hoverEquipSlot = null; }
   const dim = open ? '0.15' : '1';
   const pe = open ? 'none' : 'auto';
   ['joystick-base', 'action-buttons', 'potion-buttons'].forEach((id) => {
@@ -24,7 +24,7 @@ export function setInventoryOpen(open) {
 export function invPanelHandlePoint(mx, my) {
   for (const tab of INV_TABS) {
     const r = ui.invTabRects[tab.key];
-    if (r && pointInRect(mx, my, r)) { ui.invPanelTab = tab.key; ui.hoverInvIndex = null; return; }
+    if (r && pointInRect(mx, my, r)) { ui.invPanelTab = tab.key; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; return; }
   }
   for (const b of ui.invButtons) {
     if (pointInRect(mx, my, b)) { b.fn(); return; }
@@ -32,7 +32,9 @@ export function invPanelHandlePoint(mx, my) {
   if (ui.invPanelTab === 'bag') {
     const hit = ui.invSlotRects.find((r) => pointInRect(mx, my, r));
     // 클릭하면 그 칸을 고정, 같은 칸을 다시 누르면 고정 해제 - 마우스를 옮겨도 선택이 바뀌지 않음
-    if (hit) ui.selectedInvIndex = (ui.selectedInvIndex === hit.index) ? null : hit.index;
+    // 착용 중 칸(slot)과 가방 칸(index)은 하나만 고정
+    if (hit && hit.slot) { ui.selectedEquipSlot = (ui.selectedEquipSlot === hit.slot) ? null : hit.slot; ui.selectedInvIndex = null; }
+    else if (hit) { ui.selectedInvIndex = (ui.selectedInvIndex === hit.index) ? null : hit.index; ui.selectedEquipSlot = null; }
   }
 }
 
@@ -119,8 +121,11 @@ export function drawInventoryPanel(ctx) {
 export function menuPointerMove(mx, my) {
   if (ui.invPanelTab === 'bag') {
     const hit = ui.invSlotRects.find((r) => pointInRect(mx, my, r));
-    ui.hoverInvIndex = hit ? hit.index : null; // 올려두기만 하면 미리보기 - 고정(selectedInvIndex)은 건드리지 않음
+    // 올려두기만 하면 미리보기 - 고정(selectedInvIndex/selectedEquipSlot)은 건드리지 않음
+    ui.hoverInvIndex = hit && !hit.slot ? hit.index : null;
+    ui.hoverEquipSlot = hit && hit.slot ? hit.slot : null;
   } else {
     ui.hoverInvIndex = null;
+    ui.hoverEquipSlot = null;
   }
 }

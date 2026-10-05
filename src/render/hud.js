@@ -1,6 +1,6 @@
 // 캔버스 HUD (체력·마나 구슬, 스태미나, 스탯, 버프, 콤보)
 import {
-  COMBO_WINDOW, BASE_DAMAGE, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION, SPEED_BUFF_DURATION,
+  COMBO_WINDOW, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION, SPEED_BUFF_DURATION,
   ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
@@ -59,13 +59,17 @@ export function drawBuffIcons(ctx) {
 // 전투 스탯 카드 - 오른쪽, 마나 구슬 아래 (버프가 걸린 스탯은 값 옆에 ▲)
 export function drawStatReadout(ctx) {
   const h = game.hero;
-  const totalAtk = BASE_DAMAGE + h.attackBonus + h.gearAtkPower;
+  // 공격력 = 무기 피해 범위(쌍수면 두 무기를 합친 범위) + 공격력 보너스
+  const ws = h.weaponStats;
+  const atkBonus = h.attackBonus + h.gearAtkPower;
+  const atkMin = Math.min(ws.main.min, ws.off ? ws.off.min : Infinity) + atkBonus;
+  const atkMax = Math.max(ws.main.max, ws.off ? ws.off.max : -Infinity) + atkBonus;
   const totalBlock = Math.min(BASE_BLOCK + h.defenseChance + h.gearDefense, 0.85);
   const totalEvasion = Math.min(BASE_EVASION + h.gearEvasion, 0.75);
   const totalSpeedPct = Math.round((h.gearSpeedMult * h.speedMult - 1) * 100);
 
   const stats = [
-    { label: '공격력', value: `${+totalAtk.toFixed(1)}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
+    { label: '공격력', value: `${atkMin}~${atkMax}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
     { label: '초당 공격', value: `${attacksPerSecond(h).toFixed(1)}회`, color: '#ffb36b', buffed: h.combo > 0 && h.comboTimer > 0 },
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },

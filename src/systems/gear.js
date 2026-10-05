@@ -2,10 +2,11 @@
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
   MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, UPGRADE_STAT_MULT,
-  ARMOR_K, ARMOR_MAX_REDUCTION
+  ARMOR_K, ARMOR_MAX_REDUCTION, BASE_DAMAGE, ATTACK_COOLDOWN
 } from '../data/balance.js';
 import {
-  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR
+  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR,
+  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT
 } from '../data/items.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
@@ -210,6 +211,20 @@ export function gearArmor(gear) {
   return Math.round(base * RARITY_DEF[gear.rarity].mult * UPGRADE_STAT_MULT ** (gear.upgradeLevel || 0));
 }
 
+// 무기 기본 속성 { min, max, interval(초) } - 무기가 아니면 null. 피해에만 등급 배율·강화를 곱함(정수)
+export function weaponStats(gear) {
+  const b = gear && gear !== 'LOCKED' && gear.category === 'weapon' ? WEAPON_BASE[gear.variant] : null;
+  if (!b) return null;
+  const two = gear.handedness === 'two';
+  const m = RARITY_DEF[gear.rarity].mult * UPGRADE_STAT_MULT ** (gear.upgradeLevel || 0) * (two ? TWO_HAND_DAMAGE_MULT : 1);
+  return { min: Math.round(b.min * m), max: Math.round(b.max * m), interval: 1 / (b.aps * (two ? TWO_HAND_SPEED_MULT : 1)) };
+}
+
+// 맨손
+export function unarmedStats() {
+  return { min: BASE_DAMAGE, max: BASE_DAMAGE, interval: ATTACK_COOLDOWN };
+}
+
 // 방어력 → 피해 감소율 (많이 쌓을수록 효율이 떨어지고 상한 있음)
 export function armorReduction(armor) {
   return Math.min(armor / (armor + ARMOR_K), ARMOR_MAX_REDUCTION);
@@ -246,6 +261,11 @@ export function recalcGearStats() {
   game.hero.gearEvasion = evasion;
   game.hero.gearArmor = armor;
   game.hero.armorReduction = armorReduction(armor);
+  // 주무기(없으면 맨손) + 쌍수일 때 보조무기 - 기본 공격은 둘을 번갈아 씀
+  game.hero.weaponStats = {
+    main: weaponStats(game.hero.equipment.weaponMain) || unarmedStats(),
+    off: weaponStats(game.hero.equipment.weaponOff)
+  };
   game.hero.gearSpeedMult = 1 + moveSpeed;
   game.hero.gearMaxHp = Math.round(health);
   game.hero.gearMaxMana = Math.round(mana);

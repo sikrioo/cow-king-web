@@ -1,5 +1,6 @@
 // 캔버스 메뉴 공용 도우미 (클릭 영역 판정, 보고 있는 가방 칸, 글자 맞춤, 비교 대상 장비)
-import { STAT_DEF, ARMOR_LABEL } from '../../data/items.js';
+import { STAT_DEF, ARMOR_LABEL, WEAPON_DAMAGE_LABEL, WEAPON_SPEED_LABEL } from '../../data/items.js';
+import { gearArmor, weaponStats } from '../../systems/gear.js';
 import { game, ui } from '../../state.js';
 
 export function pointInRect(px, py, r) {
@@ -20,12 +21,29 @@ export function fitText(ctx, text, maxW) {
   return t + '…';
 }
 
-// armor: 방어구 기본 방어력(있으면 맨 앞에 표시)
-export function wrapStatLines(ctx, stats, maxW, armor = 0) {
+// 장비 기본 속성(옵션이 아닌 것): 무기 피해/공격속도, 방어구 방어력
+//   → [{ label, text(표시), value(비교용 수치), fmt(차이 표시), cmpLabel? }]
+export function gearBaseParts(gear) {
+  const parts = [];
+  const ws = weaponStats(gear);
+  if (ws) {
+    parts.push({ label: WEAPON_DAMAGE_LABEL, cmpLabel: `${WEAPON_DAMAGE_LABEL}(평균)`, text: `${ws.min}~${ws.max}`, value: (ws.min + ws.max) / 2, fmt: (v) => `${+v.toFixed(1)}` });
+    parts.push({ label: WEAPON_SPEED_LABEL, text: `${(1 / ws.interval).toFixed(1)}회/초`, value: 1 / ws.interval, fmt: (v) => `${v.toFixed(1)}회` });
+  }
+  const armor = gearArmor(gear);
+  if (armor) parts.push({ label: ARMOR_LABEL, text: `${armor}`, value: armor, fmt: (v) => `${Math.round(v)}` });
+  return parts;
+}
+
+// 기본 속성 + 옵션을 폭에 맞춰 여러 줄로
+export function wrapStatLines(ctx, gear, maxW) {
   const lines = [];
-  let line = armor ? `${ARMOR_LABEL}${armor}` : '';
-  Object.entries(stats).forEach(([k, v]) => {
-    const part = `${STAT_DEF[k].label}${STAT_DEF[k].fmt(v)}`;
+  let line = '';
+  const parts = [
+    ...gearBaseParts(gear).map((p) => `${p.label} ${p.text}`),
+    ...Object.entries(gear.stats).map(([k, v]) => `${STAT_DEF[k].label}${STAT_DEF[k].fmt(v)}`)
+  ];
+  parts.forEach((part) => {
     const test = line ? `${line}  ${part}` : part;
     if (line && ctx.measureText(test).width > maxW) { lines.push(line); line = part; }
     else line = test;

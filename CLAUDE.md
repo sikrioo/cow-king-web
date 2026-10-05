@@ -36,6 +36,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 - 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
 - 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지.
+- 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.
 - 방어력(피해 감소): 방어구 기본값 `data/items.js`의 `GEAR_BASE_ARMOR`(옵션 아님, ×등급 배율 ×강화), 공식 상수 `data/balance.js`의 `ARMOR_K`/`ARMOR_MAX_REDUCTION`, 계산 `systems/gear.js`의 `gearArmor`/`armorReduction`. 피격 순서: 회피 → 블락 → 방어력 감소(최소 1). 원소 저항(2안)은 나중에 `hitPlayer`에 공격 종류를 붙여 확장.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 

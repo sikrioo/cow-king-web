@@ -1,29 +1,85 @@
-// 메뉴 - 가방 탭 (칸 목록 + 선택 아이템 상세: 감정/장착)
+// 메뉴 - 가방 탭 (착용 중 장비 + 가방 칸 목록 + 선택 아이템 상세: 감정/장착/비교)
+// 착용 중 칸은 ui.selectedEquipSlot/hoverEquipSlot(슬롯 이름), 가방 칸은 ui.selectedInvIndex/hoverInvIndex(인덱스)로 따로 고른다
 import { INVENTORY_SIZE, IDENTIFY_DURATION } from '../../data/balance.js';
-import { STAT_DEF, ARMOR_LABEL } from '../../data/items.js';
+import { STAT_DEF, GEAR_SLOTS } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
-import { tryIdentify, equipFromInventory, gearArmor } from '../../systems/gear.js';
+import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
 import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
-import { getInvViewIndex, fitText, getCompareItemForGear } from './common.js';
+import { getInvViewIndex, fitText, getCompareItemForGear, gearBaseParts } from './common.js';
+
+const WORN_COLOR = '#9be39b';
+
+function wornGear() {
+  return GEAR_SLOTS.map((slot) => ({ slot, g: game.hero.equipment[slot] })).filter(({ g }) => g && g !== 'LOCKED');
+}
+
+// 칸 하나 그리기 (가방/착용 중 공용)
+function drawCell(ctx, r, text, color, { pinned, hovered, worn }) {
+  if (worn) ctx.fillStyle = pinned ? 'rgba(155,227,155,0.26)' : hovered ? 'rgba(155,227,155,0.16)' : 'rgba(155,227,155,0.07)';
+  else ctx.fillStyle = pinned ? 'rgba(255,224,102,0.22)' : hovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.05)';
+  ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = pinned ? (worn ? WORN_COLOR : '#ffe066') : worn ? 'rgba(155,227,155,0.35)' : 'rgba(255,255,255,0.16)';
+  ctx.lineWidth = pinned ? 1.8 : 1;
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  let tx = r.x + 7;
+  ctx.textBaseline = 'middle';
+  if (worn) {
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = WORN_COLOR;
+    ctx.fillText('E', tx, r.y + r.h / 2 + 1);
+    tx += 12;
+  }
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = color;
+  ctx.fillText(fitText(ctx, text, r.x + r.w - 7 - tx), tx, r.y + r.h / 2 + 1);
+  ctx.textBaseline = 'alphabetic';
+}
 
 export function drawBagTab(ctx, x, startRow, w, bottom) {
+  if (ui.selectedInvIndex !== null && !game.hero.inventory[ui.selectedInvIndex]) ui.selectedInvIndex = null;
+  if (ui.hoverInvIndex !== null && !game.hero.inventory[ui.hoverInvIndex]) ui.hoverInvIndex = null;
+  const eq = game.hero.equipment;
+  if (ui.selectedEquipSlot && (!eq[ui.selectedEquipSlot] || eq[ui.selectedEquipSlot] === 'LOCKED')) ui.selectedEquipSlot = null;
+  if (ui.hoverEquipSlot && (!eq[ui.hoverEquipSlot] || eq[ui.hoverEquipSlot] === 'LOCKED')) ui.hoverEquipSlot = null;
+
+  const cols = 2, gapX = 6, gapY = 3;
+  const colW = (w - 32 - gapX) / cols;
+
+  // --- 착용 중
   ctx.textAlign = 'left';
   ctx.font = 'bold 12px sans-serif';
-  ctx.fillStyle = '#ffe066';
-  ctx.fillText(`가방 (${game.hero.inventory.length}/${INVENTORY_SIZE})`, x + 16, startRow);
+  ctx.fillStyle = WORN_COLOR;
+  ctx.fillText('착용 중', x + 16, startRow);
   ctx.textAlign = 'right';
   ctx.font = '10px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.fillText('클릭하면 고정 · 올려두면 미리보기', x + w - 16, startRow);
   ctx.textAlign = 'left';
 
-  if (ui.selectedInvIndex !== null && !game.hero.inventory[ui.selectedInvIndex]) ui.selectedInvIndex = null;
-  if (ui.hoverInvIndex !== null && !game.hero.inventory[ui.hoverInvIndex]) ui.hoverInvIndex = null;
+  const worn = wornGear();
+  const wornRowH = 22;
+  const wornTop = startRow + 8;
+  worn.forEach(({ slot, g }, i) => {
+    const r = { x: x + 16 + (i % cols) * (colW + gapX), y: wornTop + Math.floor(i / cols) * (wornRowH + gapY), w: colW, h: wornRowH };
+    drawCell(ctx, r, gearTitle(g), gearColor(g), { pinned: slot === ui.selectedEquipSlot, hovered: slot === ui.hoverEquipSlot, worn: true });
+    ui.invSlotRects.push({ ...r, slot });
+  });
+  const wornRows = Math.max(1, Math.ceil(worn.length / cols));
+  if (worn.length === 0) {
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillText('착용한 장비가 없어', x + 16, wornTop + 15);
+  }
 
-  const cols = 2, gapX = 6, gapY = 3, rowH = 24;
-  const colW = (w - 32 - gapX) / cols;
-  const listTop = startRow + 10;
+  // --- 가방
+  const bagTitleY = wornTop + wornRows * (wornRowH + gapY) + 16;
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillStyle = '#ffe066';
+  ctx.fillText(`가방 (${game.hero.inventory.length}/${INVENTORY_SIZE})`, x + 16, bagTitleY);
+
+  const rowH = 24;
+  const listTop = bagTitleY + 8;
   const count = game.hero.inventory.length;
   const rows = Math.max(1, Math.ceil(count / cols));
 
@@ -33,35 +89,15 @@ export function drawBagTab(ctx, x, startRow, w, bottom) {
     ctx.fillText('가방이 비어 있어', x + 16, listTop + 16);
   }
   game.hero.inventory.forEach((g, i) => {
-    const cx = x + 16 + (i % cols) * (colW + gapX);
-    const cy = listTop + Math.floor(i / cols) * (rowH + gapY);
-    const pinned = i === ui.selectedInvIndex;
-    const hovered = i === ui.hoverInvIndex;
-    ctx.fillStyle = pinned ? 'rgba(255,224,102,0.22)' : hovered ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.05)';
-    ctx.fillRect(cx, cy, colW, rowH);
-    ctx.strokeStyle = pinned ? '#ffe066' : 'rgba(255,255,255,0.16)';
-    ctx.lineWidth = pinned ? 1.8 : 1;
-    ctx.strokeRect(cx, cy, colW, rowH);
-
-    let text, color;
-    if (g.identified) {
-      text = gearTitle(g);
-      color = gearColor(g);
-    } else {
-      text = unidentifiedTitle(g, ui.identifyingItem === g);
-      color = UNIDENTIFIED_COLOR;
-    }
-    ctx.font = '11px sans-serif';
-    ctx.fillStyle = color;
-    ctx.textBaseline = 'middle';
-    ctx.fillText(fitText(ctx, text, colW - 14), cx + 7, cy + rowH / 2 + 1);
-    ctx.textBaseline = 'alphabetic';
+    const r = { x: x + 16 + (i % cols) * (colW + gapX), y: listTop + Math.floor(i / cols) * (rowH + gapY), w: colW, h: rowH };
+    const text = g.identified ? gearTitle(g) : unidentifiedTitle(g, ui.identifyingItem === g);
+    drawCell(ctx, r, text, g.identified ? gearColor(g) : UNIDENTIFIED_COLOR, { pinned: i === ui.selectedInvIndex, hovered: i === ui.hoverInvIndex, worn: false });
     if (ui.identifyingItem === g) {
       const prog = 1 - Math.max(ui.identifyTimer, 0) / IDENTIFY_DURATION;
       ctx.fillStyle = 'rgba(255,224,102,0.85)';
-      ctx.fillRect(cx + 1, cy + rowH - 3, (colW - 2) * prog, 2);
+      ctx.fillRect(r.x + 1, r.y + rowH - 3, (colW - 2) * prog, 2);
     }
-    ui.invSlotRects.push({ x: cx, y: cy, w: colW, h: rowH, index: i });
+    ui.invSlotRects.push({ ...r, index: i });
   });
 
   const detailTop = listTop + rows * (rowH + gapY) + 10;
@@ -71,10 +107,48 @@ export function drawBagTab(ctx, x, startRow, w, bottom) {
   drawBagDetail(ctx, x, detailTop + 8, w, bottom);
 }
 
+// 기본 속성(무기 피해/공격속도/방어력) + 옵션 줄
+function drawGearLines(ctx, gear, x, y) {
+  ctx.font = '11px sans-serif';
+  gearBaseParts(gear).forEach((p) => {
+    ctx.fillStyle = '#c9b48a';
+    ctx.fillText(`${p.label} ${p.text}`, x, y);
+    y += 15;
+  });
+  Object.entries(gear.stats).forEach(([k, v]) => {
+    ctx.fillStyle = '#dfe9d8';
+    ctx.fillText(`${STAT_DEF[k].label} ${STAT_DEF[k].fmt(v)}`, x, y);
+    y += 15;
+  });
+  return y;
+}
+
+// 착용 중 장비 상세 (가방 탭에서는 보기만 - 강화/해제는 장비·강화 탭)
+function drawWornDetail(ctx, gear, x, y, w, bottom) {
+  ctx.font = 'bold 10px sans-serif';
+  ctx.fillStyle = WORN_COLOR;
+  ctx.fillText('착용 중', x + 16, y);
+  y += 16;
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillStyle = gearColor(gear);
+  ctx.fillText(fitText(ctx, gearTitle(gear, { hand: true }), w - 32), x + 16, y);
+  y += 19;
+  drawGearLines(ctx, gear, x + 16, y);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.fillText('착용 중인 장비 · 강화는 강화 탭에서', x + 16, bottom - 4);
+}
+
 export function drawBagDetail(ctx, x, top, w, bottom) {
+  ctx.textAlign = 'left';
+  // 착용 중 칸을 고정했거나(우선), 가방 칸 고정이 없을 때 착용 중 칸에 올려둔 경우
+  const wornSlot = ui.selectedEquipSlot || (ui.selectedInvIndex === null ? ui.hoverEquipSlot : null);
+  if (wornSlot) {
+    drawWornDetail(ctx, game.hero.equipment[wornSlot], x, top + 10, w, bottom);
+    return;
+  }
   const idx = getInvViewIndex();
   const pinned = idx !== null && idx === ui.selectedInvIndex;
-  ctx.textAlign = 'left';
   if (idx === null) {
     ctx.font = '11px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
@@ -143,33 +217,40 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   ctx.fillStyle = gearColor(sel);
   ctx.fillText(fitText(ctx, gearTitle(sel, { hand: true }), w - 32), x + 16, y);
   y += 19;
-
-  ctx.font = '11px sans-serif';
-  const selArmor = gearArmor(sel);
-  if (selArmor) {
-    ctx.fillStyle = '#c9b48a';
-    ctx.fillText(`${ARMOR_LABEL} ${selArmor}`, x + 16, y);
-    y += 15;
-  }
-  Object.entries(sel.stats).forEach(([k, v]) => {
-    ctx.fillStyle = '#dfe9d8';
-    ctx.fillText(`${STAT_DEF[k].label} ${STAT_DEF[k].fmt(v)}`, x + 16, y);
-    y += 15;
-  });
+  y = drawGearLines(ctx, sel, x + 16, y);
 
   const equipped = getCompareItemForGear(sel);
   if (equipped && equipped !== sel) {
-    y += 5;
+    // 비교 행: 기본 속성(같은 이름끼리) + 옵션
+    const selBase = gearBaseParts(sel), eqBase = gearBaseParts(equipped);
+    const baseLabels = Array.from(new Set([...selBase, ...eqBase].map((p) => p.label)));
+    const rows = baseLabels.map((label) => {
+      const a = selBase.find((p) => p.label === label), b = eqBase.find((p) => p.label === label);
+      const ref = a || b;
+      return { label: ref.cmpLabel || label, delta: +((a ? a.value : 0) - (b ? b.value : 0)).toFixed(4), fmt: ref.fmt };
+    });
+    const keys = Array.from(new Set([...Object.keys(sel.stats || {}), ...Object.keys(equipped.stats || {})]));
+    keys.forEach((k) => rows.push({ label: STAT_DEF[k].label, delta: +((sel.stats[k] || 0) - (equipped.stats[k] || 0)).toFixed(4), fmt: STAT_DEF[k].fmt }));
+
+    // 착용 중 장비와의 비교는 초록 테두리 상자로 따로 묶음 (고른 아이템과 헷갈리지 않게)
+    y += 6;
+    const boxTop = y - 4;
+    const boxH = 8 + 16 + rows.length * 14;
+    ctx.fillStyle = 'rgba(155,227,155,0.06)';
+    ctx.fillRect(x + 12, boxTop, w - 24, boxH);
+    ctx.strokeStyle = 'rgba(155,227,155,0.45)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 12.5, boxTop + 0.5, w - 25, boxH - 1);
+    y += 12;
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = WORN_COLOR;
+    ctx.fillText('착용 중', x + 20, y);
+    const tagW = ctx.measureText('착용 중').width;
     ctx.font = 'bold 11px sans-serif';
     ctx.fillStyle = gearColor(equipped);
-    ctx.fillText(fitText(ctx, `현재 장착: ${gearTitle(equipped, { upgrade: false })}`, w - 32), x + 16, y);
-    y += 15;
+    ctx.fillText(fitText(ctx, gearTitle(equipped, { upgrade: false }), w - 48 - tagW), x + 28 + tagW, y);
+    y += 16;
     ctx.font = '11px sans-serif';
-    const keys = Array.from(new Set([...Object.keys(sel.stats || {}), ...Object.keys(equipped.stats || {})]));
-    // 방어력(기본값)도 비교 줄에 포함 - 둘 다 0이면 생략
-    const rows = keys.map((k) => ({ label: STAT_DEF[k].label, delta: +((sel.stats[k] || 0) - (equipped.stats[k] || 0)).toFixed(4), fmt: STAT_DEF[k].fmt }));
-    const eqArmor = gearArmor(equipped);
-    if (selArmor || eqArmor) rows.unshift({ label: ARMOR_LABEL, delta: selArmor - eqArmor, fmt: (v) => `${Math.round(v)}` });
     rows.forEach(({ label, delta, fmt }) => {
       ctx.textAlign = 'left';
       ctx.fillStyle = '#a8b8a0';
@@ -177,9 +258,9 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
       ctx.textAlign = 'right';
       // fmt 결과에 이미 '+'가 붙어 있으므로 떼고 부호를 직접 붙임 (그대로 쓰면 "++6"처럼 중복됨)
       const plain = (v) => fmt(v).replace(/^\+/, '');
-      if (delta > 0) { ctx.fillStyle = '#7fe08a'; ctx.fillText(`▲ +${plain(delta)}`, x + w - 16, y); }
-      else if (delta < 0) { ctx.fillStyle = '#ff6b6b'; ctx.fillText(`▼ -${plain(Math.abs(delta))}`, x + w - 16, y); }
-      else { ctx.fillStyle = '#888'; ctx.fillText('동일', x + w - 16, y); }
+      if (delta > 0) { ctx.fillStyle = '#7fe08a'; ctx.fillText(`▲ +${plain(delta)}`, x + w - 20, y); }
+      else if (delta < 0) { ctx.fillStyle = '#ff6b6b'; ctx.fillText(`▼ -${plain(Math.abs(delta))}`, x + w - 20, y); }
+      else { ctx.fillStyle = '#888'; ctx.fillText('동일', x + w - 20, y); }
       y += 14;
     });
     ctx.textAlign = 'left';
@@ -197,7 +278,7 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
       equipFromInventory(ui.selectedInvIndex);
       ui.selectedInvIndex = null;
       ui.hoverInvIndex = null;
-      showInvToast(`${name} 장착`, '#9be39b');
+      showInvToast(`${name} 장착`, WORN_COLOR);
     });
   } else {
     hintLine('클릭해서 고정하면 장착할 수 있어');
