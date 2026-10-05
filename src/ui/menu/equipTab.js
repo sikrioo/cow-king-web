@@ -1,5 +1,6 @@
 // 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비 합산 옵션)
 import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
+import { gearArmor } from '../../systems/gear.js';
 import { game } from '../../state.js';
 import { gearTitle, gearColor } from '../itemView.js';
 import { fitText, wrapStatLines } from './common.js';
@@ -38,7 +39,7 @@ export function drawEquipTab(ctx, x, startRow, w) {
       row += 13;
       ctx.font = '10px sans-serif';
       ctx.fillStyle = '#cfd8c8';
-      wrapStatLines(ctx, it.stats, maxW).forEach((ln) => { ctx.fillText(ln, textX, row); row += 12; });
+      wrapStatLines(ctx, it.stats, maxW, gearArmor(it)).forEach((ln) => { ctx.fillText(ln, textX, row); row += 12; });
       row += 7;
     }
   });
@@ -59,7 +60,8 @@ export function drawEquipTab(ctx, x, startRow, w) {
     ['블락률', `+${Math.round(game.hero.gearDefense * 100)}%`],
     ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
     ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],
-    ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`]
+    ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`],
+    ['방어력', `${game.hero.gearArmor} (피해 -${Math.round(game.hero.armorReduction * 100)}%)`]
   ];
   const colW = (w - 32) / 2;
   ctx.font = '10px sans-serif';

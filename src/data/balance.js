@@ -99,6 +99,12 @@ export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: '
 export const INVENTORY_SIZE = 20;
 export const IDENTIFY_DURATION = 0.8;
 export const UPGRADE_SUCCESS_CHANCE = 0.65;
+export const UPGRADE_STAT_MULT = 1.25; // 강화 성공: 옵션 하나 ×1.25, 방어구 기본 방어력도 강화 단계마다 ×1.25
+
+// --- 방어력 (피해 감소). 피격 순서: 회피 → 블락 → 방어력 감소(최소 1)
+// 감소율 = 방어력 / (방어력 + ARMOR_K), 최대 ARMOR_MAX_REDUCTION  (예: 100 → 20%, 400 → 50%)
+export const ARMOR_K = 400;
+export const ARMOR_MAX_REDUCTION = 0.6;
 
 // --- 물약
 export const POTION_MAX = 6;           // 종류별 보관 한도

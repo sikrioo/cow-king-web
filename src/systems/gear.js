@@ -1,10 +1,11 @@
 // 장비: 굴리기(등급/옵션), 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
-  MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE
+  MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, UPGRADE_STAT_MULT,
+  ARMOR_K, ARMOR_MAX_REDUCTION
 } from '../data/balance.js';
 import {
-  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT
+  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR
 } from '../data/items.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
@@ -193,7 +194,7 @@ export function tryUpgradeSlot(slotIndex) {
   if (Math.random() < UPGRADE_SUCCESS_CHANCE) {
     const statKeys = Object.keys(it.stats);
     const k = statKeys[Math.floor(Math.random() * statKeys.length)];
-    it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * 1.25) : it.stats[k] * 1.25;
+    it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * UPGRADE_STAT_MULT) : it.stats[k] * UPGRADE_STAT_MULT;
     it.upgradeLevel = (it.upgradeLevel || 0) + 1;
     recalcGearStats();
     floatText(game.hero.x, game.hero.y - 40, `${GEAR_SLOT_LABEL[slot]} 업그레이드 성공 +${it.upgradeLevel}`, RARITY_DEF[it.rarity].color);
@@ -202,11 +203,24 @@ export function tryUpgradeSlot(slotIndex) {
   }
 }
 
+// 방어구 기본 방어력 = 분류 기본값 × 등급 배율 × 강화(단계마다 ×1.25), 정수. 저장하지 않고 계산(아이템 데이터 그대로)
+export function gearArmor(gear) {
+  const base = GEAR_BASE_ARMOR[gear.category];
+  if (!base) return 0;
+  return Math.round(base * RARITY_DEF[gear.rarity].mult * UPGRADE_STAT_MULT ** (gear.upgradeLevel || 0));
+}
+
+// 방어력 → 피해 감소율 (많이 쌓을수록 효율이 떨어지고 상한 있음)
+export function armorReduction(armor) {
+  return Math.min(armor / (armor + ARMOR_K), ARMOR_MAX_REDUCTION);
+}
+
 export function recalcGearStats() {
-  let atkSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0;
+  let atkSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
     if (!it || it === 'LOCKED') return;
+    armor += gearArmor(it);
     if (it.stats.atkSpeed) atkSpeed += it.stats.atkSpeed;
     if (it.stats.atkPower) atkPower += it.stats.atkPower;
     if (it.stats.defense) defense += it.stats.defense;
@@ -230,6 +244,8 @@ export function recalcGearStats() {
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
+  game.hero.gearArmor = armor;
+  game.hero.armorReduction = armorReduction(armor);
   game.hero.gearSpeedMult = 1 + moveSpeed;
   game.hero.gearMaxHp = Math.round(health);
   game.hero.gearMaxMana = Math.round(mana);

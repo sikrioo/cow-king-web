@@ -24,11 +24,14 @@ export const GEAR_VARIANT_LABEL = {
 };
 export const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear'];
 export const ACCESSORY_VARIANTS = ['amulet', 'ring', 'charm'];
+// 방어구 기본 방어력 (×등급 배율 ×강화). 무기/장신구는 없음
+export const GEAR_BASE_ARMOR = { armor: 60, shield: 40, greaves: 30, boots: 20 };
+export const ARMOR_LABEL = '방어력';
 export const GEAR_CATEGORY_COLOR = { armor: '#c9a227', weapon: '#e05b4d', greaves: '#7fa8c9', boots: '#8fbf6b', accessory: '#c07fe0' };
 
 // --- 옵션 범위
 // flat: 고정 수치 옵션 - 굴릴 때/강화할 때 정수로 반올림 (나머지는 % 옵션이라 소수 그대로)
-// defense = 블락률(피격 시 데미지를 통째로 막을 확률). 키 이름은 골든 호환 때문에 유지 - 피해 감소 방어력은 별도 키로 추가 예정
+// defense = 블락률(피격 시 데미지를 통째로 막을 확률). 키 이름은 골든 호환 때문에 유지 - 피해 감소 방어력은 GEAR_BASE_ARMOR(옵션 아님)
 export const STAT_DEF = {
   atkSpeed:  { label: '공격속도', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
   atkPower:  { label: '공격력',   min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },

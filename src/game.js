@@ -83,6 +83,8 @@ export function resetGame() {
   game.hero.gearAtkPower = 0;
   game.hero.gearDefense = 0;
   game.hero.gearEvasion = 0;
+  game.hero.gearArmor = 0;
+  game.hero.armorReduction = 0;
   game.hero.gearSpeedMult = 1;
   game.hero.gearMaxHp = 0;
   game.hero.gearMaxMana = 0;

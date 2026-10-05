@@ -124,8 +124,9 @@ export function hitPlayer(fromX, fromY, dmg) {
   const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
   const blocked = Math.random() < totalBlock;
   if (!blocked) {
-    game.hero.hp -= dmg;
-    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${dmg}`, '#ff5b52');
+    const taken = Math.max(1, Math.round(dmg * (1 - game.hero.armorReduction))); // 방어력 피해 감소
+    game.hero.hp -= taken;
+    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, '#ff5b52');
   } else {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'BLOCK', '#8fd0ff');
   }

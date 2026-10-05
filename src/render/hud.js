@@ -66,6 +66,7 @@ export function drawStatReadout(ctx) {
   const stats = [
     { label: '공격력', value: `${+totalAtk.toFixed(1)}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
+    { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
     { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 }
   ];

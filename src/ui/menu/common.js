@@ -1,5 +1,5 @@
 // 캔버스 메뉴 공용 도우미 (클릭 영역 판정, 보고 있는 가방 칸, 글자 맞춤, 비교 대상 장비)
-import { STAT_DEF } from '../../data/items.js';
+import { STAT_DEF, ARMOR_LABEL } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 
 export function pointInRect(px, py, r) {
@@ -20,9 +20,10 @@ export function fitText(ctx, text, maxW) {
   return t + '…';
 }
 
-export function wrapStatLines(ctx, stats, maxW) {
+// armor: 방어구 기본 방어력(있으면 맨 앞에 표시)
+export function wrapStatLines(ctx, stats, maxW, armor = 0) {
   const lines = [];
-  let line = '';
+  let line = armor ? `${ARMOR_LABEL}${armor}` : '';
   Object.entries(stats).forEach(([k, v]) => {
     const part = `${STAT_DEF[k].label}${STAT_DEF[k].fmt(v)}`;
     const test = line ? `${line}  ${part}` : part;

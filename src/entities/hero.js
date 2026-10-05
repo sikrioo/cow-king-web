@@ -52,6 +52,8 @@ export function createHero() {
     gearAtkPower: 0,
     gearDefense: 0,
     gearEvasion: 0,
+    gearArmor: 0,
+    armorReduction: 0,
     gearSpeedMult: 1,
     gearMaxHp: 0,
     gearMaxMana: 0,

@@ -1,9 +1,9 @@
 // 메뉴 - 가방 탭 (칸 목록 + 선택 아이템 상세: 감정/장착)
 import { INVENTORY_SIZE, IDENTIFY_DURATION } from '../../data/balance.js';
-import { STAT_DEF } from '../../data/items.js';
+import { STAT_DEF, ARMOR_LABEL } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
-import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
+import { tryIdentify, equipFromInventory, gearArmor } from '../../systems/gear.js';
 import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareItemForGear } from './common.js';
 
@@ -145,6 +145,12 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   y += 19;
 
   ctx.font = '11px sans-serif';
+  const selArmor = gearArmor(sel);
+  if (selArmor) {
+    ctx.fillStyle = '#c9b48a';
+    ctx.fillText(`${ARMOR_LABEL} ${selArmor}`, x + 16, y);
+    y += 15;
+  }
   Object.entries(sel.stats).forEach(([k, v]) => {
     ctx.fillStyle = '#dfe9d8';
     ctx.fillText(`${STAT_DEF[k].label} ${STAT_DEF[k].fmt(v)}`, x + 16, y);
@@ -160,14 +166,17 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     y += 15;
     ctx.font = '11px sans-serif';
     const keys = Array.from(new Set([...Object.keys(sel.stats || {}), ...Object.keys(equipped.stats || {})]));
-    keys.forEach((k) => {
-      const delta = +((sel.stats[k] || 0) - (equipped.stats[k] || 0)).toFixed(4);
+    // 방어력(기본값)도 비교 줄에 포함 - 둘 다 0이면 생략
+    const rows = keys.map((k) => ({ label: STAT_DEF[k].label, delta: +((sel.stats[k] || 0) - (equipped.stats[k] || 0)).toFixed(4), fmt: STAT_DEF[k].fmt }));
+    const eqArmor = gearArmor(equipped);
+    if (selArmor || eqArmor) rows.unshift({ label: ARMOR_LABEL, delta: selArmor - eqArmor, fmt: (v) => `${Math.round(v)}` });
+    rows.forEach(({ label, delta, fmt }) => {
       ctx.textAlign = 'left';
       ctx.fillStyle = '#a8b8a0';
-      ctx.fillText(`  ${STAT_DEF[k].label}`, x + 16, y);
+      ctx.fillText(`  ${label}`, x + 16, y);
       ctx.textAlign = 'right';
       // fmt 결과에 이미 '+'가 붙어 있으므로 떼고 부호를 직접 붙임 (그대로 쓰면 "++6"처럼 중복됨)
-      const plain = (v) => STAT_DEF[k].fmt(v).replace(/^\+/, '');
+      const plain = (v) => fmt(v).replace(/^\+/, '');
       if (delta > 0) { ctx.fillStyle = '#7fe08a'; ctx.fillText(`▲ +${plain(delta)}`, x + w - 16, y); }
       else if (delta < 0) { ctx.fillStyle = '#ff6b6b'; ctx.fillText(`▼ -${plain(Math.abs(delta))}`, x + w - 16, y); }
       else { ctx.fillStyle = '#888'; ctx.fillText('동일', x + w - 16, y); }
