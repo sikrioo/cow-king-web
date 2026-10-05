@@ -52,6 +52,21 @@ export function wrapStatLines(ctx, gear, maxW) {
   return lines;
 }
 
+// 비교 대상 목록 [{ gear, label }] - 한손 무기는 주무기와 보조무기(무기일 때) 둘 다
+export function getCompareTargets(it) {
+  if (!it || it === 'LOCKED') return [];
+  const eq = game.hero.equipment;
+  const valid = (g) => g && g !== 'LOCKED';
+  if (it.category === 'weapon') {
+    const list = [];
+    if (valid(eq.weaponMain)) list.push({ gear: eq.weaponMain, label: '주무기' });
+    if (it.handedness === 'one' && valid(eq.weaponOff) && eq.weaponOff.category === 'weapon') list.push({ gear: eq.weaponOff, label: '보조무기' });
+    return list;
+  }
+  const g = getCompareItemForGear(it);
+  return g ? [{ gear: g, label: '' }] : [];
+}
+
 export function getCompareItemForGear(it) {
   if (!it || it === 'LOCKED') return null;
   const eq = game.hero.equipment;

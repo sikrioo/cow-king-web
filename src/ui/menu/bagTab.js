@@ -6,7 +6,7 @@ import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
 import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
-import { getInvViewIndex, fitText, getCompareItemForGear, gearBaseParts } from './common.js';
+import { getInvViewIndex, fitText, getCompareTargets, gearBaseParts } from './common.js';
 
 const WORN_COLOR = '#9be39b';
 
@@ -169,8 +169,11 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   }
 
   const btnH = 32;
-  const addButton = (label, fn, enabled = true) => {
-    const bx = x + 16, bw = w - 32;
+  // col/cols: 버튼 여러 개를 한 줄에 나란히 (주무기/보조무기 선택)
+  const addButton = (label, fn, enabled = true, col = 0, cols = 1) => {
+    const gap = 6;
+    const bw = (w - 32 - gap * (cols - 1)) / cols;
+    const bx = x + 16 + col * (bw + gap);
     const by = Math.max(bottom - btnH, y + 6);
     ui.invButtons.push({ x: bx, y: by, w: bw, h: btnH, fn });
     ctx.fillStyle = enabled ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.08)';
@@ -182,7 +185,7 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, bx + bw / 2, by + btnH / 2 + 1);
+    ctx.fillText(fitText(ctx, label, bw - 10), bx + bw / 2, by + btnH / 2 + 1);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
   };
@@ -219,8 +222,8 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
   y += 19;
   y = drawGearLines(ctx, sel, x + 16, y);
 
-  const equipped = getCompareItemForGear(sel);
-  if (equipped && equipped !== sel) {
+  // 착용 중 장비와 비교 - 한손 무기는 주무기/보조무기 각각. 초록 테두리 상자로 따로 묶음 (고른 아이템과 헷갈리지 않게)
+  getCompareTargets(sel).filter((t) => t.gear !== sel).forEach(({ gear: equipped, label: slotLabel }) => {
     // 비교 행: 기본 속성(같은 이름끼리) + 옵션
     const selBase = gearBaseParts(sel), eqBase = gearBaseParts(equipped);
     const baseLabels = Array.from(new Set([...selBase, ...eqBase].map((p) => p.label)));
@@ -232,7 +235,6 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     const keys = Array.from(new Set([...Object.keys(sel.stats || {}), ...Object.keys(equipped.stats || {})]));
     keys.forEach((k) => rows.push({ label: STAT_DEF[k].label, delta: +((sel.stats[k] || 0) - (equipped.stats[k] || 0)).toFixed(4), fmt: STAT_DEF[k].fmt }));
 
-    // 착용 중 장비와의 비교는 초록 테두리 상자로 따로 묶음 (고른 아이템과 헷갈리지 않게)
     y += 6;
     const boxTop = y - 4;
     const boxH = 8 + 16 + rows.length * 14;
@@ -242,10 +244,11 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     ctx.lineWidth = 1;
     ctx.strokeRect(x + 12.5, boxTop + 0.5, w - 25, boxH - 1);
     y += 12;
+    const tag = slotLabel ? `착용 중 · ${slotLabel}` : '착용 중';
     ctx.font = 'bold 10px sans-serif';
     ctx.fillStyle = WORN_COLOR;
-    ctx.fillText('착용 중', x + 20, y);
-    const tagW = ctx.measureText('착용 중').width;
+    ctx.fillText(tag, x + 20, y);
+    const tagW = ctx.measureText(tag).width;
     ctx.font = 'bold 11px sans-serif';
     ctx.fillStyle = gearColor(equipped);
     ctx.fillText(fitText(ctx, gearTitle(equipped, { upgrade: false }), w - 48 - tagW), x + 28 + tagW, y);
@@ -264,22 +267,31 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
       y += 14;
     });
     ctx.textAlign = 'left';
-  }
+  });
 
   if (pinned) {
     const eq = game.hero.equipment;
-    let label = '장착하기';
-    if (sel.category === 'weapon' && sel.handedness === 'two' && eq.weaponOff && eq.weaponOff !== 'LOCKED') label = '장착하기 (보조손 장비 해제)';
-    if (sel.category === 'shield' && eq.weaponMain && eq.weaponMain !== 'LOCKED' && eq.weaponMain.handedness === 'two') label = '장착하기 (양손무기 해제)';
-    addButton(label, () => {
+    const equipAs = (slot) => () => {
       const g = game.hero.inventory[ui.selectedInvIndex];
       if (!g) return;
       const name = gearDisplayName(g);
-      equipFromInventory(ui.selectedInvIndex);
+      equipFromInventory(ui.selectedInvIndex, slot);
       ui.selectedInvIndex = null;
       ui.hoverInvIndex = null;
       showInvToast(`${name} 장착`, WORN_COLOR);
-    });
+    };
+    const main = eq.weaponMain && eq.weaponMain !== 'LOCKED' ? eq.weaponMain : null;
+    if (sel.category === 'weapon' && sel.handedness === 'one' && main && main.handedness === 'one') {
+      // 한손 무기 + 주무기가 이미 있음 → 어느 칸에 넣을지 선택
+      const off = eq.weaponOff && eq.weaponOff !== 'LOCKED' ? eq.weaponOff : null;
+      addButton('주무기로 장착', equipAs('weaponMain'), true, 0, 2);
+      addButton(off && off.category === 'shield' ? '보조무기로 (방패 해제)' : '보조무기로 장착', equipAs('weaponOff'), true, 1, 2);
+    } else {
+      let label = sel.category === 'weapon' && sel.handedness === 'one' ? '주무기로 장착' : '장착하기';
+      if (sel.category === 'weapon' && sel.handedness === 'two' && eq.weaponOff && eq.weaponOff !== 'LOCKED') label = '장착하기 (보조손 장비 해제)';
+      if (sel.category === 'shield' && main && main.handedness === 'two') label = '장착하기 (양손무기 해제)';
+      addButton(label, equipAs(null));
+    }
   } else {
     hintLine('클릭해서 고정하면 장착할 수 있어');
   }

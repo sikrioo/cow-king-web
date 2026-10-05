@@ -63,3 +63,24 @@ it('쌍수면 주무기/보조무기를 번갈아 쓰고, 피해는 무기 범�
     }
   } finally { env.restore(); }
 });
+
+it('한손 무기는 주무기/보조무기 칸을 골라 장착하고, 바뀐 장비는 가방으로', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    m.resetGame();
+    const h = m.game.hero;
+    const main0 = h.equipment.weaponMain, shield = h.equipment.weaponOff; // 시작: 한손무기 + 방패
+    const a = weapon('dagger', { identified: true }), b = weapon('mace', { identified: true });
+    h.inventory.push(a, b);
+    m.equipFromInventory(h.inventory.indexOf(a), 'weaponOff');
+    expect(h.equipment.weaponMain).toBe(main0);
+    expect(h.equipment.weaponOff).toBe(a);
+    expect(h.inventory).toContain(shield);
+    m.equipFromInventory(h.inventory.indexOf(b), 'weaponMain');
+    expect(h.equipment.weaponMain).toBe(b);
+    expect(h.equipment.weaponOff).toBe(a);
+    expect(h.inventory).toContain(main0);
+    expect(h.weaponStats.off).not.toBe(null); // 쌍수
+  } finally { env.restore(); }
+});

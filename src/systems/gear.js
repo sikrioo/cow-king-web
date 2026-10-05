@@ -92,6 +92,7 @@ export function nextItemUid() {
   return game.itemSeq;
 }
 
+// opts.slot: 한손 무기를 넣을 칸 지정('weaponMain' | 'weaponOff'). 없으면 빈 칸 우선 자동 배치
 export function equipItem(gear, opts = {}) {
   let slot;
   const replaced = [];
@@ -104,7 +105,17 @@ export function equipItem(gear, opts = {}) {
       slot = 'weaponMain';
     } else {
       const mainIsTwoHand = game.hero.equipment.weaponMain && game.hero.equipment.weaponMain !== 'LOCKED' && game.hero.equipment.weaponMain.handedness === 'two';
-      if (mainIsTwoHand) {
+      if (opts.slot === 'weaponOff' && game.hero.equipment.weaponMain && !mainIsTwoHand) {
+        // 보조무기로 지정: 보조 칸(무기/방패)만 교체
+        if (game.hero.equipment.weaponOff && game.hero.equipment.weaponOff !== 'LOCKED') replaced.push(game.hero.equipment.weaponOff);
+        game.hero.equipment.weaponOff = gear;
+        slot = 'weaponOff';
+      } else if (opts.slot === 'weaponMain' && game.hero.equipment.weaponMain && !mainIsTwoHand) {
+        // 주무기로 지정: 주 칸만 교체
+        replaced.push(game.hero.equipment.weaponMain);
+        game.hero.equipment.weaponMain = gear;
+        slot = 'weaponMain';
+      } else if (mainIsTwoHand) {
         replaced.push(game.hero.equipment.weaponMain);
         game.hero.equipment.weaponMain = gear;
         game.hero.equipment.weaponOff = null;
@@ -171,10 +182,10 @@ export function giveTestStash() {
   game.hero.inventory.push(rollGearItem({ category: 'shield', rarity: 'normal', identified: true }));
 }
 
-export function equipFromInventory(index) {
+export function equipFromInventory(index, slot = null) {
   const gear = game.hero.inventory[index];
   if (!gear || !gear.identified) return; // 미감정 장비는 장착 불가
-  const replaced = equipItem(gear);
+  const replaced = equipItem(gear, slot ? { slot } : {});
   game.hero.inventory.splice(index, 1);
   replaced.forEach((old) => {
     if (old && old !== 'LOCKED' && game.hero.inventory.length < INVENTORY_SIZE) game.hero.inventory.push(old);
