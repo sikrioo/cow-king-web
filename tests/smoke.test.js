@@ -190,7 +190,8 @@ describe('smoke: 모바일 버튼/조이스틱 조작', () => {
   for (const seed of [3, 2024]) {
     it(`mobile seed ${seed}`, async () => {
       const prints = await runModularMobile(seed);
-      expect(prints.some((p) => p.kills > 0), '전투가 실제로 일어났는지').toBe(true);
+      // 전투가 실제로 일어났는지: 처치했거나 맞았는지 (2026-10-06 이동 속도 수정 후 주인공이 빨라져 처치 없이 끝나는 시드가 생김)
+      expect(prints.some((p) => p.kills > 0 || p.hp < prints[0].hp), '전투가 실제로 일어났는지').toBe(true);
       expect(allHpInteger(prints), '체력은 정수').toBe(true);
       expect(prints).toMatchSnapshot();
     }, 120000);
