@@ -1,6 +1,22 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
 import { hexToRgba } from '../util.js';
-import { game } from '../state.js';
+import { game, ui } from '../state.js';
+
+// 클릭 이동 표시: 찍은 지점에 줄어드는 고리 (0.45초)
+export function drawMoveMarker(ctx) {
+  const m = ui.moveMarker;
+  if (!m) return;
+  const p = (performance.now() - m.t0) / 450;
+  if (p >= 1) return;
+  ctx.save();
+  ctx.globalAlpha = 1 - p;
+  ctx.strokeStyle = '#9be39b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(m.x, m.y, 14 * (1 - p * 0.6), 7 * (1 - p * 0.6), 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 export function drawParticles(ctx) {
   game.particles.forEach((p) => {

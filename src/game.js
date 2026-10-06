@@ -130,6 +130,9 @@ export function resetGame() {
   game.hero.slot2 = 'warcry';
   input.holdSlot1 = false;
   input.holdSlot2 = false;
+  input.moveTarget = null;
+  input.mouseMoveHeld = false;
+  ui.moveMarker = null;
   const s1label = document.getElementById('slot1-label');
   const s2label = document.getElementById('slot2-label');
   const s1el = document.getElementById('slot1');

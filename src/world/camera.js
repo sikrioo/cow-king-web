@@ -42,6 +42,14 @@ export function viewRect() {
   return { x: camera.x - w / 2, y: camera.y - h / 2, w, h };
 }
 
+// 화면 좌표(캔버스 px) → 월드 좌표 (마지막으로 그린 카메라 기준)
+export function screenToWorld(sx, sy) {
+  return {
+    x: camera.x + (sx - canvas.width / 2) / camera.zoom,
+    y: camera.y + (sy - canvas.height / 2) / camera.zoom
+  };
+}
+
 export function inView(x, y, margin) {
   const v = viewRect();
   return x > v.x - margin && x < v.x + v.w + margin && y > v.y - margin && y < v.y + v.h + margin;

@@ -60,6 +60,7 @@ export const MOVE_DUST_COLOR = '#bda98b';
 // --- 플레이어 자원 (이동/마나/스태미나)
 export const WALK_SPEED = 130;
 export const RUN_SPEED = 215;
+export const MOVE_ARRIVE_RADIUS = 10; // 클릭 이동: 목표 지점에 이만큼 가까워지면 도착(멈춤)
 export const MAX_MANA = 100;
 export const MANA_REGEN = 5;
 export const MAX_STAMINA = 100;

@@ -2,7 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, expForLevel
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, expForLevel
 } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
@@ -173,6 +173,7 @@ export function updatePlayer(dt) {
 
   let dx = 0, dy = 0, moving, wantsRun;
   if (input.joystick.active && input.joystick.magnitude > 0.08) {
+    input.moveTarget = null; // 조이스틱을 쓰면 클릭 이동 취소
     const len = Math.hypot(input.joystick.dx, input.joystick.dy) || 1;
     dx = input.joystick.dx / len;
     dy = input.joystick.dy / len;
@@ -183,6 +184,14 @@ export function updatePlayer(dt) {
     if (input.keys['arrowright'] || input.keys['d']) dx += 1;
     if (input.keys['arrowup'] || input.keys['w']) dy -= 1;
     if (input.keys['arrowdown'] || input.keys['s']) dy += 1;
+    if (dx || dy) input.moveTarget = null; // 키보드로 움직이면 클릭 이동 취소
+    else if (input.moveTarget) {
+      // 클릭 이동: 목표 쪽으로 (도착하면 멈춤, 끄는 중이면 목표가 계속 갱신됨)
+      const tx = input.moveTarget.x - game.hero.x, ty = input.moveTarget.y - game.hero.y;
+      const d = Math.hypot(tx, ty);
+      if (d <= MOVE_ARRIVE_RADIUS) { if (!input.mouseMoveHeld) input.moveTarget = null; }
+      else { dx = tx / d; dy = ty / d; }
+    }
     moving = !!(dx || dy);
     wantsRun = !!input.keys['shift'];
   }

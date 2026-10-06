@@ -2,7 +2,9 @@
 // 이동/달리기처럼 누르고 있는 상태는 input.keys / input.joystick으로 매 틱 읽음
 import { LEVEL_STAT_KEYS } from './data/balance.js';
 import { canvas } from './core/context.js';
-import { ui, input } from './state.js';
+import { game, ui, input } from './state.js';
+import { screenToWorld } from './world/camera.js';
+import { clampToPen } from './world/arena.js';
 import { invPanelHandlePoint, menuPointerMove } from './ui/menu/panel.js';
 
 export const JOY_RADIUS = 42;
@@ -10,6 +12,15 @@ export const JOY_RADIUS = 42;
 export const joyBase = document.getElementById('joystick-base');
 
 export const joyKnob = document.getElementById('joystick-knob');
+
+// 클릭 지점(화면) → 이동 목표(월드, 목장 안쪽). marker: 클릭 표시를 새로 띄울지 (끄는 중엔 위치만 갱신)
+function setMoveTarget(e, marker) {
+  const rect = canvas.getBoundingClientRect();
+  const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  input.moveTarget = clampToPen(w.x, w.y, game.hero.r);
+  if (marker || !ui.moveMarker) ui.moveMarker = { x: input.moveTarget.x, y: input.moveTarget.y, t0: performance.now() };
+  else { ui.moveMarker.x = input.moveTarget.x; ui.moveMarker.y = input.moveTarget.y; }
+}
 
 export function joyMove(clientX, clientY) {
   const dx = clientX - input.joystick.baseX;
@@ -70,17 +81,29 @@ export function bindInput(actions) {
     if (KEY_INTENTS[k] === 'slot2') input.holdSlot2 = false;
   });
 
-  // 좌클릭(또는 터치) = 슬롯1 길게 누르기, 우클릭 = 슬롯2 길게 누르기
+  // 마우스: 좌클릭 = 그 지점으로 이동(누른 채 끌면 커서를 따라감), Shift+좌클릭 = 슬롯1, 우클릭 = 슬롯2 (길게 = 반복)
+  // 터치/펜: 화면 탭 = 슬롯1 (모바일 이동은 조이스틱)
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
-    actions.slotPress(e.button === 2 ? 2 : 1);
+    const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
+    if (mouse && e.button === 0 && !e.shiftKey && game.gameState === 'playing' && !game.paused) {
+      setMoveTarget(e, true);
+      input.mouseMoveHeld = true;
+      return;
+    }
+    actions.slotPress(e.button === 2 ? 2 : 1); // 타이틀/게임오버에서는 시작
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (ui.showInventory || !input.mouseMoveHeld) return;
+    if (game.gameState !== 'playing' || game.paused) return;
+    setMoveTarget(e, false);
   });
   window.addEventListener('pointerup', (e) => {
     if (e.button === 2) input.holdSlot2 = false;
-    else input.holdSlot1 = false;
+    else { input.holdSlot1 = false; input.mouseMoveHeld = false; }
   });
-  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
+  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; input.mouseMoveHeld = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
 
   // 메뉴가 열려 있으면 캔버스 포인터는 메뉴로 (호버 미리보기 / 클릭)
   canvas.addEventListener('pointermove', (e) => {

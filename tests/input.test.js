@@ -47,3 +47,44 @@ it('한글 입력 상태에서 WASD로 이동하고, 키를 떼면 멈춘다 / �
     env.restore();
   }
 });
+
+it('마우스 좌클릭 이동: 찍은 지점까지 가서 멈추고, 끌면 따라가고, WASD를 쓰면 취소된다 / 터치는 슬롯1', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, input } = await import('../src/state.js');
+    const { canvas } = await import('../src/core/context.js');
+    const { screenToWorld } = await import('../src/world/camera.js');
+    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const goal = screenToWorld(cx + 200, cy);
+    env.pointer('pointerdown', cx + 200, cy, 0);
+    env.windowPointerUp(0);
+    expect(input.holdSlot1).toBe(false); // 좌클릭은 공격이 아니라 이동
+    expect(input.moveTarget).not.toBe(null);
+    env.frame(600); // 실제 걷기 속도가 느려서(frictionAir) 넉넉히
+    expect(Math.hypot(game.hero.x - goal.x, game.hero.y - goal.y)).toBeLessThan(25);
+    expect(input.moveTarget).toBe(null); // 도착하면 목표 해제
+
+    env.pointer('pointerdown', cx - 200, cy, 0);
+    env.pointer('pointermove', cx, cy + 200, 0); // 누른 채 끌기 → 목표 갱신
+    const dragGoal = screenToWorld(cx, cy + 200);
+    expect(Math.abs(input.moveTarget.y - dragGoal.y)).toBeLessThan(1);
+    env.windowPointerUp(0);
+    env.key('w'); env.frame(2);
+    expect(input.moveTarget).toBe(null); // 키보드 이동이 클릭 이동을 취소
+    env.key('w', false);
+
+    const h = canvasHandler(env, 'pointerdown');
+    h({ button: 0, pointerType: 'touch', clientX: cx, clientY: cy, preventDefault() {} });
+    expect(input.holdSlot1).toBe(true); // 터치는 그대로 슬롯1
+  } finally {
+    env.restore();
+  }
+});
+
+// 테스트 도우미: pointerType이 있는 캔버스 이벤트를 직접 보냄
+function canvasHandler(env, type) {
+  return (evt) => env.pointerEvent(type, evt);
+}

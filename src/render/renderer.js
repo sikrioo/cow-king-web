@@ -2,7 +2,7 @@
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { drawPen } from './arena.js';
-import { drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
+import { drawMoveMarker, drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
 import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
@@ -41,6 +41,7 @@ export function render(t) {
   ctx.save();
   applyCamera(ctx); // 여기부터 월드 좌표
   drawPen();
+  drawMoveMarker(ctx);
   drawHazards(ctx);
   // 화면 밖 몬스터는 안 그림 (몬스터 그림은 난수를 쓰지 않으므로 게임 결과에 영향 없음)
   const drawables = game.cows.filter((c) => inView(c.x, c.y, 160)).map((c) => ({ y: c.y, fn: () => drawMonster(c, ctx, t) }));

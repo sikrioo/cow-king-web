@@ -43,7 +43,8 @@ export const ui = {
   titleCows: [],
   titleTime: 0,
   identifyingItem: null, // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
-  identifyTimer: 0
+  identifyTimer: 0,
+  moveMarker: null // 클릭 이동 표시 {x, y, t0} (그리기 전용)
 };
 
 // 입력 상태 (눌린 키, 슬롯 길게 누르기, 가상 조이스틱)
@@ -51,5 +52,7 @@ export const input = {
   keys: {},
   holdSlot1: false,
   holdSlot2: false,
+  moveTarget: null, // 클릭 이동 목표 {x, y} (월드 좌표) - WASD/조이스틱을 쓰면 취소
+  mouseMoveHeld: false, // 좌클릭을 누른 채 끄는 중 (커서를 계속 따라감)
   joystick: { active: false, id: null, baseX: 0, baseY: 0, dx: 0, dy: 0, magnitude: 0 }
 };

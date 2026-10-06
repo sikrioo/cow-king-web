@@ -58,7 +58,7 @@ export function drawTitleOverlay(t) {
   ctx.fillText('Space / 클릭 / 탭', cx, cy + 80);
   ctx.font = '12px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.50)';
-  ctx.fillText('WASD 이동 · Space/E 시전(길게) · Q/R 슬롯전환 · 1/2 물약 · I 장비', cx, cy + 116);
+  ctx.fillText('클릭/WASD 이동 · Space/E 시전(길게) · Q/R 슬롯전환 · 1/2 물약 · I 장비', cx, cy + 116);
   ctx.font = '11px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.36)';
   ctx.fillText(`BEST WAVE ${game.releaseMeta.bestWave}  ·  BEST KILLS ${game.releaseMeta.bestKills}  ·  CLEAR ${game.releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, cy + 142);
