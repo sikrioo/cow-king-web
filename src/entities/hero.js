@@ -11,6 +11,7 @@ import { TEAM_HERO } from './actor.js';
 import { emitMoveReaction } from '../systems/fx.js';
 import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../systems/skills.js';
 import { unarmedStats } from '../systems/gear.js';
+import { emptyResist, emptyDot } from '../systems/elements.js';
 import { tryPlayerAttack, getWeaponRange, getCowHitRadius } from '../systems/combat.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
@@ -40,7 +41,10 @@ export function createHero() {
     leapCooldown: 0,
     leapFrom: { x: 0, y: 0 },
     leapTo: { x: 0, y: 0 },
-    slowTimer: 0,
+    slowTimer: 0, // 둔화(냉기) 남은 시간
+    burn: emptyDot(), // 화상 { dps, timer, tick }
+    poison: emptyDot(), // 중독
+    resist: emptyResist(), // 원소 저항 (장비에서, 상한 data/elements.RESIST_CAP)
     bonusMaxHp: 0,
     vitalityTimer: 0,
     speedMult: 1,

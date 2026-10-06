@@ -25,7 +25,7 @@ world/camera.js    카메라(주인공 추적, 맵 끝 멈춤, 작은 화면 줌
 state.js           game / ui / input 상태 그룹 (주인공은 game.hero)
 core/              context(canvas), physics(Matter 엔진·별칭), loop(고정 타임스텝)
 util.js save.js config.js
-data/              숫자·콘텐츠만: balance, monsters, items, skills, drops, maps, palette
+data/              숫자·콘텐츠만: balance, monsters, items, elements, skills, drops, maps, palette
 ```
 - 실제 계층은 brief 권장과 조금 다름(순환을 피하려고): combat → loot, hero → skills, systems/loot → ui/itemView(데이터만 쓰는 말단).
 - 새 import를 추가하면 순환이 없는지 확인할 것.
@@ -38,6 +38,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, skills, drops
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
 - 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지.
 - 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.
+- 원소(화염/냉기/번개/독): 수치·색 `data/elements.js`, 규칙 `systems/elements.js`(피해 묶음 `{phys, fire, cold, lightning, poison}` → 물리=방어력, 원소=저항(상한 75%), 화상/중독 지속 피해, 둔화). `hitPlayer`는 숫자(물리) 또는 묶음을 받음. 몬스터 근접 원소는 `data/monsters.js`의 `element`. 1단계(10-06)는 주인공이 받는 쪽만 - 무기/스킬 원소와 저항 옵션, 몬스터 저항은 2·3단계.
 - 방어력(피해 감소): 방어구 기본값 `data/items.js`의 `GEAR_BASE_ARMOR`(옵션 아님, ×등급 배율 ×강화), 공식 상수 `data/balance.js`의 `ARMOR_K`/`ARMOR_MAX_REDUCTION`, 계산 `systems/gear.js`의 `gearArmor`/`armorReduction`. 피격 순서: 회피 → 블락 → 방어력 감소(최소 1). 원소 저항(2안)은 나중에 `hitPlayer`에 공격 종류를 붙여 확장.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 

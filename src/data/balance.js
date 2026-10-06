@@ -140,7 +140,14 @@ export const BOSS_SLAM_DAMAGE = 60;
 export const CHARGE_DAMAGE = 60;
 export const EXPLODER_BLAST_DAMAGE = 60;
 export const ZAP_DAMAGE = 60;
-export const FIRE_HAZARD_DAMAGE = 30;   // 불바닥 0.6초마다
+export const FIRE_HAZARD_DAMAGE = 30;   // 불바닥 0.6초마다 (화염 피해 → 화상)
+// 독 카우: 주인공이 가까이 오면 주기적으로, 그리고 죽을 때 독 구름을 뿜음. 구름 안에 있으면 TICK마다 중독 갱신 (막기/회피 불가)
+export const VENOM_CLOUD_TRIGGER_RANGE = 130;
+export const VENOM_CLOUD_COOLDOWN = 4.5;
+export const POISON_CLOUD_RADIUS = 70;
+export const POISON_CLOUD_LIFE = 3.0;
+export const POISON_CLOUD_TICK = 0.5;
+export const POISON_CLOUD_DAMAGE = 60;  // 중독 총량(4초에 걸쳐)
 export const SHAMAN_HEAL = 30;
 export const CHARGE_RANGE = 240;
 export const CHARGE_TELEGRAPH = 0.8;

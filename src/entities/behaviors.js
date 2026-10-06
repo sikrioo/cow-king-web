@@ -11,14 +11,15 @@ import {
   BOSS_SLAM_COOLDOWN, CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
   CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
   EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
-  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT
+  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT, VENOM_CLOUD_TRIGGER_RANGE, VENOM_CLOUD_COOLDOWN
 } from '../data/balance.js';
 import { distToSegment, getHitPoint } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { recordRun } from '../save.js';
 import { killCow, spawnColdNova, bossSlam, hitPlayer } from '../systems/combat.js';
-import { spawnHitParticles, spawnFireHazard, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
+import { spawnHitParticles, spawnFireHazard, spawnPoisonCloud, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
+import { rollLightning } from '../systems/elements.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 
@@ -162,7 +163,7 @@ export const behaviors = {
           spawnLightningBolt(m.x, m.y, boltEndX, boltEndY);
           spawnHitParticles(m.x, m.y, '#fff066', 5);
           if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, m.x, m.y, boltEndX, boltEndY) <= ZAP_BEAM_WIDTH) {
-            hitPlayer(m.x, m.y, ZAP_DAMAGE);
+            hitPlayer(m.x, m.y, { lightning: rollLightning(ZAP_DAMAGE) }); // 번개: 피해가 들쭉날쭉
           }
           m.zapCooldown = ZAP_COOLDOWN;
           m.setState('idle', 0.4);
@@ -334,6 +335,25 @@ export const behaviors = {
         ctx.strokeRect(0, -CHARGE_WIDTH / 2, dist, CHARGE_WIDTH);
         ctx.restore();
       }
+    }
+  },
+
+  // 독 카우 - 주인공이 가까이 오면 주기적으로 독 구름을 뿜고, 죽을 때도 뿜음 (구름 안에 있으면 중독)
+  venom: {
+    init(m) { m.cloudCooldown = 1 + Math.random(); },
+    update(m, dt) {
+      if (m.cloudCooldown > 0) m.cloudCooldown -= dt;
+      if (m.cloudCooldown <= 0 && m.state !== 'stunned' && game.hero.alive &&
+          Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= VENOM_CLOUD_TRIGGER_RANGE) {
+        spawnPoisonCloud(m.x, m.y);
+        spawnHitParticles(m.x, m.y, '#7fe05a', 6);
+        m.cloudCooldown = VENOM_CLOUD_COOLDOWN;
+      }
+      return false;
+    },
+    onDeath(m) {
+      spawnPoisonCloud(m.x, m.y);
+      return false;
     }
   },
 

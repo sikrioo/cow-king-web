@@ -2,6 +2,43 @@
 import { hexToRgba } from '../util.js';
 import { game, ui, input } from '../state.js';
 
+// 독 구름: 단색 원 겹치기 + 떠오르는 거품 (그라데이션 없음, 난수 없음)
+function drawPoisonCloud(ctx, h) {
+  const t = performance.now() / 1000;
+  const fade = Math.min(1, h.life / 0.6, (h.maxLife - h.life) / 0.25 + 0.2);
+  ctx.save();
+  ctx.globalAlpha = 0.22 * fade;
+  ctx.fillStyle = '#5fbf3a';
+  ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 0.18 * fade;
+  ctx.fillStyle = '#9be35a';
+  for (let i = 0; i < 3; i++) {
+    const a = t * 0.6 + i * 2.1;
+    ctx.beginPath(); ctx.arc(h.x + Math.cos(a) * h.r * 0.35, h.y + Math.sin(a) * h.r * 0.25, h.r * 0.55, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 0.6 * fade;
+  ctx.fillStyle = '#c6ff4d';
+  for (let i = 0; i < 6; i++) {
+    const p = (t * 0.5 + i / 6) % 1;
+    ctx.beginPath(); ctx.arc(h.x + Math.cos(i * 1.7) * h.r * 0.6, h.y + Math.sin(i * 2.3) * h.r * 0.4 - p * 18, 2.5 * (1 - p) + 0.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// 둔화(냉기) 중인 주인공 발밑 서리 고리
+export function drawHeroChill(ctx) {
+  const h = game.hero;
+  if (!(h.slowTimer > 0) || !h.alive) return;
+  ctx.save();
+  ctx.globalAlpha = 0.5 + Math.sin(performance.now() / 160) * 0.15;
+  ctx.strokeStyle = '#bfeaff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.ellipse(h.x, h.y + h.r * 0.7, h.r * 1.3, h.r * 0.55, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // 클릭 공격 목표 표시: 발밑 빨간 고리
 export function drawAttackTargetMarker(ctx) {
   const c = input.attackTarget;
@@ -45,6 +82,7 @@ export function drawParticles(ctx) {
 
 export function drawHazards(ctx) {
   game.hazards.forEach((h) => {
+    if (h.element === 'poison') { drawPoisonCloud(ctx, h); return; }
     const alpha = Math.min(1, h.life / h.maxLife) * (0.35 + Math.sin(performance.now() / 90 + h.x) * 0.08);
     ctx.save();
     ctx.globalAlpha = Math.max(0, alpha);

@@ -1,5 +1,6 @@
 // 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비 합산 옵션)
 import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
+import { ELEMENTS, ELEMENT_DEF, RESIST_CAP } from '../../data/elements.js';
 import { game } from '../../state.js';
 import { gearTitle, gearColor } from '../itemView.js';
 import { fitText, wrapStatLines } from './common.js';
@@ -60,7 +61,8 @@ export function drawEquipTab(ctx, x, startRow, w) {
     ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
     ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],
     ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`],
-    ['방어력', `${game.hero.gearArmor} (피해 -${Math.round(game.hero.armorReduction * 100)}%)`]
+    ['방어력', `${game.hero.gearArmor} (물리 -${Math.round(game.hero.armorReduction * 100)}%)`],
+    ['저항', ELEMENTS.map((el) => `${ELEMENT_DEF[el].short}${Math.round(Math.min(game.hero.resist[el] || 0, RESIST_CAP) * 100)}`).join(' ')]
   ];
   const colW = (w - 32) / 2;
   ctx.font = '10px sans-serif';

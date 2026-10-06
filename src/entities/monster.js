@@ -61,6 +61,8 @@ export class Monster {
     this.zapTargetY = 0;
     this.dmg = def.dmg;
     this.hunt = !!opts.hunt;
+    this.element = def.element || null; // 근접 공격 원소 (없으면 물리)
+    this.cloudCooldown = Infinity; // venom 전용
     this.whirlHitCd = 0;
     this.team = TEAM_MONSTER;
     this.behavior = behaviors[kind] || null;
@@ -136,7 +138,7 @@ export class Monster {
       if (this.state !== 'attack') { this.setState('attack', 0.6); this.attackHit = false; this.attackingPlayer = true; }
       if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
       if (!this.attackHit && this.stateElapsed > 0.12 && this.stateElapsed < 0.22) {
-        if (distP <= this.meleeRange + 10) { hitPlayer(this.x, this.y, this.dmg); this.attackHit = true; }
+        if (distP <= this.meleeRange + 10) { hitPlayer(this.x, this.y, this.element ? { [this.element]: this.dmg } : this.dmg); this.attackHit = true; }
       }
       this.timer -= dt;
       if (this.timer <= 0) this.setState('idle', auraMult > 1 ? 0.08 : 0.18);

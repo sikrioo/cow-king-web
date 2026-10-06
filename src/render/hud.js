@@ -4,6 +4,7 @@ import {
   ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
+import { ELEMENTS, ELEMENT_DEF, RESIST_CAP, BURN_DURATION, POISON_DURATION, COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import { canvas, ctx } from '../core/context.js';
 import { game } from '../state.js';
 import { attacksPerSecond } from '../util.js';
@@ -41,6 +42,10 @@ export function drawBuffIcons(ctx) {
   if (game.hero.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: game.hero.speedBuffTimer / SPEED_BUFF_DURATION });
   if (game.hero.attackBuffTimer > 0) buffs.push({ color: ITEM_STYLE.attack.color, frac: game.hero.attackBuffTimer / ATTACK_BUFF_DURATION });
   if (game.hero.defenseBuffTimer > 0) buffs.push({ color: ITEM_STYLE.defense.color, frac: game.hero.defenseBuffTimer / DEFENSE_BUFF_DURATION });
+  // 원소 상태(디버프) - 빨간 테두리
+  if (game.hero.burn.timer > 0) buffs.push({ color: ELEMENT_DEF.fire.color, frac: game.hero.burn.timer / BURN_DURATION, debuff: true });
+  if (game.hero.poison.timer > 0) buffs.push({ color: ELEMENT_DEF.poison.color, frac: game.hero.poison.timer / POISON_DURATION, debuff: true });
+  if (game.hero.slowTimer > 0) buffs.push({ color: ELEMENT_DEF.cold.color, frac: game.hero.slowTimer / COLD_NOVA_CHILL_DURATION, debuff: true });
   if (!buffs.length) return;
   const size = 16, gap = 4;
   const startX = canvas.width / 2 - (buffs.length * (size + gap)) / 2;
@@ -51,8 +56,8 @@ export function drawBuffIcons(ctx) {
     ctx.fillStyle = b.color;
     const h = size * Math.max(0, Math.min(1, b.frac));
     ctx.fillRect(x, y + (size - h), size, h);
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = b.debuff ? '#ff3b30' : 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = b.debuff ? 1.5 : 1;
     ctx.strokeRect(x, y, size, size);
   });
 }
@@ -78,6 +83,10 @@ export function drawStatReadout(ctx) {
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
+    {
+      label: '저항', color: '#c9c9c9', buffed: false,
+      parts: ELEMENTS.map((el) => ({ text: `${Math.round(Math.min(h.resist[el] || 0, RESIST_CAP) * 100)}`, color: ELEMENT_DEF[el].color }))
+    },
     { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 || h.running }
   ];
 
@@ -103,7 +112,17 @@ export function drawStatReadout(ctx) {
     ctx.textAlign = 'right';
     ctx.font = 'bold 12px monospace';
     ctx.fillStyle = st.color;
-    ctx.fillText(st.buffed ? `▲${st.value}` : st.value, x + w - pad, cy);
+    if (st.parts) {
+      // 원소별 값을 오른쪽부터 색깔별로 (화/냉/번/독 순서)
+      let rx = x + w - pad;
+      for (let i = st.parts.length - 1; i >= 0; i--) {
+        ctx.fillStyle = st.parts[i].color;
+        ctx.fillText(st.parts[i].text, rx, cy);
+        rx -= ctx.measureText(st.parts[i].text).width + 5;
+      }
+    } else {
+      ctx.fillText(st.buffed ? `▲${st.value}` : st.value, x + w - pad, cy);
+    }
   });
   ctx.restore();
 }

@@ -16,6 +16,7 @@ import { startNextWave } from './systems/waves.js';
 import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
 import { PEN } from './world/arena.js';
+import { updateHeroStatuses, emptyResist, emptyDot } from './systems/elements.js';
 import { viewSize } from './world/camera.js';
 
 export function resetGame() {
@@ -71,6 +72,9 @@ export function resetGame() {
   game.hero.moveInputActive = false;
   game.hero.moveStep = 0;
   game.hero.slowTimer = 0;
+  game.hero.burn = emptyDot();
+  game.hero.poison = emptyDot();
+  game.hero.resist = emptyResist();
   game.hero.bonusMaxHp = 0;
   game.hero.vitalityTimer = 0;
   game.hero.speedMult = 1;
@@ -221,6 +225,7 @@ export function fixedUpdate(dt) {
   if (game.hitstop > 0) { game.hitstop--; return; }
   if (game.gameState === 'playing') {
     updatePlayer(dt);
+    updateHeroStatuses(dt);
     updateSkillSlots();
     game.cows.forEach((c) => c.update(dt));
     for (let i = game.cows.length - 1; i >= 0; i--) {

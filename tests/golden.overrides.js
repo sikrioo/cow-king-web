@@ -5,6 +5,12 @@ export const GOLDEN_OVERRIDES = {
   'exact.statDef.defense.label': '블락률'
 };
 
+// 골든에 없던 항목을 **새로 추가**한 경우 (부모 경로는 있어야 함). 값은 현재 단위(×10)
+export const GOLDEN_ADDITIONS = {
+  // 2026-10-06: 원소 1단계 - 독 카우 추가 (사용자 결정: 기존 원소 몬스터 3종 + 독 카우 1종)
+  'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 }
+};
+
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)
 export const LEGACY_HP_SCALE = 10;
 function scaleLegacy(g) {
@@ -34,6 +40,16 @@ export function applyOverrides(golden) {
       o = o[k];
     }
     if (!(keys[keys.length - 1] in o)) throw new Error('override 경로 없음: ' + path);
+    o[keys[keys.length - 1]] = value;
+  }
+  for (const [path, value] of Object.entries(GOLDEN_ADDITIONS)) {
+    const keys = path.split('.');
+    let o = g;
+    for (const k of keys.slice(0, -1)) {
+      if (!(k in o)) throw new Error('추가 경로의 부모 없음: ' + path);
+      o = o[k];
+    }
+    if (keys[keys.length - 1] in o) throw new Error('이미 있는 항목 - GOLDEN_OVERRIDES로: ' + path);
     o[keys[keys.length - 1]] = value;
   }
   return g;

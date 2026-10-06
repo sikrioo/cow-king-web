@@ -2,17 +2,20 @@
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
   BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
-  BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE
+  BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
-import { World, Body, world } from '../core/physics.js';
+import { World, world } from '../core/physics.js';
 import { game } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { recordRun } from '../save.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot } from './loot.js';
 import { attackSpeedMul } from '../util.js';
+import { COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
+import {
+  toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath
+} from './elements.js';
 import { gainExp } from './progression.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
@@ -85,7 +88,7 @@ export function killCow(c) {
 export function spawnColdNova(x, y) {
   spawnShockwave(x, y, 90, '#9fd8ff');
   if (game.hero.alive && Math.hypot(game.hero.x - x, game.hero.y - y) <= 90) {
-    game.hero.slowTimer = 2.5;
+    applyChill(COLD_NOVA_CHILL_DURATION);
   }
 }
 
@@ -132,6 +135,7 @@ export function damageCow(c, dmg) {
   }
 }
 
+// dmg: 숫자(물리) 또는 피해 묶음 { phys, fire, cold, lightning, poison } - 회피/블락은 공격 전체에 적용
 export function hitPlayer(fromX, fromY, dmg) {
   if (!game.hero.alive || game.hero.invuln > 0) return;
 
@@ -145,9 +149,10 @@ export function hitPlayer(fromX, fromY, dmg) {
   const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
   const blocked = Math.random() < totalBlock;
   if (!blocked) {
-    const taken = Math.max(1, Math.round(dmg * (1 - game.hero.armorReduction))); // 방어력 피해 감소
-    game.hero.hp -= taken;
-    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, '#ff5b52');
+    const r = resolveHeroDamage(toPacket(dmg)); // 물리 = 방어력, 원소 = 저항
+    game.hero.hp -= r.total;
+    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${r.total}`, damageColor(r.dominant));
+    applyHeroStatuses(r.parts);
   } else {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'BLOCK', '#8fd0ff');
   }
@@ -160,13 +165,7 @@ export function hitPlayer(fromX, fromY, dmg) {
   game.hitstop = blocked ? 0 : 5;
   spawnHitParticles(game.hero.x, game.hero.y, PALETTE.eye, blocked ? 4 : 8);
 
-  if (game.hero.hp <= 0) {
-    game.hero.hp = 0;
-    game.hero.alive = false;
-    game.gameState = 'gameover';
-    recordRun('gameover');
-    Body.setVelocity(game.hero.body, { x: 0, y: 0 });
-  }
+  checkHeroDeath();
 }
 
 export function updateHazards(dt) {
@@ -176,9 +175,14 @@ export function updateHazards(dt) {
     h.tickTimer -= dt;
     if (h.life <= 0) { game.hazards.splice(i, 1); continue; }
     if (game.hero.alive && h.tickTimer <= 0 && Math.hypot(game.hero.x - h.x, game.hero.y - h.y) <= h.r) {
-      hitPlayer(h.x, h.y, FIRE_HAZARD_DAMAGE);
-      h.tickTimer = 0.6;
-      if (Math.random() < 0.4) spawnHitParticles(game.hero.x, game.hero.y - 10, '#ff7a1a', 3);
+      if (h.element === 'poison') {
+        applyPoisonDirect(POISON_CLOUD_DAMAGE); // 독 구름: 막기/회피 없이 중독 갱신
+        h.tickTimer = POISON_CLOUD_TICK;
+      } else {
+        hitPlayer(h.x, h.y, { fire: FIRE_HAZARD_DAMAGE });
+        h.tickTimer = 0.6;
+        if (Math.random() < 0.4) spawnHitParticles(game.hero.x, game.hero.y - 10, '#ff7a1a', 3);
+      }
     }
   }
 }

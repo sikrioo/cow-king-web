@@ -1,5 +1,5 @@
 // 이펙트 생성/갱신 (파티클·불바닥·번개·충격파·떠오르는 글자·이동 반응·메뉴 안내) - 그리기는 render/fx.js
-import { MOVE_DUST_COLOR } from '../data/balance.js';
+import { MOVE_DUST_COLOR, POISON_CLOUD_RADIUS, POISON_CLOUD_LIFE } from '../data/balance.js';
 import { game, ui } from '../state.js';
 
 export function spawnHitParticles(x, y, color, count) {
@@ -33,7 +33,12 @@ export function emitMoveReaction(dirX, dirY, strength = 1) {
 }
 
 export function spawnFireHazard(x, y) {
-  game.hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0 });
+  game.hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0, element: 'fire' });
+}
+
+// 독 구름 (독 카우) - 안에 있으면 중독 갱신
+export function spawnPoisonCloud(x, y) {
+  game.hazards.push({ x, y, r: POISON_CLOUD_RADIUS, life: POISON_CLOUD_LIFE, maxLife: POISON_CLOUD_LIFE, tickTimer: 0, element: 'poison' });
 }
 
 // 번개카우가 쏘는 전기 줄기 - 아주 짧게 번쩍이는 시각 효과

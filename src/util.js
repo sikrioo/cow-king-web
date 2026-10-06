@@ -1,4 +1,5 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
+import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
 
 // 기본 공격의 시간 배율(작을수록 빠름, 공격 대기/동작 시간에 곱함) = 1 / 속도 배율
@@ -6,7 +7,8 @@ import { COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPE
 export function attackSpeedMul(hero) {
   const comboBonus = Math.min(hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
   const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus, ATTACK_SPEED_MAX_MULT);
-  return 1 / speed;
+  const chill = hero.slowTimer > 0 ? CHILL_ATTACK_SPEED_MULT : 1; // 냉기 둔화 중엔 공격도 느려짐
+  return 1 / (speed * chill);
 }
 
 // 초당 기본 공격 횟수 (공격 버튼을 누르고 있을 때). 쌍수면 두 무기 간격의 평균
