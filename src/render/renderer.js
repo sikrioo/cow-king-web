@@ -2,7 +2,7 @@
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { drawPen } from './arena.js';
-import { drawMoveMarker, drawAttackTargetMarker, drawHeroChill, drawMeteorMarkers, drawMeteorBalls, drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
+import { drawMoveMarker, drawAttackTargetMarker, drawHeroChill, drawMeteorMarkers, drawMeteorBalls, drawProjectiles, drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
 import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
@@ -51,6 +51,7 @@ export function render(t) {
   drawables.push({ y: game.hero.y, fn: () => drawPlayer(ctx, t) });
   drawables.sort((a, b) => a.y - b.y).forEach((d) => d.fn());
   drawItems(ctx, t);
+  drawProjectiles(ctx);
   drawMeteorBalls(ctx); // 불덩이는 몬스터/주인공 위로
   drawParticles(ctx);
   drawShockwaves(ctx);

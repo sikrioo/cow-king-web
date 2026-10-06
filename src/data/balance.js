@@ -159,6 +159,25 @@ export const METEOR_DAMAGE = 70;        // 화염 피해 (→ 화상)
 export const METEOR_FIRE_RADIUS = 58;   // 착탄 자리에 남는 불꽃 바닥
 export const METEOR_FIRE_LIFE = 3.5;
 export const PYRO_KITE_DISTANCE = 200;  // 이보다 가까우면 물러남
+// 화염술사 마법 고르기: 거리 ≥ METEOR_MIN이면 메테오(쿨이면 파이어볼), ≤ WALL_MAX면 화염 벽(쿨이면 파이어볼), 그 사이 파이어볼
+export const PYRO_CAST_GAP = 1.8;       // 마법 사이 최소 간격(초)
+export const PYRO_METEOR_MIN_DIST = 300;
+export const PYRO_WALL_MAX_DIST = 150;
+// 파이어볼: 곧게 날아가는 투사체 (유도 없음)
+export const FIREBALL_CAST_TIME = 0.35;
+export const FIREBALL_SPEED = 260;      // px/초
+export const FIREBALL_RANGE = 480;
+export const FIREBALL_RADIUS = 10;      // 몸통 판정
+export const FIREBALL_EXPLODE_RADIUS = 36;
+export const FIREBALL_DAMAGE = 40;      // 화염 (→ 화상)
+// 화염 벽: 시전자와 주인공 사이(시전자 쪽에서 POS 비율 지점)에 수직으로 불꽃 바닥 SEGMENTS개
+export const FIRE_WALL_CAST_TIME = 0.5;
+export const FIRE_WALL_COOLDOWN = 6.0;
+export const FIRE_WALL_POS = 0.55;
+export const FIRE_WALL_SEGMENTS = 7;
+export const FIRE_WALL_SPACING = 26;
+export const FIRE_WALL_RADIUS = 20;
+export const FIRE_WALL_LIFE = 4.0;
 export const SHAMAN_HEAL = 30;
 export const CHARGE_RANGE = 240;
 export const CHARGE_TELEGRAPH = 0.8;

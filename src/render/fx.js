@@ -63,6 +63,30 @@ export function drawMeteorMarkers(ctx) {
   });
 }
 
+// 투사체 (파이어볼): 진행 방향 뒤로 꼬리 + 일렁이는 불덩이
+export function drawProjectiles(ctx) {
+  const t = performance.now() / 1000;
+  game.projectiles.forEach((p, i) => {
+    ctx.save();
+    for (let k = 4; k >= 1; k--) {
+      ctx.globalAlpha = 0.5 - k * 0.1;
+      ctx.fillStyle = k > 2 ? '#ff4d1a' : '#ff7a1a';
+      ctx.beginPath();
+      ctx.arc(p.x - p.dirX * k * 7, p.y - p.dirY * k * 7, p.radius * (1 - k * 0.15), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const wob = 1 + Math.sin(t * 20 + i) * 0.08;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ff4d1a';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 1.15 * wob, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffb02e';
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 0.75, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff3c0';
+    ctx.beginPath(); ctx.arc(p.x + p.dirX * 2, p.y + p.dirY * 2, p.radius * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+}
+
 // 메테오 불덩이: 하늘(왼쪽 위)에서 착탄 지점으로 떨어짐 + 꼬리
 export function drawMeteorBalls(ctx) {
   game.meteors.forEach((m) => {

@@ -33,7 +33,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 ## 확장할 때 고칠 곳
 - 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph/casting…)엔 매 틱 true.
-  마법형 몬스터 훅은 `entities/spellBehaviors.js`(behaviors에 합쳐짐), 마법 자체(메테오 등)는 `systems/spells.js`.
+  마법형 몬스터 훅은 `entities/spellBehaviors.js`(behaviors에 합쳐짐), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
+- 투사체: `systems/projectiles.js`의 `spawnProjectile({kind, x, y, dirX, dirY, speed, range, radius, packet, explodeRadius, color})` - 지금은 몬스터→주인공만. 그림은 `render/fx.js` drawProjectiles.
 - 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS`. 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
 - 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.

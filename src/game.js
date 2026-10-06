@@ -7,6 +7,7 @@ import { game, ui, input } from './state.js';
 import { updatePlayer } from './entities/hero.js';
 import { updateHazards } from './systems/combat.js';
 import { updateMeteors } from './systems/spells.js';
+import { updateProjectiles } from './systems/projectiles.js';
 import { updateParticles, updateLightningBolts, updateShockwaves, updateFloatTexts } from './systems/fx.js';
 import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot, unarmedStats } from './systems/gear.js';
 import { updateItems } from './systems/loot.js';
@@ -125,6 +126,7 @@ export function resetGame() {
   game.shockwaves = [];
   game.hazards = [];
   game.meteors = [];
+  game.projectiles = [];
   game.lightningBolts = [];
   game.items = [];
   game.floatTexts = [];
@@ -248,6 +250,7 @@ export function fixedUpdate(dt) {
   updateShockwaves(dt);
   updateHazards(dt);
   updateMeteors(dt);
+  updateProjectiles(dt);
   updateLightningBolts(dt);
   updateFloatTexts(dt);
   if (game.waveBannerTimer > 0) game.waveBannerTimer = Math.max(0, game.waveBannerTimer - dt);
