@@ -32,8 +32,8 @@ export function emitMoveReaction(dirX, dirY, strength = 1) {
   game.shake = Math.min(game.shake + 0.55 * strength, 12);
 }
 
-export function spawnFireHazard(x, y) {
-  game.hazards.push({ x, y, r: 24, life: 2.2, maxLife: 2.2, tickTimer: 0, element: 'fire' });
+export function spawnFireHazard(x, y, r = 24, life = 2.2) {
+  game.hazards.push({ x, y, r, life, maxLife: life, tickTimer: 0, element: 'fire' });
 }
 
 // 독 구름 (독 카우) - 안에 있으면 중독 갱신

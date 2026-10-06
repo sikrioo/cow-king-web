@@ -13,7 +13,7 @@ import {
   EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
   ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT, VENOM_CLOUD_TRIGGER_RANGE, VENOM_CLOUD_COOLDOWN
 } from '../data/balance.js';
-import { distToSegment, getHitPoint } from '../util.js';
+import { distToSegment, getHitPoint, hash01 } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { recordRun } from '../save.js';
@@ -22,6 +22,7 @@ import { spawnHitParticles, spawnFireHazard, spawnPoisonCloud, spawnLightningBol
 import { rollLightning } from '../systems/elements.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
+import { spellBehaviors } from './spellBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
 export function getAuraSpeedMult(cow) {
@@ -197,16 +198,18 @@ export const behaviors = {
       }
       return false;
     },
-    drawUnder(m, ctx) {
-      if (m.state === 'zapping' && Math.random() < 0.6) {
+    drawUnder(m, ctx, t) {
+      // 그림에서는 게임 난수를 쓰지 않음 (화면 밖 몬스터는 안 그리므로 화면 크기에 따라 게임 결과가 달라짐) - 시간·개체 해시
+      const f = Math.floor(t * 30);
+      if (m.state === 'zapping' && hash01(f, m.phase * 1000, 0) < 0.6) {
         // 충전 중 - 뿔 끝에서 지지직거리는 스파크
         ctx.save();
-        ctx.globalAlpha = 0.5 + Math.random() * 0.4;
+        ctx.globalAlpha = 0.5 + hash01(f, m.phase * 1000, 1) * 0.4;
         ctx.strokeStyle = '#fff9b0';
         ctx.lineWidth = 1.5;
         for (let i = 0; i < 2; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const len = 10 + Math.random() * 14;
+          const ang = hash01(f, m.phase * 1000, 2 + i) * Math.PI * 2;
+          const len = 10 + hash01(f, m.phase * 1000, 4 + i) * 14;
           ctx.beginPath();
           ctx.moveTo(m.x, m.y - 22 * m.scale);
           ctx.lineTo(m.x + Math.cos(ang) * len, m.y - 22 * m.scale + Math.sin(ang) * len);
@@ -378,3 +381,6 @@ export const behaviors = {
     }
   }
 };
+
+// 마법 쓰는 몬스터(entities/spellBehaviors.js)도 같은 표에
+Object.assign(behaviors, spellBehaviors);

@@ -10,6 +10,7 @@ export const game = {
   cows: [],
   items: [],
   hazards: [],
+  meteors: [], // 떨어지는 중인 메테오 (systems/spells.js)
   lightningBolts: [],
   shockwaves: [],
   particles: [],

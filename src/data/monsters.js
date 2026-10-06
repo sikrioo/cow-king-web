@@ -13,6 +13,7 @@ export const MONSTERS = {
   exploder: { hp: 30, dmg: 30, scaleMul: 1,   speedMul: 1.7,  aggroMul: 1.6, exp: 22,  ring: '#ff2d2d', colors: { hide: '#5c1414', horn: '#ff9b9b', snout: '#2e0a0a', eye: '#fff066' } },
   shaman:   { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 32,  ring: '#9f6bff', colors: { hide: '#3a2a5c', horn: '#d9c6ff', snout: '#241a3d', eye: '#7fffd4' } },
   shocker:  { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 30,  element: 'lightning', ring: '#fff066', colors: { hide: '#8a7a2e', horn: '#fffde0', snout: '#4a4015', eye: '#fff9b0' } },
+  pyro:     { hp: 50, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 2.8, exp: 35,  element: 'fire', ring: '#ff4d1a', colors: { hide: '#5a1f1a', horn: '#ffb36b', snout: '#2e0f0c', eye: '#ffd34d' } },
   venom:    { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.95, aggroMul: 1,   exp: 28,  element: 'poison', ring: '#7fe05a', colors: { hide: '#3f6e2a', horn: '#d8f5b0', snout: '#1f3a14', eye: '#c6ff4d' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.7, speedMul: 0.85, aggroMul: 1,   exp: 400, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
 };
@@ -29,6 +30,7 @@ export const MONSTER_WEAPONS = {
   shaman:   ['staff'],
   shocker:  ['rod'],
   venom:    ['pitchfork', 'cleaver'],
+  pyro:     ['firestaff'],
   boss:     ['hammer']
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
@@ -40,7 +42,7 @@ export function weaponFor(kind, seed) {
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
 
 // 엘리트 풀 - 웨이브 ELITE_MIN_WAVE부터 eliteChance = min(BASE + wave * PER_WAVE, MAX) 확률로 이 중 하나가 균등하게 뽑힘
-export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'venom'];
+export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'venom', 'pyro'];
 export const ELITE_MIN_WAVE = 2;
 export const ELITE_CHANCE_BASE = 0.16;
 export const ELITE_CHANCE_PER_WAVE = 0.05;

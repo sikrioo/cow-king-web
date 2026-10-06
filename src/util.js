@@ -18,6 +18,13 @@ export function attacksPerSecond(hero) {
   return 1 / (interval * attackSpeedMul(hero));
 }
 
+// 정수 3개 → 0~1 (결정적 해시). 그림에서 Math.random 대신 씀
+export function hash01(a, b, c) {
+  let h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) + Math.imul(c | 0, 1442695041)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
 export function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
 export function lerpAngle(a, b, t) {

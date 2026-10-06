@@ -8,7 +8,9 @@ export const GOLDEN_OVERRIDES = {
 // 골든에 없던 항목을 **새로 추가**한 경우 (부모 경로는 있어야 함). 값은 현재 단위(×10)
 export const GOLDEN_ADDITIONS = {
   // 2026-10-06: 원소 1단계 - 독 카우 추가 (사용자 결정: 기존 원소 몬스터 3종 + 독 카우 1종)
-  'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 }
+  'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
+  // 2026-10-06: 화염술사 카우(메테오) 추가
+  'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 }
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

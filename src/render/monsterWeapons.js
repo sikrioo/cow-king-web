@@ -160,9 +160,27 @@ function drawRod(ctx) {
   ctx.stroke();
 }
 
+// 화염 지팡이 (화염술사 카우 - 끝에서 일렁이는 불꽃 구슬)
+function drawFirestaff(ctx, animT) {
+  shaft(ctx, -40, 46, 4, WOOD_DARK);
+  const f = Math.sin(animT * 11) * 1.5;
+  ctx.fillStyle = 'rgba(255,122,26,0.35)';
+  ctx.beginPath();
+  ctx.arc(54, 0, 13 + f, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff7a1a';
+  ctx.beginPath();
+  ctx.arc(54, 0, 7.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd34d';
+  ctx.beginPath();
+  ctx.arc(53, -1, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 export const WEAPON_DRAW = {
   halberd: drawHalberd, pitchfork: drawPitchfork, club: drawClub, axe: drawAxe, spear: drawSpear,
-  hammer: drawHammer, cleaver: drawCleaver, staff: drawStaff, torch: drawTorch, rod: drawRod
+  hammer: drawHammer, cleaver: drawCleaver, staff: drawStaff, torch: drawTorch, rod: drawRod, firestaff: drawFirestaff
 };
 
 // 무기 하나 그리기: 손 위치(x, y)로 옮기고, 찌르기(poke 0→1)만큼 앞으로 회전

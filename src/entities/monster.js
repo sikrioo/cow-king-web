@@ -57,6 +57,9 @@ export class Monster {
     this.fuseTimer = Infinity; // exploder 전용 - 점화되면 카운트다운 시작
     this.healCooldown = Infinity;
     this.zapCooldown = Infinity;
+    this.castCooldown = Infinity; // pyro 전용 (메테오)
+    this.castX = 0;
+    this.castY = 0;
     this.zapTargetX = 0;
     this.zapTargetY = 0;
     this.dmg = def.dmg;

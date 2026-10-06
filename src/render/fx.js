@@ -2,6 +2,95 @@
 import { hexToRgba } from '../util.js';
 import { game, ui, input } from '../state.js';
 
+// 불꽃 바닥: 그을린 바닥 + 일렁이는 불꽃 혀 (그라데이션/난수 없음 - 시간과 위치로만)
+function drawFireField(ctx, h) {
+  const t = performance.now() / 1000;
+  const fade = Math.max(0, Math.min(1, h.life / 0.5, (h.maxLife - h.life) / 0.15 + 0.3));
+  ctx.save();
+  ctx.globalAlpha = 0.35 * fade;
+  ctx.fillStyle = '#5a1e08';
+  ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r, h.r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = (0.3 + Math.sin(t * 7 + h.x) * 0.06) * fade;
+  ctx.fillStyle = '#ff6a1a';
+  ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r * 0.78, h.r * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+  const n = Math.max(3, Math.round(h.r / 8));
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.39996; // 황금각 - 고르게 흩어짐
+    const rr = h.r * 0.72 * Math.sqrt((i + 0.5) / n);
+    const fx = h.x + Math.cos(a) * rr, fy = h.y + Math.sin(a) * rr * 0.6;
+    const wob = Math.sin(t * 9 + i * 1.7 + h.x * 0.05);
+    const ht = (h.r * 0.32 + 7) * (0.7 + 0.3 * wob);
+    const w = 3 + h.r * 0.05;
+    const sway = Math.sin(t * 5 + i) * w * 0.6;
+    ctx.globalAlpha = 0.8 * fade;
+    ctx.fillStyle = '#ff7a1a';
+    flame(ctx, fx, fy, w, ht, sway);
+    ctx.fillStyle = '#ffd34d';
+    flame(ctx, fx, fy, w * 0.5, ht * 0.55, sway * 0.6);
+  }
+  ctx.restore();
+}
+
+// 불꽃 혀 하나 (밑동 (x, y), 폭 w, 높이 ht, 끝 흔들림 sway)
+function flame(ctx, x, y, w, ht, sway) {
+  ctx.beginPath();
+  ctx.moveTo(x - w, y);
+  ctx.quadraticCurveTo(x - w * 0.7, y - ht * 0.55, x + sway, y - ht);
+  ctx.quadraticCurveTo(x + w * 0.7, y - ht * 0.55, x + w, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// 메테오 경고: 착탄 지점에 차오르는 붉은 원 + 떨어질수록 짙어지는 그림자
+export function drawMeteorMarkers(ctx) {
+  game.meteors.forEach((m) => {
+    const p = Math.min(1, m.t / m.delay);
+    ctx.save();
+    ctx.globalAlpha = 0.12 + p * 0.25;
+    ctx.fillStyle = '#ff4d1a';
+    ctx.beginPath(); ctx.ellipse(m.x, m.y, m.r * p, m.r * p * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.75;
+    ctx.strokeStyle = '#ff7a1a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(m.x, m.y, m.r, m.r * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
+    const q = Math.max(0, (m.t - (m.delay - m.fall)) / m.fall);
+    if (q > 0) {
+      ctx.globalAlpha = 0.35 * q;
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(m.x, m.y, 10 + 12 * q, (10 + 12 * q) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+// 메테오 불덩이: 하늘(왼쪽 위)에서 착탄 지점으로 떨어짐 + 꼬리
+export function drawMeteorBalls(ctx) {
+  game.meteors.forEach((m) => {
+    const q = (m.t - (m.delay - m.fall)) / m.fall;
+    if (q <= 0) return;
+    const sx = m.x - 140, sy = m.y - 420;
+    const at = (k) => ({ x: sx + (m.x - sx) * k, y: sy + (m.y - sy) * k });
+    ctx.save();
+    for (let k = 4; k >= 1; k--) {
+      const tq = q - k * 0.07;
+      if (tq < 0) continue;
+      const p = at(tq);
+      ctx.globalAlpha = 0.55 - k * 0.11;
+      ctx.fillStyle = k > 2 ? '#ff4d1a' : '#ff7a1a';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 13 - k * 2, 0, Math.PI * 2); ctx.fill();
+    }
+    const p = at(q);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ff4d1a';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffb02e';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff3c0';
+    ctx.beginPath(); ctx.arc(p.x - 2, p.y - 2, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+}
+
 // 독 구름: 단색 원 겹치기 + 떠오르는 거품 (그라데이션 없음, 난수 없음)
 function drawPoisonCloud(ctx, h) {
   const t = performance.now() / 1000;
@@ -83,18 +172,7 @@ export function drawParticles(ctx) {
 export function drawHazards(ctx) {
   game.hazards.forEach((h) => {
     if (h.element === 'poison') { drawPoisonCloud(ctx, h); return; }
-    const alpha = Math.min(1, h.life / h.maxLife) * (0.35 + Math.sin(performance.now() / 90 + h.x) * 0.08);
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, alpha);
-    const grad = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, h.r);
-    grad.addColorStop(0, 'rgba(255,200,80,0.9)');
-    grad.addColorStop(0.6, 'rgba(255,110,30,0.55)');
-    grad.addColorStop(1, 'rgba(255,60,10,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    drawFireField(ctx, h);
   });
 }
 

@@ -148,6 +148,17 @@ export const POISON_CLOUD_RADIUS = 70;
 export const POISON_CLOUD_LIFE = 3.0;
 export const POISON_CLOUD_TICK = 0.5;
 export const POISON_CLOUD_DAMAGE = 60;  // 중독 총량(4초에 걸쳐)
+// 화염술사 카우의 메테오: 시전(CAST) → 그 순간 주인공 자리에 경고 원 → DELAY초 뒤 착탄(마지막 FALL초 동안 불덩이가 떨어지는 모습)
+export const METEOR_RANGE = 420;
+export const METEOR_CAST_TIME = 0.6;
+export const METEOR_COOLDOWN = 5.0;
+export const METEOR_DELAY = 1.1;
+export const METEOR_FALL_TIME = 0.45;
+export const METEOR_RADIUS = 70;        // 폭발 범위
+export const METEOR_DAMAGE = 70;        // 화염 피해 (→ 화상)
+export const METEOR_FIRE_RADIUS = 58;   // 착탄 자리에 남는 불꽃 바닥
+export const METEOR_FIRE_LIFE = 3.5;
+export const PYRO_KITE_DISTANCE = 200;  // 이보다 가까우면 물러남
 export const SHAMAN_HEAL = 30;
 export const CHARGE_RANGE = 240;
 export const CHARGE_TELEGRAPH = 0.8;

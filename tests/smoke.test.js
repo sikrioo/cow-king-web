@@ -4,7 +4,7 @@
 // 이력: v1-modular까지는 레거시(legacy/cow_pen.html)와 같은 입력으로 나란히 돌려 상태+그리기가 똑같은지 비교했고,
 //      ×10 정수화 1단계까지 레거시와 상태가 같음을 확인한 뒤(커밋 9ec9ee6) 2단계(1 단위 정수)부터 이 스냅샷이 기준.
 // 동작을 **의도적으로** 바꿨을 때만 사용자 확인 후 `npx vitest run -u`로 스냅샷 갱신. 의도하지 않은 불일치는 코드를 되돌린다.
-// 시나리오: 일반(타이틀 → 시작 → 약 150초 무작위 입력: 이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사), 몬스터 12종, 모바일 버튼/조이스틱
+// 시나리오: 일반(타이틀 → 시작 → 약 150초 무작위 입력: 이동/스킬/물약/레벨업/일시정지/장비창 클릭 난사), 몬스터 13종, 모바일 버튼/조이스틱
 import { describe, it, expect, vi } from 'vitest';
 import { installBrowserEnv, mulberry32 } from './helpers/browserEnv.js';
 
@@ -66,7 +66,7 @@ function runScenario(env, seed, view) {
 }
 
 // 몬스터 11종 동물원: 시작 후 각 종류를 한 마리씩 소환해 900프레임 동안 싸우고, 남은 몬스터를 전부 처치(보스 승리 처리 포함)
-const KINDS = ['normal', 'tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'venom', 'boss'];
+const KINDS = ['normal', 'tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'venom', 'pyro', 'boss'];
 function runZoo(env, seed, view, spawn, killAll) {
   const rnd = mulberry32(seed + 7);
   const prints = [];
@@ -175,7 +175,7 @@ describe('smoke: 일반 플레이', () => {
   }
 });
 
-describe('smoke: 몬스터 12종 특수 행동/처치', () => {
+describe('smoke: 몬스터 13종 특수 행동/처치', () => {
   for (const seed of [5, 99]) {
     it(`zoo seed ${seed}`, async () => {
       const prints = await runModularZoo(seed);
