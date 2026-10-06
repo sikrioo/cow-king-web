@@ -2,7 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, CLICK_ATTACK_RANGE_SLACK, expForLevel
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, CLICK_ATTACK_RANGE_SLACK, HERO_SLOW_MULT, expForLevel
 } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
@@ -235,7 +235,7 @@ export function updatePlayer(dt) {
     dy /= inputLen;
   }
 
-  const slowMul = game.hero.slowTimer > 0 ? 0.55 : 1;
+  const slowMul = game.hero.slowTimer > 0 ? HERO_SLOW_MULT : 1;
   const speedPxPerSec = (game.hero.running ? RUN_SPEED : WALK_SPEED) *
     slowMul * game.hero.speedMult * game.hero.gearSpeedMult;
   const targetSpeed = moving ? speedPxPerSec / 60 : 0;
@@ -300,7 +300,10 @@ export function updatePlayer(dt) {
     }
   }
 
-  Body.setVelocity(game.hero.body, { x: nextVX, y: nextVY });
+  // 물리 엔진이 매 틱 공기 저항(frictionAir)만큼 속도를 깎으므로 미리 나눠서 넣음 → 엔진을 거친 뒤 의도한 속도(nextV)가 됨
+  // (예전엔 이 보정이 없어서 가속과 저항이 맞서는 지점(설정 속도의 약 1/4)에서 멈췄고 달리기도 빨라지지 않았음)
+  const keep = 1 - game.hero.body.frictionAir;
+  Body.setVelocity(game.hero.body, { x: nextVX / keep, y: nextVY / keep });
 
   const accelX = (nextVX - curVX) / Math.max(dt, 0.0001);
   const accelY = (nextVY - curVY) / Math.max(dt, 0.0001);

@@ -1,6 +1,6 @@
 // 캔버스 HUD (체력·마나 구슬, 스태미나, 스탯, 버프, 콤보)
 import {
-  COMBO_WINDOW, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION, SPEED_BUFF_DURATION,
+  COMBO_WINDOW, RUN_SPEED, WALK_SPEED, HERO_SLOW_MULT, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION, SPEED_BUFF_DURATION,
   ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
@@ -67,7 +67,10 @@ export function drawStatReadout(ctx) {
   const atkMax = Math.max(ws.main.max, ws.off ? ws.off.max : -Infinity) + atkBonus;
   const totalBlock = Math.min(BASE_BLOCK + h.defenseChance + h.gearDefense, 0.85);
   const totalEvasion = Math.min(BASE_EVASION + h.gearEvasion, 0.75);
-  const totalSpeedPct = Math.round((h.gearSpeedMult * h.speedMult - 1) * 100);
+  // 지금 이동 속도 배율 (장비·물약 × 달리기 × 둔화) - 주인공 이동 계산과 같은 항목
+  const runMul = h.running ? RUN_SPEED / WALK_SPEED : 1;
+  const slowMul = h.slowTimer > 0 ? HERO_SLOW_MULT : 1;
+  const totalSpeedPct = Math.round((h.gearSpeedMult * h.speedMult * runMul * slowMul - 1) * 100);
 
   const stats = [
     { label: '공격력', value: `${atkMin}~${atkMax}`, color: '#ff8a3d', buffed: h.attackBuffTimer > 0 },
@@ -75,7 +78,7 @@ export function drawStatReadout(ctx) {
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
-    { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 }
+    { label: '이동속도', value: `${totalSpeedPct >= 0 ? '+' : ''}${totalSpeedPct}%`, color: '#5be0c9', buffed: h.speedBuffTimer > 0 || h.running }
   ];
 
   const w = 128, rowH = 19, pad = 8;

@@ -63,7 +63,7 @@ it('마우스 좌클릭 이동: 찍은 지점까지 가서 멈추고, 끌면 따
     env.windowPointerUp(0);
     expect(input.holdSlot1).toBe(false); // 좌클릭은 공격이 아니라 이동
     expect(input.moveTarget).not.toBe(null);
-    env.frame(600); // 실제 걷기 속도가 느려서(frictionAir) 넉넉히
+    env.frame(240);
     expect(Math.hypot(game.hero.x - goal.x, game.hero.y - goal.y)).toBeLessThan(25);
     expect(input.moveTarget).toBe(null); // 도착하면 목표 해제
 

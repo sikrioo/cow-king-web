@@ -60,6 +60,7 @@ export const MOVE_DUST_COLOR = '#bda98b';
 // --- 플레이어 자원 (이동/마나/스태미나)
 export const WALK_SPEED = 130;
 export const RUN_SPEED = 215;
+export const HERO_SLOW_MULT = 0.55; // 냉기 둔화 중 이동 속도 배율
 export const MOVE_ARRIVE_RADIUS = 10; // 클릭 이동: 목표 지점에 이만큼 가까워지면 도착(멈춤)
 export const CLICK_PICK_PADDING = 10;  // 적 클릭 판정: 몸 반경 + 이만큼 (작은 적도 잘 찍히게)
 export const CLICK_ATTACK_RANGE_SLACK = 6; // 클릭 공격: 사거리보다 이만큼 더 붙어서 휘두름 (헛치지 않게)
