@@ -1,6 +1,19 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
 import { hexToRgba } from '../util.js';
-import { game, ui } from '../state.js';
+import { game, ui, input } from '../state.js';
+
+// 클릭 공격 목표 표시: 발밑 빨간 고리
+export function drawAttackTargetMarker(ctx) {
+  const c = input.attackTarget;
+  if (!c || c.state === 'dead') return;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,91,82,0.85)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(c.x, c.y + c.r * 0.55, c.r * 1.1, c.r * 0.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 // 클릭 이동 표시: 찍은 지점에 줄어드는 고리 (0.45초)
 export function drawMoveMarker(ctx) {

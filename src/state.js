@@ -54,5 +54,7 @@ export const input = {
   holdSlot2: false,
   moveTarget: null, // 클릭 이동 목표 {x, y} (월드 좌표) - WASD/조이스틱을 쓰면 취소
   mouseMoveHeld: false, // 좌클릭을 누른 채 끄는 중 (커서를 계속 따라감)
+  attackTarget: null, // 클릭한 적 - 사거리까지 걸어가서 공격. 누르고 있는 동안(attackHeld)은 계속, 떼면 한 번 치고 끝
+  attackHeld: false,
   joystick: { active: false, id: null, baseX: 0, baseY: 0, dx: 0, dy: 0, magnitude: 0 }
 };

@@ -132,6 +132,8 @@ export function resetGame() {
   input.holdSlot2 = false;
   input.moveTarget = null;
   input.mouseMoveHeld = false;
+  input.attackTarget = null;
+  input.attackHeld = false;
   ui.moveMarker = null;
   const s1label = document.getElementById('slot1-label');
   const s2label = document.getElementById('slot2-label');

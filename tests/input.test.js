@@ -88,3 +88,50 @@ it('마우스 좌클릭 이동: 찍은 지점까지 가서 멈추고, 끌면 따
 function canvasHandler(env, type) {
   return (evt) => env.pointerEvent(type, evt);
 }
+
+it('적 좌클릭: 사거리까지 걸어가서 공격 - 떼면 한 번, 누르고 있으면 계속. 자동으로 다음 적을 치지 않음', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, input } = await import('../src/state.js');
+    const { canvas } = await import('../src/core/context.js');
+    const { camera } = await import('../src/world/camera.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { Body } = await import('../src/core/physics.js');
+    env.frame(30); env.key(' '); env.key(' ', false); env.frame(10);
+    game.waveTransition = 999; // 웨이브가 끼어들지 않게
+    const place = (dx) => {
+      const c = new Monster(0.4, 'normal');
+      c.hp = c.maxHp = 100000; c.speed = 0; // 안 죽고 안 움직이게
+      const p = { x: game.hero.x + dx, y: game.hero.y };
+      Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
+      game.cows.push(c);
+      return c;
+    };
+    const cow = place(160);
+    env.frame(1);
+    const toScreen = (c) => [canvas.width / 2 + (c.x - camera.x) * camera.zoom, canvas.height / 2 + (c.y - camera.y) * camera.zoom];
+
+    // 클릭 후 바로 뗌 → 다가가서 한 번만
+    env.pointer('pointerdown', ...toScreen(cow), 0);
+    env.windowPointerUp(0);
+    expect(input.attackTarget).toBe(cow);
+    expect(input.moveTarget).toBe(null);
+    let hits = 0, last = cow.hp;
+    for (let i = 0; i < 900; i++) { env.frame(1); if (cow.hp < last) { hits++; last = cow.hp; } }
+    expect(hits).toBe(1);
+    expect(input.attackTarget).toBe(null);
+
+    // 누르고 있으면 계속
+    env.pointer('pointerdown', ...toScreen(cow), 0);
+    hits = 0; last = cow.hp;
+    for (let i = 0; i < 180; i++) { env.frame(1); if (cow.hp < last) { hits++; last = cow.hp; } }
+    expect(hits).toBeGreaterThan(2);
+    env.windowPointerUp(0);
+    env.frame(60);
+    expect(input.attackTarget).toBe(null);
+  } finally {
+    env.restore();
+  }
+});

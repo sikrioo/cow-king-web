@@ -1,6 +1,6 @@
 // 입력: 키보드/마우스/터치/조이스틱 → 의도(intent). 게임 로직은 의도만 받아 처리 (game.js의 handleKeyDown/slotPress)
 // 이동/달리기처럼 누르고 있는 상태는 input.keys / input.joystick으로 매 틱 읽음
-import { LEVEL_STAT_KEYS } from './data/balance.js';
+import { LEVEL_STAT_KEYS, CLICK_PICK_PADDING } from './data/balance.js';
 import { canvas } from './core/context.js';
 import { game, ui, input } from './state.js';
 import { screenToWorld } from './world/camera.js';
@@ -13,10 +13,25 @@ export const joyBase = document.getElementById('joystick-base');
 
 export const joyKnob = document.getElementById('joystick-knob');
 
+function eventWorld(e) {
+  const rect = canvas.getBoundingClientRect();
+  return screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+// 월드 좌표 아래의 적 (겹치면 가장 가까운 것)
+function cowAt(w) {
+  let best = null, bestD = Infinity;
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || c.team === game.hero.team) return;
+    const d = Math.hypot(c.x - w.x, c.y - w.y);
+    if (d <= c.r + CLICK_PICK_PADDING && d < bestD) { best = c; bestD = d; }
+  });
+  return best;
+}
+
 // 클릭 지점(화면) → 이동 목표(월드, 목장 안쪽). marker: 클릭 표시를 새로 띄울지 (끄는 중엔 위치만 갱신)
 function setMoveTarget(e, marker) {
-  const rect = canvas.getBoundingClientRect();
-  const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  const w = eventWorld(e);
   input.moveTarget = clampToPen(w.x, w.y, game.hero.r);
   if (marker || !ui.moveMarker) ui.moveMarker = { x: input.moveTarget.x, y: input.moveTarget.y, t0: performance.now() };
   else { ui.moveMarker.x = input.moveTarget.x; ui.moveMarker.y = input.moveTarget.y; }
@@ -88,6 +103,15 @@ export function bindInput(actions) {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
     const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
     if (mouse && e.button === 0 && !e.shiftKey && game.gameState === 'playing' && !game.paused) {
+      const cow = cowAt(eventWorld(e));
+      if (cow) {
+        // 적 클릭: 그 적에게 가서 공격 (누르고 있는 동안 계속)
+        input.attackTarget = cow;
+        input.attackHeld = true;
+        input.moveTarget = null;
+        return;
+      }
+      input.attackTarget = null;
       setMoveTarget(e, true);
       input.mouseMoveHeld = true;
       return;
@@ -95,15 +119,17 @@ export function bindInput(actions) {
     actions.slotPress(e.button === 2 ? 2 : 1); // 타이틀/게임오버에서는 시작
   });
   canvas.addEventListener('pointermove', (e) => {
-    if (ui.showInventory || !input.mouseMoveHeld) return;
-    if (game.gameState !== 'playing' || game.paused) return;
+    if (ui.showInventory || game.gameState !== 'playing') return;
+    // 적 위에서는 커서 모양으로 공격 가능함을 알림
+    if (e.pointerType !== 'touch') canvas.style.cursor = cowAt(eventWorld(e)) ? 'crosshair' : 'default';
+    if (!input.mouseMoveHeld || game.paused) return;
     setMoveTarget(e, false);
   });
   window.addEventListener('pointerup', (e) => {
     if (e.button === 2) input.holdSlot2 = false;
-    else { input.holdSlot1 = false; input.mouseMoveHeld = false; }
+    else { input.holdSlot1 = false; input.mouseMoveHeld = false; input.attackHeld = false; }
   });
-  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; input.mouseMoveHeld = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
+  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; input.mouseMoveHeld = false; input.attackHeld = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
 
   // 메뉴가 열려 있으면 캔버스 포인터는 메뉴로 (호버 미리보기 / 클릭)
   canvas.addEventListener('pointermove', (e) => {

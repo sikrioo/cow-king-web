@@ -61,7 +61,7 @@ function createStubs({ width = 1024, height = 768, drawSampleEvery = 50 } = {}) 
   let rafCb = null; let now = 0; let frameNo = 0;
   const rec = makeRecorder();
   const ctx = makeCtxStub(rec);
-  const canvas = { width, height, getContext: () => ctx, addEventListener: (e, f) => { (canvasHandlers[e] ||= []).push(f); }, getBoundingClientRect: () => ({ left: 0, top: 0, width, height }) };
+  const canvas = { width, height, style: {}, getContext: () => ctx, addEventListener: (e, f) => { (canvasHandlers[e] ||= []).push(f); }, getBoundingClientRect: () => ({ left: 0, top: 0, width, height }) };
   const document = {
     getElementById: (id) => { if (id === 'c') return canvas; return (elCache[id] ||= makeEl()); },
     querySelector: (sel) => { const id = sel.split(' ')[0].replace('#', ''); return (elCache[id] ||= makeEl()); },

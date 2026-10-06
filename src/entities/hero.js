@@ -2,7 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, expForLevel
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, CLICK_ATTACK_RANGE_SLACK, expForLevel
 } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
@@ -11,6 +11,7 @@ import { TEAM_HERO } from './actor.js';
 import { emitMoveReaction } from '../systems/fx.js';
 import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../systems/skills.js';
 import { unarmedStats } from '../systems/gear.js';
+import { tryPlayerAttack, getWeaponRange, getCowHitRadius } from '../systems/combat.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
 export function createHero() {
@@ -99,6 +100,23 @@ export function createHero() {
   return hero;
 }
 
+// 클릭 공격: 사거리 밖이면 다가갈 방향을 돌려주고, 사거리 안이면 멈춰서 적을 보고 기본 공격
+// 버튼을 뗀 상태면 한 번 휘두른 뒤 목표 해제 (자동 공격 없음)
+function clickAttackStep() {
+  const c = input.attackTarget;
+  if (!c || c.state === 'dead' || !game.cows.includes(c)) { input.attackTarget = null; return null; }
+  const tx = c.x - game.hero.x, ty = c.y - game.hero.y;
+  const d = Math.hypot(tx, ty) || 1;
+  const reach = getWeaponRange() + getCowHitRadius(c) - CLICK_ATTACK_RANGE_SLACK;
+  if (d > reach) return { x: tx / d, y: ty / d };
+  game.hero.facing = Math.atan2(ty, tx);
+  if (game.hero.attackCooldown <= 0) {
+    tryPlayerAttack();
+    if (!input.attackHeld) input.attackTarget = null;
+  }
+  return null;
+}
+
 export function updatePlayer(dt) {
   game.hero.x = game.hero.body.position.x;
   game.hero.y = game.hero.body.position.y;
@@ -173,7 +191,8 @@ export function updatePlayer(dt) {
 
   let dx = 0, dy = 0, moving, wantsRun;
   if (input.joystick.active && input.joystick.magnitude > 0.08) {
-    input.moveTarget = null; // 조이스틱을 쓰면 클릭 이동 취소
+    input.moveTarget = null; // 조이스틱을 쓰면 클릭 이동/공격 취소
+    input.attackTarget = null;
     const len = Math.hypot(input.joystick.dx, input.joystick.dy) || 1;
     dx = input.joystick.dx / len;
     dy = input.joystick.dy / len;
@@ -184,8 +203,11 @@ export function updatePlayer(dt) {
     if (input.keys['arrowright'] || input.keys['d']) dx += 1;
     if (input.keys['arrowup'] || input.keys['w']) dy -= 1;
     if (input.keys['arrowdown'] || input.keys['s']) dy += 1;
-    if (dx || dy) input.moveTarget = null; // 키보드로 움직이면 클릭 이동 취소
-    else if (input.moveTarget) {
+    if (dx || dy) { input.moveTarget = null; input.attackTarget = null; } // 키보드로 움직이면 클릭 이동/공격 취소
+    else if (input.attackTarget) {
+      const step = clickAttackStep();
+      if (step) { dx = step.x; dy = step.y; }
+    } else if (input.moveTarget) {
       // 클릭 이동: 목표 쪽으로 (도착하면 멈춤, 끄는 중이면 목표가 계속 갱신됨)
       const tx = input.moveTarget.x - game.hero.x, ty = input.moveTarget.y - game.hero.y;
       const d = Math.hypot(tx, ty);
