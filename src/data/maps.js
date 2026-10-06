@@ -9,17 +9,17 @@ export const MAPS = {
     // 바닥 무늬 (render/ground.js): 노이즈 얼룩 + 장식. 다른 지형(사막/지옥/얼음)은 이 묶음만 바꾸면 됨
     ground: {
       base: '#3a6b3f',
-      shades: ['#34623a', '#3a6b3f', '#41753f', '#47803f'], // 풀 명암 (지형 값 낮음 → 높음)
+      shades: ['#35643b', '#3a6b3f', '#40733f', '#447c3f'], // 풀 명암 (지형 값 낮음 → 높음). 10-06 대비 20% 줄임
       dirt: '#6e5b3c', dirtEdge: '#56603a',                 // 흙 얼룩과 그 가장자리
-      dirtThreshold: 0.66,                                   // 지형 값이 이보다 크면 흙
+      dirtThreshold: 0.69,                                   // 지형 값이 이보다 크면 흙
       patchScale: 300,                                       // 큰 얼룩 크기(px)
       cell: 10,                                              // 얼룩을 찍는 칸(px)
       decor: [
-        { type: 'tuft',   every: 30,  chance: 0.6,  size: 7,   colors: ['#2a5430', '#53904f', '#3f7a3c'] },
-        { type: 'flower', every: 85,  chance: 0.35, size: 1.6, colors: ['#f2f0e6', '#ffe066', '#ff9bd0', '#b9a8ff'] },
-        { type: 'stone',  every: 120, chance: 0.4,  size: 6,   colors: ['#7d7a70', '#6c6a62'], light: '#a29f93' },
-        { type: 'speck',  every: 26,  chance: 0.7,  size: 1.6, colors: ['#5a4a30', '#857150', '#4b3d28'], onDirt: true },
-        { type: 'stone',  every: 70,  chance: 0.35, size: 4,   colors: ['#8a8578'], light: '#aaa598', onDirt: true }
+        { type: 'tuft',   every: 30,  chance: 0.48,  size: 7,   colors: ['#2a5430', '#53904f', '#3f7a3c'] },
+        { type: 'flower', every: 85,  chance: 0.28, size: 1.6, colors: ['#f2f0e6', '#ffe066', '#ff9bd0', '#b9a8ff'] },
+        { type: 'stone',  every: 120, chance: 0.32,  size: 6,   colors: ['#7d7a70', '#6c6a62'], light: '#a29f93' },
+        { type: 'speck',  every: 26,  chance: 0.56,  size: 1.6, colors: ['#5a4a30', '#857150', '#4b3d28'], onDirt: true },
+        { type: 'stone',  every: 70,  chance: 0.28, size: 4,   colors: ['#8a8578'], light: '#aaa598', onDirt: true }
       ]
     }
   }
