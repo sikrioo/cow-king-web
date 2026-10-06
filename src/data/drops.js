@@ -8,6 +8,7 @@ export const DROP_RATES = {
   guaranteed: { gear: 0.5, material: 0.35, consumable: 1 }
 };
 export const DROP_SCATTER = 18; // 죽은 자리에서 흩어지는 최대 거리(px)
+export const DISCARD_ITEM_LIFE = 60; // 가방에서 버린 장비가 바닥에 남는 시간(초)
 
 // 소모품 종류 가중치: 생명/마나는 '채우는' 물약. 최대체력을 올리는 체력(vitality) 물약은 의도와 달라서 드랍에서 뺌 (applyItem 코드는 남겨둠)
 export const POTION_DROP_WEIGHTS = { heal: 3, mana: 2.5, speed: 1, attack: 1, defense: 1 };

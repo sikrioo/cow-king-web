@@ -5,6 +5,7 @@ import { STAT_DEF, GEAR_SLOTS } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
+import { discardFromInventory } from '../../systems/loot.js';
 import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareTargets, gearBaseParts } from './common.js';
 
@@ -139,7 +140,58 @@ function drawWornDetail(ctx, gear, x, y, w, bottom) {
   ctx.fillText('착용 중인 장비 · 강화는 강화 탭에서', x + 16, bottom - 4);
 }
 
+// 상세: 내용은 버튼 줄 위 영역에만 그리고(넘치면 잘림), 버튼 줄은 항상 패널 맨 아래에 고정
+const BTN_H = 32;
 export function drawBagDetail(ctx, x, top, w, bottom) {
+  const out = { buttons: [], hint: null };
+  const contentBottom = bottom - BTN_H - 8;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x + 2, top - 14, w - 4, contentBottom - (top - 14));
+  ctx.clip();
+  drawBagDetailBody(ctx, x, top, w, contentBottom, out);
+  ctx.restore();
+  drawDetailFooter(ctx, x, w, bottom, out);
+}
+
+// 버튼 줄: 버리기는 오른쪽 좁은 버튼, 나머지(장착/감정)는 남은 폭을 나눔
+function drawDetailFooter(ctx, x, w, bottom, out) {
+  if (!out.buttons.length) {
+    if (out.hint) {
+      ctx.font = '10px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText(out.hint, x + 16, bottom - 4);
+    }
+    return;
+  }
+  const gap = 6, discardW = 64, by = bottom - BTN_H;
+  const mains = out.buttons.filter((b) => b.kind !== 'discard');
+  const discards = out.buttons.filter((b) => b.kind === 'discard');
+  const mainW = (w - 32 - discards.length * (discardW + gap) - gap * Math.max(0, mains.length - 1)) / Math.max(1, mains.length);
+  let bx = x + 16;
+  const draw = (b, bw) => {
+    ui.invButtons.push({ x: bx, y: by, w: bw, h: BTN_H, fn: b.fn });
+    const discard = b.kind === 'discard';
+    const main = discard ? '#ff9b6b' : '#ffe066';
+    ctx.fillStyle = b.enabled ? (discard ? 'rgba(255,155,107,0.16)' : 'rgba(255,224,102,0.25)') : 'rgba(255,255,255,0.08)';
+    ctx.fillRect(bx, by, bw, BTN_H);
+    ctx.strokeStyle = b.enabled ? main : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by, bw, BTN_H);
+    ctx.fillStyle = b.enabled ? main : '#aaa';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fitText(ctx, b.label, bw - 10), bx + bw / 2, by + BTN_H / 2 + 1);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    bx += bw + gap;
+  };
+  mains.forEach((b) => draw(b, mainW));
+  discards.forEach((b) => draw(b, discardW));
+}
+
+function drawBagDetailBody(ctx, x, top, w, bottom, out) {
   ctx.textAlign = 'left';
   // 착용 중 칸을 고정했거나(우선), 가방 칸 고정이 없을 때 착용 중 칸에 올려둔 경우
   const wornSlot = ui.selectedEquipSlot || (ui.selectedInvIndex === null ? ui.hoverEquipSlot : null);
@@ -168,32 +220,18 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     ctx.restore();
   }
 
-  const btnH = 32;
-  // col/cols: 버튼 여러 개를 한 줄에 나란히 (주무기/보조무기 선택)
-  const addButton = (label, fn, enabled = true, col = 0, cols = 1) => {
-    const gap = 6;
-    const bw = (w - 32 - gap * (cols - 1)) / cols;
-    const bx = x + 16 + col * (bw + gap);
-    const by = Math.max(bottom - btnH, y + 6);
-    ui.invButtons.push({ x: bx, y: by, w: bw, h: btnH, fn });
-    ctx.fillStyle = enabled ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.08)';
-    ctx.fillRect(bx, by, bw, btnH);
-    ctx.strokeStyle = enabled ? '#ffe066' : 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx, by, bw, btnH);
-    ctx.fillStyle = enabled ? '#ffe066' : '#aaa';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(fitText(ctx, label, bw - 10), bx + bw / 2, by + btnH / 2 + 1);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-  };
-  const hintLine = (text) => {
-    ctx.font = '10px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText(text, x + 16, bottom - 4);
-  };
+  // 버튼/안내는 모아 뒀다가 drawDetailFooter가 맨 아래에 그림
+  const addButton = (label, fn, enabled = true, kind = 'main') => out.buttons.push({ label, fn, enabled, kind });
+  const hintLine = (text) => { out.hint = text; };
+  const addDiscard = () => addButton('버리기', () => {
+    const g = game.hero.inventory[ui.selectedInvIndex];
+    if (!g) return;
+    const name = g.identified ? gearDisplayName(g) : unidentifiedTitle(g);
+    discardFromInventory(ui.selectedInvIndex);
+    ui.selectedInvIndex = null;
+    ui.hoverInvIndex = null;
+    showInvToast(`${name} 버림 (발밑)`, '#ff9b6b');
+  }, true, 'discard');
 
   if (!sel.identified) {
     ctx.font = 'bold 13px sans-serif';
@@ -210,6 +248,7 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
       const identifying = ui.identifyingItem === sel;
       const dots = identifying ? '.'.repeat(1 + Math.floor((performance.now() / 300) % 3)) : '';
       addButton(identifying ? `감정 중${dots}` : '감정하기', () => tryIdentify(ui.selectedInvIndex), !identifying);
+      addDiscard();
     } else {
       hintLine('클릭해서 고정하면 감정할 수 있어');
     }
@@ -284,14 +323,15 @@ export function drawBagDetail(ctx, x, top, w, bottom) {
     if (sel.category === 'weapon' && sel.handedness === 'one' && main && main.handedness === 'one') {
       // 한손 무기 + 주무기가 이미 있음 → 어느 칸에 넣을지 선택
       const off = eq.weaponOff && eq.weaponOff !== 'LOCKED' ? eq.weaponOff : null;
-      addButton('주무기로 장착', equipAs('weaponMain'), true, 0, 2);
-      addButton(off && off.category === 'shield' ? '보조무기로 (방패 해제)' : '보조무기로 장착', equipAs('weaponOff'), true, 1, 2);
+      addButton('주무기로 장착', equipAs('weaponMain'));
+      addButton(off && off.category === 'shield' ? '보조무기로 (방패 해제)' : '보조무기로 장착', equipAs('weaponOff'));
     } else {
       let label = sel.category === 'weapon' && sel.handedness === 'one' ? '주무기로 장착' : '장착하기';
       if (sel.category === 'weapon' && sel.handedness === 'two' && eq.weaponOff && eq.weaponOff !== 'LOCKED') label = '장착하기 (보조손 장비 해제)';
       if (sel.category === 'shield' && main && main.handedness === 'two') label = '장착하기 (양손무기 해제)';
       addButton(label, equipAs(null));
     }
+    addDiscard();
   } else {
     hintLine('클릭해서 고정하면 장착할 수 있어');
   }

@@ -1,13 +1,26 @@
 // 드랍 굴리기와 줍기
 import { INVENTORY_SIZE, POTION_MAX } from '../data/balance.js';
-import { DROP_RATES, DROP_SCATTER, POTION_DROP_WEIGHTS } from '../data/drops.js';
+import { DROP_RATES, DROP_SCATTER, POTION_DROP_WEIGHTS, DISCARD_ITEM_LIFE } from '../data/drops.js';
 import { ITEM_STYLE } from '../data/items.js';
-import { game } from '../state.js';
+import { game, ui } from '../state.js';
 import { Item } from '../entities/drop.js';
 import { spawnHitParticles, floatText } from './fx.js';
 import { rollGearItem } from './gear.js';
 import { applyItem } from './potions.js';
 import { unidentifiedTitle } from '../ui/itemView.js';
+
+// 가방 장비 버리기: 주인공 발밑에 떨어뜨림 (다시 주울 수 있음, DISCARD_ITEM_LIFE초 뒤 사라짐)
+export function discardFromInventory(index) {
+  const gear = game.hero.inventory[index];
+  if (!gear) return null;
+  game.hero.inventory.splice(index, 1);
+  if (ui.identifyingItem === gear) ui.identifyingItem = null;
+  const it = new Item(game.hero.x, game.hero.y + 8, 'gear', gear);
+  it.life = DISCARD_ITEM_LIFE;
+  it.dropped = true;
+  game.items.push(it);
+  return gear;
+}
 
 export function dropLoot(x, y, guaranteed, count) {
   for (let i = 0; i < count; i++) {
@@ -38,6 +51,11 @@ export function updateItems(dt) {
     if (it.life <= 0) { game.items.splice(i, 1); continue; }
     if (game.hero.alive) {
       const d = Math.hypot(game.hero.x - it.x, game.hero.y - it.y);
+      // 방금 버린 장비는 발에서 한 번 벗어난 뒤에야 다시 주움 (버리자마자 다시 줍지 않게)
+      if (it.dropped) {
+        if (d > game.hero.r + 26) it.dropped = false;
+        else continue;
+      }
       if (d <= game.hero.r + 16) {
         if (it.type === 'gear') {
           if (game.hero.inventory.length >= INVENTORY_SIZE) {
