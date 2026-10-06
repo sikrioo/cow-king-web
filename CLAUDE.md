@@ -16,7 +16,7 @@
 main.js            부팅만 (boot: 화면/목장 → createHero → 입력 연결 → resetGame → 타이틀 → 루프)
 game.js            새 게임(resetGame), 상태(title/playing/gameover/victory + paused), fixedUpdate 순서, 키 의도 처리
 input.js           KEY_INTENTS(키 → 의도 한 테이블), 키보드/캔버스/조이스틱 리스너
-render/            그리기만 (renderer.js = 프레임 그리기 순서·월드/화면 좌표 구분, monster/heroSprites, arena, fx, hud, minimap, items)
+render/            그리기만 (renderer.js = 프레임 그리기 순서·월드/화면 좌표 구분, monster/heroSprites, arena, ground(바닥 무늬 조각 캐시), fx, hud, minimap, items)
 ui/                overlays(타이틀·배너·일시정지), dom(HTML 버튼·동기화), itemView(아이템 표시 규칙 한 곳), menu/(캔버스 메뉴)
 entities/          monster(일반 AI) + behaviors(종류별 훅), hero(createHero/updatePlayer), drop(바닥 아이템), actor(team)
 systems/           combat, skills, gear, loot, potions, progression, waves, fx(이펙트 생성/갱신)

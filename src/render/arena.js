@@ -2,10 +2,10 @@
 import { PALETTE } from '../data/palette.js';
 import { ctx } from '../core/context.js';
 import { PEN } from '../world/arena.js';
+import { drawGround } from './ground.js';
 
 export function drawPen() {
-  ctx.fillStyle = PALETTE.ground;
-  ctx.fillRect(PEN.x, PEN.y, PEN.size, PEN.size);
+  drawGround(ctx); // 바닥 무늬 (조각 캐시)
 
   ctx.strokeStyle = PALETTE.fence;
   ctx.lineWidth = 6;

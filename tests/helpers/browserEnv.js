@@ -63,6 +63,8 @@ function createStubs({ width = 1024, height = 768, drawSampleEvery = 50 } = {}) 
   const ctx = makeCtxStub(rec);
   const canvas = { width, height, style: {}, getContext: () => ctx, addEventListener: (e, f) => { (canvasHandlers[e] ||= []).push(f); }, getBoundingClientRect: () => ({ left: 0, top: 0, width, height }) };
   const document = {
+    // 바닥 무늬 캐시용 오프스크린 캔버스 (기록 안 함)
+    createElement: () => ({ width: 0, height: 0, style: {}, getContext: () => makeCtxStub(makeRecorder()) }),
     getElementById: (id) => { if (id === 'c') return canvas; return (elCache[id] ||= makeEl()); },
     querySelector: (sel) => { const id = sel.split(' ')[0].replace('#', ''); return (elCache[id] ||= makeEl()); },
     body: { classList: { add() {}, remove() {}, toggle() {} } }, documentElement: { requestFullscreen: () => Promise.resolve() },
