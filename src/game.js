@@ -11,7 +11,7 @@ import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot, unarmed
 import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint } from './systems/progression.js';
-import { SKILLS, cycleSkillSlot, updateSkillSlots } from './systems/skills.js';
+import { SKILLS, cycleSkillSlot, updateSkillSlots, trySlot } from './systems/skills.js';
 import { startNextWave } from './systems/waves.js';
 import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
@@ -138,6 +138,7 @@ export function resetGame() {
   input.mouseMoveHeld = false;
   input.attackTarget = null;
   input.attackHeld = false;
+  input.standAttackHeld = false;
   ui.moveMarker = null;
   const s1label = document.getElementById('slot1-label');
   const s2label = document.getElementById('slot2-label');
@@ -274,11 +275,11 @@ export function handleKeyDown(intent, k, e) {
   if (intent === 'slot1') {
     e.preventDefault();
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot1) { stopClickOrders(); input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); }
+    else if (!input.holdSlot1) { stopClickOrders(); input.holdSlot1 = true; trySlot(1); }
   }
   if (intent === 'slot2') {
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot2) { stopClickOrders(); input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); }
+    else if (!input.holdSlot2) { stopClickOrders(); input.holdSlot2 = true; trySlot(2); }
   }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (intent === 'cycleSlot1') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
@@ -297,6 +298,7 @@ function stopClickOrders() {
   input.moveTarget = null;
   input.mouseMoveHeld = false;
   input.attackTarget = null;
+  input.standAttackHeld = false;
 }
 
 // 캔버스 클릭으로 슬롯 시전 시작 (좌클릭/터치 = 1, 우클릭 = 2)
@@ -304,8 +306,8 @@ export function slotPress(slotNum) {
   if (game.gameState !== 'playing') { resetGame(); return; }
   if (game.paused) return;
   stopClickOrders();
-  if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); } }
-  else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); } }
+  if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; trySlot(2); } }
+  else { if (!input.holdSlot1) { input.holdSlot1 = true; trySlot(1); } }
 }
 
 // 도움말 창: 플레이 중에 열면 일시정지하고, 닫으면 (도움말이 일시정지시킨 경우에만) 다시 진행

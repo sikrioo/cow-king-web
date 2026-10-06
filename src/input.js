@@ -13,6 +13,11 @@ export const joyBase = document.getElementById('joystick-base');
 
 export const joyKnob = document.getElementById('joystick-knob');
 
+function rememberMouse(e) {
+  const rect = canvas.getBoundingClientRect();
+  input.mouseScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
 function eventWorld(e) {
   const rect = canvas.getBoundingClientRect();
   return screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -96,12 +101,22 @@ export function bindInput(actions) {
     if (KEY_INTENTS[k] === 'slot2') input.holdSlot2 = false;
   });
 
-  // 마우스: 좌클릭 = 그 지점으로 이동(누른 채 끌면 커서를 따라감), Shift+좌클릭 = 슬롯1, 우클릭 = 슬롯2 (길게 = 반복)
+  // 마우스: 좌클릭 = 그 지점으로 이동(누른 채 끌면 커서를 따라감) / 적이면 그 적 공격, Shift+좌클릭 = 제자리에서 커서 방향 기본 공격,
+  //        우클릭 = 슬롯2 (길게 = 반복). 스킬은 커서 방향으로 시전
   // 터치/펜: 화면 탭 = 슬롯1 (모바일 이동은 조이스틱)
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
     const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
+    if (mouse) rememberMouse(e);
+    if (mouse && e.button === 0 && e.shiftKey && game.gameState === 'playing' && !game.paused) {
+      // 디아블로식 제자리 공격: 클릭 명령은 취소, 누르고 있는 동안 커서 방향으로 계속 (skills.updateSkillSlots)
+      input.moveTarget = null;
+      input.mouseMoveHeld = false;
+      input.attackTarget = null;
+      input.standAttackHeld = true;
+      return;
+    }
     if (mouse && e.button === 0 && !e.shiftKey && game.gameState === 'playing' && !game.paused) {
       const cow = cowAt(eventWorld(e));
       if (cow) {
@@ -119,6 +134,7 @@ export function bindInput(actions) {
     actions.slotPress(e.button === 2 ? 2 : 1); // 타이틀/게임오버에서는 시작
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') rememberMouse(e);
     if (ui.showInventory || game.gameState !== 'playing') return;
     // 적 위에서는 커서 모양으로 공격 가능함을 알림
     if (e.pointerType !== 'touch') canvas.style.cursor = cowAt(eventWorld(e)) ? 'crosshair' : 'default';
@@ -127,9 +143,9 @@ export function bindInput(actions) {
   });
   window.addEventListener('pointerup', (e) => {
     if (e.button === 2) input.holdSlot2 = false;
-    else { input.holdSlot1 = false; input.mouseMoveHeld = false; input.attackHeld = false; }
+    else { input.holdSlot1 = false; input.mouseMoveHeld = false; input.attackHeld = false; input.standAttackHeld = false; }
   });
-  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; input.mouseMoveHeld = false; input.attackHeld = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
+  canvas.addEventListener('pointerleave', () => { input.holdSlot1 = false; input.holdSlot2 = false; input.mouseMoveHeld = false; input.attackHeld = false; input.standAttackHeld = false; ui.hoverInvIndex = null; ui.hoverEquipSlot = null; });
 
   // 메뉴가 열려 있으면 캔버스 포인터는 메뉴로 (호버 미리보기 / 클릭)
   canvas.addEventListener('pointermove', (e) => {

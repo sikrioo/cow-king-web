@@ -163,3 +163,39 @@ it('클릭 이동 중 Space를 누르면 멈춰서 시전, WASD 이동 중에는
     env.restore();
   }
 });
+
+it('Shift+좌클릭 = 제자리에서 커서 방향 기본 공격(누르는 동안 계속), Space = 커서 방향 시전', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, input } = await import('../src/state.js');
+    const { canvas } = await import('../src/core/context.js');
+    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    game.waveTransition = 999;
+    const h = game.hero;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const shiftDown = (x, y) => env.pointerEvent('pointerdown', { button: 0, shiftKey: true, clientX: x, clientY: y, preventDefault() {} });
+
+    // 커서가 주인공 바로 위쪽 → 위를 보고 공격, 제자리
+    const x0 = h.x, y0 = h.y;
+    shiftDown(cx, cy - 150);
+    expect(input.standAttackHeld).toBe(true);
+    let swings = 0, prev = 0;
+    for (let i = 0; i < 120; i++) { env.frame(1); if (h.attackTimer > prev) swings++; prev = h.attackTimer; }
+    expect(swings).toBeGreaterThan(2);
+    expect(Math.abs(h.facing - (-Math.PI / 2))).toBeLessThan(0.05);
+    expect(Math.hypot(h.x - x0, h.y - y0)).toBeLessThan(3);
+    env.windowPointerUp(0);
+    expect(input.standAttackHeld).toBe(false);
+
+    // Space: 커서(오른쪽) 방향으로 시전
+    env.pointerEvent('pointermove', { clientX: cx + 200, clientY: cy, preventDefault() {} });
+    env.frame(40);
+    env.key(' ');
+    expect(Math.abs(h.facing)).toBeLessThan(0.05);
+    env.key(' ', false);
+  } finally {
+    env.restore();
+  }
+});

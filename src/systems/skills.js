@@ -16,6 +16,7 @@ import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, sk
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
+import { screenToWorld } from '../world/camera.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
@@ -255,8 +256,24 @@ export function cycleSkillSlot(slotNum) {
   if (slotEl) slotEl.style.background = SKILLS[game.hero[key]].color;
 }
 
+// PC(마우스를 쓴 적 있음): 시전 직전에 커서 쪽을 보게 함 → 공격/스킬이 커서 방향으로. 모바일은 바라보는 방향 그대로
+export function aimAtCursor() {
+  if (!input.mouseScreen || !game.hero.alive) return;
+  const w = screenToWorld(input.mouseScreen.x, input.mouseScreen.y);
+  const dx = w.x - game.hero.x, dy = w.y - game.hero.y;
+  if (Math.hypot(dx, dy) > 4) game.hero.facing = Math.atan2(dy, dx);
+}
+
+// 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로
+export function trySlot(n) {
+  aimAtCursor();
+  SKILLS[n === 2 ? game.hero.slot2 : game.hero.slot1].try();
+}
+
 export function updateSkillSlots() {
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
-  if (input.holdSlot1) SKILLS[game.hero.slot1].try();
-  if (input.holdSlot2) SKILLS[game.hero.slot2].try();
+  if (input.holdSlot1) trySlot(1);
+  if (input.holdSlot2) trySlot(2);
+  // Shift+좌클릭 제자리 공격 (기본 공격, 쿨다운은 tryPlayerAttack이 확인)
+  if (input.standAttackHeld && game.hero.attackCooldown <= 0) { aimAtCursor(); tryPlayerAttack(); }
 }
