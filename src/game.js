@@ -269,11 +269,11 @@ export function handleKeyDown(intent, k, e) {
   if (intent === 'slot1') {
     e.preventDefault();
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); }
+    else if (!input.holdSlot1) { stopClickOrders(); input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); }
   }
   if (intent === 'slot2') {
     if (game.gameState !== 'playing') { resetGame(); }
-    else if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); }
+    else if (!input.holdSlot2) { stopClickOrders(); input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); }
   }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (intent === 'cycleSlot1') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
@@ -287,10 +287,18 @@ export function handleKeyDown(intent, k, e) {
   }
 }
 
+// 스킬을 쓰면 클릭 이동/클릭 공격 명령은 취소 → 그 자리에 멈춰서 시전 (WASD 이동은 키를 누르는 동안 계속)
+function stopClickOrders() {
+  input.moveTarget = null;
+  input.mouseMoveHeld = false;
+  input.attackTarget = null;
+}
+
 // 캔버스 클릭으로 슬롯 시전 시작 (좌클릭/터치 = 1, 우클릭 = 2)
 export function slotPress(slotNum) {
   if (game.gameState !== 'playing') { resetGame(); return; }
   if (game.paused) return;
+  stopClickOrders();
   if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; SKILLS[game.hero.slot2].try(); } }
   else { if (!input.holdSlot1) { input.holdSlot1 = true; SKILLS[game.hero.slot1].try(); } }
 }

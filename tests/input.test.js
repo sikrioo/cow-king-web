@@ -135,3 +135,31 @@ it('적 좌클릭: 사거리까지 걸어가서 공격 - 떼면 한 번, 누르�
     env.restore();
   }
 });
+
+it('클릭 이동 중 Space를 누르면 멈춰서 시전, WASD 이동 중에는 계속 이동', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, input } = await import('../src/state.js');
+    const { canvas } = await import('../src/core/context.js');
+    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    game.waveTransition = 999;
+    env.pointer('pointerdown', canvas.width / 2 + 300, canvas.height / 2, 0);
+    env.windowPointerUp(0);
+    env.frame(30);
+    env.key(' '); env.key(' ', false);
+    expect(input.moveTarget).toBe(null);
+    env.frame(40);
+    const x1 = game.hero.x; env.frame(30);
+    expect(Math.abs(game.hero.x - x1)).toBeLessThan(1); // 멈춤
+
+    env.key('d'); env.frame(20);
+    env.key(' '); env.key(' ', false);
+    const x2 = game.hero.x; env.frame(30);
+    expect(game.hero.x - x2).toBeGreaterThan(20); // WASD는 계속 이동
+    env.key('d', false);
+  } finally {
+    env.restore();
+  }
+});
