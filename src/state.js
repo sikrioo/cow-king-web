@@ -46,7 +46,15 @@ export const ui = {
   titleTime: 0,
   identifyingItem: null, // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
   identifyTimer: 0,
-  moveMarker: null // 클릭 이동 표시 {x, y, t0} (그리기 전용)
+  moveMarker: null, // 클릭 이동 표시 {x, y, t0} (그리기 전용)
+  devPanelOpen: false
+};
+
+// 개발자 모드 치트 (systems/dev.js, 패널은 ui/devPanel.js)
+export const dev = {
+  god: false,          // 무적 (피해 안 받음)
+  infiniteMana: false, // 마나 항상 가득
+  noCooldown: false    // 스킬 대기시간 0
 };
 
 // 입력 상태 (눌린 키, 슬롯 길게 누르기, 가상 조이스틱)

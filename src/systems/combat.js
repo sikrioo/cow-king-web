@@ -7,7 +7,7 @@ import {
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { World, world } from '../core/physics.js';
-import { game } from '../state.js';
+import { game, dev } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot } from './loot.js';
@@ -137,7 +137,7 @@ export function damageCow(c, dmg) {
 
 // dmg: 숫자(물리) 또는 피해 묶음 { phys, fire, cold, lightning, poison } - 회피/블락은 공격 전체에 적용
 export function hitPlayer(fromX, fromY, dmg) {
-  if (!game.hero.alive || game.hero.invuln > 0) return;
+  if (!game.hero.alive || game.hero.invuln > 0 || dev.god) return;
 
   const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
   if (Math.random() < totalEvasion) {

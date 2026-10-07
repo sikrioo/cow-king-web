@@ -58,7 +58,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
   → 동작을 **의도적으로** 바꾼 경우에만 사용자 확인 후 `npx vitest run -u`로 갱신. 의도하지 않은 불일치는 코드를 되돌린다.
   (이력: v1-modular까지는 레거시와 상태+그리기 동일, ×10 정수화 1단계(9ec9ee6)까지 레거시와 상태 동일을 확인한 뒤 스냅샷 기준으로 전환)
 - `tests/baseline.*.test.js`: `docs/baseline.golden.json`과 비교. 동작을 바꾸지 않는 작업에서 불일치가 나면 코드를 되돌린다(테스트 수정 금지). 사용자가 결정한 **의도적 변경**은 골든 파일을 고치지 말고 `tests/golden.overrides.js`에 경로·값·이유·날짜를 추가한다 (골든은 레거시 기록으로 유지 → `legacy/tools/baseline.cjs --check`도 계속 통과).
-- 테스트용 기능 `L`키 레벨업, `giveTestStash()`는 나중에 제거 예정(유지 중).
+- 개발자 모드(`config.isDevMode()`: 개발 서버·테스트는 항상, 배포본은 `?dev=1`): ` 키/DEV 버튼 패널(`ui/devPanel.js`, 동작은 `systems/dev.js`, 치트 플래그는 `state.dev`). `L`키 레벨업과 `giveTestStash()`도 개발자 모드에서만.
 
 ## 자주 밟는 함정
 - 초기화 순서: 모듈 로드 중 아무것도 실행하지 않는다. 부팅·리스너 등록은 `boot()`에서. 주인공 바디는 벽 다음에 생성.

@@ -68,7 +68,8 @@ export function joyEnd() {
 export const KEY_INTENTS = {
   escape: 'back',        // 메뉴 닫기 / 일시정지 토글
   p: 'pause',
-  l: 'debugLevelUp',     // 테스트용: 한 레벨 업 (나중에 제거)
+  l: 'debugLevelUp',     // 개발자 모드: 한 레벨 업
+  '`': 'devPanel',       // 개발자 모드: 패널 열기/닫기
   ' ': 'slot1',          // 길게 누르면 반복 시전
   e: 'slot2',
   q: 'cycleSlot1',       // 슬롯 스킬 전환

@@ -5,7 +5,7 @@ import {
   POISON_RATIO, POISON_DURATION, CHILL_DURATION, LIGHTNING_MIN, LIGHTNING_MAX
 } from '../data/elements.js';
 import { Body } from '../core/physics.js';
-import { game } from '../state.js';
+import { game, dev } from '../state.js';
 import { recordRun } from '../save.js';
 import { spawnDamageNumber, spawnHitParticles } from './fx.js';
 
@@ -89,6 +89,7 @@ export function updateHeroStatuses(dt) {
 
 // 체력만 바로 깎음 (무적시간/넉백 없음) - 지속 피해용
 export function damageHeroDirect(amount, color) {
+  if (dev.god) return;
   game.hero.hp -= amount;
   spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${amount}`, color);
   checkHeroDeath();

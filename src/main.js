@@ -12,6 +12,8 @@ import { bindInput } from './input.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
 import { bindDomButtons } from './ui/dom.js';
+import { bindDevButton } from './ui/devPanel.js';
+import { isDevMode } from './config.js';
 import { layoutArena } from './world/arena.js';
 
 function boot() {
@@ -22,6 +24,7 @@ function boot() {
   game.hero = createHero();
   bindInput({ keyDown: handleKeyDown, slotPress });
   bindDomButtons({ restart: resetGame, pressAction, setPaused, toggleHelp });
+  if (isDevMode()) bindDevButton();
 
   resetGame();
   // 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌

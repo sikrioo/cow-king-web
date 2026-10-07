@@ -18,6 +18,9 @@ import { startNextWave } from './systems/waves.js';
 import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
 import { PEN } from './world/arena.js';
+import { isDevMode } from './config.js';
+import { updateDev } from './systems/dev.js';
+import { toggleDevPanel } from './ui/devPanel.js';
 import { updateHeroStatuses, emptyResist, emptyDot } from './systems/elements.js';
 import { viewSize } from './world/camera.js';
 
@@ -103,7 +106,7 @@ export function resetGame() {
   game.hero.potions = { heal: 2, mana: 2 };
   game.hero.potionCd = { heal: 0, mana: 0 };
   giveStarterGear(); // gear 보너스 초기화 이후에 호출해야 장착 효과가 덮어써지지 않음
-  giveTestStash(); // 장비 교체 테스트용 - 무기 종류별 1개 + 방패 + 양손무기를 가방에 바로 지급
+  if (isDevMode()) giveTestStash(); // 개발자 모드: 장비 교체 테스트용 - 무기 종류별 1개 + 방패 + 양손무기를 가방에 바로 지급
   game.hero.hp = game.hero.maxHp + game.hero.gearMaxHp;
   game.hero.mana = game.hero.maxMana + game.hero.gearMaxMana;
   ui.identifyingItem = null;
@@ -231,6 +234,7 @@ export function fixedUpdate(dt) {
   if (game.gameState === 'playing') {
     updatePlayer(dt);
     updateHeroStatuses(dt);
+    updateDev();
     updateSkillSlots();
     game.cows.forEach((c) => c.update(dt));
     for (let i = game.cows.length - 1; i >= 0; i--) {
@@ -271,7 +275,8 @@ export function handleKeyDown(intent, k, e) {
   }
   if (intent === 'pause' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
   if (game.paused) return;
-  if (intent === 'debugLevelUp' && game.gameState === 'playing') gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 테스트용: L = 한 레벨 업 (밸런스/스킬 해금 확인용)
+  if (intent === 'devPanel' && isDevMode()) { toggleDevPanel(); return; }
+  if (intent === 'debugLevelUp' && game.gameState === 'playing' && isDevMode()) gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 개발자 모드: L = 한 레벨 업
   const num = intent === 'num' ? Number(k) : 0;
   if (!ui.showInventory && game.gameState === 'playing') {
     if (num === 1) tryDrinkPotion('heal');
