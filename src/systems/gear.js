@@ -242,12 +242,13 @@ export function armorReduction(armor) {
 }
 
 export function recalcGearStats() {
-  let atkSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
+  let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
     if (!it || it === 'LOCKED') return;
     armor += gearArmor(it);
     if (it.stats.atkSpeed) atkSpeed += it.stats.atkSpeed;
+    if (it.stats.castSpeed) castSpeed += it.stats.castSpeed;
     if (it.stats.atkPower) atkPower += it.stats.atkPower;
     if (it.stats.defense) defense += it.stats.defense;
     if (it.stats.evasion) evasion += it.stats.evasion;
@@ -258,6 +259,7 @@ export function recalcGearStats() {
 
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨" 합산치)
   atkSpeed += (game.hero.levelStats.atkSpeed || 0) * LEVEL_STAT_PER_POINT.atkSpeed;
+  castSpeed += (game.hero.levelStats.castSpeed || 0) * LEVEL_STAT_PER_POINT.castSpeed;
   atkPower += (game.hero.levelStats.atkPower || 0) * LEVEL_STAT_PER_POINT.atkPower;
   defense += (game.hero.levelStats.defense || 0) * LEVEL_STAT_PER_POINT.defense;
   evasion += (game.hero.levelStats.evasion || 0) * LEVEL_STAT_PER_POINT.evasion;
@@ -267,6 +269,7 @@ export function recalcGearStats() {
 
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;
+  game.hero.gearCastSpeed = castSpeed;
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;

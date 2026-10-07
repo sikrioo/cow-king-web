@@ -1,6 +1,6 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
-import { COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
+import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
 
 // 기본 공격의 시간 배율(작을수록 빠름, 공격 대기/동작 시간에 곱함) = 1 / 속도 배율
 //   속도 배율 = 1 + 장비/레벨 공격속도 + 콤보 (최대 ATTACK_SPEED_MAX_MULT). 공격(combat)과 HUD 표시가 같이 쓴다
@@ -9,6 +9,11 @@ export function attackSpeedMul(hero) {
   const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus, ATTACK_SPEED_MAX_MULT);
   const chill = hero.slowTimer > 0 ? CHILL_ATTACK_SPEED_MULT : 1; // 냉기 둔화 중엔 공격도 느려짐
   return 1 / (speed * chill);
+}
+
+// 스킬 대기시간 배율(작을수록 자주) = 1 / (1 + 시전속도), 상한 CAST_SPEED_MAX_MULT. 전사·마법사 스킬 공통 (기본 공격은 attackSpeedMul)
+export function castSpeedMul(hero) {
+  return 1 / Math.min(1 + (hero.gearCastSpeed || 0), CAST_SPEED_MAX_MULT);
 }
 
 // 초당 기본 공격 횟수 (공격 버튼을 누르고 있을 때). 쌍수면 두 무기 간격의 평균

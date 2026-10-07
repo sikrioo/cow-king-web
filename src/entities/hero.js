@@ -56,6 +56,7 @@ export function createHero() {
     defenseBuffTimer: 0,
     equipment: { armor: null, weaponMain: null, weaponOff: null, greaves: null, boots: null, accessory1: null, accessory2: null },
     gearAtkSpeed: 0,
+    gearCastSpeed: 0, // 시전속도 (장비+레벨)
     gearAtkPower: 0,
     gearDefense: 0,
     gearEvasion: 0,
@@ -102,7 +103,7 @@ export function createHero() {
     exp: 0,
     expToNext: expForLevel(1),
     statPoints: 0,
-    levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 },
+    levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, castSpeed: 0, moveSpeed: 0, health: 0, mana: 0 },
     team: TEAM_HERO
   };
   Body.setInertia(hero.body, Infinity);

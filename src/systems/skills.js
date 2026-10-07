@@ -20,12 +20,13 @@ import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber 
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
 import { screenToWorld } from '../world/camera.js';
+import { castSpeedMul, attackSpeedMul } from '../util.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
   if (game.hero.mana < WARCRY_MANA_COST) return;
   game.hero.mana -= WARCRY_MANA_COST;
-  game.hero.warcryCooldown = WARCRY_COOLDOWN;
+  game.hero.warcryCooldown = WARCRY_COOLDOWN * castSpeedMul(game.hero);
   spawnShockwave(game.hero.x, game.hero.y, WARCRY_RADIUS, '#e8a33d');
   game.shake = Math.min(game.shake + 7, 12);
   game.cows.forEach((c) => {
@@ -49,7 +50,7 @@ export function tryWhirlwind() {
   game.hero.mana -= WHIRLWIND_MANA_COST;
   game.cows.forEach((c) => { c.whirlHitCd = 0; });
   game.hero.whirlwindTimer = WHIRLWIND_DURATION;
-  game.hero.whirlwindCooldown = WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION;
+  game.hero.whirlwindCooldown = WHIRLWIND_COOLDOWN * castSpeedMul(game.hero) + WHIRLWIND_DURATION; // 지속 시간은 그대로, 대기시간만 줄어듦
   game.shake = Math.min(game.shake + 5, 12);
 }
 
@@ -85,7 +86,7 @@ export function tryLeap() {
   if (!game.hero.alive || game.hero.leapCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
   if (game.hero.mana < LEAP_MANA_COST) return;
   game.hero.mana -= LEAP_MANA_COST;
-  game.hero.leapCooldown = LEAP_COOLDOWN;
+  game.hero.leapCooldown = LEAP_COOLDOWN * castSpeedMul(game.hero);
   game.hero.leapTimer = LEAP_DURATION;
   game.hero.leapFrom.x = game.hero.x;
   game.hero.leapFrom.y = game.hero.y;
@@ -147,7 +148,7 @@ export function tryRush() {
   if (game.hero.mana < RUSH_MANA_COST) return;
 
   game.hero.mana -= RUSH_MANA_COST;
-  game.hero.rushCooldown = RUSH_COOLDOWN;
+  game.hero.rushCooldown = RUSH_COOLDOWN * castSpeedMul(game.hero);
   game.hero.rushTimer = RUSH_DURATION;
   game.hero.rushFrom.x = game.hero.x;
   game.hero.rushFrom.y = game.hero.y;
@@ -202,7 +203,7 @@ export function tryGroundSmash() {
   if (game.hero.mana < SMASH_MANA_COST) return;
 
   game.hero.mana -= SMASH_MANA_COST;
-  game.hero.smashCooldown = SMASH_COOLDOWN;
+  game.hero.smashCooldown = SMASH_COOLDOWN * castSpeedMul(game.hero);
   game.hero.smashTimer = SMASH_DURATION;
   game.hero.smashHitDone = false;
   Body.setVelocity(game.hero.body, { x: 0, y: 0 });
@@ -238,17 +239,17 @@ export function updateGroundSmash(dt) {
 
 export const SKILLS = {
   attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(), cd: () => game.hero.attackCooldown,    cdMax: () => game.hero.attackCooldownMax || ATTACK_COOLDOWN },
-  warcry:    { ...SKILL_META.warcry,    try: () => tryWarCry(),       cd: () => game.hero.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN },
-  whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => game.hero.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION },
-  leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => game.hero.leapCooldown,      cdMax: () => LEAP_COOLDOWN },
-  rush:      { ...SKILL_META.rush,      try: () => tryRush(),         cd: () => game.hero.rushCooldown,      cdMax: () => RUSH_COOLDOWN },
-  smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => game.hero.smashCooldown,     cdMax: () => SMASH_COOLDOWN },
+  warcry:    { ...SKILL_META.warcry,    try: () => tryWarCry(),       cd: () => game.hero.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN * castSpeedMul(game.hero) },
+  whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => game.hero.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN * castSpeedMul(game.hero) + WHIRLWIND_DURATION },
+  leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => game.hero.leapCooldown,      cdMax: () => LEAP_COOLDOWN * castSpeedMul(game.hero) },
+  rush:      { ...SKILL_META.rush,      try: () => tryRush(),         cd: () => game.hero.rushCooldown,      cdMax: () => RUSH_COOLDOWN * castSpeedMul(game.hero) },
+  smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => game.hero.smashCooldown,     cdMax: () => SMASH_COOLDOWN * castSpeedMul(game.hero) },
   // 마법사 (systems/sorcSkills.js)
-  bolt:      { ...SKILL_META.bolt,      try: () => tryBolt(),          cd: () => game.hero.spellCd.bolt,      cdMax: () => SPELLS.bolt.cooldown },
-  fireball:  { ...SKILL_META.fireball,  try: () => tryFireballSpell(), cd: () => game.hero.spellCd.fireball,  cdMax: () => SPELLS.fireball.cooldown },
-  frostnova: { ...SKILL_META.frostnova, try: () => tryFrostNova(),     cd: () => game.hero.spellCd.frostnova, cdMax: () => SPELLS.frostnova.cooldown },
-  chain:     { ...SKILL_META.chain,     try: () => tryChain(),         cd: () => game.hero.spellCd.chain,     cdMax: () => SPELLS.chain.cooldown },
-  orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown }
+  bolt:      { ...SKILL_META.bolt,      try: () => tryBolt(),          cd: () => game.hero.spellCd.bolt,      cdMax: () => SPELLS.bolt.cooldown * attackSpeedMul(game.hero) },
+  fireball:  { ...SKILL_META.fireball,  try: () => tryFireballSpell(), cd: () => game.hero.spellCd.fireball,  cdMax: () => SPELLS.fireball.cooldown * castSpeedMul(game.hero) },
+  frostnova: { ...SKILL_META.frostnova, try: () => tryFrostNova(),     cd: () => game.hero.spellCd.frostnova, cdMax: () => SPELLS.frostnova.cooldown * castSpeedMul(game.hero) },
+  chain:     { ...SKILL_META.chain,     try: () => tryChain(),         cd: () => game.hero.spellCd.chain,     cdMax: () => SPELLS.chain.cooldown * castSpeedMul(game.hero) },
+  orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown * castSpeedMul(game.hero) }
 };
 
 // 지금 캐릭터의 스킬 목록 (슬롯 전환 순서)

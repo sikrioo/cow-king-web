@@ -2,7 +2,7 @@
 // 방향은 주인공이 바라보는 방향(PC는 시전 직전에 커서 쪽으로 돌아봄 - skills.aimAtCursor)
 import { SPELLS, SPELL_LEVEL_SCALE } from '../data/skills.js';
 import { game } from '../state.js';
-import { attackSpeedMul } from '../util.js';
+import { attackSpeedMul, castSpeedMul } from '../util.js';
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
@@ -24,8 +24,8 @@ export function updateSpellCooldowns(dt) {
   for (const k in cd) if (cd[k] > 0) cd[k] = Math.max(0, cd[k] - dt);
 }
 
-// 시전 가능하면 마나/대기시간을 쓰고 시전 자세를 잡음
-function begin(id, cooldown = SPELLS[id].cooldown) {
+// 시전 가능하면 마나/대기시간을 쓰고 시전 자세를 잡음 (대기시간: 스킬 = 시전속도, 마력탄 = 공격속도)
+function begin(id, cooldown = SPELLS[id].cooldown * castSpeedMul(game.hero)) {
   const h = game.hero, s = SPELLS[id];
   if (!h.alive || h.spellCd[id] > 0) return false;
   if (h.mana < s.mana) {

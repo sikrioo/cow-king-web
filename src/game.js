@@ -137,7 +137,8 @@ export function resetGame() {
   game.hero.exp = 0;
   game.hero.expToNext = expForLevel(1);
   game.hero.statPoints = 0;
-  game.hero.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
+  game.hero.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, castSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
+  game.hero.gearCastSpeed = 0;
   game.hero.maxMana = game.hero.baseMaxMana;
 
   game.particles = [];

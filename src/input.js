@@ -64,7 +64,7 @@ export function joyEnd() {
 
 // 키 → 의도 (한 테이블). 같은 키라도 상태에 따라 뜻이 달라지는 것은 game.js의 handleKeyDown이 해석:
 //   num: 메뉴 닫힘 → 1/2 = 생명/마나 물약, 메뉴 열림 → 1~7 = 장비 칸 강화
-//   stat: 메뉴 열림 → Z~M = 스탯 투자 (어느 스탯인지는 data/balance.js의 LEVEL_STAT_KEYS)
+//   stat: 메뉴 열림 → Z~M, 쉼표 = 스탯 투자 (어느 스탯인지는 data/balance.js의 LEVEL_STAT_KEYS)
 //   이동: W/A/S/D·방향키, 달리기: Shift - 의도가 아니라 누름 상태(input.keys)로 매 틱 읽음
 export const KEY_INTENTS = {
   escape: 'back',        // 메뉴 닫기 / 일시정지 토글

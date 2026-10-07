@@ -83,6 +83,7 @@ export function drawStatReadout(ctx) {
     { label: '블락률', value: `${Math.round(totalBlock * 100)}%`, color: '#6fb3ff', buffed: h.defenseBuffTimer > 0 },
     { label: '방어력', value: `${h.gearArmor}·${Math.round(h.armorReduction * 100)}%`, color: '#c9b48a', buffed: false },
     { label: '회피율', value: `${Math.round(totalEvasion * 100)}%`, color: '#8fe8ff', buffed: false },
+    { label: '시전속도', value: `+${Math.round((h.gearCastSpeed || 0) * 100)}%`, color: '#b8a4ff', buffed: false },
     {
       label: '저항', color: '#c9c9c9', buffed: false,
       parts: ELEMENTS.map((el) => ({ text: `${Math.round(Math.min(h.resist[el] || 0, RESIST_CAP) * 100)}`, color: ELEMENT_DEF[el].color }))

@@ -19,7 +19,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   ctx.fillText(`여유 포인트: ${game.hero.statPoints}`, x + 16, row);
   row += 24;
 
-  const statOrder = ['atkPower', 'defense', 'evasion', 'atkSpeed', 'moveSpeed', 'health', 'mana'];
+  const statOrder = ['atkPower', 'defense', 'evasion', 'atkSpeed', 'castSpeed', 'moveSpeed', 'health', 'mana'];
   const keyByStat = {};
   Object.entries(LEVEL_STAT_KEYS).forEach(([k, v]) => { keyByStat[v] = k; });
   statOrder.forEach((sk) => {
@@ -58,7 +58,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   ctx.textAlign = 'left';
   ctx.font = '10px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fillText(`레벨업마다 ${POINTS_PER_LEVEL}포인트 · 키보드 Z X C V B N M 로도 투자할 수 있어`, x + 16, row + 4);
+  ctx.fillText(`레벨업마다 ${POINTS_PER_LEVEL}포인트 · 키보드 Z X C V B N M , 로도 투자할 수 있어`, x + 16, row + 4);
 
   let ry = row + 30;
   ctx.font = 'bold 12px sans-serif';
