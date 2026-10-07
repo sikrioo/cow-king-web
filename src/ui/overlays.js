@@ -77,7 +77,7 @@ function drawStartButton(cx, y, t) {
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff6cf';
   ctx.font = 'bold 18px sans-serif';
-  ctx.fillText(`${CLASSES[ui.selectedClass].label}로 게임 시작`, cx, y + h / 2 - 1);
+  ctx.fillText('게임 시작', cx, y + h / 2 - 1);
   ctx.textBaseline = 'alphabetic';
   ctx.font = '11px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
