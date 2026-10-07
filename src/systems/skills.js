@@ -8,11 +8,14 @@ import {
   SMASH_DAMAGE_BONUS
 } from '../data/balance.js';
 import { PALETTE } from '../data/palette.js';
-import { SKILL_ORDER, SKILL_META } from '../data/skills.js';
+import { SKILL_META, SPELLS } from '../data/skills.js';
+import { CLASSES } from '../data/classes.js';
+import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage } from './combat.js';
+import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange } from './combat.js';
+import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
@@ -239,15 +242,41 @@ export const SKILLS = {
   whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => game.hero.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN + WHIRLWIND_DURATION },
   leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => game.hero.leapCooldown,      cdMax: () => LEAP_COOLDOWN },
   rush:      { ...SKILL_META.rush,      try: () => tryRush(),         cd: () => game.hero.rushCooldown,      cdMax: () => RUSH_COOLDOWN },
-  smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => game.hero.smashCooldown,     cdMax: () => SMASH_COOLDOWN }
+  smash:     { ...SKILL_META.smash,     try: () => tryGroundSmash(),  cd: () => game.hero.smashCooldown,     cdMax: () => SMASH_COOLDOWN },
+  // 마법사 (systems/sorcSkills.js)
+  bolt:      { ...SKILL_META.bolt,      try: () => tryBolt(),          cd: () => game.hero.spellCd.bolt,      cdMax: () => SPELLS.bolt.cooldown },
+  fireball:  { ...SKILL_META.fireball,  try: () => tryFireballSpell(), cd: () => game.hero.spellCd.fireball,  cdMax: () => SPELLS.fireball.cooldown },
+  frostnova: { ...SKILL_META.frostnova, try: () => tryFrostNova(),     cd: () => game.hero.spellCd.frostnova, cdMax: () => SPELLS.frostnova.cooldown },
+  chain:     { ...SKILL_META.chain,     try: () => tryChain(),         cd: () => game.hero.spellCd.chain,     cdMax: () => SPELLS.chain.cooldown },
+  orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown }
 };
+
+// 지금 캐릭터의 스킬 목록 (슬롯 전환 순서)
+export function classSkills() {
+  return (CLASSES[game.hero.classKey] || CLASSES.warrior).skills;
+}
+
+// 기본 공격 (적 클릭/Shift+클릭): 전사 = 근접 휘두르기, 마법사 = 마력탄
+const isCaster = () => (CLASSES[game.hero.classKey] || CLASSES.warrior).basic === 'bolt';
+export function tryBasicAttack() {
+  if (isCaster()) tryBolt(); else tryPlayerAttack();
+}
+export function basicAttackReady() {
+  return isCaster() ? game.hero.spellCd.bolt <= 0 : game.hero.attackCooldown <= 0;
+}
+// 적 c를 기본 공격하려면 이만큼 가까이 가야 함
+export function basicAttackReach(c) {
+  if (isCaster()) return SPELLS.bolt.range * 0.8;
+  return getWeaponRange() + getCowHitRadius(c) - CLICK_ATTACK_RANGE_SLACK;
+}
 
 export function cycleSkillSlot(slotNum) {
   const key = slotNum === 1 ? 'slot1' : 'slot2';
   const otherKey = slotNum === 1 ? 'slot2' : 'slot1';
-  const cur = SKILL_ORDER.indexOf(game.hero[key]);
-  for (let i = 1; i <= SKILL_ORDER.length; i++) {
-    const next = SKILL_ORDER[(cur + i) % SKILL_ORDER.length];
+  const order = classSkills();
+  const cur = order.indexOf(game.hero[key]);
+  for (let i = 1; i <= order.length; i++) {
+    const next = order[(cur + i) % order.length];
     if (next !== game.hero[otherKey] && isSkillUnlocked(next)) { game.hero[key] = next; break; }
   }
   const slotEl = document.getElementById(key === 'slot1' ? 'slot1' : 'slot2');
@@ -274,6 +303,6 @@ export function updateSkillSlots() {
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
   if (input.holdSlot1) trySlot(1);
   if (input.holdSlot2) trySlot(2);
-  // Shift+좌클릭 제자리 공격 (기본 공격, 쿨다운은 tryPlayerAttack이 확인)
-  if (input.standAttackHeld && game.hero.attackCooldown <= 0) { aimAtCursor(); tryPlayerAttack(); }
+  // Shift+좌클릭 제자리 공격 (캐릭터의 기본 공격)
+  if (input.standAttackHeld && basicAttackReady()) { aimAtCursor(); tryBasicAttack(); }
 }

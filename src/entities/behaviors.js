@@ -20,18 +20,21 @@ import { recordRun } from '../save.js';
 import { killCow, spawnColdNova, bossSlam, hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnFireHazard, spawnPoisonCloud, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
 import { rollLightning } from '../systems/elements.js';
+import { MONSTER_CHILL_MOVE_MULT } from '../data/elements.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
+// (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함)
 export function getAuraSpeedMult(cow) {
-  if (cow.kind === 'fanatic') return AURA_SPEED_MULT;
+  const chill = cow.chillTimer > 0 ? MONSTER_CHILL_MOVE_MULT : 1;
+  if (cow.kind === 'fanatic') return AURA_SPEED_MULT * chill;
   for (const other of game.cows) {
     if (other === cow || other.kind !== 'fanatic' || other.state === 'dead') continue;
-    if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) return AURA_SPEED_MULT;
+    if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) return AURA_SPEED_MULT * chill;
   }
-  return 1;
+  return chill;
 }
 
 export const behaviors = {

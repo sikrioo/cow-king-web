@@ -6,6 +6,7 @@ import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { drawCow } from '../render/monsterSprites.js';
 import { PEN } from '../world/arena.js';
+import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import { viewSize } from '../world/camera.js';
 
 export function drawTitleScene(t) {
@@ -63,6 +64,47 @@ export function drawTitleOverlay(t) {
   ctx.fillStyle = 'rgba(255,255,255,.36)';
   ctx.fillText(`BEST WAVE ${game.releaseMeta.bestWave}  ·  BEST KILLS ${game.releaseMeta.bestKills}  ·  CLEAR ${game.releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, cy + 142);
   ctx.textAlign = 'left';
+  drawClassCards(cx, Math.min(cy + 160, canvas.height - 112));
+}
+
+// 캐릭터 고르기 카드 (클릭 영역은 ui.titleCardRects - 그릴 때마다 갱신, 입력은 input.js)
+function drawClassCards(cx, top) {
+  const gap = 14, ch = 84;
+  const cw = Math.min(170, (canvas.width - 40 - gap) / 2);
+  const left = cx - (cw * CLASS_ORDER.length + gap * (CLASS_ORDER.length - 1)) / 2;
+  ui.titleCardRects = [];
+  ctx.save();
+  CLASS_ORDER.forEach((key, i) => {
+    const cls = CLASSES[key];
+    const x = left + i * (cw + gap), y = top;
+    const sel = ui.selectedClass === key;
+    ui.titleCardRects.push({ x, y, w: cw, h: ch, key });
+    ctx.fillStyle = sel ? 'rgba(255,224,102,0.16)' : 'rgba(0,0,0,0.45)';
+    ctx.fillRect(x, y, cw, ch);
+    ctx.strokeStyle = sel ? '#ffe066' : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = sel ? 2.5 : 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
+    // 몸 색 동그라미
+    ctx.fillStyle = cls.look.body[0];
+    ctx.beginPath(); ctx.arc(x + 22, y + 26, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = cls.look.trim;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.textAlign = 'left';
+    ctx.fillStyle = sel ? '#ffe066' : '#f2e7c9';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(cls.label, x + 42, y + 31);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(cls.desc, x + 12, y + 56);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(`체력 ${cls.hp} · 마나 ${cls.mana}`, x + 12, y + 73);
+  });
+  ctx.textAlign = 'center';
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('←/→ 로 고르기 · 카드를 누르면 그 캐릭터로 시작', cx, top + ch + 18);
+  ctx.restore();
 }
 
 export function drawStartCountdown() {

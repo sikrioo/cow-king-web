@@ -2,7 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, CLICK_ATTACK_RANGE_SLACK, HERO_SLOW_MULT, expForLevel
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, HERO_SLOW_MULT, expForLevel
 } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
@@ -10,9 +10,10 @@ import { game, input } from '../state.js';
 import { TEAM_HERO } from './actor.js';
 import { emitMoveReaction } from '../systems/fx.js';
 import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../systems/skills.js';
+import { emptySpellCooldowns } from '../systems/sorcSkills.js';
 import { unarmedStats } from '../systems/gear.js';
 import { emptyResist, emptyDot } from '../systems/elements.js';
-import { tryPlayerAttack, getWeaponRange, getCowHitRadius } from '../systems/combat.js';
+import { tryBasicAttack, basicAttackReady, basicAttackReach } from '../systems/skills.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
 export function createHero() {
@@ -76,6 +77,11 @@ export function createHero() {
     smashCooldown: 0,
     smashTimer: 0,
     smashHitDone: false,
+    classKey: 'warrior', // data/classes.js (resetGame에서 ui.selectedClass로)
+    baseMaxMana: MAX_MANA,
+    manaRegen: MANA_REGEN,
+    spellCd: emptySpellCooldowns(), // 마법사 스킬 대기시간
+    noManaWarn: 0,
     slot1: 'attack',
     slot2: 'warcry',
     potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
@@ -111,11 +117,10 @@ function clickAttackStep() {
   if (!c || c.state === 'dead' || !game.cows.includes(c)) { input.attackTarget = null; return null; }
   const tx = c.x - game.hero.x, ty = c.y - game.hero.y;
   const d = Math.hypot(tx, ty) || 1;
-  const reach = getWeaponRange() + getCowHitRadius(c) - CLICK_ATTACK_RANGE_SLACK;
-  if (d > reach) return { x: tx / d, y: ty / d };
+  if (d > basicAttackReach(c)) return { x: tx / d, y: ty / d };
   game.hero.facing = Math.atan2(ty, tx);
-  if (game.hero.attackCooldown <= 0) {
-    tryPlayerAttack();
+  if (basicAttackReady()) {
+    tryBasicAttack();
     if (!input.attackHeld) input.attackTarget = null;
   }
   return null;
@@ -154,7 +159,7 @@ export function updatePlayer(dt) {
   if (game.hero.moveFxCooldown > 0) game.hero.moveFxCooldown -= dt;
   if (game.hero.moveReaction > 0) game.hero.moveReaction = Math.max(0, game.hero.moveReaction - dt * 4.2);
   game.hero.renderBreath += dt * (game.hero.moveSpeedN > 0.08 ? 4.0 : 1.35);
-  game.hero.mana = Math.min(game.hero.maxMana, game.hero.mana + MANA_REGEN * dt);
+  game.hero.mana = Math.min(game.hero.maxMana, game.hero.mana + game.hero.manaRegen * dt);
 
   if (!game.hero.alive) {
     Body.setVelocity(game.hero.body, { x: 0, y: 0 });

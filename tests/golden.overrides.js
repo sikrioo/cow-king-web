@@ -10,7 +10,13 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-06: 원소 1단계 - 독 카우 추가 (사용자 결정: 기존 원소 몬스터 3종 + 독 카우 1종)
   'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-06: 화염술사 카우(메테오) 추가
-  'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 }
+  'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
+  // 2026-10-07: 마법사 캐릭터 스킬 해금 레벨
+  'exact.progression.skillUnlockLevel.bolt': 1,
+  'exact.progression.skillUnlockLevel.fireball': 1,
+  'exact.progression.skillUnlockLevel.frostnova': 2,
+  'exact.progression.skillUnlockLevel.chain': 4,
+  'exact.progression.skillUnlockLevel.orb': 6
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

@@ -8,6 +8,8 @@ import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
 import { HUNT_SPEED_MULT } from '../data/balance.js';
 import { randomPointInPen } from '../world/arena.js';
+import { emptyDot } from '../systems/elements.js';
+import { updateCowStatuses } from '../systems/elementCombat.js';
 
 export class Monster {
   // opts.pos: 생성 위치(없으면 목장 안 무작위), opts.hunt: 웨이브 몬스터 - 주인공을 못 봤어도 주인공 쪽으로 몰려감
@@ -67,6 +69,9 @@ export class Monster {
     this.zapTargetY = 0;
     this.dmg = def.dmg;
     this.hunt = !!opts.hunt;
+    this.burn = emptyDot(); // 주인공 원소 공격으로 걸리는 상태 (systems/elementCombat.js)
+    this.poison = emptyDot();
+    this.chillTimer = 0;
     this.element = def.element || null; // 근접 공격 원소 (없으면 물리)
     this.cloudCooldown = Infinity; // venom 전용
     this.whirlHitCd = 0;
@@ -91,6 +96,9 @@ export class Monster {
 
     this.x = this.body.position.x;
     this.y = this.body.position.y;
+
+    updateCowStatuses(this, dt); // 화상/중독 피해, 둔화 시간
+    if (this.state === 'dead') return;
 
     // 종류별 특수 처리 (보스 슬램/불바닥/치유/번개/자폭/돌진). true면 상태 점유 중 → 아래 일반 AI는 이번 틱에 실행 안 함
     const b = this.behavior;

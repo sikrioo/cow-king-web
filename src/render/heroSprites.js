@@ -2,6 +2,11 @@
 import { LEAP_DURATION, SMASH_DURATION, SMASH_IMPACT_TIME } from '../data/balance.js';
 import { clamp01, lerpAngle, easeOutCubic } from '../util.js';
 import { game } from '../state.js';
+import { CLASSES } from '../data/classes.js';
+import { drawHeroStaff } from './heroStaff.js';
+
+const heroClass = () => CLASSES[game.hero.classKey] || CLASSES.warrior;
+const look = () => heroClass().look;
 
 export function drawPlayer(ctx, t = 0) {
   if (!game.hero.alive) return;
@@ -63,7 +68,8 @@ export function drawPlayer(ctx, t = 0) {
   // 오른손 = 주무기, 왼손 = 보조무기 또는 방패 (실제 장착한 것을 그대로 반영)
   const mainGear = game.hero.equipment.weaponMain;
   const offGear = game.hero.equipment.weaponOff;
-  const rightHeld = mainGear && mainGear !== 'LOCKED' ? { kind: 'weapon', variant: mainGear.variant || 'sword' } : { kind: 'none', variant: null };
+  const rightHeld = mainGear && mainGear !== 'LOCKED' ? { kind: 'weapon', variant: mainGear.variant || 'sword' }
+    : heroClass().staff ? { kind: 'staff', variant: null } : { kind: 'none', variant: null }; // 마법사는 빈손이면 지팡이
   const leftHeld = offGear && offGear !== 'LOCKED'
     ? (offGear.category === 'shield' ? { kind: 'shield', variant: null } : { kind: 'weapon', variant: offGear.variant || 'sword' })
     : { kind: 'none', variant: null };
@@ -181,14 +187,14 @@ export function drawAbstractScarf(ctx, fx, fy, sx, sy, r, speedN, t) {
   const tailX = -fx * r * (1.25 + speedN * 0.32) + sx * sway;
   const tailY = -fy * r * (1.25 + speedN * 0.32) + sy * sway;
   ctx.save();
-  ctx.strokeStyle = '#5a1721';
+  ctx.strokeStyle = look().scarf[0];
   ctx.lineWidth = r * 0.22;
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(backX, backY);
   ctx.quadraticCurveTo(-fx * r * 0.92 + sx * sway * 0.4, -fy * r * 0.92 + sy * sway * 0.4, tailX, tailY);
   ctx.stroke();
-  ctx.fillStyle = '#862534';
+  ctx.fillStyle = look().scarf[1];
   ctx.beginPath();
   ctx.moveTo(tailX + sx * r * 0.10, tailY + sy * r * 0.10);
   ctx.lineTo(tailX - fx * r * 0.28, tailY - fy * r * 0.28);
@@ -209,7 +215,7 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
     drawAbstractSlashTrail(ctx, hx, hy, r * 2.25, handPose.trail.from, handPose.trail.to, handPose.trail.alpha * alpha);
   }
 
-  ctx.fillStyle = '#a3abb4';
+  ctx.fillStyle = look().hand;
   ctx.strokeStyle = '#e2ddd1';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -222,6 +228,8 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
     drawHeldShield(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha);
   } else if (heldKind === 'weapon') {
     drawAbstractSword(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, heldVariant);
+  } else if (heldKind === 'staff') {
+    drawHeroStaff(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, game.hero.renderBreath);
   }
   ctx.restore();
 }
@@ -239,12 +247,13 @@ export function drawAbstractHeroBody(ctx, fx, fy, sx, sy, r, speedN, t) {
   ctx.closePath();
 
   const g = ctx.createLinearGradient(-r * 0.75, -r, r * 0.75, r);
-  g.addColorStop(0, '#7a8088');
-  g.addColorStop(0.50, '#2e3137');
-  g.addColorStop(1, '#101216');
+  const lk = look();
+  g.addColorStop(0, lk.body[0]);
+  g.addColorStop(0.50, lk.body[1]);
+  g.addColorStop(1, lk.body[2]);
   ctx.fillStyle = g;
   ctx.fill();
-  ctx.strokeStyle = '#d5d0c4';
+  ctx.strokeStyle = lk.trim;
   ctx.lineWidth = 2.6;
   ctx.stroke();
 
@@ -267,14 +276,14 @@ export function drawAbstractHeroBody(ctx, fx, fy, sx, sy, r, speedN, t) {
   ctx.roundRect(-r * 0.40, -r * 0.16, r * 0.80, r * 0.32, r * 0.15);
   ctx.fill();
 
-  ctx.fillStyle = '#ffb65c';
+  ctx.fillStyle = lk.eyes;
   ctx.beginPath();
   ctx.ellipse(-r * 0.16, 0, r * 0.075, r * 0.052, 0, 0, Math.PI * 2);
   ctx.ellipse(r * 0.16, 0, r * 0.075, r * 0.052, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  ctx.fillStyle = '#8a2331';
+  ctx.fillStyle = lk.gem;
   ctx.beginPath();
   ctx.moveTo(fx * r * 0.08 - sx * r * 0.10, fy * r * 0.08 - sy * r * 0.10 + r * 0.25);
   ctx.lineTo(fx * r * 0.08 + sx * r * 0.10, fy * r * 0.08 + sy * r * 0.10 + r * 0.25);

@@ -118,6 +118,18 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
+  if (c.chillTimer > 0) {
+    // 둔화(냉기) - 발밑 서리 고리
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = '#bfeaff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y + c.r * 0.5, c.r * 1.05, c.r * 0.45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   const visualState = c.state === 'charging' ? 'attack'
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;

@@ -47,7 +47,9 @@ export const ui = {
   identifyingItem: null, // 인덱스가 아니라 객체 참조 - 중간에 다른 칸이 장착/정리돼 배열이 밀려도 안전
   identifyTimer: 0,
   moveMarker: null, // 클릭 이동 표시 {x, y, t0} (그리기 전용)
-  devPanelOpen: false
+  devPanelOpen: false,
+  selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
+  titleCardRects: [] // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
 };
 
 // 개발자 모드 치트 (systems/dev.js, 패널은 ui/devPanel.js)

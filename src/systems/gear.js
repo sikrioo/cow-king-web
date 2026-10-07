@@ -284,6 +284,6 @@ export function recalcGearStats() {
   const newEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   if (newEffectiveMax > oldEffectiveMax) game.hero.hp += (newEffectiveMax - oldEffectiveMax);
   game.hero.hp = Math.min(game.hero.hp, newEffectiveMax);
-  game.hero.maxMana = MAX_MANA + game.hero.gearMaxMana;
+  game.hero.maxMana = game.hero.baseMaxMana + game.hero.gearMaxMana;
   game.hero.mana = Math.min(game.hero.mana, game.hero.maxMana);
 }

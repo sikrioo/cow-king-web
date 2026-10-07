@@ -108,6 +108,13 @@ export function bindInput(actions) {
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
+    if (game.gameState === 'title') {
+      // 시작 화면: 캐릭터 카드를 누르면 그 캐릭터로 시작, 다른 곳은 고른 캐릭터로 시작
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const card = ui.titleCardRects.find((r) => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h);
+      if (card) ui.selectedClass = card.key;
+    }
     const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
     if (mouse) rememberMouse(e);
     if (mouse && e.button === 0 && e.shiftKey && game.gameState === 'playing' && !game.paused) {

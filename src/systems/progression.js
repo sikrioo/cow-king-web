@@ -2,6 +2,7 @@
 import { MAX_LEVEL, POINTS_PER_LEVEL, expForLevel } from '../data/balance.js';
 import { STAT_DEF } from '../data/items.js';
 import { SKILL_META, SKILL_UNLOCK_LEVEL } from '../data/skills.js';
+import { CLASSES } from '../data/classes.js';
 import { game } from '../state.js';
 import { floatText } from './fx.js';
 import { recalcGearStats } from './gear.js';
@@ -15,7 +16,7 @@ export function gainExp(amount) {
     game.hero.statPoints += POINTS_PER_LEVEL;
     game.hero.expToNext = expForLevel(game.hero.level);
     floatText(game.hero.x, game.hero.y - 54, `LEVEL UP! Lv.${game.hero.level}`, '#ffe066');
-    Object.keys(SKILL_UNLOCK_LEVEL).forEach((id) => {
+    (CLASSES[game.hero.classKey] || CLASSES.warrior).skills.forEach((id) => {
       if (SKILL_UNLOCK_LEVEL[id] === game.hero.level) floatText(game.hero.x, game.hero.y - 74, `새 스킬 해금: ${SKILL_META[id].label}`, '#9be39b');
     });
     game.shake = Math.min(game.shake + 5, 12);

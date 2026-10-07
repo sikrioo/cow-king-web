@@ -19,12 +19,27 @@ import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
 import { PEN } from './world/arena.js';
 import { isDevMode } from './config.js';
+import { CLASSES, CLASS_ORDER } from './data/classes.js';
+import { emptySpellCooldowns, updateSpellCooldowns } from './systems/sorcSkills.js';
 import { updateDev } from './systems/dev.js';
 import { toggleDevPanel } from './ui/devPanel.js';
 import { updateHeroStatuses, emptyResist, emptyDot } from './systems/elements.js';
 import { viewSize } from './world/camera.js';
 
+// 고른 캐릭터(ui.selectedClass)의 시작 수치/슬롯
+function applyClass() {
+  const key = CLASSES[ui.selectedClass] ? ui.selectedClass : 'warrior';
+  const cls = CLASSES[key];
+  game.hero.classKey = key;
+  game.hero.maxHp = cls.hp;
+  game.hero.baseMaxMana = cls.mana;
+  game.hero.manaRegen = cls.manaRegen;
+  game.hero.spellCd = emptySpellCooldowns();
+  game.hero.noManaWarn = 0;
+}
+
 export function resetGame() {
+  applyClass();
   game.paused = false;
   game.runRecorded = false;
   const pb = document.getElementById('btn-pause');
@@ -105,7 +120,7 @@ export function resetGame() {
   game.hero.inventory = [];
   game.hero.potions = { heal: 2, mana: 2 };
   game.hero.potionCd = { heal: 0, mana: 0 };
-  giveStarterGear(); // gear 보너스 초기화 이후에 호출해야 장착 효과가 덮어써지지 않음
+  if (CLASSES[game.hero.classKey].starterGear) giveStarterGear(); // gear 보너스 초기화 이후에 호출해야 장착 효과가 덮어써지지 않음
   if (isDevMode()) giveTestStash(); // 개발자 모드: 장비 교체 테스트용 - 무기 종류별 1개 + 방패 + 양손무기를 가방에 바로 지급
   game.hero.hp = game.hero.maxHp + game.hero.gearMaxHp;
   game.hero.mana = game.hero.maxMana + game.hero.gearMaxMana;
@@ -123,7 +138,7 @@ export function resetGame() {
   game.hero.expToNext = expForLevel(1);
   game.hero.statPoints = 0;
   game.hero.levelStats = { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
-  game.hero.maxMana = MAX_MANA;
+  game.hero.maxMana = game.hero.baseMaxMana;
 
   game.particles = [];
   game.shockwaves = [];
@@ -137,8 +152,8 @@ export function resetGame() {
   game.hitstop = 0;
   game.impactFlash = 0;
   game.kills = 0;
-  game.hero.slot1 = 'attack';
-  game.hero.slot2 = 'warcry';
+  game.hero.slot1 = CLASSES[game.hero.classKey].slots[0];
+  game.hero.slot2 = CLASSES[game.hero.classKey].slots[1];
   input.holdSlot1 = false;
   input.holdSlot2 = false;
   input.moveTarget = null;
@@ -234,6 +249,7 @@ export function fixedUpdate(dt) {
   if (game.gameState === 'playing') {
     updatePlayer(dt);
     updateHeroStatuses(dt);
+    updateSpellCooldowns(dt);
     updateDev();
     updateSkillSlots();
     game.cows.forEach((c) => c.update(dt));
@@ -263,8 +279,15 @@ export function fixedUpdate(dt) {
   if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
 }
 
+// 타이틀 캐릭터 고르기 (키보드 ←/→, 카드 클릭은 input.js)
+export function cycleTitleClass(dir) {
+  const i = CLASS_ORDER.indexOf(ui.selectedClass);
+  ui.selectedClass = CLASS_ORDER[(i + dir + CLASS_ORDER.length) % CLASS_ORDER.length];
+}
+
 // 키 의도 처리 - 순서가 의미: 메뉴 닫기/일시정지 → (일시정지 중이면 여기서 끝) → 나머지
 export function handleKeyDown(intent, k, e) {
+  if (game.gameState === 'title' && ['arrowleft', 'arrowright', 'a', 'd'].includes(k)) { cycleTitleClass(k === 'arrowleft' || k === 'a' ? -1 : 1); return; }
   if (intent === 'help') { setHelpOpen(!ui.showHelp); return; }
   if (intent === 'back' && ui.showHelp) { e.preventDefault(); setHelpOpen(false); return; }
   if (ui.showHelp) return; // 도움말 창이 열려 있는 동안 다른 입력은 무시

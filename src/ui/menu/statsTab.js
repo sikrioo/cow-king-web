@@ -5,7 +5,7 @@ import { SKILL_UNLOCK_LEVEL } from '../../data/skills.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
-import { SKILLS } from '../../systems/skills.js';
+import { SKILLS, classSkills } from '../../systems/skills.js';
 
 export function drawStatsTab(ctx, x, startRow, w) {
   let row = startRow;
@@ -67,7 +67,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   ry += 18;
   const skillColW = (w - 32) / 2;
   ctx.font = '11px sans-serif';
-  Object.keys(SKILL_UNLOCK_LEVEL).sort((a, b) => SKILL_UNLOCK_LEVEL[a] - SKILL_UNLOCK_LEVEL[b]).forEach((id, i) => {
+  [...classSkills()].sort((a, b) => SKILL_UNLOCK_LEVEL[a] - SKILL_UNLOCK_LEVEL[b]).forEach((id, i) => {
     const cx = x + 16 + (i % 2) * skillColW;
     const cy = ry + Math.floor(i / 2) * 17;
     const ok = isSkillUnlocked(id);

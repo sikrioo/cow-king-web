@@ -36,11 +36,13 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
   마법형 몬스터 훅은 `entities/spellBehaviors.js`(behaviors에 합쳐짐), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
 - 투사체: `systems/projectiles.js`의 `spawnProjectile({kind, x, y, dirX, dirY, speed, range, radius, packet, explodeRadius, color})` - 지금은 몬스터→주인공만. 그림은 `render/fx.js` drawProjectiles.
 - 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS`. 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
+- 캐릭터(직업): `data/classes.js`(체력·마나·스킬 목록·시작 슬롯·기본 공격·생김새). 시작 화면 카드로 고름(`ui.selectedClass`), `resetGame`의 `applyClass`가 적용. 기본 공격은 `skills.tryBasicAttack`(전사 근접 / 마법사 마력탄).
+- 마법사 스킬: 수치 `data/skills.js`의 `SPELLS`, 동작 `systems/sorcSkills.js`, 등록 `systems/skills.js`의 `SKILLS`. 주인공 → 몬스터 원소 피해는 `systems/elementCombat.js`(`damageCowPacket`: 몬스터 저항 `resist`, 화상/중독/둔화). 투사체 `team: 'hero'`면 몬스터를 맞힘.
 - 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
 - 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지.
 - 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.
-- 원소(화염/냉기/번개/독): 수치·색 `data/elements.js`, 규칙 `systems/elements.js`(피해 묶음 `{phys, fire, cold, lightning, poison}` → 물리=방어력, 원소=저항(상한 75%), 화상/중독 지속 피해, 둔화). `hitPlayer`는 숫자(물리) 또는 묶음을 받음. 몬스터 근접 원소는 `data/monsters.js`의 `element`. 1단계(10-06)는 주인공이 받는 쪽만 - 무기/스킬 원소와 저항 옵션, 몬스터 저항은 2·3단계.
+- 원소(화염/냉기/번개/독): 수치·색 `data/elements.js`, 규칙 `systems/elements.js`(피해 묶음 `{phys, fire, cold, lightning, poison}` → 물리=방어력, 원소=저항(상한 75%), 화상/중독 지속 피해, 둔화). `hitPlayer`는 숫자(물리) 또는 묶음을 받음. 몬스터 근접 원소는 `data/monsters.js`의 `element`. 1단계(10-06) 주인공이 받는 쪽, 마법사(10-07)로 몬스터 저항·상태 추가. 남은 것: 무기 원소 피해 옵션·주인공 저항 옵션.
 - 방어력(피해 감소): 방어구 기본값 `data/items.js`의 `GEAR_BASE_ARMOR`(옵션 아님, ×등급 배율 ×강화), 공식 상수 `data/balance.js`의 `ARMOR_K`/`ARMOR_MAX_REDUCTION`, 계산 `systems/gear.js`의 `gearArmor`/`armorReduction`. 피격 순서: 회피 → 블락 → 방어력 감소(최소 1). 원소 저항(2안)은 나중에 `hitPlayer`에 공격 종류를 붙여 확장.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 

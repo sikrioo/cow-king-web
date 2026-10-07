@@ -3,7 +3,7 @@
 // 모듈을 불러오는 동안에는 아무것도 실행하지 않는다(초기화 순서 버그 방지). 전부 boot()에서.
 import { resizeCanvas } from './core/context.js';
 import { startLoop } from './core/loop.js';
-import { game } from './state.js';
+import { game, ui } from './state.js';
 import { createHero } from './entities/hero.js';
 import {
   resetGame, setPaused, initTitleScene, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp
@@ -24,7 +24,9 @@ function boot() {
   game.hero = createHero();
   bindInput({ keyDown: handleKeyDown, slotPress });
   bindDomButtons({ restart: resetGame, pressAction, setPaused, toggleHelp });
-  if (isDevMode()) bindDevButton();
+  if (isDevMode()) {
+    bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });
+  }
 
   resetGame();
   // 첫 로드는 바로 시작하지 않고 어트랙트 타이틀 화면을 보여줌

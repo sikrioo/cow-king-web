@@ -4,12 +4,14 @@ import { ELITE_KINDS } from '../data/monsters.js';
 import { RARITY_DEF } from '../data/items.js';
 import { BOSS_WAVE } from '../data/balance.js';
 import { ui } from '../state.js';
+import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import {
   devLevelUp, devMaxLevel, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn,
   devGiveGear, devMaterials, devPotions
 } from '../systems/dev.js';
 
 let built = false;
+let panelActions = { newGameAs: () => {} };
 
 const TOGGLES = [
   ['god', '무적'],
@@ -37,6 +39,9 @@ function row(body, title) {
 
 function build() {
   const body = document.getElementById('dev-body');
+  const cls = row(body, '새 게임');
+  CLASS_ORDER.forEach((k) => button(cls, `${CLASSES[k].label}로 시작`, () => panelActions.newGameAs(k)));
+
   const ch = row(body, '캐릭터');
   button(ch, '레벨 +1', () => devLevelUp(1));
   button(ch, '레벨 +5', () => devLevelUp(5));
@@ -69,8 +74,9 @@ export function toggleDevPanel() {
   document.getElementById('dev-panel').classList.toggle('open', ui.devPanelOpen);
 }
 
-// 부팅: 개발자 모드면 DEV 버튼 보이기
-export function bindDevButton() {
+// 부팅: 개발자 모드면 DEV 버튼 보이기. actions = { newGameAs(classKey) }
+export function bindDevButton(actions) {
+  panelActions = actions;
   document.body.classList.add('dev-mode');
   document.getElementById('btn-dev').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleDevPanel(); });
   document.getElementById('dev-close').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleDevPanel(); });

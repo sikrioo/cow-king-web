@@ -22,6 +22,9 @@ export const POISON_DURATION = 4.0;
 export const CHILL_DURATION = 2.0;
 export const CHILL_ATTACK_SPEED_MULT = 0.8;
 export const COLD_NOVA_CHILL_DURATION = 2.5; // 냉기 카우 사망 노바
+// 몬스터가 냉기 피해를 받으면: MONSTER_CHILL_DURATION초 동안 이동 MONSTER_CHILL_MOVE_MULT배
+export const MONSTER_CHILL_DURATION = 2.5;
+export const MONSTER_CHILL_MOVE_MULT = 0.5;
 // 번개: 피해가 기준값의 LIGHTNING_MIN~LIGHTNING_MAX배 사이에서 들쭉날쭉 (평균은 기준값)
 export const LIGHTNING_MIN = 0.3;
 export const LIGHTNING_MAX = 1.7;
