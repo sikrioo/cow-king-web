@@ -15,6 +15,7 @@ import { bindDomButtons } from './ui/dom.js';
 import { bindDevButton } from './ui/devPanel.js';
 import { isDevMode } from './config.js';
 import { layoutArena } from './world/arena.js';
+import { pickCard, rerollCards } from './systems/levelCards.js';
 
 function boot() {
   loadReleaseMeta();
@@ -22,7 +23,7 @@ function boot() {
   window.addEventListener('resize', resizeCanvas);
   layoutArena();
   game.hero = createHero();
-  bindInput({ keyDown: handleKeyDown, slotPress });
+  bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards });
   bindDomButtons({ restart: resetGame, pressAction, setPaused, toggleHelp });
   if (isDevMode()) {
     bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });

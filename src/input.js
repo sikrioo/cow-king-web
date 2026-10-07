@@ -89,7 +89,7 @@ export function keyOf(e) {
   return e.key.toLowerCase();
 }
 
-// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum) } - 의도 처리는 game.js
+// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum), pickCard(i), rerollCards() } - 처리는 game.js / systems/levelCards.js
 export function bindInput(actions) {
   window.addEventListener('keydown', (e) => {
     const k = keyOf(e);
@@ -109,6 +109,16 @@ export function bindInput(actions) {
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
+    if (game.cardOffer && game.gameState === 'playing') {
+      // 레벨업 카드: 카드를 누르면 고름, '다시 뽑기' 버튼 (다른 곳은 무시)
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const inside = (r) => r && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
+      const i = ui.cardRects.findIndex(inside);
+      if (i >= 0) actions.pickCard(i);
+      else if (inside(ui.cardRerollRect)) actions.rerollCards();
+      return;
+    }
     if (game.gameState === 'title') {
       // 시작 화면: 카드 = 캐릭터 고르기만, '게임 시작' 버튼을 눌러야 시작 (다른 곳 클릭은 무시)
       const rect = canvas.getBoundingClientRect();
@@ -147,7 +157,7 @@ export function bindInput(actions) {
   });
   canvas.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'touch' && e.pointerType !== 'pen') rememberMouse(e);
-    if (ui.showInventory || game.gameState !== 'playing') return;
+    if (ui.showInventory || game.cardOffer || game.gameState !== 'playing') return;
     // 적 위에서는 커서 모양으로 공격 가능함을 알림
     if (e.pointerType !== 'touch') canvas.style.cursor = cowAt(eventWorld(e)) ? 'crosshair' : 'default';
     if (!input.mouseMoveHeld || game.paused) return;

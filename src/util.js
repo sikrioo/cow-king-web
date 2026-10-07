@@ -1,6 +1,20 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
+import { SKILL_LEVEL_UP } from './data/skills.js';
+
+// 스킬 레벨 (0 = 안 배움). 레벨업 카드로 오름 (systems/levelCards.js)
+export function skillLevel(hero, id) {
+  return (hero.skillLevels && hero.skillLevels[id]) || 0;
+}
+// 스킬 레벨 보너스: Lv1 대비 더해지는 양 (data/skills.js의 SKILL_LEVEL_UP × (레벨 - 1)). 안 배운 스킬을 직접 써도 Lv1처럼
+export function skillBonus(hero, id, key) {
+  const per = (SKILL_LEVEL_UP[id] && SKILL_LEVEL_UP[id][key]) || 0;
+  return per * Math.max(0, skillLevel(hero, id) - 1);
+}
+export function skillMul(hero, id, key) {
+  return 1 + skillBonus(hero, id, key);
+}
 
 // 기본 공격의 시간 배율(작을수록 빠름, 공격 대기/동작 시간에 곱함) = 1 / 속도 배율
 //   속도 배율 = 1 + 장비/레벨 공격속도 + 콤보 (최대 ATTACK_SPEED_MAX_MULT). 공격(combat)과 HUD 표시가 같이 쓴다

@@ -24,6 +24,7 @@ export const game = {
   demoTipTimer: 0,
   runRecorded: false,
   releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 },
+  cardOffer: null, // 레벨업 카드 고르는 중 { cards: [...] } - 있으면 게임이 멈춤 (systems/levelCards.js)
   hero: null, // 주인공 - boot()에서 createHero()로 생성 (entities/hero.js)
   itemSeq: 0 // 아이템 uid 발급 카운터 (새 게임에서도 이어서 증가 - 한 실행 안에서 uid가 겹치지 않게)
 };
@@ -51,7 +52,9 @@ export const ui = {
   devPanelOpen: false,
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
   titleCardRects: [], // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
-  titleStartRect: null // 시작 화면 '게임 시작' 버튼 영역
+  titleStartRect: null, // 시작 화면 '게임 시작' 버튼 영역
+  cardRects: [], // 레벨업 카드 클릭 영역 (그릴 때마다 갱신, ui/cardPick.js)
+  cardRerollRect: null
 };
 
 // 개발자 모드 치트 (systems/dev.js, 패널은 ui/devPanel.js)

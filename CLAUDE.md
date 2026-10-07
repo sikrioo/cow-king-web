@@ -39,7 +39,10 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 캐릭터(직업): `data/classes.js`(체력·마나·스킬 목록·시작 슬롯·기본 공격·생김새). 시작 화면 카드로 고름(`ui.selectedClass`), `resetGame`의 `applyClass`가 적용. 기본 공격은 `skills.tryBasicAttack`(전사 근접 / 마법사 마력탄).
 - 마법사 스킬: 수치 `data/skills.js`의 `SPELLS`, 동작 `systems/sorcSkills.js`, 등록 `systems/skills.js`의 `SKILLS`. 주인공 → 몬스터 원소 피해는 `systems/elementCombat.js`(`damageCowPacket`: 몬스터 저항 `resist`, 화상/중독/둔화). 투사체 `team: 'hero'`면 몬스터를 맞힘.
 - 속도 규칙: 기본 공격(전사 근접/마법사 마력탄)은 공격속도(`util.attackSpeedMul`), 그 밖의 스킬은 시전속도(`util.castSpeedMul`, 대기시간만 줄임 - 지속/동작 시간은 그대로). 둘 다 상한 2배.
-- 스킬 해금 규칙(스킬트리): `systems/progression.js`의 `isSkillUnlocked` 한 곳.
+- 스킬 해금 규칙: `systems/progression.js`의 `isSkillUnlocked` 한 곳(= 스킬 레벨 1 이상).
+- 레벨업 카드(뱀서식): 레벨업마다 카드 3장 중 하나 - 새 스킬 배우기/스킬 레벨 +1/채우기 카드. 동작 `systems/levelCards.js`, 수치 `data/cards.js`, 화면 `ui/cardPick.js`.
+  고르는 동안 `game.cardOffer`가 있고 게임이 멈춤. 스킬 레벨 보너스는 `data/skills.js`의 `SKILL_LEVEL_UP` → `util.skillMul/skillBonus`로 각 스킬에서 곱함. 스탯 포인트는 그대로 유지(사용자 결정). 슬롯은 2개 + Q/R 전환 유지.
+  새 카드 종류(원소 강화·일반 강화·수습생의 마법)는 `rollCards`의 뽑기 풀에 추가.
 - 아이템 표시: `ui/itemView.js` 한 곳. 드랍 확률: `data/drops.js`. 장비는 순수 데이터 + `uid`.
 - 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지.
 - 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.

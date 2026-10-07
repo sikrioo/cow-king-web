@@ -2,7 +2,9 @@
 // 골든 파일은 레거시 그대로 둔다(legacy/tools/baseline.cjs --check가 계속 통과하도록). 바꾼 이유와 날짜를 같이 적을 것.
 export const GOLDEN_OVERRIDES = {
   // 2026-10-05: '방어력'과 '블락률'이 같은 수치인데 화면마다 이름이 달라서 '블락률'로 통일 (사용자 결정 A)
-  'exact.statDef.defense.label': '블락률'
+  'exact.statDef.defense.label': '블락률',
+  // 2026-10-07: 스킬은 레벨이 아니라 레벨업 카드(뱀서식)로 배움 (사용자 결정) - 카드를 안 고른 새 캐릭터는 레벨과 상관없이 시작 스킬만
+  'exact.slot2OptionsByLevel': { 1: ['warcry'], 2: ['warcry'], 3: ['warcry'], 4: ['warcry'], 5: ['warcry'] }
 };
 
 // 골든에 없던 항목을 **새로 추가**한 경우 (부모 경로는 있어야 함). 값은 현재 단위(×10)

@@ -12,6 +12,7 @@ import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
 import { updatePotionButtonsUI, updateSkillButtonsUI, syncTitleModeClass } from '../ui/dom.js';
 import { drawInventoryPanel } from '../ui/menu/panel.js';
+import { drawCardOffer } from '../ui/cardPick.js';
 import {
   drawTitleScene, drawTitleOverlay, drawStartCountdown, drawWavePresentation, drawDemoTip, drawPauseOverlay
 } from '../ui/overlays.js';
@@ -70,6 +71,7 @@ export function render(t) {
   updateSkillButtonsUI();
   updatePotionButtonsUI();
   if (ui.showInventory) drawInventoryPanel(ctx);
+  if (game.cardOffer) drawCardOffer(t);
   if (game.paused) drawPauseOverlay();
 
   if (game.impactFlash > 0) {

@@ -117,6 +117,9 @@ function runMobile(env, seed, view) {
     if (i === 1000 || i === 1060) fire('btn-pause', 'pointerdown');
     if (i === 1500 || i === 1700) fire('btn-inv', 'pointerdown');
     if (i === 1520) fire('btn-full', 'pointerdown');
+    // 레벨업 카드: 화면의 카드를 탭해서 고름 (고르기 전엔 게임이 멈춤)
+    const card = view().game.cardOffer && view().ui.cardRects[i % 3];
+    if (card && i % 20 === 10) env.pointer('pointerdown', card.x + card.w / 2, card.y + card.h / 2, 0);
     env.frame(1);
     if ((i + 1) % 100 === 0) snap(i + 1);
   }

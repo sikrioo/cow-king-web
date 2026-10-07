@@ -1,6 +1,8 @@
 // 개발자 모드 동작 (테스트 편의). 켜는 조건은 config.isDevMode(), 화면은 ui/devPanel.js
 // 일반 플레이에는 영향 없음 - 패널 버튼과 dev 플래그(무적/마나 무한/대기시간 0)로만 동작
 import { MAX_LEVEL, POTION_MAX, INVENTORY_SIZE } from '../data/balance.js';
+import { SKILL_MAX_LEVEL } from '../data/skills.js';
+import { CLASSES } from '../data/classes.js';
 import { World, world } from '../core/physics.js';
 import { game, dev } from '../state.js';
 import { Monster } from '../entities/monster.js';
@@ -16,7 +18,18 @@ export function devLevelUp(n = 1) {
   say(`레벨 ${game.hero.level}`);
 }
 
-export function devMaxLevel() { devLevelUp(MAX_LEVEL); }
+// 최대 레벨 + 이 캐릭터 스킬 전부 최대 (레벨업 카드는 건너뜀)
+export function devMaxLevel() {
+  devLevelUp(MAX_LEVEL);
+  CLASSES[game.hero.classKey].skills.forEach((id) => { game.hero.skillLevels[id] = SKILL_MAX_LEVEL; });
+  devSkipCards();
+}
+
+// 쌓인 레벨업 카드를 고르지 않고 닫음
+export function devSkipCards() {
+  game.hero.pendingCards = 0;
+  game.cardOffer = null;
+}
 
 export function devStatPoints(n = 5) {
   game.hero.statPoints += n;

@@ -157,6 +157,7 @@ it('마법사로 실제 진행(그리기 포함): 예외 없음, 체력 정수, 
     for (let i = 0; i < 3600; i++) {
       if (i % 20 === 0) { const k = keys[Math.floor(rnd() * keys.length)]; env.key(k); if (i % 40 === 0) env.key(k, false); }
       if (i % 45 === 0) ['w', 'a', 's', 'd', ' ', 'e'].forEach((k) => env.key(k, false));
+      if (game.cardOffer && i % 30 === 7) env.key(String(1 + (i % 3))); // 레벨업 카드 고르기
       env.frame(1);
       expect(Number.isInteger(game.hero.hp)).toBe(true);
       if (game.gameState !== 'playing') break;

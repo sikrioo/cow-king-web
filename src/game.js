@@ -25,6 +25,7 @@ import { updateDev } from './systems/dev.js';
 import { toggleDevPanel } from './ui/devPanel.js';
 import { updateHeroStatuses, emptyResist, emptyDot } from './systems/elements.js';
 import { viewSize } from './world/camera.js';
+import { resetSkillLevels, pickCard, rerollCards } from './systems/levelCards.js';
 
 // 고른 캐릭터(ui.selectedClass)의 시작 수치/슬롯
 function applyClass() {
@@ -36,6 +37,7 @@ function applyClass() {
   game.hero.manaRegen = cls.manaRegen;
   game.hero.spellCd = emptySpellCooldowns();
   game.hero.noManaWarn = 0;
+  resetSkillLevels(cls);
 }
 
 export function resetGame() {
@@ -228,7 +230,7 @@ export function updateTitleScene(dt) {
 
 export function pressAction(fn) {
   if (game.gameState !== 'playing') { resetGame(); return; }
-  if (game.paused) return;
+  if (game.paused || game.cardOffer) return;
   fn();
 }
 
@@ -236,6 +238,13 @@ export function fixedUpdate(dt) {
   if (game.gameState === 'title') {
     updateTitleScene(dt);
     updateParticles(dt);
+    if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
+    return;
+  }
+  if (game.cardOffer) {
+    // 레벨업 카드를 고르는 동안은 전부 멈춤 (화면 효과만)
+    updateParticles(dt);
+    updateFloatTexts(dt);
     if (game.impactFlash > 0) game.impactFlash = Math.max(0, game.impactFlash - dt * 2.8);
     return;
   }
@@ -301,6 +310,14 @@ export function handleKeyDown(intent, k, e) {
     else if (k === ' ' || k === 'enter') { e.preventDefault(); resetGame(); }
     return;
   }
+  if (game.cardOffer && game.gameState === 'playing') {
+    // 레벨업 카드: 1/2/3 = 고르기, R = 다시 뽑기 (그 밖의 키는 무시)
+    if (intent === 'devPanel' && isDevMode()) toggleDevPanel();
+    else if (intent === 'num') pickCard(Number(k) - 1);
+    else if (k === 'r') rerollCards();
+    else if (k === ' ' || intent === 'back') e.preventDefault();
+    return;
+  }
   if (intent === 'back') {
     e.preventDefault();
     if (ui.showInventory) { setInventoryOpen(false); return; }
@@ -348,7 +365,7 @@ function stopClickOrders() {
 // 캔버스 클릭으로 슬롯 시전 시작 (좌클릭/터치 = 1, 우클릭 = 2)
 export function slotPress(slotNum) {
   if (game.gameState !== 'playing') { resetGame(); return; }
-  if (game.paused) return;
+  if (game.paused || game.cardOffer) return;
   stopClickOrders();
   if (slotNum === 2) { if (!input.holdSlot2) { input.holdSlot2 = true; trySlot(2); } }
   else { if (!input.holdSlot1) { input.holdSlot1 = true; trySlot(1); } }

@@ -6,7 +6,7 @@ import { BOSS_WAVE } from '../data/balance.js';
 import { ui } from '../state.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import {
-  devLevelUp, devMaxLevel, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn,
+  devLevelUp, devMaxLevel, devSkipCards, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn,
   devGiveGear, devMaterials, devPotions
 } from '../systems/dev.js';
 
@@ -45,7 +45,8 @@ function build() {
   const ch = row(body, '캐릭터');
   button(ch, '레벨 +1', () => devLevelUp(1));
   button(ch, '레벨 +5', () => devLevelUp(5));
-  button(ch, '최대 레벨', devMaxLevel);
+  button(ch, '최대 레벨+스킬', devMaxLevel);
+  button(ch, '카드 건너뛰기', devSkipCards);
   button(ch, '스탯 +5', () => devStatPoints(5));
   button(ch, '체력·마나 가득', devFill);
 

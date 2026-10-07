@@ -2,16 +2,16 @@
 // 방향은 주인공이 바라보는 방향(PC는 시전 직전에 커서 쪽으로 돌아봄 - skills.aimAtCursor)
 import { SPELLS, SPELL_LEVEL_SCALE } from '../data/skills.js';
 import { game } from '../state.js';
-import { attackSpeedMul, castSpeedMul } from '../util.js';
+import { attackSpeedMul, castSpeedMul, skillMul, skillBonus } from '../util.js';
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
 import { spawnHitParticles, spawnIceRing, spawnLightningBolt, floatText } from './fx.js';
 import { spawnProjectile } from './projectiles.js';
 
-// 레벨에 따라 오르는 주문 피해 (정수)
-export function spellDamage(base) {
-  return Math.round(base * (1 + SPELL_LEVEL_SCALE * (game.hero.level - 1)));
+// 주인공 레벨 + 스킬 레벨에 따라 오르는 주문 피해 (정수)
+export function spellDamage(base, id) {
+  return Math.round(base * (1 + SPELL_LEVEL_SCALE * (game.hero.level - 1)) * skillMul(game.hero, id, 'damage'));
 }
 
 export function emptySpellCooldowns() {
@@ -49,7 +49,7 @@ export function tryBolt() {
   const d = facingDir(), o = castPoint(d);
   spawnProjectile({
     kind: 'bolt', team: 'hero', x: o.x, y: o.y, dirX: d.x, dirY: d.y, speed: s.speed, range: s.range, radius: s.radius,
-    packet: { phys: spellDamage(s.damage) }, knock: 2, color: '#c9b8ff'
+    packet: { phys: spellDamage(s.damage, 'bolt') }, knock: 2, color: '#c9b8ff'
   });
 }
 
@@ -59,7 +59,7 @@ export function tryFireballSpell() {
   const d = facingDir(), o = castPoint(d);
   spawnProjectile({
     kind: 'fireball', team: 'hero', x: o.x, y: o.y, dirX: d.x, dirY: d.y, speed: s.speed, range: s.range, radius: s.radius,
-    packet: { fire: spellDamage(s.damage) }, explodeRadius: s.explode, knock: 4, color: '#ff7a1a'
+    packet: { fire: spellDamage(s.damage, 'fireball') }, explodeRadius: s.explode * skillMul(game.hero, 'fireball', 'radius'), knock: 4, color: '#ff7a1a'
   });
 }
 
@@ -67,13 +67,14 @@ export function tryFireballSpell() {
 export function tryFrostNova() {
   const s = SPELLS.frostnova, h = game.hero;
   if (!begin('frostnova')) return;
-  spawnIceRing(h.x, h.y, s.radius); // 퍼지는 얼음 가시 고리
+  const radius = s.radius * skillMul(h, 'frostnova', 'radius');
+  spawnIceRing(h.x, h.y, radius); // 퍼지는 얼음 가시 고리
   spawnHitParticles(h.x, h.y, '#dff3ff', 10);
   spawnHitParticles(h.x, h.y, '#7fd4ff', 8);
-  const dmg = spellDamage(s.damage);
+  const dmg = spellDamage(s.damage, 'frostnova');
   game.cows.forEach((c) => {
     if (c.state === 'dead' || !canHit(h, c)) return;
-    if (cowEdgeDist(c, h.x, h.y) <= s.radius) damageCowPacket(c, { cold: dmg }, { knock: 3, fromX: h.x, fromY: h.y });
+    if (cowEdgeDist(c, h.x, h.y) <= radius) damageCowPacket(c, { cold: dmg }, { knock: 3, fromX: h.x, fromY: h.y });
   });
 }
 
@@ -96,8 +97,9 @@ export function tryChain() {
     return;
   }
   const hit = new Set();
-  let from = { x: h.x, y: h.y }, cur = first, dmg = spellDamage(s.damage);
-  for (let j = 0; j <= s.jumps && cur; j++) {
+  let from = { x: h.x, y: h.y }, cur = first, dmg = spellDamage(s.damage, 'chain');
+  const jumps = s.jumps + skillBonus(h, 'chain', 'jumps');
+  for (let j = 0; j <= jumps && cur; j++) {
     const at = getCowBody(cur); // 번개는 몸통으로
     spawnLightningBolt(from.x, from.y, at.x, at.y);
     hit.add(cur);
@@ -119,7 +121,7 @@ export function tryOrb() {
   const s = SPELLS.orb;
   if (!begin('orb')) return;
   const d = facingDir(), o = castPoint(d);
-  const shardDmg = spellDamage(s.shardDamage);
+  const shardDmg = spellDamage(s.shardDamage, 'orb');
   const shard = (x, y, a) => spawnProjectile({
     kind: 'shard', team: 'hero', x, y, dirX: Math.cos(a), dirY: Math.sin(a), speed: s.shardSpeed, range: s.shardRange,
     radius: s.shardRadius, packet: { cold: shardDmg }, color: '#bfeaff'

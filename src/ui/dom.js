@@ -20,7 +20,7 @@ export function bindHoldSlot(slotId, slotNum, actions) {
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     if (game.gameState !== 'playing') { actions.restart(); return; }
-    if (game.paused) return;
+    if (game.paused || game.cardOffer) return;
     setHold(true);
     SKILLS[skillKey()].try();
   });
@@ -35,7 +35,7 @@ export function bindCycle(id, slotNum, actions) {
     e.preventDefault();
     e.stopPropagation();
     if (game.gameState !== 'playing') { actions.restart(); return; }
-    if (game.paused) return;
+    if (game.paused || game.cardOffer) return;
     cycleSkillSlot(slotNum);
   });
 }
@@ -79,7 +79,7 @@ export function bindDomButtons(actions) {
   });
   document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.setPaused(!game.paused); });
   document.getElementById('btn-full').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
-  document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); setInventoryOpen(!ui.showInventory); });
+  document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); if (!game.cardOffer) setInventoryOpen(!ui.showInventory); });
   document.getElementById('btn-help').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.toggleHelp(); });
   document.getElementById('help-panel').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.toggleHelp(); });
 }

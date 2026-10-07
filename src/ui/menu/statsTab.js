@@ -1,7 +1,8 @@
 // 메뉴 - 스탯 탭 (스탯 포인트 투자, 스킬 해금 현황)
 import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS } from '../../data/balance.js';
 import { STAT_DEF } from '../../data/items.js';
-import { SKILL_UNLOCK_LEVEL } from '../../data/skills.js';
+import { SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../../data/skills.js';
+import { skillLevel } from '../../util.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
@@ -63,7 +64,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   let ry = row + 30;
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#ffe066';
-  ctx.fillText('스킬 해금', x + 16, ry);
+  ctx.fillText('스킬 (레벨업 카드로 배우고 강화)', x + 16, ry);
   ry += 18;
   const skillColW = (w - 32) / 2;
   ctx.font = '11px sans-serif';
@@ -76,7 +77,8 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.fillText(SKILLS[id].label, cx, cy);
     ctx.textAlign = 'right';
     ctx.fillStyle = ok ? '#9be39b' : '#a8905a';
-    ctx.fillText(ok ? '해금됨' : `Lv.${SKILL_UNLOCK_LEVEL[id]}`, cx + skillColW - 12, cy);
+    const lv = skillLevel(game.hero, id);
+    ctx.fillText(ok ? `Lv.${lv}/${SKILL_MAX_LEVEL}` : `미습득 (Lv.${SKILL_UNLOCK_LEVEL[id]}~)`, cx + skillColW - 12, cy);
   });
   ctx.textAlign = 'left';
 }

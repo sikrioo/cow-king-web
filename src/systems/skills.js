@@ -20,26 +20,27 @@ import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber 
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
 import { screenToWorld } from '../world/camera.js';
-import { castSpeedMul, attackSpeedMul } from '../util.js';
+import { castSpeedMul, attackSpeedMul, skillMul } from '../util.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
   if (game.hero.mana < WARCRY_MANA_COST) return;
   game.hero.mana -= WARCRY_MANA_COST;
   game.hero.warcryCooldown = WARCRY_COOLDOWN * castSpeedMul(game.hero);
-  spawnShockwave(game.hero.x, game.hero.y, WARCRY_RADIUS, '#e8a33d');
+  const radius = WARCRY_RADIUS * skillMul(game.hero, 'warcry', 'radius');
+  spawnShockwave(game.hero.x, game.hero.y, radius, '#e8a33d');
   game.shake = Math.min(game.shake + 7, 12);
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (!canHit(game.hero, c)) return;
-    if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= WARCRY_RADIUS) warCryHitCow(c);
+    if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius) warCryHitCow(c);
   });
 }
 
 export function warCryHitCow(c) {
   applyKnockback(c.body, game.hero.x, game.hero.y, 8);
   c.knockback = 0.25;
-  c.stunTimer = 1.0;
+  c.stunTimer = 1.0 * skillMul(game.hero, 'warcry', 'stun');
   c.flash = 0.15;
   spawnHitParticles(c.x, c.y, '#e8dcc8', 4);
 }
@@ -56,11 +57,12 @@ export function tryWhirlwind() {
 
 export function updateWhirlwind(dt) {
   game.hero.whirlAngle += dt * 26;
+  const radius = WHIRLWIND_RADIUS * skillMul(game.hero, 'whirlwind', 'radius');
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (!canHit(game.hero, c)) return;
     if (c.whirlHitCd > 0) c.whirlHitCd -= dt;
-    if (c.whirlHitCd <= 0 && Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= WHIRLWIND_RADIUS) {
+    if (c.whirlHitCd <= 0 && Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius) {
       whirlwindHit(c);
       c.whirlHitCd = WHIRLWIND_TICK;
     }
@@ -73,7 +75,7 @@ export function whirlwindHit(c) {
   c.knockback = 0.15;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 5);
 
-  const dmg = heroHitDamage();
+  const dmg = Math.round(heroHitDamage() * skillMul(game.hero, 'whirlwind', 'damage'));
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   registerComboHit();
@@ -119,12 +121,13 @@ export function updateLeap(dt) {
 }
 
 export function leapLand() {
-  spawnShockwave(game.hero.x, game.hero.y, LEAP_RADIUS + 20, '#c9b48a');
+  const radius = LEAP_RADIUS * skillMul(game.hero, 'leap', 'radius');
+  spawnShockwave(game.hero.x, game.hero.y, radius + 20, '#c9b48a');
   game.shake = Math.min(game.shake + 8, 12);
   game.cows.forEach((c) => {
     if (c.state === 'dead') return;
     if (!canHit(game.hero, c)) return;
-    if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= LEAP_RADIUS) leapHitCow(c);
+    if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius) leapHitCow(c);
   });
 }
 
@@ -134,7 +137,7 @@ export function leapHitCow(c) {
   c.knockback = 0.2;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 6);
 
-  const dmg = heroHitDamage();
+  const dmg = Math.round(heroHitDamage() * skillMul(game.hero, 'leap', 'damage'));
   spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
   c.hp -= dmg;
   registerComboHit();
@@ -185,7 +188,7 @@ export function updateRush(dt) {
     if (!canHit(game.hero, c)) return;
     if (Math.hypot(c.x - nx, c.y - ny) <= RUSH_HIT_RADIUS + getCowHitRadius(c)) {
       game.hero.rushHitSet.add(c);
-      skillDamageCow(c, rollWeaponDamage() + RUSH_DAMAGE_BONUS, 8.5, '#ff9b63');
+      skillDamageCow(c, Math.round((rollWeaponDamage() + RUSH_DAMAGE_BONUS) * skillMul(game.hero, 'rush', 'damage')), 8.5, '#ff9b63');
     }
   });
 
@@ -218,7 +221,8 @@ export function updateGroundSmash(dt) {
   const elapsedNow = SMASH_DURATION - Math.max(game.hero.smashTimer, 0);
   if (!game.hero.smashHitDone && elapsedPrev < SMASH_IMPACT_TIME && elapsedNow >= SMASH_IMPACT_TIME) {
     game.hero.smashHitDone = true;
-    spawnShockwave(game.hero.x, game.hero.y, SMASH_RADIUS + 28, '#ffc857');
+    const radius = SMASH_RADIUS * skillMul(game.hero, 'smash', 'radius');
+    spawnShockwave(game.hero.x, game.hero.y, radius + 28, '#ffc857');
     spawnHitParticles(game.hero.x, game.hero.y + 8, '#e5d0a1', 18);
     game.shake = Math.min(game.shake + 10, 12);
     game.hitstop = Math.max(game.hitstop, 4);
@@ -227,8 +231,8 @@ export function updateGroundSmash(dt) {
     game.cows.forEach((c) => {
       if (c.state === 'dead') return;
       if (!canHit(game.hero, c)) return;
-      if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= SMASH_RADIUS + getCowHitRadius(c)) {
-        skillDamageCow(c, rollWeaponDamage() + SMASH_DAMAGE_BONUS, 11, '#ffd36a');
+      if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius + getCowHitRadius(c)) {
+        skillDamageCow(c, Math.round((rollWeaponDamage() + SMASH_DAMAGE_BONUS) * skillMul(game.hero, 'smash', 'damage')), 11, '#ffd36a');
         c.stunTimer = Math.max(c.stunTimer || 0, 0.35);
       }
     });
