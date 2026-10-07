@@ -14,6 +14,7 @@ export const game = {
   projectiles: [], // 날아가는 투사체 (systems/projectiles.js)
   lightningBolts: [],
   shockwaves: [],
+  iceRings: [], // 서리 노바 고리
   particles: [],
   floatTexts: [],
   shake: 0,

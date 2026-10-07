@@ -6,7 +6,7 @@ import { attackSpeedMul } from '../util.js';
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
-import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
+import { spawnHitParticles, spawnIceRing, spawnLightningBolt, floatText } from './fx.js';
 import { spawnProjectile } from './projectiles.js';
 
 // 레벨에 따라 오르는 주문 피해 (정수)
@@ -67,9 +67,9 @@ export function tryFireballSpell() {
 export function tryFrostNova() {
   const s = SPELLS.frostnova, h = game.hero;
   if (!begin('frostnova')) return;
-  spawnShockwave(h.x, h.y, s.radius, '#bfeaff');
-  spawnShockwave(h.x, h.y, s.radius * 0.6, '#7fd4ff');
-  spawnHitParticles(h.x, h.y, '#dff3ff', 14);
+  spawnIceRing(h.x, h.y, s.radius); // 퍼지는 얼음 가시 고리
+  spawnHitParticles(h.x, h.y, '#dff3ff', 10);
+  spawnHitParticles(h.x, h.y, '#7fd4ff', 8);
   const dmg = spellDamage(s.damage);
   game.cows.forEach((c) => {
     if (c.state === 'dead' || !canHit(h, c)) return;

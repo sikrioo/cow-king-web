@@ -57,6 +57,18 @@ export function spawnShockwave(x, y, maxRadius, color) {
   game.shockwaves.push({ x, y, maxRadius, age: 0, duration: 0.45, color });
 }
 
+// 서리 노바 고리 (그림은 render/iceFx.js) - seed는 가시 모양을 고리마다 다르게
+export function spawnIceRing(x, y, maxRadius) {
+  game.iceRings.push({ x, y, maxRadius, age: 0, duration: 0.6, seed: Math.floor(Math.random() * 1000) });
+}
+
+export function updateIceRings(dt) {
+  for (let i = game.iceRings.length - 1; i >= 0; i--) {
+    game.iceRings[i].age += dt;
+    if (game.iceRings[i].age >= game.iceRings[i].duration) game.iceRings.splice(i, 1);
+  }
+}
+
 export function updateShockwaves(dt) {
   for (let i = game.shockwaves.length - 1; i >= 0; i--) {
     game.shockwaves[i].age += dt;

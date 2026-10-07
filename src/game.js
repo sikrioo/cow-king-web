@@ -8,7 +8,7 @@ import { updatePlayer } from './entities/hero.js';
 import { updateHazards } from './systems/combat.js';
 import { updateMeteors } from './systems/spells.js';
 import { updateProjectiles } from './systems/projectiles.js';
-import { updateParticles, updateLightningBolts, updateShockwaves, updateFloatTexts } from './systems/fx.js';
+import { updateParticles, updateLightningBolts, updateShockwaves, updateIceRings, updateFloatTexts } from './systems/fx.js';
 import { updateIdentify, giveStarterGear, giveTestStash, tryUpgradeSlot, unarmedStats } from './systems/gear.js';
 import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
@@ -142,6 +142,7 @@ export function resetGame() {
 
   game.particles = [];
   game.shockwaves = [];
+  game.iceRings = [];
   game.hazards = [];
   game.meteors = [];
   game.projectiles = [];
@@ -268,6 +269,7 @@ export function fixedUpdate(dt) {
   }
   updateParticles(dt);
   updateShockwaves(dt);
+  updateIceRings(dt);
   updateHazards(dt);
   updateMeteors(dt);
   updateProjectiles(dt);

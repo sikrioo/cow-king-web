@@ -6,6 +6,7 @@ import { drawMoveMarker, drawAttackTargetMarker, drawHeroChill, drawMeteorMarker
 import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
+import { drawIceRings } from './iceFx.js';
 import { applyCamera, updateCamera, inView } from '../world/camera.js';
 import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
@@ -55,6 +56,7 @@ export function render(t) {
   drawMeteorBalls(ctx); // 불덩이는 몬스터/주인공 위로
   drawParticles(ctx);
   drawShockwaves(ctx);
+  drawIceRings(ctx);
   drawLightningBolts(ctx);
   drawFloatTexts(ctx);
   drawComboCounter(ctx);

@@ -1,6 +1,7 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
 import { hexToRgba } from '../util.js';
 import { game, ui, input } from '../state.js';
+import { drawOrb, drawShard } from './iceFx.js';
 
 // 불꽃 바닥: 그을린 바닥 + 일렁이는 불꽃 혀 (그라데이션/난수 없음 - 시간과 위치로만)
 function drawFireField(ctx, h) {
@@ -68,7 +69,7 @@ export function drawProjectiles(ctx) {
   const t = performance.now() / 1000;
   game.projectiles.forEach((p, i) => {
     if (p.kind === 'bolt') { drawBolt(ctx, p); return; }
-    if (p.kind === 'shard') { drawShard(ctx, p); return; }
+    if (p.kind === 'shard') { drawShard(ctx, p, i); return; }
     if (p.kind === 'orb') { drawOrb(ctx, p, t); return; }
     ctx.save();
     for (let k = 4; k >= 1; k--) {
@@ -101,36 +102,6 @@ function drawBolt(ctx, p) {
   ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#f2eeff';
   ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 0.45, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-}
-
-// 얼음 조각: 진행 방향으로 뾰족한 마름모
-function drawShard(ctx, p) {
-  ctx.save();
-  ctx.translate(p.x, p.y);
-  ctx.rotate(Math.atan2(p.dirY, p.dirX));
-  ctx.fillStyle = '#dff3ff';
-  ctx.beginPath();
-  ctx.moveTo(9, 0); ctx.lineTo(0, 3); ctx.lineTo(-6, 0); ctx.lineTo(0, -3);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-// 얼음 보주: 큰 하늘색 구 + 안에서 도는 반짝임
-function drawOrb(ctx, p, t) {
-  ctx.save();
-  ctx.globalAlpha = 0.3;
-  ctx.fillStyle = '#7fd4ff';
-  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 1.6, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = '#bfeaff';
-  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#ffffff';
-  for (let k = 0; k < 3; k++) {
-    const a = t * 6 + k * (Math.PI * 2 / 3);
-    ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * p.radius * 0.5, p.y + Math.sin(a) * p.radius * 0.5, 2, 0, Math.PI * 2); ctx.fill();
-  }
   ctx.restore();
 }
 
