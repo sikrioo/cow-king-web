@@ -287,10 +287,17 @@ export function cycleTitleClass(dir) {
 
 // 키 의도 처리 - 순서가 의미: 메뉴 닫기/일시정지 → (일시정지 중이면 여기서 끝) → 나머지
 export function handleKeyDown(intent, k, e) {
-  if (game.gameState === 'title' && ['arrowleft', 'arrowright', 'a', 'd'].includes(k)) { cycleTitleClass(k === 'arrowleft' || k === 'a' ? -1 : 1); return; }
   if (intent === 'help') { setHelpOpen(!ui.showHelp); return; }
   if (intent === 'back' && ui.showHelp) { e.preventDefault(); setHelpOpen(false); return; }
   if (ui.showHelp) return; // 도움말 창이 열려 있는 동안 다른 입력은 무시
+  if (game.gameState === 'title') {
+    // 시작 화면: ←/→(A/D) 캐릭터 고르기, Space/Enter = 게임 시작, 그 밖의 키는 무시
+    if (intent === 'devPanel' && isDevMode()) toggleDevPanel();
+    else if (k === 'arrowleft' || k === 'a') cycleTitleClass(-1);
+    else if (k === 'arrowright' || k === 'd') cycleTitleClass(1);
+    else if (k === ' ' || k === 'enter') { e.preventDefault(); resetGame(); }
+    return;
+  }
   if (intent === 'back') {
     e.preventDefault();
     if (ui.showInventory) { setInventoryOpen(false); return; }

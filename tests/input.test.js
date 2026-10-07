@@ -199,3 +199,28 @@ it('Shift+좌클릭 = 제자리에서 커서 방향 기본 공격(누르는 동�
     env.restore();
   }
 });
+
+it('시작 화면: 카드 클릭은 고르기만, 게임 시작 버튼(또는 Space/Enter)을 눌러야 시작', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, ui } = await import('../src/state.js');
+    env.frame(5);
+    expect(game.gameState).toBe('title');
+    const center = (r) => [r.x + r.w / 2, r.y + r.h / 2];
+    const sorcCard = ui.titleCardRects.find((r) => r.key === 'sorc');
+    env.pointer('pointerdown', ...center(sorcCard), 0);
+    expect(ui.selectedClass).toBe('sorc');
+    expect(game.gameState).toBe('title');
+    env.pointer('pointerdown', 5, 5, 0); // 빈 곳
+    env.key('e'); env.key('e', false);   // 다른 키
+    env.frame(2);
+    expect(game.gameState).toBe('title');
+    env.pointer('pointerdown', ...center(ui.titleStartRect), 0);
+    expect(game.gameState).toBe('playing');
+    expect(game.hero.classKey).toBe('sorc');
+  } finally {
+    env.restore();
+  }
+});

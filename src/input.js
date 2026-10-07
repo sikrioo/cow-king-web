@@ -110,11 +110,14 @@ export function bindInput(actions) {
   canvas.addEventListener('pointerdown', (e) => {
     if (ui.showInventory) return; // 인벤토리 열려있을 땐 별도 핸들러가 처리
     if (game.gameState === 'title') {
-      // 시작 화면: 캐릭터 카드를 누르면 그 캐릭터로 시작, 다른 곳은 고른 캐릭터로 시작
+      // 시작 화면: 카드 = 캐릭터 고르기만, '게임 시작' 버튼을 눌러야 시작 (다른 곳 클릭은 무시)
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      const card = ui.titleCardRects.find((r) => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h);
+      const inside = (r) => r && mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
+      const card = ui.titleCardRects.find(inside);
       if (card) ui.selectedClass = card.key;
+      else if (inside(ui.titleStartRect)) actions.slotPress(1);
+      return;
     }
     const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
     if (mouse) rememberMouse(e);

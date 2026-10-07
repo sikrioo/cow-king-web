@@ -48,23 +48,41 @@ export function drawTitleOverlay(t) {
   ctx.font = 'bold 14px monospace';
   ctx.fillText('카우방 액션 RPG 데모', cx, cy - 12);
 
-  const pulse = 0.60 + Math.sin(t * 3.4) * 0.28;
-  ctx.globalAlpha = pulse;
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 20px sans-serif';
-  ctx.fillText('PRESS START', cx, cy + 54);
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = 'rgba(255,255,255,.68)';
-  ctx.font = '13px sans-serif';
-  ctx.fillText('Space / 클릭 / 탭', cx, cy + 80);
+  // 아래 묶음(캐릭터 카드 → 게임 시작 버튼 → 조작 안내): 화면이 낮으면 위로 당김
+  const base = Math.min(cy, canvas.height - 240);
+  drawClassCards(cx, base + 18);
+  drawStartButton(cx, base + 136, t);
+  ctx.textAlign = 'center';
   ctx.font = '12px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.50)';
-  ctx.fillText('클릭/WASD 이동 · Space/E 시전(길게) · Q/R 슬롯전환 · 1/2 물약 · I 장비', cx, cy + 116);
+  ctx.fillText('클릭/WASD 이동 · Space/E 시전(길게) · Q/R 슬롯전환 · 1/2 물약 · I 장비', cx, base + 204);
   ctx.font = '11px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.36)';
-  ctx.fillText(`BEST WAVE ${game.releaseMeta.bestWave}  ·  BEST KILLS ${game.releaseMeta.bestKills}  ·  CLEAR ${game.releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, cy + 142);
+  ctx.fillText(`BEST WAVE ${game.releaseMeta.bestWave}  ·  BEST KILLS ${game.releaseMeta.bestKills}  ·  CLEAR ${game.releaseMeta.clears}  ·  v${RELEASE_VERSION}`, cx, base + 226);
   ctx.textAlign = 'left';
-  drawClassCards(cx, Math.min(cy + 160, canvas.height - 112));
+}
+
+// 게임 시작 버튼 (클릭 영역 ui.titleStartRect, 입력은 input.js / 키보드 Space·Enter는 game.handleKeyDown)
+function drawStartButton(cx, y, t) {
+  const w = 220, h = 44, x = cx - w / 2;
+  ui.titleStartRect = { x, y, w, h };
+  const pulse = 0.5 + Math.sin(t * 3.4) * 0.25;
+  ctx.save();
+  ctx.fillStyle = `rgba(255,224,102,${0.22 + pulse * 0.18})`;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#ffe066';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff6cf';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText(`${CLASSES[ui.selectedClass].label}로 게임 시작`, cx, y + h / 2 - 1);
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('Space / Enter', cx, y + h + 14);
+  ctx.restore();
 }
 
 // 캐릭터 고르기 카드 (클릭 영역은 ui.titleCardRects - 그릴 때마다 갱신, 입력은 input.js)
@@ -103,7 +121,7 @@ function drawClassCards(cx, top) {
   ctx.textAlign = 'center';
   ctx.font = '11px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fillText('←/→ 로 고르기 · 카드를 누르면 그 캐릭터로 시작', cx, top + ch + 18);
+  ctx.fillText('카드를 누르거나 ←/→ 로 캐릭터 고르기', cx, top + ch + 16);
   ctx.restore();
 }
 

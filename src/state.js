@@ -49,7 +49,8 @@ export const ui = {
   moveMarker: null, // 클릭 이동 표시 {x, y, t0} (그리기 전용)
   devPanelOpen: false,
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
-  titleCardRects: [] // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
+  titleCardRects: [], // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
+  titleStartRect: null // 시작 화면 '게임 시작' 버튼 영역
 };
 
 // 개발자 모드 치트 (systems/dev.js, 패널은 ui/devPanel.js)
