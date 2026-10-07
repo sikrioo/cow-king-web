@@ -3,7 +3,7 @@
 import { SPELLS, SPELL_LEVEL_SCALE } from '../data/skills.js';
 import { game } from '../state.js';
 import { attackSpeedMul } from '../util.js';
-import { canHit, getCowHitRadius } from './combat.js';
+import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
 import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
@@ -73,7 +73,7 @@ export function tryFrostNova() {
   const dmg = spellDamage(s.damage);
   game.cows.forEach((c) => {
     if (c.state === 'dead' || !canHit(h, c)) return;
-    if (Math.hypot(c.x - h.x, c.y - h.y) <= s.radius + getCowHitRadius(c)) damageCowPacket(c, { cold: dmg }, { knock: 3, fromX: h.x, fromY: h.y });
+    if (cowEdgeDist(c, h.x, h.y) <= s.radius) damageCowPacket(c, { cold: dmg }, { knock: 3, fromX: h.x, fromY: h.y });
   });
 }
 
@@ -98,16 +98,16 @@ export function tryChain() {
   const hit = new Set();
   let from = { x: h.x, y: h.y }, cur = first, dmg = spellDamage(s.damage);
   for (let j = 0; j <= s.jumps && cur; j++) {
-    spawnLightningBolt(from.x, from.y, cur.x, cur.y);
+    const at = getCowBody(cur); // 번개는 몸통으로
+    spawnLightningBolt(from.x, from.y, at.x, at.y);
     hit.add(cur);
-    const at = { x: cur.x, y: cur.y };
     damageCowPacket(cur, { lightning: rollLightning(dmg) }, { knock: 2, fromX: from.x, fromY: from.y });
     dmg = Math.max(1, Math.round(dmg * s.falloff));
     from = at;
     let next = null, nd = Infinity;
     alive.forEach((c) => {
       if (hit.has(c) || c.state === 'dead') return;
-      const dd = Math.hypot(c.x - at.x, c.y - at.y);
+      const dd = Math.hypot(getCowBody(c).x - at.x, getCowBody(c).y - at.y);
       if (dd <= s.jumpRange && dd < nd) { nd = dd; next = c; }
     });
     cur = next;

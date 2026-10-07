@@ -164,3 +164,21 @@ it('마법사로 실제 진행(그리기 포함): 예외 없음, 체력 정수, 
     expect(game.kills).toBeGreaterThan(0);
   } finally { env.restore(); }
 }, 120000);
+
+it('판정은 그림의 몸통 기준: 발밑이 아니라 몸통 위쪽을 지나가는 마력탄도 맞음, 몸통 클릭도 적으로 인식', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await bootSorc();
+    const h = m.game.hero;
+    const c = m.place(160);
+    const { getCowBody, cowEdgeDist } = await import('../src/systems/combat.js');
+    const b = getCowBody(c);
+    const aimY = b.y - b.r * 0.6; // 몸통 위쪽 (발밑 판정 원과는 멀리)
+    expect(Math.hypot(c.x - c.x, aimY - c.y)).toBeGreaterThan(20);
+    h.facing = Math.atan2(aimY - h.y, c.x - h.x);
+    m.tryBolt();
+    m.fly(1);
+    expect(c.hp).toBeLessThan(100000);
+    expect(cowEdgeDist(c, b.x, b.y - b.r * 0.5)).toBeLessThanOrEqual(0); // 몸통 클릭 지점은 적 위
+  } finally { env.restore(); }
+});

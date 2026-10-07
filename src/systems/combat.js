@@ -28,6 +28,18 @@ export function getCowHitRadius(c) {
   return c.r * 0.58;
 }
 
+// 몬스터 몸통 = 그림의 동그란 몸 (render/monsterSprites.drawCow: 발(c.x, c.y)에서 위로 40*scale이 중심, 반지름 30*scale)
+export function getCowBody(c) {
+  return { x: c.x, y: c.y - 40 * c.scale, r: 30 * c.scale };
+}
+
+// 점(x, y)에서 몬스터 가장자리까지 거리 (몸통 원과 발밑 판정 원 중 가까운 쪽, 안쪽이면 0 이하)
+// 투사체·폭발·클릭처럼 "그림에 닿았는지"가 중요한 판정에 씀
+export function cowEdgeDist(c, x, y) {
+  const b = getCowBody(c);
+  return Math.min(Math.hypot(x - b.x, y - b.y) - b.r, Math.hypot(x - c.x, y - c.y) - getCowHitRadius(c));
+}
+
 export function getWeaponRange() {
   const w = game.hero.equipment.weaponMain;
   if (w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined) return WEAPON_RANGE[w.variant];

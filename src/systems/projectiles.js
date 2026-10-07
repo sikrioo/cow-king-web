@@ -4,7 +4,7 @@
 // 그리기는 render/fx.js의 drawProjectiles (kind로 모양 구분)
 import { game } from '../state.js';
 import { PEN } from '../world/arena.js';
-import { hitPlayer, canHit, getCowHitRadius } from './combat.js';
+import { hitPlayer, canHit, cowEdgeDist } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave } from './fx.js';
 
@@ -17,7 +17,7 @@ export function spawnProjectile(p) {
 function cowHit(p) {
   for (const c of game.cows) {
     if (c.state === 'dead' || !canHit(game.hero, c)) continue;
-    if (Math.hypot(c.x - p.x, c.y - p.y) <= p.radius + getCowHitRadius(c)) return c;
+    if (cowEdgeDist(c, p.x, p.y) <= p.radius) return c; // 그림의 몸통/발밑에 닿으면
   }
   return null;
 }
@@ -61,7 +61,7 @@ function explodeOnCows(p, hit) {
     spawnShockwave(p.x, p.y, p.explodeRadius, p.color);
     game.cows.forEach((c) => {
       if (c.state === 'dead' || !canHit(game.hero, c)) return;
-      if (Math.hypot(c.x - p.x, c.y - p.y) <= p.explodeRadius + getCowHitRadius(c)) damageCowPacket(c, p.packet, opts);
+      if (cowEdgeDist(c, p.x, p.y) <= p.explodeRadius) damageCowPacket(c, p.packet, opts);
     });
   } else if (hit) {
     damageCowPacket(hit, p.packet, opts);

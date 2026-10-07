@@ -5,6 +5,7 @@ import { canvas } from './core/context.js';
 import { game, ui, input } from './state.js';
 import { screenToWorld } from './world/camera.js';
 import { clampToPen } from './world/arena.js';
+import { cowEdgeDist } from './systems/combat.js';
 import { invPanelHandlePoint, menuPointerMove } from './ui/menu/panel.js';
 
 export const JOY_RADIUS = 42;
@@ -28,8 +29,8 @@ function cowAt(w) {
   let best = null, bestD = Infinity;
   game.cows.forEach((c) => {
     if (c.state === 'dead' || c.team === game.hero.team) return;
-    const d = Math.hypot(c.x - w.x, c.y - w.y);
-    if (d <= c.r + CLICK_PICK_PADDING && d < bestD) { best = c; bestD = d; }
+    const d = cowEdgeDist(c, w.x, w.y); // 그림의 몸통/발밑 기준
+    if (d <= CLICK_PICK_PADDING && d < bestD) { best = c; bestD = d; }
   });
   return best;
 }

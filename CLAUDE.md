@@ -68,7 +68,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 키는 `input.keyOf(e)`로 읽는다(글자/숫자는 e.code) - 한글 입력 상태에서도 동작해야 함.
 - 캔버스 `textAlign` 등 상태 누수: 그리기 블록마다 `ctx.save()/restore()`.
 - 감정 대상은 인덱스가 아니라 객체 참조. 메뉴 클릭 영역은 그릴 때마다 재등록, 입력은 직전 프레임 영역 사용.
-- 히트 판정은 몬스터 중심 + `getCowHitRadius`. `hitPlayer` 무적시간이 지속 피해 틱을 제한한다.
+- 히트 판정: 근접은 몬스터 중심(발) + `getCowHitRadius`. 투사체·폭발·클릭은 그림 기준 `combat.cowEdgeDist`(몸통 원 = 발에서 위로 40*scale, 반지름 30*scale + 발밑 원) - 소 그림의 몸통은 발보다 위에 그려진다. `hitPlayer` 무적시간이 지속 피해 틱을 제한한다.
 - 맵은 화면보다 크다(카메라): 월드 좌표 그림은 renderer의 applyCamera 블록 안, HUD·배너는 밖. 화면 밖 몬스터는 그리지 않으므로 그림 코드가 게임 상태/난수를 건드리면 화면 크기에 따라 결과가 달라진다.
 - 웨이브 몬스터는 `hunt`(어그로 밖이어도 주인공 쪽으로 이동). 생성 위치 규칙은 `systems/waves.js`, 수치는 `data/balance.js`의 WAVE_*/HUNT_*.
 - 몬스터 40마리 이상도 나온다: 몬스터마다 `ctx.filter`나 매 프레임 그라데이션 생성 금지.
