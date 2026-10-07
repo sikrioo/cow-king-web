@@ -3,7 +3,7 @@
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT } from '../data/skills.js';
-import { FILLER_CARDS } from '../data/cards.js';
+import { FILLER_CARDS, UPGRADE_CARDS, CARD_RARITY, UPGRADE_MAX_PICKS } from '../data/cards.js';
 
 const TYPE_STYLE = {
   newSkill: { tag: '새 스킬', color: '#9be39b' },
@@ -24,7 +24,25 @@ function bonusLines(card) {
   });
 }
 
+// 강화 수치 표시: 12% / 40 / 1.5/초
+export function formatUpgrade(unit, v) {
+  if (unit === 'pct') return `+${Math.round(v * 100)}%`;
+  if (unit === 'perSec') return `+${Math.round(v * 10) / 10}/초`;
+  return `+${Math.round(v)}`;
+}
+
+// 카드 종류 표시 (강화 카드는 등급 이름·색)
+function cardStyle(card) {
+  if (card.type === 'upgrade') { const r = CARD_RARITY[card.rarity]; return { tag: `강화 · ${r.label}`, color: r.color }; }
+  return TYPE_STYLE[card.type];
+}
+
 function cardText(card) {
+  if (card.type === 'upgrade') {
+    const u = UPGRADE_CARDS[card.id];
+    const picks = game.hero.cardPicks[card.id] || 0;
+    return { title: u.label, level: `${picks + 1}/${UPGRADE_MAX_PICKS}`, lines: [`${u.statLabel} ${formatUpgrade(u.unit, card.amount)}`], swatch: u.color };
+  }
   if (card.type === 'filler') {
     const f = FILLER_CARDS[card.id];
     return { title: f.label, level: '', lines: [f.desc], swatch: f.color };
@@ -99,7 +117,7 @@ export function drawCardOffer(t) {
 }
 
 function drawCard(card, i, x, y, w, h, wide, t) {
-  const style = TYPE_STYLE[card.type];
+  const style = cardStyle(card);
   const txt = cardText(card);
   const glow = 0.5 + Math.sin(t * 3 + i) * 0.5;
   ctx.save();
@@ -109,7 +127,7 @@ function drawCard(card, i, x, y, w, h, wide, t) {
   ctx.fillRect(x, y, wide ? w : 8, wide ? 8 : h); // 스킬 색 띠
   ctx.strokeStyle = style.color;
   ctx.globalAlpha = 0.6 + glow * 0.4;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = card.rarity === 'legendary' ? 3 : 2;
   ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
   ctx.globalAlpha = 1;
 

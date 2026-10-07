@@ -257,7 +257,7 @@ export function recalcGearStats() {
     if (it.stats.mana) mana += it.stats.mana;
   });
 
-  // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨" 합산치)
+  // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
   atkSpeed += (game.hero.levelStats.atkSpeed || 0) * LEVEL_STAT_PER_POINT.atkSpeed;
   castSpeed += (game.hero.levelStats.castSpeed || 0) * LEVEL_STAT_PER_POINT.castSpeed;
   atkPower += (game.hero.levelStats.atkPower || 0) * LEVEL_STAT_PER_POINT.atkPower;
@@ -266,6 +266,12 @@ export function recalcGearStats() {
   moveSpeed += (game.hero.levelStats.moveSpeed || 0) * LEVEL_STAT_PER_POINT.moveSpeed;
   health += (game.hero.levelStats.health || 0) * LEVEL_STAT_PER_POINT.health;
   mana += (game.hero.levelStats.mana || 0) * LEVEL_STAT_PER_POINT.mana;
+  // 레벨업 강화 카드 (systems/levelCards.js)
+  const cb = game.hero.cardBonus;
+  if (cb) {
+    atkSpeed += cb.atkSpeed; castSpeed += cb.castSpeed; atkPower += cb.atkPower;
+    moveSpeed += cb.moveSpeed; health += cb.health; mana += cb.mana;
+  }
 
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;

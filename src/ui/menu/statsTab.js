@@ -1,4 +1,4 @@
-// 메뉴 - 스탯 탭 (스탯 포인트 투자, 스킬 해금 현황)
+// 메뉴 - 스탯 탭 (스탯 포인트 투자, 스킬 레벨, 카드 강화 합계)
 import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS } from '../../data/balance.js';
 import { STAT_DEF } from '../../data/items.js';
 import { SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../../data/skills.js';
@@ -7,6 +7,8 @@ import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
 import { SKILLS, classSkills } from '../../systems/skills.js';
+import { UPGRADE_CARDS, UPGRADE_ORDER } from '../../data/cards.js';
+import { formatUpgrade } from '../cardPick.js';
 
 export function drawStatsTab(ctx, x, startRow, w) {
   let row = startRow;
@@ -81,4 +83,25 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.fillText(ok ? `Lv.${lv}/${SKILL_MAX_LEVEL}` : `미습득 (Lv.${SKILL_UNLOCK_LEVEL[id]}~)`, cx + skillColW - 12, cy);
   });
   ctx.textAlign = 'left';
+  drawCardUpgrades(ctx, x, ry + Math.ceil(classSkills().length / 2) * 17 + 8, w);
+}
+
+// 고른 강화 카드 합계 (예: "화염 피해 +24% · 최대 체력 +80"), 폭에 맞춰 줄바꿈
+function drawCardUpgrades(ctx, x, y, w) {
+  const cb = game.hero.cardBonus || {};
+  const parts = UPGRADE_ORDER.filter((id) => game.hero.cardPicks && game.hero.cardPicks[id])
+    .map((id) => { const u = UPGRADE_CARDS[id]; return `${u.statLabel} ${formatUpgrade(u.unit, cb[u.stat])}`; });
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillStyle = '#ffe066';
+  ctx.fillText('카드 강화', x + 16, y);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = parts.length ? '#dfe9d8' : '#777';
+  const lines = [];
+  let line = '';
+  (parts.length ? parts : ['아직 없음']).forEach((p) => {
+    const next = line ? `${line} · ${p}` : p;
+    if (line && ctx.measureText(next).width > w - 32) { lines.push(line); line = p; } else line = next;
+  });
+  lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l, x + 16, y + 17 + i * 15));
 }

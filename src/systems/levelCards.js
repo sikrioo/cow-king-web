@@ -1,13 +1,21 @@
-// 레벨업 카드(뱀서식): 레벨이 오르면 카드 3장 중 하나를 고름 - 새 스킬 배우기 / 배운 스킬 레벨 +1 / (모자라면) 채우기 카드
+// 레벨업 카드(뱀서식): 레벨이 오르면 카드 3장 중 하나를 고름 - 새 스킬 배우기 / 배운 스킬 레벨 +1 / 강화(능력치·원소, 등급) / (모자라면) 채우기 카드
 // 고르는 동안 게임은 멈춤(game.cardOffer가 있으면 game.fixedUpdate가 전투를 건너뜀). 한 번에 여러 레벨이 오르면 차례로 고름
 // 카드 뽑기는 게임 난수(Math.random) - systems에서만. 수치는 data/cards.js, data/skills.js / 화면은 ui/cardPick.js
-import { CARD_CHOICES, CARD_REROLLS, CARD_WEIGHT, FILLER_CARDS, FILLER_ORDER } from '../data/cards.js';
+import {
+  CARD_CHOICES, CARD_REROLLS, CARD_WEIGHT, FILLER_CARDS, FILLER_ORDER, CARD_RARITY, CARD_RARITY_ORDER, UPGRADE_CARDS, UPGRADE_ORDER, UPGRADE_MAX_PICKS
+} from '../data/cards.js';
 import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../data/skills.js';
 import { POTION_MAX } from '../data/balance.js';
 import { CLASSES } from '../data/classes.js';
 import { game, input } from '../state.js';
 import { skillLevel } from '../util.js';
 import { floatText, spawnHitParticles } from './fx.js';
+import { recalcGearStats } from './gear.js';
+
+// 카드 강화 합계 (gear.recalcGearStats와 elementCombat이 읽음)
+export function emptyCardBonus() {
+  return { health: 0, mana: 0, manaRegen: 0, castSpeed: 0, atkSpeed: 0, moveSpeed: 0, atkPower: 0, fire: 0, cold: 0, lightning: 0, burn: 0, chill: 0 };
+}
 
 // 새 게임: 시작 슬롯 2개만 Lv1
 export function resetSkillLevels(cls) {
@@ -15,6 +23,8 @@ export function resetSkillLevels(cls) {
   h.skillLevels = Object.fromEntries(cls.slots.map((id) => [id, 1]));
   h.pendingCards = 0;
   h.cardRerolls = CARD_REROLLS;
+  h.cardBonus = emptyCardBonus();
+  h.cardPicks = {};
   game.cardOffer = null;
 }
 
@@ -38,7 +48,7 @@ function openNextOffer() {
   input.standAttackHeld = false;
 }
 
-// 뽑을 수 있는 스킬 카드 전부 (비중 포함)
+// 뽑을 수 있는 카드 전부 (비중 포함)
 function skillCardPool() {
   const h = game.hero;
   const pool = [];
@@ -46,6 +56,12 @@ function skillCardPool() {
     const lv = skillLevel(h, id);
     if (lv === 0 && h.level >= (SKILL_UNLOCK_LEVEL[id] || 1)) pool.push({ type: 'newSkill', id, from: 0, to: 1, weight: CARD_WEIGHT.newSkill });
     else if (lv > 0 && lv < SKILL_MAX_LEVEL) pool.push({ type: 'skillUp', id, from: lv, to: lv + 1, weight: CARD_WEIGHT.skillUp });
+  });
+  UPGRADE_ORDER.forEach((id) => {
+    const u = UPGRADE_CARDS[id];
+    if (u.classes && !u.classes.includes(h.classKey)) return;
+    if ((h.cardPicks[id] || 0) >= UPGRADE_MAX_PICKS) return;
+    pool.push({ type: 'upgrade', id, weight: CARD_WEIGHT.upgrade });
   });
   return pool;
 }
@@ -59,10 +75,21 @@ export function rollCards() {
     let r = Math.random() * total, i = 0;
     while (i < pool.length - 1 && r >= pool[i].weight) { r -= pool[i].weight; i++; }
     const { weight, ...card } = pool.splice(i, 1)[0];
+    if (card.type === 'upgrade') rollRarity(card);
     cards.push(card);
   }
   for (let i = 0; cards.length < CARD_CHOICES && i < FILLER_ORDER.length; i++) cards.push({ type: 'filler', id: FILLER_ORDER[i] });
   return cards;
+}
+
+// 강화 카드 등급 굴림 → 수치 = 일반 수치 × 등급 배율
+function rollRarity(card) {
+  const total = CARD_RARITY_ORDER.reduce((s, k) => s + CARD_RARITY[k].weight, 0);
+  let r = Math.random() * total;
+  card.rarity = CARD_RARITY_ORDER.find((k) => (r -= CARD_RARITY[k].weight) < 0) || 'common';
+  const u = UPGRADE_CARDS[card.id];
+  const v = u.amount * CARD_RARITY[card.rarity].mult;
+  card.amount = u.unit === 'int' ? Math.round(v) : v;
 }
 
 export function rerollCards() {
@@ -91,6 +118,17 @@ function applyCard(card) {
     if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
     else say(`${label} Lv.${card.to}`, '#ffe066');
     spawnHitParticles(h.x, h.y, '#ffe066', 10);
+    return;
+  }
+  if (card.type === 'upgrade') {
+    const u = UPGRADE_CARDS[card.id];
+    h.cardPicks[card.id] = (h.cardPicks[card.id] || 0) + 1;
+    h.cardBonus[u.stat] += card.amount;
+    if (u.stat === 'manaRegen') h.manaRegen += card.amount;
+    else recalcGearStats(); // 체력/마나/속도/공격력 (원소 배율은 맞힐 때 읽음)
+    say(`${u.label} (${CARD_RARITY[card.rarity].label})`, CARD_RARITY[card.rarity].color);
+    spawnHitParticles(h.x, h.y, u.color, card.rarity === 'legendary' ? 20 : 10);
+    if (card.rarity === 'legendary') game.shake = Math.min(game.shake + 4, 12);
     return;
   }
   const f = FILLER_CARDS[card.id];

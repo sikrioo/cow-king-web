@@ -1,4 +1,4 @@
-// 레벨업 카드(뱀서식): 레벨업 → 카드 3장 → 고르면 스킬 배우기/강화, 고르는 동안 게임 멈춤, 다시 뽑기, 채우기 카드
+// 레벨업 카드(뱀서식): 레벨업 → 카드 3장 → 고르면 스킬 배우기/강화, 강화 카드(등급·원소), 고르는 동안 게임 멈춤, 다시 뽑기, 채우기 카드
 import { it, expect, vi } from 'vitest';
 import { installBrowserEnv } from './helpers/browserEnv.js';
 
@@ -18,6 +18,8 @@ async function boot(cls = 'warrior') {
   m.ui.selectedClass = cls;
   m.resetGame();
   m.levelUp = () => m.gainExp(Math.max(1, m.game.hero.expToNext - m.game.hero.exp));
+  // 강화 카드를 다 고른 것으로 → 스킬 카드만 남김
+  m.noUpgrades = () => m.UPGRADE_ORDER.forEach((id) => { m.game.hero.cardPicks[id] = m.UPGRADE_MAX_PICKS; });
   return m;
 }
 
@@ -37,6 +39,7 @@ it('레벨업 → 카드 3장, 고르는 동안 게임 멈춤, 새 스킬을 고
   try {
     const m = await boot();
     const h = m.game.hero;
+    m.noUpgrades();
     m.levelUp();
     expect(h.level).toBe(2);
     expect(h.statPoints).toBeGreaterThan(0); // 스탯 포인트는 그대로
@@ -96,10 +99,47 @@ it('스킬을 전부 최대로 올리면 채우기 카드(재정비/물약)가 �
     const m = await boot();
     const h = m.game.hero;
     ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash'].forEach((id) => { h.skillLevels[id] = m.SKILL_MAX_LEVEL; });
+    m.noUpgrades();
     m.levelUp();
     expect(m.game.cardOffer.cards.map((c) => c.type)).toEqual(['filler', 'filler', 'filler']);
     h.hp = 1;
     m.pickCard(m.game.cardOffer.cards.findIndex((c) => c.id === 'restore'));
     expect(h.hp).toBe(h.maxHp + h.bonusMaxHp + h.gearMaxHp);
+  } finally { env.restore(); }
+});
+
+it('강화 카드: 등급만큼 수치, 체력/원소 피해/화상에 반영, 원소 카드는 마법사만, 같은 카드는 최대 횟수까지', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    const m = await boot('sorc');
+    const h = m.game.hero;
+    const { damageCowPacket } = await import('../src/systems/elementCombat.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const offer = (card) => { m.game.cardOffer = { cards: [card] }; m.pickCard(0); };
+
+    const hp0 = h.maxHp + h.gearMaxHp;
+    offer({ type: 'upgrade', id: 'vigor', rarity: 'legendary', amount: Math.round(m.UPGRADE_CARDS.vigor.amount * m.CARD_RARITY.legendary.mult) });
+    expect(h.maxHp + h.gearMaxHp).toBe(hp0 + Math.round(m.UPGRADE_CARDS.vigor.amount * m.CARD_RARITY.legendary.mult));
+
+    const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000;
+    const base = damageCowPacket(c, { fire: 100 });
+    offer({ type: 'upgrade', id: 'pyro', rarity: 'common', amount: 0.5 });
+    expect(damageCowPacket(c, { fire: 100 })).toBe(Math.round(base * 1.5));
+    offer({ type: 'upgrade', id: 'ember', rarity: 'common', amount: 1 });
+    damageCowPacket(c, { fire: 100 });
+    expect(c.burn.dps).toBeGreaterThan(0);
+
+    // 같은 카드는 UPGRADE_MAX_PICKS번까지만 나옴
+    for (let i = 0; i < m.UPGRADE_MAX_PICKS; i++) offer({ type: 'upgrade', id: 'haste', rarity: 'common', amount: 0.01 });
+    for (let i = 0; i < 40; i++) expect(m.rollCards().some((k) => k.id === 'haste')).toBe(false);
+    // 등급 굴림: 수치 = 일반 수치 × 배율
+    for (let i = 0; i < 40; i++) m.rollCards().filter((k) => k.type === 'upgrade').forEach((k) => {
+      const u = m.UPGRADE_CARDS[k.id], v = u.amount * m.CARD_RARITY[k.rarity].mult;
+      expect(k.amount).toBe(u.unit === 'int' ? Math.round(v) : v);
+    });
+
+    m.ui.selectedClass = 'warrior'; m.resetGame();
+    for (let i = 0; i < 60; i++) m.rollCards().forEach((k) => { if (k.type === 'upgrade') expect(m.UPGRADE_CARDS[k.id].classes || ['warrior']).toContain('warrior'); });
+    expect(m.game.hero.cardBonus.fire).toBe(0); // 새 게임이면 초기화
   } finally { env.restore(); }
 });
