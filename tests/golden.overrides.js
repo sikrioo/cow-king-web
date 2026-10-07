@@ -17,9 +17,9 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.frostnova': 2,
   'exact.progression.skillUnlockLevel.chain': 4,
   'exact.progression.skillUnlockLevel.orb': 6,
-  // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 + 스탯 포인트)
-  'exact.statDef.castSpeed': { label: '시전속도', min: 0.05, max: 0.15, fmtAtMax: '+15%' },
-  'exact.progression.perPoint.castSpeed': 0.01
+  // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 10~25% + 스탯 포인트 3%)
+  'exact.statDef.castSpeed': { label: '시전속도', min: 0.10, max: 0.25, fmtAtMax: '+25%' },
+  'exact.progression.perPoint.castSpeed': 0.03
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

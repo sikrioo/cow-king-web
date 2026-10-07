@@ -26,7 +26,7 @@ it('전사: 시전속도 +50%면 스킬 대기시간 2/3, 휠윈드 지속 시�
   try {
     const m = await boot('warrior');
     const h = m.game.hero;
-    h.levelStats.castSpeed = 50; m.recalcGearStats();
+    h.levelStats.castSpeed = 50 / 3; m.recalcGearStats(); // 포인트당 3%
     expect(h.gearCastSpeed).toBeCloseTo(0.5);
     m.tryWarCry();
     expect(h.warcryCooldown).toBeCloseTo(m.WARCRY_COOLDOWN / 1.5);
@@ -42,7 +42,7 @@ it('마법사: 화염구는 시전속도, 마력탄은 공격속도', async () =
   try {
     const m = await boot('sorc');
     const h = m.game.hero;
-    h.levelStats.castSpeed = 100; m.recalcGearStats();
+    h.levelStats.castSpeed = 100 / 3; m.recalcGearStats();
     m.tryFireballSpell();
     expect(h.spellCd.fireball).toBeCloseTo(m.SPELLS.fireball.cooldown / 2);
     m.tryBolt();

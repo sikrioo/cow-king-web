@@ -101,7 +101,7 @@ export function expForLevel(level) {
 }
 // 스탯 1포인트당 실제 증가량 (장비 옵션과 동일한 계열로 합산됨)
 // 포인트당 효과 - 기본 체력 5 / 몬스터 체력 2~3 기준이라 공격력·체력은 아주 작게 (이전엔 공격력 +1, 체력 +2씩이라 한 레벨에 몬스터가 다 한 방이었음)
-export const LEVEL_STAT_PER_POINT = { atkPower: 2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, castSpeed: 0.01, moveSpeed: 0.01, health: 10, mana: 3 };
+export const LEVEL_STAT_PER_POINT = { atkPower: 2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, castSpeed: 0.03, moveSpeed: 0.01, health: 10, mana: 3 };
 export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana', ',': 'castSpeed' };
 
 // --- 아이템 (가방/감정/강화/드랍)
