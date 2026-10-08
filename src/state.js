@@ -56,7 +56,7 @@ export const ui = {
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
   titleCardRects: [], // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
   titleStartRect: null, // 시작 화면 '게임 시작' 버튼 영역
-  hubMap: 'ranch', hubWave: 1, hubDifficulty: 'normal', // 맵 선택 화면에서 고른 것 (session.js)
+  hubMap: 'ranch', hubDifficulty: 'normal', // 맵 선택 화면에서 고른 것 (session.js)
   hubRects: [], // 맵 선택 화면 클릭 영역 (ui/mapSelect.js)
   exitArmedUntil: 0, // 맵 나가기 두 번 누르기 (session.requestExitMap)
   cardRects: [], // 레벨업 카드 클릭 영역 (그릴 때마다 갱신, ui/cardPick.js)

@@ -1,12 +1,13 @@
 // 맵 정의. 색 테마는 data/palette.js. 맵은 화면 크기와 상관없는 고정 크기(px) - 화면은 카메라가 주인공을 따라감
-//   mode: 'wave' = 레벨업 공간(웨이브가 계속 옴, 시작 웨이브 선택) / 'farm' = 파밍 공간(인스턴스 - 들어갈 때마다 무리를 새로 배치, 난이도 선택)
+//   mode: 'wave' = 레벨업 공간(웨이브가 계속 옴, 난이도마다 1웨이브부터) / 'farm' = 파밍 공간(인스턴스 - 들어갈 때마다 무리를 새로 배치)
+//   두 종류 모두 난이도(data/difficulty.js)를 골라 들어감. immune(면역 무리 종류)이 없는 맵은 면역 무리가 안 나옴
 //   진행은 systems/mapRun.js, 맵 선택 화면은 ui/mapSelect.js
 export const MAP_ORDER = ['ranch', 'barn'];
 export const MAPS = {
   ranch: {
     name: '목장',
     mode: 'wave',
-    desc: '웨이브가 계속 몰려오는 레벨업 장소',
+    desc: '웨이브가 계속 몰려오는 레벨업 장소 - 난이도마다 1웨이브부터',
     start: { x: 0.5, y: 0.5 }, // 주인공 시작 위치 (맵 크기 비율)
     size: 1900,             // 정사각형 한 변(px). 2026-10-05: 화면 맞춤(PC 약 950) → 고정 1900(넓이 약 4배)
     wallThickness: 24,      // 울타리 벽 두께(px)

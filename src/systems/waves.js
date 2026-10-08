@@ -40,20 +40,22 @@ function packPoint(center) {
   return clampToPen(center.x + Math.cos(a) * r, center.y + Math.sin(a) * r, WAVE_SPAWN_EDGE_MARGIN);
 }
 
+// 난이도 배율 (game.run - 보통이면 1 = 기본 수치)
+const diffOpts = () => ({ hpMul: game.run.hpMul, dmgMul: game.run.dmgMul });
+
 export function startNextWave() {
   game.wave++;
-  game.hero.maxWave = Math.max(game.hero.maxWave || 0, game.wave); // 맵 선택 화면의 시작 웨이브 상한
   game.waveBannerTimer = 1.6;
   if (game.wave === BOSS_WAVE) {
     const c = pickPackCenter();
-    game.cows.push(new Monster(1.0, 'boss', { pos: c, hunt: true }));
-    for (let i = 0; i < 4; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, 'normal', { pos: packPoint(c), hunt: true }));
+    game.cows.push(new Monster(1.0, 'boss', { pos: c, hunt: true, ...diffOpts() }));
+    for (let i = 0; i < 4; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, 'normal', { pos: packPoint(c), hunt: true, ...diffOpts() }));
     return;
   }
   const size = 6 + game.wave * 4; // 웨이브가 지날수록 순차적으로 마리 수 증가 (난이도 상향)
   const packs = WAVE_PACKS_MIN + Math.floor(Math.random() * (WAVE_PACKS_MAX - WAVE_PACKS_MIN + 1));
   const centers = Array.from({ length: packs }, () => pickPackCenter());
   for (let i = 0; i < size; i++) {
-    game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind(), { pos: packPoint(centers[i % packs]), hunt: true }));
+    game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind(), { pos: packPoint(centers[i % packs]), hunt: true, ...diffOpts() }));
   }
 }

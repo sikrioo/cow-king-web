@@ -11,7 +11,7 @@ import { giveStarterGear, giveTestStash, unarmedStats, recalcGearStats } from '.
 import { emptySpellCooldowns } from './systems/sorcSkills.js';
 import { emptyResist, emptyDot } from './systems/elements.js';
 import { resetSkillLevels } from './systems/levelCards.js';
-import { beginRun, clearWorld, maxStartWave } from './systems/mapRun.js';
+import { beginRun, clearWorld } from './systems/mapRun.js';
 import { floatText } from './systems/fx.js';
 import { setMap } from './world/arena.js';
 import { syncSlotLabels } from './ui/dom.js';
@@ -60,7 +60,6 @@ export function newCharacter() {
   h.slot1 = cls.slots[0];
   h.slot2 = cls.slots[1];
   h.mapRuns = {}; // 맵·난이도별 입장 횟수 (systems/mapRun.runKey)
-  h.maxWave = 0;  // 목장에서 도달한 웨이브 (시작 웨이브 선택 상한)
   ui.identifyingItem = null;
   ui.identifyTimer = 0;
   ui.selectedInvIndex = null;
@@ -71,7 +70,6 @@ export function newCharacter() {
   ui.invToast = null;
   ui.invReveal = null;
   ui.hubMap = MAP_ORDER[0];
-  ui.hubWave = 1;
   ui.hubDifficulty = DIFFICULTY_ORDER[0];
 }
 
@@ -147,7 +145,7 @@ function clearInput() {
   ui.moveMarker = null;
 }
 
-// 맵 입장 (인스턴스: 매번 새로). opts = { startWave } (목장) / { difficulty } (파밍 맵)
+// 맵 입장 (인스턴스: 매번 새로). opts = { difficulty }
 export function enterMap(mapId, opts = {}) {
   clearWorld();
   game.paused = false;
@@ -184,7 +182,6 @@ export function goHub() {
   game.impactFlash = 0;
   clearInput();
   setInventoryOpen(false);
-  ui.hubWave = Math.min(ui.hubWave || 1, maxStartWave(isDevMode()));
   game.gameState = 'hub';
 }
 
@@ -204,8 +201,7 @@ export function startFromTitle() {
 
 // 맵 선택 화면에서 고른 맵으로 입장
 export function enterSelectedMap() {
-  const def = MAPS[ui.hubMap];
-  enterMap(ui.hubMap, def.mode === 'farm' ? { difficulty: ui.hubDifficulty } : { startWave: ui.hubWave });
+  enterMap(ui.hubMap, { difficulty: ui.hubDifficulty });
 }
 
 // 플레이 중이 아닐 때 '행동' 입력(Space/클릭/버튼): 타이틀 → 시작, 맵 선택 → 입장, 죽음/승리 화면 → 맵 선택
@@ -232,11 +228,8 @@ export function hubCycleMap(dir) {
   const i = MAP_ORDER.indexOf(ui.hubMap);
   ui.hubMap = MAP_ORDER[(i + dir + MAP_ORDER.length) % MAP_ORDER.length];
 }
+// 난이도 바꾸기 (목장·파밍 맵 공통)
 export function hubChangeOption(dir) {
-  if (MAPS[ui.hubMap].mode === 'farm') {
-    const i = DIFFICULTY_ORDER.indexOf(ui.hubDifficulty);
-    ui.hubDifficulty = DIFFICULTY_ORDER[Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, i + dir))];
-  } else {
-    ui.hubWave = Math.max(1, Math.min(maxStartWave(isDevMode()), (ui.hubWave || 1) + dir));
-  }
+  const i = DIFFICULTY_ORDER.indexOf(ui.hubDifficulty);
+  ui.hubDifficulty = DIFFICULTY_ORDER[Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, i + dir))];
 }

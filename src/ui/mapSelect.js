@@ -6,8 +6,7 @@ import { MAPS, MAP_ORDER } from '../data/maps.js';
 import { DIFFICULTY } from '../data/difficulty.js';
 import { CLASSES } from '../data/classes.js';
 import { MAX_LEVEL } from '../data/balance.js';
-import { isDevMode } from '../config.js';
-import { maxStartWave, runKey } from '../systems/mapRun.js';
+import { runKey } from '../systems/mapRun.js';
 
 const IMMUNE_NAME = { phys: '물리', fire: '화염', cold: '냉기', lightning: '번개', poison: '독' };
 
@@ -31,8 +30,7 @@ function button(x, y, w, h, text, extra, style = {}) {
 // 이 맵·지금 옵션의 입장 횟수 (파밍 회차)
 function runCount(id) {
   const def = MAPS[id];
-  const diff = def.mode === 'farm' ? ui.hubDifficulty : 'normal';
-  return (game.hero.mapRuns && game.hero.mapRuns[runKey(id, diff)]) || 0;
+  return (game.hero.mapRuns && game.hero.mapRuns[runKey(id, ui.hubDifficulty)]) || 0;
 }
 
 export function drawMapSelect(t) {
@@ -95,17 +93,17 @@ export function drawMapSelect(t) {
   ctx.textAlign = 'center';
   ctx.font = '11px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.fillText('Space/Enter 입장 · ↑↓ 맵 · ←→ 옵션 · I 장비', W / 2, y + bh + 22);
+  ctx.fillText('Space/Enter 입장 · ↑↓ 맵 · ←→ 난이도 · I 장비', W / 2, y + bh + 22);
   button(x + pw - 110, y + bh + 34, 110, 28, '새 캐릭터', { action: 'title' }, { font: '12px sans-serif', color: 'rgba(255,255,255,0.75)' });
   ctx.restore();
 }
 
-// 고른 맵의 옵션: 목장 = 시작 웨이브, 파밍 = 난이도(+ 효과 요약)
+// 고른 맵의 옵션: 난이도(+ 효과 요약) - 목장·파밍 맵 공통
 function drawOptions(def, x, y, w) {
-  const farm = def.mode === 'farm';
-  const label = farm ? '난이도' : '시작 웨이브';
-  const value = farm ? DIFFICULTY[ui.hubDifficulty].label : `${ui.hubWave}`;
-  const color = farm ? DIFFICULTY[ui.hubDifficulty].color : '#ffe066';
+  const d = DIFFICULTY[ui.hubDifficulty];
+  const label = '난이도';
+  const value = d.label;
+  const color = d.color;
   ctx.font = '12px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.fillText(def.desc, x + 20, y + 12);
@@ -120,12 +118,7 @@ function drawOptions(def, x, y, w) {
   ctx.textAlign = 'left';
   ctx.font = '11px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  if (farm) {
-    const d = DIFFICULTY[ui.hubDifficulty];
-    ctx.fillText(`권장 Lv.${d.level}`, x + 282, oy + 17);
-    const immune = d.immunePack > 0 ? ` · 면역 무리 ${Math.round(d.immunePack * 100)}% (${def.immune.map((k) => IMMUNE_NAME[k]).join('·')})` : '';
-    ctx.fillText(`체력 ×${d.hp} · 공격 ×${d.dmg} · 경험치 ×${d.exp} · 장비 ×${d.gearDrop} · 높은 등급 ×${d.rarity}${immune}`, x + 20, oy + 46, w - 34);
-  } else {
-    ctx.fillText(`최고 ${maxStartWave(isDevMode())}웨이브까지 고를 수 있음`, x + 282, oy + 17);
-  }
+  ctx.fillText(`권장 Lv.${d.level}`, x + 282, oy + 17);
+  const immune = def.immune && d.immunePack > 0 ? ` · 면역 무리 ${Math.round(d.immunePack * 100)}% (${def.immune.map((k) => IMMUNE_NAME[k]).join('·')})` : '';
+  ctx.fillText(`체력 ×${d.hp} · 공격 ×${d.dmg} · 경험치 ×${d.exp} · 장비 ×${d.gearDrop} · 높은 등급 ×${d.rarity}${immune}`, x + 20, oy + 46, w - 34);
 }

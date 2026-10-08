@@ -177,7 +177,7 @@ export function drawHUD() {
   ctx.textAlign = 'center';
   const remaining = game.cows.filter((c) => c.state !== 'dead').length;
   if (game.run.mode === 'farm') ctx.fillText(`${MAPS[game.run.mapId].name} (${DIFFICULTY[game.run.difficulty].label})  ·  남은 카우 ${remaining}/${game.run.total}`, canvas.width / 2, expY + 30);
-  else ctx.fillText(`웨이브 ${game.wave}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
+  else ctx.fillText(`웨이브 ${game.wave}${game.run.difficulty !== 'normal' ? ` (${DIFFICULTY[game.run.difficulty].label})` : ''}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
   ctx.textAlign = 'left';
 
   const mm = minimapSize();

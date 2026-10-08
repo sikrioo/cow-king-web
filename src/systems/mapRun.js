@@ -3,14 +3,12 @@
 // 입장/나가기 흐름(상태 전환)은 game.js의 enterMap/goHub
 import { MAPS } from '../data/maps.js';
 import { DIFFICULTY } from '../data/difficulty.js';
-import { FIRST_WAVE_DELAY, BOSS_WAVE } from '../data/balance.js';
+import { FIRST_WAVE_DELAY } from '../data/balance.js';
 import { World, Body, world } from '../core/physics.js';
 import { game } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { setMap, PEN, clampToPen, randomPointInPen } from '../world/arena.js';
 import { floatText } from './fx.js';
-
-const NORMAL_RUN = { hpMul: 1, dmgMul: 1, expMul: 1, gearDropMul: 1, rarityBoost: 1 };
 
 // 맵 안의 것 전부 치움 (몬스터 바디, 바닥 아이템, 이펙트)
 export function clearWorld() {
@@ -31,23 +29,18 @@ export function heroStartPoint(def) {
   return { x: PEN.x + PEN.size * def.start.x, y: PEN.y + PEN.size * def.start.y };
 }
 
-// 시작 웨이브로 고를 수 있는 최대값: 이 캐릭터가 도달한 웨이브 (처음엔 1)
-export function maxStartWave(devAll = false) {
-  return devAll ? BOSS_WAVE : Math.max(1, Math.min(BOSS_WAVE, game.hero.maxWave || 0));
-}
-
 export const runKey = (mapId, difficulty) => `${mapId}:${difficulty}`;
 
-// 입장: 맵 바꾸기 → 주인공 시작 위치 → (웨이브) 시작 웨이브 / (파밍) 무리 배치. opts = { startWave, difficulty }
+// 입장: 맵 바꾸기 → 난이도 배율 → 주인공 시작 위치 → (웨이브) 1웨이브부터 / (파밍) 무리 배치. opts = { difficulty }
 export function beginRun(mapId, opts = {}) {
   const def = MAPS[mapId] || MAPS.ranch;
   setMap(mapId);
   const farm = def.mode === 'farm';
-  const diffKey = farm && DIFFICULTY[opts.difficulty] ? opts.difficulty : 'normal';
+  const diffKey = DIFFICULTY[opts.difficulty] ? opts.difficulty : 'normal';
   const d = DIFFICULTY[diffKey];
   game.run = {
     mapId, mode: def.mode, difficulty: diffKey, cleared: false, total: 0,
-    ...(farm ? { hpMul: d.hp, dmgMul: d.dmg, expMul: d.exp, gearDropMul: d.gearDrop, rarityBoost: d.rarity } : NORMAL_RUN)
+    hpMul: d.hp, dmgMul: d.dmg, expMul: d.exp, gearDropMul: d.gearDrop, rarityBoost: d.rarity
   };
   const key = runKey(mapId, diffKey);
   game.hero.mapRuns[key] = (game.hero.mapRuns[key] || 0) + 1; // 같은 맵 몇 번째인지 (파밍 회차)
@@ -64,8 +57,7 @@ export function beginRun(mapId, opts = {}) {
     populateFarm(def, d, p);
     game.run.total = game.cows.length;
   } else {
-    const start = Math.max(1, Math.min(BOSS_WAVE, opts.startWave || 1));
-    game.wave = start - 1;
+    game.wave = 0; // 난이도마다 1웨이브부터
     game.waveTransition = FIRST_WAVE_DELAY; // 시작 직후 적이 튀어나오지 않도록 준비 시간
     game.waveBannerTimer = 0;
   }
@@ -98,7 +90,7 @@ function packCenters(def, start) {
 // 파밍 맵 몬스터 배치: 무리마다 종류를 비중대로 섞고, 난이도에 따라 무리 단위로 면역 하나
 function populateFarm(def, d, start) {
   packCenters(def, start).forEach((c, i) => {
-    const resist = Math.random() < d.immunePack ? { [def.immune[Math.floor(Math.random() * def.immune.length)]]: 1 } : null;
+    const resist = def.immune && Math.random() < d.immunePack ? { [def.immune[Math.floor(Math.random() * def.immune.length)]]: 1 } : null;
     const base = { hpMul: d.hp, dmgMul: d.dmg, home: c, ...(resist ? { resist } : {}) };
     const [lo, hi] = def.packSize;
     const n = lo + Math.floor(Math.random() * (hi - lo + 1));

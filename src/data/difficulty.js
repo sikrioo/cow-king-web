@@ -1,4 +1,4 @@
-// 파밍 맵 난이도 (맵 선택 화면에서 고름). 웨이브 모드(목장)는 난이도 없음 = normal 수치
+// 맵 난이도 (맵 선택 화면에서 고름, 목장·파밍 맵 공통). 면역 무리는 맵에 immune 종류가 있을 때만 (목장은 없음)
 //   hp/dmg: 몬스터 체력·공격력 배율, exp: 경험치 배율, gearDrop: 장비 드랍 확률 배율(최대 1),
 //   rarity: 장비 등급 굴림에서 일반 외 등급 비중 배율, immunePack: 무리가 면역을 가질 확률, level: 권장 레벨(제한 아님)
 export const DIFFICULTY_ORDER = ['normal', 'hard', 'extreme'];

@@ -100,7 +100,7 @@ it('다 잡으면 클리어, T 두 번 = 맵 선택으로 (캐릭터·가방·�
   } finally { env.restore(); }
 });
 
-it('목장: 도달한 웨이브까지만 시작 웨이브로 고름, 죽으면 맵 선택으로 (캐릭터 유지)', async () => {
+it('목장: 난이도를 골라 1웨이브부터 (몬스터 체력 배율, 면역 무리 없음), 죽으면 맵 선택으로 (캐릭터 유지)', async () => {
   const env = installBrowserEnv({ seed: 2 });
   try {
     const m = await boot();
@@ -108,15 +108,17 @@ it('목장: 도달한 웨이브까지만 시작 웨이브로 고름, 죽으면 �
     const { hitPlayer } = await import('../src/systems/combat.js');
     m.resetGame();
     m.goHub();
-    m.hubChangeOption(1);
-    // 개발자 모드(테스트)는 전부 열림 → 상한은 maxStartWave(true)
-    expect(m.ui.hubWave).toBe(2);
-    expect(m.maxStartWave(false)).toBe(1);
+    m.hubChangeOption(1); m.hubChangeOption(1); m.hubChangeOption(1); // 끝에서 멈춤
+    expect(m.ui.hubDifficulty).toBe('extreme');
     m.enterSelectedMap();
-    expect(m.game.run.mode).toBe('wave');
+    expect(m.game.run).toMatchObject({ mapId: 'ranch', mode: 'wave', difficulty: 'extreme', hpMul: m.DIFFICULTY.extreme.hp });
+    expect(m.game.wave).toBe(0);
     startNextWave();
-    expect(m.game.wave).toBe(2);
-    expect(m.maxStartWave(false)).toBe(2);
+    expect(m.game.wave).toBe(1);
+    const c = m.game.cows[0];
+    expect(c.maxHp).toBe(Math.round(60 * m.DIFFICULTY.extreme.hp));
+    expect(m.game.cows.some((k) => k.resist)).toBe(false); // 목장엔 면역 무리 없음 (전사가 막히지 않게)
+    expect(m.game.hero.mapRuns['ranch:extreme']).toBe(1);
 
     const lv = m.game.hero.level;
     m.game.hero.invuln = 0;
@@ -125,8 +127,9 @@ it('목장: 도달한 웨이브까지만 시작 웨이브로 고름, 죽으면 �
     env.key(' '); env.key(' ', false);
     expect(m.game.gameState).toBe('hub');
     expect(m.game.hero.level).toBe(lv);
-    env.key(' '); env.key(' ', false); // 다시 입장 → 체력 가득
+    env.key(' '); env.key(' ', false); // 다시 입장 → 1웨이브부터, 체력 가득
     expect(m.game.gameState).toBe('playing');
+    expect(m.game.wave).toBe(0);
     expect(m.game.hero.alive).toBe(true);
     expect(m.game.hero.hp).toBe(m.game.hero.maxHp + m.game.hero.gearMaxHp);
   } finally { env.restore(); }
