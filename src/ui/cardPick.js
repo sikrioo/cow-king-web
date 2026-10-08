@@ -2,7 +2,7 @@
 // 넓은 화면은 가로 3장, 좁은 화면(모바일 세로)은 세로로 쌓음. 클릭 영역은 그릴 때마다 ui.cardRects / ui.cardRerollRect에 다시 등록
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
-import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT } from '../data/skills.js';
+import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT, SKILL_STATS, SKILL_TYPE_LABEL } from '../data/skills.js';
 import { FILLER_CARDS, UPGRADE_CARDS, CARD_RARITY, UPGRADE_MAX_PICKS } from '../data/cards.js';
 
 const TYPE_STYLE = {
@@ -11,13 +11,15 @@ const TYPE_STYLE = {
   filler:   { tag: '보급', color: '#c9c3e8' }
 };
 
-// 레벨업 보너스 한 줄: "피해 +15% → +30%" (Lv1 대비 누적)
+// 레벨업 보너스 한 줄: "피해 +15% → +30%" (Lv1 대비 누적). add면 기본값에 더한 실제 값("체력 증가 36% → 42%"), neg면 감소("-8%")
 function bonusLines(card) {
   const up = SKILL_LEVEL_UP[card.id] || {};
   return Object.keys(up).map((key) => {
     const st = SKILL_LEVEL_STAT[key];
     const fmt = (lv) => {
       const v = up[key] * Math.max(0, lv - 1);
+      if (st.add) return `${Math.round((SKILL_STATS[card.id][key] + v) * 100)}%`;
+      if (st.neg) return `-${Math.round(v * 100)}%`;
       return st.pct ? `+${Math.round(v * 100)}%` : `+${v}`;
     };
     return `${st.label} ${fmt(card.from)} → ${fmt(card.to)}`;
@@ -34,7 +36,9 @@ export function formatUpgrade(unit, v) {
 // 카드 종류 표시 (강화 카드는 등급 이름·색)
 function cardStyle(card) {
   if (card.type === 'upgrade') { const r = CARD_RARITY[card.rarity]; return { tag: `강화 · ${r.label}`, color: r.color }; }
-  return TYPE_STYLE[card.type];
+  const st = TYPE_STYLE[card.type];
+  const meta = SKILL_META[card.id];
+  return meta ? { tag: `${st.tag} · ${SKILL_TYPE_LABEL[meta.type]}`, color: st.color } : st; // 스킬 카드는 분류(물리/마법/공통)도
 }
 
 function cardText(card) {

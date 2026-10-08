@@ -30,6 +30,17 @@ export function bindHoldSlot(slotId, slotNum, actions) {
   el.addEventListener('pointerleave', release);
 }
 
+// 공통 슬롯 버튼: 누를 때 한 번 시전 (비어 있으면 아무것도 안 함)
+function bindCommonSlot(actions) {
+  document.getElementById('slot3').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (game.gameState !== 'playing') { actions.restart(); return; }
+    if (game.paused || game.cardOffer || !game.hero.slot3) return;
+    SKILLS[game.hero.slot3].try();
+  });
+}
+
 export function bindCycle(id, slotNum, actions) {
   document.getElementById(id).addEventListener('pointerdown', (e) => {
     e.preventDefault();
@@ -58,10 +69,22 @@ export const cdSlot1 = document.querySelector('#slot1 .cd');
 
 export const cdSlot2 = document.querySelector('#slot2 .cd');
 
+const slot3El = document.getElementById('slot3');
+const cdSlot3 = document.querySelector('#slot3 .cd');
+const slot3Label = document.getElementById('slot3-label');
+let slot3Shown; // 이름이 바뀔 때만 DOM 갱신
+
 export function updateSkillButtonsUI() {
   const s1 = SKILLS[game.hero.slot1], s2 = SKILLS[game.hero.slot2];
   cdSlot1.style.height = `${Math.max(0, Math.min(1, s1.cd() / s1.cdMax())) * 100}%`;
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
+  const s3 = game.hero.slot3 ? SKILLS[game.hero.slot3] : null;
+  if (cdSlot3) cdSlot3.style.height = s3 ? `${Math.max(0, Math.min(1, s3.cd() / s3.cdMax())) * 100}%` : '0%';
+  if (slot3El && slot3Shown !== game.hero.slot3) {
+    slot3Shown = game.hero.slot3;
+    if (slot3Label) slot3Label.textContent = s3 ? s3.label : '공통';
+    slot3El.classList.toggle('empty', !s3);
+  }
 }
 
 // HTML 버튼 연결. actions: { restart, pressAction, setPaused, toggleHelp } - game.js
@@ -70,6 +93,7 @@ export function bindDomButtons(actions) {
   bindHoldSlot('slot2', 2, actions);
   bindCycle('slot1-cycle', 1, actions);
   bindCycle('slot2-cycle', 2, actions);
+  bindCommonSlot(actions);
   ['heal', 'mana'].forEach((kind) => {
     document.getElementById(`pot-${kind}`).addEventListener('pointerdown', (e) => {
       e.preventDefault();

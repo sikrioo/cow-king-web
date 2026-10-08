@@ -41,6 +41,10 @@
   }
   #slot1 { background:rgba(220,70,60,0.35); }
   #slot2 { background:rgba(127,212,224,0.35); }
+  /* 공통 슬롯(F): 물약 버튼 왼쪽 - 좁은 화면에서도 조이스틱과 안 겹치게 */
+  #slot3 { position:fixed; right:166px; bottom:116px; width:62px; height:62px; background:rgba(160,140,255,0.35); }
+  #slot3 .label { font-size:11px; }
+  #slot3.empty { opacity:0.4; }
   #potion-buttons { position:fixed; right:18px; bottom:116px; display:flex; gap:12px; }
   .potion-btn {
     position:relative; width:62px; height:62px; border-radius:50%;
@@ -70,6 +74,7 @@
   #btn-pause { left:8px; width:38px; }
   #btn-full { right:94px; width:38px; font-size:12px; }
   #btn-pause:active, #btn-full:active { background:rgba(255,255,255,.14); }
+  body.title-mode #slot3,
   body.title-mode #joystick-base, body.title-mode #action-buttons, body.title-mode #potion-buttons,
   body.title-mode #btn-inv, body.title-mode #btn-pause { opacity:0; pointer-events:none; }
 

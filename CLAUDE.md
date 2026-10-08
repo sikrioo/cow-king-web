@@ -39,6 +39,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 캐릭터(직업): `data/classes.js`(체력·마나·스킬 목록·시작 슬롯·기본 공격·생김새). 시작 화면 카드로 고름(`ui.selectedClass`), `resetGame`의 `applyClass`가 적용. 기본 공격은 `skills.tryBasicAttack`(전사 근접 / 마법사 마력탄).
 - 마법사 스킬: 수치 `data/skills.js`의 `SPELLS`, 동작 `systems/sorcSkills.js`, 등록 `systems/skills.js`의 `SKILLS`. 주인공 → 몬스터 원소 피해는 `systems/elementCombat.js`(`damageCowPacket`: 몬스터 저항 `resist`, 화상/중독/둔화). 투사체 `team: 'hero'`면 몬스터를 맞힘.
 - 속도 규칙: 기본 공격(전사 근접/마법사 마력탄)은 공격속도(`util.attackSpeedMul`), 그 밖의 스킬은 시전속도(`util.castSpeedMul`, 대기시간만 줄임 - 지속/동작 시간은 그대로). 둘 다 상한 2배.
+- 스킬 분류: `data/skills.js`의 `SKILL_META[id].type` = physical(전사) / magic(마법사) / common(모든 캐릭터, `COMMON_SKILLS`, 공통 슬롯 F = `hero.slot3`).
+  마법 수치는 `SPELLS`, 그 밖의 새 스킬 수치는 `SKILL_STATS`(대기시간은 `hero.spellCd`). 물리 보조 `systems/physSkills.js`(투지), 공통 `systems/commonSkills.js`(순간이동). 등록은 `systems/skills.js`의 `SKILLS`.
 - 스킬 해금 규칙: `systems/progression.js`의 `isSkillUnlocked` 한 곳(= 스킬 레벨 1 이상).
 - 레벨업 카드(뱀서식): 레벨업마다 카드 3장 중 하나 - 새 스킬 배우기/스킬 레벨 +1/강화 카드(능력치·원소, 등급 일반/희귀/전설)/채우기 카드.
   강화 카드 합계는 `hero.cardBonus` → 능력치는 `gear.recalcGearStats`, 원소 피해·화상·둔화는 `elementCombat.damageCowPacket`이 읽음. 동작 `systems/levelCards.js`, 수치 `data/cards.js`, 화면 `ui/cardPick.js`.

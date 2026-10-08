@@ -1,5 +1,5 @@
 // 캐릭터(직업): 시작 수치·스킬 목록·기본 슬롯·기본 공격·생김새. 시작 화면에서 고름(ui.selectedClass)
-//   skills: 슬롯 전환(Q/R) 순서 = 이 캐릭터가 쓸 수 있는 스킬, slots: 시작 슬롯1/2, basic: 기본 공격(적 클릭/Shift+클릭)
+//   skills: 슬롯 전환(Q/R) 순서 = 이 캐릭터가 쓸 수 있는 스킬(공통 스킬은 data/skills.js COMMON_SKILLS → 공통 슬롯), slots: 시작 슬롯1/2, basic: 기본 공격(적 클릭/Shift+클릭)
 //   look: heroSprites가 쓰는 색 (몸 그라데이션 3단, 테두리, 목도리 2색, 가슴 보석, 눈, 손)
 import { HERO_BASE_HP, MAX_MANA, MANA_REGEN } from './balance.js';
 
@@ -8,7 +8,7 @@ export const CLASSES = {
   warrior: {
     label: '전사', desc: '근접 무기 · 높은 체력',
     hp: HERO_BASE_HP, mana: MAX_MANA, manaRegen: MANA_REGEN,
-    skills: ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash'], slots: ['attack', 'warcry'],
+    skills: ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash', 'fortify'], slots: ['attack', 'warcry'],
     basic: 'melee', starterGear: true, staff: false,
     look: { body: ['#7a8088', '#2e3137', '#101216'], trim: '#d5d0c4', scarf: ['#5a1721', '#862534'], gem: '#8a2331', eyes: '#ffb65c', hand: '#a3abb4' }
   },

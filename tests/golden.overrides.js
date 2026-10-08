@@ -21,7 +21,10 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.orb': 6,
   // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 10~25% + 스탯 포인트 3%)
   'exact.statDef.castSpeed': { label: '시전속도', min: 0.10, max: 0.25, fmtAtMax: '+25%' },
-  'exact.progression.perPoint.castSpeed': 0.03
+  'exact.progression.perPoint.castSpeed': 0.03,
+  // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
+  'exact.progression.skillUnlockLevel.fortify': 3,
+  'exact.progression.skillUnlockLevel.teleport': 3
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

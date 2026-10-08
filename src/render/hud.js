@@ -38,6 +38,7 @@ export function drawComboCounter(ctx) {
 
 export function drawBuffIcons(ctx) {
   const buffs = [];
+  if (game.hero.fortifyTimer > 0) buffs.push({ color: '#ff6b6b', frac: game.hero.fortifyTimer / game.hero.fortifyMax }); // 투지
   if (game.hero.vitalityTimer > 0) buffs.push({ color: ITEM_STYLE.vitality.color, frac: game.hero.vitalityTimer / VITALITY_DURATION });
   if (game.hero.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: game.hero.speedBuffTimer / SPEED_BUFF_DURATION });
   if (game.hero.attackBuffTimer > 0) buffs.push({ color: ITEM_STYLE.attack.color, frac: game.hero.attackBuffTimer / ATTACK_BUFF_DURATION });

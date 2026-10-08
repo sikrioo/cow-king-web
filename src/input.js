@@ -73,6 +73,7 @@ export const KEY_INTENTS = {
   '`': 'devPanel',       // 개발자 모드: 패널 열기/닫기
   ' ': 'slot1',          // 길게 누르면 반복 시전
   e: 'slot2',
+  f: 'slot3',            // 공통 슬롯
   q: 'cycleSlot1',       // 슬롯 스킬 전환
   r: 'cycleSlot2',
   i: 'toggleMenu',

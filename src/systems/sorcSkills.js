@@ -1,6 +1,6 @@
 // 마법사 스킬: 마력탄(기본 공격), 화염구, 서리 노바, 연쇄 번개, 얼음 보주. 수치는 data/skills.js의 SPELLS
 // 방향은 주인공이 바라보는 방향(PC는 시전 직전에 커서 쪽으로 돌아봄 - skills.aimAtCursor)
-import { SPELLS, SPELL_LEVEL_SCALE } from '../data/skills.js';
+import { SPELLS, SPELL_LEVEL_SCALE, SKILL_STATS } from '../data/skills.js';
 import { game } from '../state.js';
 import { attackSpeedMul, castSpeedMul, skillMul, skillBonus } from '../util.js';
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
@@ -14,8 +14,9 @@ export function spellDamage(base, id) {
   return Math.round(base * (1 + SPELL_LEVEL_SCALE * (game.hero.level - 1)) * skillMul(game.hero, id, 'damage'));
 }
 
+// 스킬별 대기시간 (마법 + 투지·순간이동 같은 SKILL_STATS 스킬)
 export function emptySpellCooldowns() {
-  return Object.fromEntries(Object.keys(SPELLS).map((k) => [k, 0]));
+  return Object.fromEntries([...Object.keys(SPELLS), ...Object.keys(SKILL_STATS)].map((k) => [k, 0]));
 }
 
 export function updateSpellCooldowns(dt) {

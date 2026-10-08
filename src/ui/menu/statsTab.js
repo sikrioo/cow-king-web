@@ -6,7 +6,7 @@ import { skillLevel } from '../../util.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
-import { SKILLS, classSkills } from '../../systems/skills.js';
+import { SKILLS, learnableSkills } from '../../systems/skills.js';
 import { UPGRADE_CARDS, UPGRADE_ORDER } from '../../data/cards.js';
 import { formatUpgrade } from '../cardPick.js';
 
@@ -70,7 +70,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   ry += 18;
   const skillColW = (w - 32) / 2;
   ctx.font = '11px sans-serif';
-  [...classSkills()].sort((a, b) => SKILL_UNLOCK_LEVEL[a] - SKILL_UNLOCK_LEVEL[b]).forEach((id, i) => {
+  learnableSkills().sort((a, b) => SKILL_UNLOCK_LEVEL[a] - SKILL_UNLOCK_LEVEL[b]).forEach((id, i) => {
     const cx = x + 16 + (i % 2) * skillColW;
     const cy = ry + Math.floor(i / 2) * 17;
     const ok = isSkillUnlocked(id);
@@ -83,7 +83,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.fillText(ok ? `Lv.${lv}/${SKILL_MAX_LEVEL}` : `미습득 (Lv.${SKILL_UNLOCK_LEVEL[id]}~)`, cx + skillColW - 12, cy);
   });
   ctx.textAlign = 'left';
-  drawCardUpgrades(ctx, x, ry + Math.ceil(classSkills().length / 2) * 17 + 8, w);
+  drawCardUpgrades(ctx, x, ry + Math.ceil(learnableSkills().length / 2) * 17 + 8, w);
 }
 
 // 고른 강화 카드 합계 (예: "화염 피해 +24% · 최대 체력 +80"), 폭에 맞춰 줄바꿈

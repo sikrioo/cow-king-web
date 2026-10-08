@@ -4,7 +4,7 @@
 import {
   CARD_CHOICES, CARD_REROLLS, CARD_WEIGHT, FILLER_CARDS, FILLER_ORDER, CARD_RARITY, CARD_RARITY_ORDER, UPGRADE_CARDS, UPGRADE_ORDER, UPGRADE_MAX_PICKS
 } from '../data/cards.js';
-import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../data/skills.js';
+import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL, COMMON_SKILLS } from '../data/skills.js';
 import { POTION_MAX } from '../data/balance.js';
 import { CLASSES } from '../data/classes.js';
 import { game, input } from '../state.js';
@@ -52,7 +52,7 @@ function openNextOffer() {
 function skillCardPool() {
   const h = game.hero;
   const pool = [];
-  (CLASSES[h.classKey] || CLASSES.warrior).skills.forEach((id) => {
+  [...(CLASSES[h.classKey] || CLASSES.warrior).skills, ...COMMON_SKILLS].forEach((id) => {
     const lv = skillLevel(h, id);
     if (lv === 0 && h.level >= (SKILL_UNLOCK_LEVEL[id] || 1)) pool.push({ type: 'newSkill', id, from: 0, to: 1, weight: CARD_WEIGHT.newSkill });
     else if (lv > 0 && lv < SKILL_MAX_LEVEL) pool.push({ type: 'skillUp', id, from: lv, to: lv + 1, weight: CARD_WEIGHT.skillUp });
@@ -115,7 +115,10 @@ function applyCard(card) {
   if (card.type === 'newSkill' || card.type === 'skillUp') {
     h.skillLevels[card.id] = card.to;
     const label = SKILL_META[card.id].label;
-    if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
+    if (card.type === 'newSkill' && SKILL_META[card.id].type === 'common') {
+      if (!h.slot3) h.slot3 = card.id; // 공통 슬롯(F)이 비어 있으면 바로 넣음
+      say(`새 스킬: ${label} (F)`, '#9be39b');
+    } else if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
     else say(`${label} Lv.${card.to}`, '#ffe066');
     spawnHitParticles(h.x, h.y, '#ffe066', 10);
     return;

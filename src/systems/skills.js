@@ -8,7 +8,7 @@ import {
   SMASH_DAMAGE_BONUS
 } from '../data/balance.js';
 import { PALETTE } from '../data/palette.js';
-import { SKILL_META, SPELLS } from '../data/skills.js';
+import { SKILL_META, SPELLS, SKILL_STATS, COMMON_SKILLS } from '../data/skills.js';
 import { CLASSES } from '../data/classes.js';
 import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
 import { Body } from '../core/physics.js';
@@ -16,11 +16,13 @@ import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
+import { tryFortify } from './physSkills.js';
+import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
 import { screenToWorld } from '../world/camera.js';
-import { castSpeedMul, attackSpeedMul, skillMul } from '../util.js';
+import { castSpeedMul, attackSpeedMul, skillMul, skillBonus } from '../util.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
@@ -253,12 +255,19 @@ export const SKILLS = {
   fireball:  { ...SKILL_META.fireball,  try: () => tryFireballSpell(), cd: () => game.hero.spellCd.fireball,  cdMax: () => SPELLS.fireball.cooldown * castSpeedMul(game.hero) },
   frostnova: { ...SKILL_META.frostnova, try: () => tryFrostNova(),     cd: () => game.hero.spellCd.frostnova, cdMax: () => SPELLS.frostnova.cooldown * castSpeedMul(game.hero) },
   chain:     { ...SKILL_META.chain,     try: () => tryChain(),         cd: () => game.hero.spellCd.chain,     cdMax: () => SPELLS.chain.cooldown * castSpeedMul(game.hero) },
-  orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown * castSpeedMul(game.hero) }
+  orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown * castSpeedMul(game.hero) },
+  // 물리 보조 (systems/physSkills.js), 공통 (systems/commonSkills.js)
+  fortify:   { ...SKILL_META.fortify,   try: () => tryFortify(),       cd: () => game.hero.spellCd.fortify,   cdMax: () => SKILL_STATS.fortify.cooldown * castSpeedMul(game.hero) },
+  teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
 
-// 지금 캐릭터의 스킬 목록 (슬롯 전환 순서)
+// 지금 캐릭터의 스킬 목록 (슬롯1/2 전환 순서)
 export function classSkills() {
   return (CLASSES[game.hero.classKey] || CLASSES.warrior).skills;
+}
+// 배울 수 있는 스킬 전부 = 캐릭터 스킬 + 공통 스킬
+export function learnableSkills() {
+  return [...classSkills(), ...COMMON_SKILLS];
 }
 
 // 기본 공격 (적 클릭/Shift+클릭): 전사 = 근접 휘두르기, 마법사 = 마력탄
@@ -276,6 +285,7 @@ export function basicAttackReach(c) {
 }
 
 export function cycleSkillSlot(slotNum) {
+  if (slotNum === 3) { cycleCommonSlot(); return; }
   const key = slotNum === 1 ? 'slot1' : 'slot2';
   const otherKey = slotNum === 1 ? 'slot2' : 'slot1';
   const order = classSkills();
@@ -290,6 +300,13 @@ export function cycleSkillSlot(slotNum) {
   if (slotEl) slotEl.style.background = SKILLS[game.hero[key]].color;
 }
 
+// 공통 슬롯(F): 배운 공통 스킬 중 다음 것으로 (버튼 이름은 ui/dom.updateSkillButtonsUI가 매 프레임 맞춤)
+function cycleCommonSlot() {
+  const learned = COMMON_SKILLS.filter((id) => isSkillUnlocked(id));
+  if (!learned.length) return;
+  game.hero.slot3 = learned[(learned.indexOf(game.hero.slot3) + 1) % learned.length];
+}
+
 // PC(마우스를 쓴 적 있음): 시전 직전에 커서 쪽을 보게 함 → 공격/스킬이 커서 방향으로. 모바일은 바라보는 방향 그대로
 export function aimAtCursor() {
   if (!input.mouseScreen || !game.hero.alive) return;
@@ -300,8 +317,10 @@ export function aimAtCursor() {
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로
 export function trySlot(n) {
+  const id = n === 3 ? game.hero.slot3 : n === 2 ? game.hero.slot2 : game.hero.slot1;
+  if (!id) return; // 공통 슬롯이 아직 빔
   aimAtCursor();
-  SKILLS[n === 2 ? game.hero.slot2 : game.hero.slot1].try();
+  SKILLS[id].try();
 }
 
 export function updateSkillSlots() {

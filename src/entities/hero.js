@@ -85,6 +85,8 @@ export function createHero() {
     noManaWarn: 0,
     slot1: 'attack',
     slot2: 'warcry',
+    slot3: null, // 공통 슬롯(F) - 공통 스킬을 배우면 채워짐
+    fortifyTimer: 0, fortifyMax: 0, fortifyHp: 0, // 투지 (systems/physSkills.js)
     potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
     potionCd: { heal: 0, mana: 0 }, // 종류별 대기시간 (생명 마신 직후에도 마나는 바로 마실 수 있게)
     moveOffsetX: 0,
