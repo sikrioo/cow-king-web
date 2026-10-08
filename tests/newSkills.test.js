@@ -84,3 +84,14 @@ it('순간이동: 카드로 배우면 R로 슬롯2에 넣고, 바라보는 쪽 �
     expect(h.x).toBeLessThanOrEqual(m.PEN.x + m.PEN.size - h.r); // 벽 안쪽
   } finally { env.restore(); }
 });
+
+it('투지 표시: 걸려 있는 동안 그리기(체력 구슬 링·발밑 오라)에서 예외 없음', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    m.tryFortify();
+    env.frame(30); // 그리기 포함
+    m.game.hero.fortifyTimer = 1.5; env.frame(10); // 끝나기 직전 깜빡임
+    expect(m.game.hero.fortifyTimer).toBeGreaterThan(0);
+  } finally { env.restore(); }
+});

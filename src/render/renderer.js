@@ -2,7 +2,7 @@
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { drawPen } from './arena.js';
-import { drawMoveMarker, drawAttackTargetMarker, drawHeroChill, drawMeteorMarkers, drawMeteorBalls, drawProjectiles, drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
+import { drawMoveMarker, drawAttackTargetMarker, drawHeroChill, drawHeroFortify, drawMeteorMarkers, drawMeteorBalls, drawProjectiles, drawParticles, drawHazards, drawLightningBolts, drawShockwaves, drawFloatTexts } from './fx.js';
 import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
@@ -46,6 +46,7 @@ export function render(t) {
   drawMoveMarker(ctx);
   drawAttackTargetMarker(ctx);
   drawHeroChill(ctx);
+  drawHeroFortify(ctx, t);
   drawHazards(ctx);
   drawMeteorMarkers(ctx);
   // 화면 밖 몬스터는 안 그림 - 그래서 몬스터 그림 코드는 게임 난수(Math.random)를 쓰면 안 됨 (화면 크기에 따라 결과가 달라짐)

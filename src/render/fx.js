@@ -1,5 +1,5 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
-import { hexToRgba } from '../util.js';
+import { hexToRgba, hash01 } from '../util.js';
 import { game, ui, input } from '../state.js';
 import { drawOrb, drawShard } from './iceFx.js';
 
@@ -167,6 +167,39 @@ export function drawHeroChill(ctx) {
   ctx.beginPath();
   ctx.ellipse(h.x, h.y + h.r * 0.7, h.r * 1.3, h.r * 0.55, 0, 0, Math.PI * 2);
   ctx.stroke();
+  ctx.restore();
+}
+
+// 투지(최대 체력 증가) 중: 발밑에 붉은 오라가 맥동하고 불티가 위로 올라감. 끝나기 2초 전부터 깜빡임
+// 불티 위치는 시간 t + hash01(결정적) - 게임 난수 안 씀
+export function drawHeroFortify(ctx, t) {
+  const h = game.hero;
+  if (!(h.fortifyTimer > 0) || !h.alive) return;
+  const ending = h.fortifyTimer < 2;
+  const blink = ending ? (Math.sin(t * 18) > 0 ? 1 : 0.35) : 1;
+  const pulse = 0.5 + Math.sin(t * 5) * 0.5;
+  ctx.save();
+  ctx.globalAlpha = (0.18 + pulse * 0.12) * blink;
+  ctx.fillStyle = '#ff5a3c';
+  ctx.beginPath();
+  ctx.ellipse(h.x, h.y + h.r * 0.7, h.r * (1.5 + pulse * 0.15), h.r * 0.65, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.85 * blink;
+  ctx.strokeStyle = '#ff8a4d';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.ellipse(h.x, h.y + h.r * 0.7, h.r * (1.35 + pulse * 0.2), h.r * (0.58 + pulse * 0.08), 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // 불티: 몸 둘레에서 위로 떠오르며 사라짐
+  ctx.fillStyle = '#ffb066';
+  for (let i = 0; i < 7; i++) {
+    const life = (t * 0.9 + hash01(i, 11, 3)) % 1;
+    const a = hash01(i, 12, 3) * Math.PI * 2;
+    const px = h.x + Math.cos(a) * h.r * 1.1;
+    const py = h.y + h.r * 0.5 - life * 46;
+    ctx.globalAlpha = (1 - life) * 0.9 * blink;
+    ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+  }
   ctx.restore();
 }
 
