@@ -3,20 +3,14 @@
 import {
   ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF
 } from '../data/elements.js';
-import { MONSTERS } from '../data/monsters.js';
 import { game } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { killCow, registerComboHit } from './combat.js';
+import { killCow, registerComboHit, cowResist } from './combat.js';
 import { damageColor } from './elements.js';
 import { spawnDamageNumber, spawnHitParticles } from './fx.js';
 
 // 레벨업 카드 강화 (없으면 0)
 const cardBonus = (key) => (game.hero && game.hero.cardBonus && game.hero.cardBonus[key]) || 0;
-
-function cowResist(c, el) {
-  const r = (MONSTERS[c.kind] || MONSTERS.normal).resist;
-  return (r && r[el]) || 0;
-}
 
 // packet = { phys, fire, cold, lightning, poison }, opts = { knock(밀어내는 힘), fromX, fromY } → 준 피해
 export function damageCowPacket(c, packet, opts = {}) {
@@ -28,8 +22,14 @@ export function damageCowPacket(c, packet, opts = {}) {
     total += v;
     if (v > best) { best = v; dominant = key; }
   };
-  if (packet.phys) add('phys', Math.round(packet.phys));
-  ELEMENTS.forEach((el) => { if (packet[el]) add(el, Math.round(packet[el] * (1 + cardBonus(el)) * (1 - cowResist(c, el)))); });
+  if (packet.phys) add('phys', Math.round(packet.phys * (1 - Math.min(1, cowResist(c, 'phys')))));
+  ELEMENTS.forEach((el) => { if (packet[el]) add(el, Math.round(packet[el] * (1 + cardBonus(el)) * (1 - Math.min(1, cowResist(c, el))))); });
+  // 맞힌 속성이 전부 면역이면 피해 0 + '면역' (그 밖엔 최소 1)
+  const immune = ['phys', ...ELEMENTS].every((k) => !packet[k] || cowResist(c, k) >= 1);
+  if (immune) {
+    spawnDamageNumber(c.x, c.y - 40 * c.scale, '면역', '#9a9a9a');
+    return 0;
+  }
   total = Math.max(1, total);
   c.hp -= total;
   c.flash = 0.12;

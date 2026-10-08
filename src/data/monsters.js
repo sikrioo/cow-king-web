@@ -1,7 +1,7 @@
 // 몬스터 종류별 수치/외형 - 종류 하나 = 항목 하나
 // ★ 전투 수치 스케일(×3 → ×10): 체구 기준 밸런싱 - 작은(기본 체구) 카우는 2방, 큰(강화) 카우는 3방 (기본 데미지 3 기준). 보스는 별도 체계
 //   hp: 체력, dmg: 근접 데미지, scaleMul: 체구 배율, speedMul: 이동속도 배율, aggroMul: 인식 범위 배율, exp: 처치 경험치
-//   ring: 발밑 링/오라 색, colors: 몸 색(null이면 기본 카우 색), element: 근접 공격 원소(없으면 물리, data/elements.js), resist: 원소 저항(0~1, 없으면 0)
+//   ring: 발밑 링/오라 색, colors: 몸 색(null이면 기본 카우 색), element: 근접 공격 원소(없으면 물리, data/elements.js), resist: 저항(phys 물리 + 원소, 0~1, 없으면 0 - 1이면 면역: 피해 0, "면역" 표시)
 export const MONSTERS = {
   normal:   { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 1,    aggroMul: 1,   exp: 10,  ring: null, colors: null },
   tough:    { hp: 90, dmg: 60, scaleMul: 1.3, speedMul: 1,    aggroMul: 1,   exp: 25,  ring: '#ff5b4d', colors: { hide: '#a8402c', horn: '#f2c9a0', snout: '#6e2416', eye: '#ff3b30' } },

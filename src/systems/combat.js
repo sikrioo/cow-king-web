@@ -131,7 +131,27 @@ export function heroHitDamage(ws = game.hero.weaponStats.main) {
   return rollWeaponDamage(ws) + game.hero.attackBonus + game.hero.gearAtkPower;
 }
 
+// 몬스터 저항 (data/monsters.js의 resist: phys/fire/cold/lightning/poison, 0~1 - 1이면 면역)
+export function cowResist(c, key) {
+  const r = (MONSTERS[c.kind] || MONSTERS.normal).resist;
+  return (r && r[key]) || 0;
+}
+
+// 주인공의 물리 피해 → 물리 저항 적용 (면역이면 0, 저항이 없으면 그대로)
+export function physDamageTo(c, dmg) {
+  const r = cowResist(c, 'phys');
+  if (r <= 0) return dmg;
+  if (r >= 1) return 0;
+  return Math.max(1, Math.round(dmg * (1 - r)));
+}
+
+// 몬스터 위 피해 숫자 (0이면 회색 '면역')
+export function showCowDamage(c, dmg, color = '#fff') {
+  spawnDamageNumber(c.x, c.y - 40 * c.scale, dmg > 0 ? `-${dmg}` : '면역', dmg > 0 ? color : '#9a9a9a');
+}
+
 export function damageCow(c, dmg) {
+  dmg = physDamageTo(c, dmg);
   c.flash = 0.12;
   applyKnockback(c.body, game.hero.x, game.hero.y, 7);
   c.knockback = 0.18;
@@ -139,7 +159,7 @@ export function damageCow(c, dmg) {
   game.hitstop = 4;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
+  showCowDamage(c, dmg);
   c.hp -= dmg;
   if (c.hp <= 0 && c.state !== 'dead') {
     killCow(c);
@@ -204,9 +224,10 @@ export function skillDamageCow(c, bonusDamage, knockForce, color) {
   c.flash = 0.13;
   applyKnockback(c.body, game.hero.x, game.hero.y, knockForce);
   c.knockback = Math.max(c.knockback || 0, 0.22);
-  const dmg = Math.max(1, bonusDamage + game.hero.attackBonus + game.hero.gearAtkPower);
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, color || '#fff');
+  const dmg = physDamageTo(c, Math.max(1, bonusDamage + game.hero.attackBonus + game.hero.gearAtkPower));
+  showCowDamage(c, dmg, color || '#fff');
   spawnHitParticles(c.x, c.y, color || PALETTE.hide, 8);
+  if (dmg <= 0) return; // 물리 면역
   c.hp -= dmg;
   registerComboHit();
   if (c.hp <= 0 && c.state !== 'dead') killCow(c);

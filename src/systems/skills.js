@@ -14,7 +14,7 @@ import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange } from './combat.js';
+import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
 import { tryFortify } from './physSkills.js';
 import { tryTeleport } from './commonSkills.js';
@@ -77,8 +77,9 @@ export function whirlwindHit(c) {
   c.knockback = 0.15;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 5);
 
-  const dmg = Math.round(heroHitDamage() * skillMul(game.hero, 'whirlwind', 'damage'));
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
+  const dmg = physDamageTo(c, Math.round(heroHitDamage() * skillMul(game.hero, 'whirlwind', 'damage')));
+  showCowDamage(c, dmg);
+  if (dmg <= 0) return; // 물리 면역
   c.hp -= dmg;
   registerComboHit();
   if (c.hp <= 0 && c.state !== 'dead') {
@@ -139,8 +140,9 @@ export function leapHitCow(c) {
   c.knockback = 0.2;
   spawnHitParticles(c.x, c.y, PALETTE.hide, 6);
 
-  const dmg = Math.round(heroHitDamage() * skillMul(game.hero, 'leap', 'damage'));
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${dmg}`, '#fff');
+  const dmg = physDamageTo(c, Math.round(heroHitDamage() * skillMul(game.hero, 'leap', 'damage')));
+  showCowDamage(c, dmg);
+  if (dmg <= 0) return; // 물리 면역
   c.hp -= dmg;
   registerComboHit();
   if (c.hp <= 0 && c.state !== 'dead') {
