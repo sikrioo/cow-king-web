@@ -8,6 +8,8 @@ import { drawCow } from '../render/monsterSprites.js';
 import { PEN } from '../world/arena.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import { viewSize } from '../world/camera.js';
+import { MAPS } from '../data/maps.js';
+import { DIFFICULTY } from '../data/difficulty.js';
 
 export function drawTitleScene(t) {
   const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);
@@ -146,7 +148,8 @@ export function drawStartCountdown() {
 export function drawWavePresentation(t) {
   if (game.waveBannerTimer <= 0 || game.gameState !== 'playing' || ui.showInventory) return;
   const a = Math.min(1, game.waveBannerTimer * 2.2) * Math.min(1, (1.6 - game.waveBannerTimer) * 3.0 + 1);
-  const boss = game.wave === BOSS_WAVE;
+  const boss = game.wave === BOSS_WAVE && game.run.mode === 'wave';
+  const farm = game.run.mode === 'farm';
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, a));
   ctx.textAlign = 'center';
@@ -154,11 +157,11 @@ export function drawWavePresentation(t) {
   ctx.shadowColor = 'rgba(0,0,0,.75)';
   ctx.shadowBlur = 12;
   ctx.font = boss ? '900 38px Georgia, serif' : '900 28px sans-serif';
-  ctx.fillText(boss ? 'THE COW KING' : `WAVE ${game.wave}`, canvas.width / 2, canvas.height * 0.42);
+  ctx.fillText(farm ? MAPS[game.run.mapId].name : boss ? 'THE COW KING' : `WAVE ${game.wave}`, canvas.width / 2, canvas.height * 0.42);
   ctx.shadowBlur = 0;
   ctx.font = '12px monospace';
   ctx.fillStyle = boss ? '#ffe8a1' : 'rgba(255,255,255,.75)';
-  ctx.fillText(boss ? '왕의 목장에 입장했습니다' : 'SURVIVE THE PASTURE', canvas.width / 2, canvas.height * 0.42 + 24);
+  ctx.fillText(farm ? `난이도 ${DIFFICULTY[game.run.difficulty].label} · ${game.hero.mapRuns[`${game.run.mapId}:${game.run.difficulty}`] || 1}번째 입장` : boss ? '왕의 목장에 입장했습니다' : 'SURVIVE THE PASTURE', canvas.width / 2, canvas.height * 0.42 + 24);
   ctx.restore();
 }
 

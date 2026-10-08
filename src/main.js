@@ -5,9 +5,9 @@ import { resizeCanvas } from './core/context.js';
 import { startLoop } from './core/loop.js';
 import { game, ui } from './state.js';
 import { createHero } from './entities/hero.js';
-import {
-  resetGame, setPaused, initTitleScene, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp
-} from './game.js';
+import { setPaused, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp } from './game.js';
+import { resetGame, advanceScreen, requestExitMap, hubSelectMap, hubChangeOption, enterSelectedMap, goTitle } from './session.js';
+import { initTitleScene } from './ui/titleScene.js';
 import { bindInput } from './input.js';
 import { render } from './render/renderer.js';
 import { loadReleaseMeta } from './save.js';
@@ -17,14 +17,22 @@ import { isDevMode } from './config.js';
 import { layoutArena } from './world/arena.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 
+// 맵 선택 화면 클릭 (영역은 ui/mapSelect.js가 그릴 때 등록): 무엇을 눌렀는지 → session 함수
+function hubClick(r) {
+  if (r.action === 'map') hubSelectMap(r.map);
+  else if (r.action === 'opt') hubChangeOption(r.dir);
+  else if (r.action === 'enter') enterSelectedMap();
+  else if (r.action === 'title') goTitle();
+}
+
 function boot() {
   loadReleaseMeta();
   resizeCanvas(); // 화면 크기는 보이는 범위(카메라)만 바꿈 - 목장 크기는 고정
   window.addEventListener('resize', resizeCanvas);
   layoutArena();
   game.hero = createHero();
-  bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards });
-  bindDomButtons({ restart: resetGame, pressAction, setPaused, toggleHelp });
+  bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards, hubClick });
+  bindDomButtons({ restart: advanceScreen, pressAction, setPaused, toggleHelp, exitMap: requestExitMap });
   if (isDevMode()) {
     bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });
   }

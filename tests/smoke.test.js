@@ -36,7 +36,8 @@ function runScenario(env, seed, view) {
   const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
   const prints = [];
   env.frame(60);                       // 타이틀 화면
-  env.key(' '); env.key(' ', false);   // Space로 시작
+  env.key(' '); env.key(' ', false);   // Space로 시작 → 맵 선택
+  env.key(' '); env.key(' ', false);   // Space로 목장 입장
   const dirs = ['w', 'a', 's', 'd']; let cur = null; let spaceDown = false; let eDown = false; let invOpen = false;
   for (let i = 0; i < FRAMES; i++) {
     if (i % 45 === 0) { if (cur) env.key(cur, false); cur = pick(dirs); env.key(cur); }
@@ -71,7 +72,7 @@ function runZoo(env, seed, view, spawn, killAll) {
   const rnd = mulberry32(seed + 7);
   const prints = [];
   const snap = (frame) => prints.push({ frame, ...fingerprint(view()) });
-  env.frame(60); env.key(' '); env.key(' ', false);
+  env.frame(60); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); // 타이틀 → 맵 선택 → 목장
   env.frame(300); snap('start');
   KINDS.forEach((k) => spawn(k));
   const dirs = ['w', 'a', 's', 'd']; let cur = null;
@@ -98,7 +99,8 @@ function runMobile(env, seed, view) {
   const ev = (extra = {}) => ({ preventDefault() {}, stopPropagation() {}, pointerId: 7, clientX: 50, clientY: 50, ...extra });
   const fire = (id, type, extra) => env.elCache[id]._fire(type, ev(extra));
   env.frame(60);
-  fire('slot1', 'pointerdown'); fire('slot1', 'pointerup'); // 타이틀에서 버튼 = 시작
+  fire('slot1', 'pointerdown'); fire('slot1', 'pointerup'); // 타이틀에서 버튼 = 시작 → 맵 선택
+  fire('slot1', 'pointerdown'); fire('slot1', 'pointerup'); // 맵 선택에서 버튼 = 입장
   env.frame(300); snap('start');
   let joy = false;
   for (let i = 0; i < 3000; i++) {

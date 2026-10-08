@@ -1,7 +1,8 @@
 // 바닥 무늬: 맵 데이터(data/maps.js의 ground)대로 GROUND_CHUNK px 조각마다 처음 보일 때 한 번 그려 캐시하고,
 // 매 프레임은 보이는 조각만 붙임 (몬스터 40마리 이상에서도 바닥 비용은 drawImage 몇 번).
 // 무늬의 "무작위"는 월드 좌표 해시(결정적) - 게임 난수(Math.random)를 쓰면 안 됨
-import { CURRENT_MAP, GROUND_CHUNK } from '../data/maps.js';
+import { GROUND_CHUNK } from '../data/maps.js';
+import { currentMap, currentMapId } from '../world/arena.js';
 import { PEN } from '../world/arena.js';
 import { viewRect } from '../world/camera.js';
 
@@ -114,7 +115,8 @@ function drawDecor(c, d, x, y, pick) {
 
 // 목장 안쪽 바닥 (월드 좌표, 카메라 적용된 상태에서 호출)
 export function drawGround(ctx) {
-  const g = CURRENT_MAP.ground;
+  const g = currentMap().ground;
+  const id = currentMapId();
   const C = GROUND_CHUNK;
   const v = viewRect();
   const x0 = Math.max(PEN.x, v.x), y0 = Math.max(PEN.y, v.y);
@@ -126,7 +128,7 @@ export function drawGround(ctx) {
   ctx.clip();
   for (let cy = Math.floor((y0 - PEN.y) / C); cy <= Math.floor((y1 - PEN.y) / C); cy++) {
     for (let cx = Math.floor((x0 - PEN.x) / C); cx <= Math.floor((x1 - PEN.x) / C); cx++) {
-      const key = cx + ',' + cy;
+      const key = id + ',' + cx + ',' + cy; // 맵마다 따로 캐시
       let cv = cache.get(key);
       if (!cv) { cv = buildChunk(g, cx, cy); cache.set(key, cv); }
       ctx.drawImage(cv, PEN.x + cx * C, PEN.y + cy * C);

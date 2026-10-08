@@ -49,10 +49,13 @@ export function revealIdentifiedGear(gear) {
   ui.invReveal = { item: gear, color: rDef.color, until: performance.now() + 1100 };
 }
 
-export function rollRarity() {
-  let roll = Math.random() * RARITY_TOTAL_WEIGHT;
+// boost: 일반('normal') 외 등급 비중 배율 (파밍 맵 난이도 - data/difficulty.js rarity). 1이면 기본 확률
+export function rollRarity(boost = 1) {
+  const w = (key) => (key === 'normal' ? 1 : boost) * RARITY_DEF[key].weight;
+  const total = boost === 1 ? RARITY_TOTAL_WEIGHT : Object.keys(RARITY_DEF).reduce((s, k) => s + w(k), 0);
+  let roll = Math.random() * total;
   for (const key of Object.keys(RARITY_DEF)) {
-    roll -= RARITY_DEF[key].weight;
+    roll -= w(key);
     if (roll <= 0) return key;
   }
   return 'normal';
@@ -62,7 +65,7 @@ export function rollGearItem(opts = {}) {
   const categories = ['armor', 'weapon', 'greaves', 'boots', 'accessory', 'shield'];
   const category = opts.category || categories[Math.floor(Math.random() * categories.length)];
   const handedness = category === 'weapon' ? (opts.handedness || (Math.random() < 0.5 ? 'two' : 'one')) : null;
-  const rarity = opts.rarity || rollRarity();
+  const rarity = opts.rarity || rollRarity(opts.rarityBoost || 1);
   const rDef = RARITY_DEF[rarity];
 
   const statKeys = Object.keys(STAT_DEF).filter((k) => !STAT_DEF[k].noRoll);

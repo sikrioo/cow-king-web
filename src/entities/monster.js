@@ -6,13 +6,15 @@ import { game } from '../state.js';
 import { TEAM_MONSTER } from './actor.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
-import { HUNT_SPEED_MULT } from '../data/balance.js';
-import { randomPointInPen } from '../world/arena.js';
+import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS } from '../data/balance.js';
+import { randomPointInPen, clampToPen } from '../world/arena.js';
 import { emptyDot } from '../systems/elements.js';
 import { updateCowStatuses } from '../systems/elementCombat.js';
 
 export class Monster {
   // opts.pos: 생성 위치(없으면 목장 안 무작위), opts.hunt: 웨이브 몬스터 - 주인공을 못 봤어도 주인공 쪽으로 몰려감
+  // 파밍 맵(systems/mapRun.js): opts.hpMul/dmgMul(난이도 배율), opts.resist(개체 저항 - 면역 무리), opts.home(이 근처만 배회),
+  //   opts.dropCount(죽을 때 드랍 횟수 - 우두머리), opts.mapBoss(우두머리 표시)
   constructor(scale, kind = 'normal', opts = {}) {
     this.kind = kind;
 
@@ -37,8 +39,9 @@ export class Monster {
     this.phase = Math.random() * 10;
     this.weapon = weaponFor(kind, this.phase); // 그림용 - 난수 소비 없음
     this.speed = (34 + Math.random() * 18) * speedMul;
-    this.hp = hp;
-    this.maxHp = hp;
+    const hpMul = opts.hpMul || 1;
+    this.hp = hpMul === 1 ? hp : Math.max(1, Math.round(hp * hpMul));
+    this.maxHp = this.hp;
     this.deadTimer = 0;
     this.deadPos = null;
     this.attackHit = false;
@@ -67,7 +70,11 @@ export class Monster {
     this.castY = 0;
     this.zapTargetX = 0;
     this.zapTargetY = 0;
-    this.dmg = def.dmg;
+    this.dmg = opts.dmgMul && opts.dmgMul !== 1 ? Math.max(1, Math.round(def.dmg * opts.dmgMul)) : def.dmg; // 근접 공격력 (난이도 배율)
+    if (opts.resist) this.resist = opts.resist; // 개체 저항 (util.resistOf가 종류 기본값보다 먼저 봄)
+    this.home = opts.home || null;
+    this.dropCount = opts.dropCount || 1;
+    this.mapBoss = !!opts.mapBoss;
     this.hunt = !!opts.hunt;
     this.burn = emptyDot(); // 주인공 원소 공격으로 걸리는 상태 (systems/elementCombat.js)
     this.poison = emptyDot();
@@ -78,6 +85,12 @@ export class Monster {
     this.team = TEAM_MONSTER;
     this.behavior = behaviors[kind] || null;
     if (this.behavior && this.behavior.init) this.behavior.init(this);
+  }
+
+  // 파밍 맵 몬스터: 무리 자리(home) 근처에서만 배회 (맵 전체로 흩어지지 않게)
+  homeWanderPoint() {
+    const a = Math.random() * Math.PI * 2, r = Math.random() * HOME_WANDER_RADIUS;
+    return clampToPen(this.home.x + Math.cos(a) * r, this.home.y + Math.sin(a) * r, this.r + 10);
   }
 
   setState(state, duration) {
@@ -167,7 +180,7 @@ export class Monster {
           this.setState('attack', 0.6);
           this.attackingPlayer = false;
         } else {
-          this.target = randomPointInPen();
+          this.target = this.home ? this.homeWanderPoint() : randomPointInPen();
           this.setState('walk', 999);
         }
       }

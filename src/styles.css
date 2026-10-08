@@ -60,7 +60,7 @@
     font:bold 11px sans-serif; display:flex; align-items:center; justify-content:center;
     touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none;
   }
-  #btn-pause, #btn-full {
+  #btn-pause, #btn-full, #btn-exit {
     position:fixed; top:8px; height:34px; border-radius:8px;
     background:rgba(0,0,0,0.48); border:1px solid rgba(255,255,255,0.30); color:#f2eee5;
     font:700 14px/1 sans-serif; display:flex; align-items:center; justify-content:center;
@@ -68,10 +68,14 @@
     transition:opacity .18s ease, background .16s ease;
   }
   #btn-pause { left:8px; width:38px; }
+  #btn-exit { left:52px; width:38px; } /* 맵 나가기 (두 번 누르기) */
   #btn-full { right:94px; width:38px; font-size:12px; }
   #btn-pause:active, #btn-full:active { background:rgba(255,255,255,.14); }
   body.title-mode #joystick-base, body.title-mode #action-buttons, body.title-mode #potion-buttons,
-  body.title-mode #btn-inv, body.title-mode #btn-pause { opacity:0; pointer-events:none; }
+  body.title-mode #btn-inv, body.title-mode #btn-pause, body.title-mode #btn-exit { opacity:0; pointer-events:none; }
+  /* 맵 선택 화면: 장비 버튼만 */
+  body.hub-mode #joystick-base, body.hub-mode #action-buttons, body.hub-mode #potion-buttons,
+  body.hub-mode #btn-pause, body.hub-mode #btn-exit { opacity:0; pointer-events:none; }
 
   /* 도움말: 장비 버튼 왼쪽 버튼 + 가운데 창 (열려 있는 동안 게임 일시정지) */
   #btn-help {

@@ -10,7 +10,8 @@ import { drawIceRings } from './iceFx.js';
 import { applyCamera, updateCamera, inView } from '../world/camera.js';
 import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
-import { updatePotionButtonsUI, updateSkillButtonsUI, syncTitleModeClass } from '../ui/dom.js';
+import { updatePotionButtonsUI, updateSkillButtonsUI, syncTitleModeClass, syncHubModeClass } from '../ui/dom.js';
+import { drawMapSelect } from '../ui/mapSelect.js';
 import { drawInventoryPanel } from '../ui/menu/panel.js';
 import { drawCardOffer } from '../ui/cardPick.js';
 import {
@@ -22,8 +23,10 @@ export function render(t) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const titleMode = game.gameState === 'title';
+  const hubMode = game.gameState === 'hub';
   syncTitleModeClass(titleMode);
-  if (titleMode) {
+  syncHubModeClass(hubMode);
+  if (titleMode || hubMode) {
     updateCamera(PEN.x + PEN.size / 2, PEN.y + PEN.size / 2); // 타이틀: 목장 가운데
     ctx.save();
     applyCamera(ctx);
@@ -31,7 +34,10 @@ export function render(t) {
     drawTitleScene(t);
     drawParticles(ctx);
     ctx.restore();
-    drawTitleOverlay(t);
+    if (hubMode) {
+      drawMapSelect(t);
+      if (ui.showInventory) drawInventoryPanel(ctx); // 맵 선택 화면에서도 장비창
+    } else drawTitleOverlay(t);
     return;
   }
 

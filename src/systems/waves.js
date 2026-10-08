@@ -42,6 +42,7 @@ function packPoint(center) {
 
 export function startNextWave() {
   game.wave++;
+  game.hero.maxWave = Math.max(game.hero.maxWave || 0, game.wave); // 맵 선택 화면의 시작 웨이브 상한
   game.waveBannerTimer = 1.6;
   if (game.wave === BOSS_WAVE) {
     const c = pickPackCenter();

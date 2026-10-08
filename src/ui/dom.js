@@ -64,7 +64,7 @@ export function updateSkillButtonsUI() {
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
 }
 
-// HTML 버튼 연결. actions: { restart, pressAction, setPaused, toggleHelp } - game.js
+// HTML 버튼 연결. actions: { restart(= 화면 넘기기), pressAction, setPaused, toggleHelp, exitMap } - game.js / session.js
 export function bindDomButtons(actions) {
   bindHoldSlot('slot1', 1, actions);
   bindHoldSlot('slot2', 2, actions);
@@ -77,6 +77,7 @@ export function bindDomButtons(actions) {
       actions.pressAction(() => tryDrinkPotion(kind));
     });
   });
+  document.getElementById('btn-exit').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.exitMap(); });
   document.getElementById('btn-pause').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); actions.setPaused(!game.paused); });
   document.getElementById('btn-full').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
   document.getElementById('btn-inv').addEventListener('pointerdown', (e) => { e.preventDefault(); if (!game.cardOffer) setInventoryOpen(!ui.showInventory); });
@@ -87,6 +88,20 @@ export function bindDomButtons(actions) {
 // 타이틀 화면에서는 조작 버튼 숨김 (styles.css의 body.title-mode)
 export function syncTitleModeClass(titleMode) {
   document.body.classList.toggle('title-mode', titleMode);
+}
+// 맵 선택 화면: 전투 버튼은 숨기고 장비 버튼만 (body.hub-mode)
+export function syncHubModeClass(hubMode) {
+  document.body.classList.toggle('hub-mode', hubMode);
+}
+
+// 슬롯 버튼 이름/색을 지금 슬롯 스킬로 (맵 입장 때)
+export function syncSlotLabels() {
+  [['slot1', game.hero.slot1], ['slot2', game.hero.slot2]].forEach(([id, skill]) => {
+    const label = document.getElementById(`${id}-label`);
+    const el = document.getElementById(id);
+    if (label) label.textContent = SKILLS[skill].label;
+    if (el) el.style.background = SKILLS[skill].color;
+  });
 }
 
 // 도움말 창 보이기/숨기기

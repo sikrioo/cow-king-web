@@ -76,6 +76,7 @@ export const KEY_INTENTS = {
   q: 'cycleSlot1',       // 슬롯 스킬 전환
   r: 'cycleSlot2',
   i: 'toggleMenu',
+  t: 'exitMap',           // 맵 나가기 (두 번 눌러야 - session.requestExitMap)
   h: 'help',             // 도움말 창
   1: 'num', 2: 'num', 3: 'num', 4: 'num', 5: 'num', 6: 'num', 7: 'num',
   ...Object.fromEntries(Object.keys(LEVEL_STAT_KEYS).map((k) => [k, 'stat']))
@@ -89,7 +90,7 @@ export function keyOf(e) {
   return e.key.toLowerCase();
 }
 
-// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum), pickCard(i), rerollCards() } - 처리는 game.js / systems/levelCards.js
+// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum), pickCard(i), rerollCards(), hubClick(rect) } - 처리는 game.js / systems/levelCards.js
 export function bindInput(actions) {
   window.addEventListener('keydown', (e) => {
     const k = keyOf(e);
@@ -117,6 +118,15 @@ export function bindInput(actions) {
       const i = ui.cardRects.findIndex(inside);
       if (i >= 0) actions.pickCard(i);
       else if (inside(ui.cardRerollRect)) actions.rerollCards();
+      return;
+    }
+    if (game.gameState === 'hub') {
+      // 맵 선택 화면: 누른 영역(맵 카드/옵션/입장/새 캐릭터) → main.hubClick
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      // 작은 버튼(옵션)이 카드 위에 겹쳐 있으므로 나중에 등록된 것부터
+      const hit = [...ui.hubRects].reverse().find((r) => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h);
+      if (hit) actions.hubClick(hit);
       return;
     }
     if (game.gameState === 'title') {

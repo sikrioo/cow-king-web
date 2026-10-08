@@ -1,6 +1,7 @@
 // 게임 상태 한 곳. 다른 모듈은 이 객체들의 속성을 읽고/바꾼다 (바인딩 재할당 대신 game.cows = [] 처럼 속성 대입)
 
 // 월드/진행 상태
+// gameState: 'title'(캐릭터 고르기) → 'hub'(맵 선택) → 'playing'(맵 안) → 'gameover'/'victory' → 다시 'hub'
 export const game = {
   gameState: 'playing',
   paused: false,
@@ -24,6 +25,8 @@ export const game = {
   demoTipTimer: 0,
   runRecorded: false,
   releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 },
+  // 지금 들어와 있는 맵 (systems/mapRun.js beginRun이 채움). 배율은 파밍 맵 난이도(data/difficulty.js), 목장은 전부 1
+  run: { mapId: 'ranch', mode: 'wave', difficulty: 'normal', hpMul: 1, dmgMul: 1, expMul: 1, gearDropMul: 1, rarityBoost: 1, cleared: false, total: 0 },
   cardOffer: null, // 레벨업 카드 고르는 중 { cards: [...] } - 있으면 게임이 멈춤 (systems/levelCards.js)
   hero: null, // 주인공 - boot()에서 createHero()로 생성 (entities/hero.js)
   itemSeq: 0 // 아이템 uid 발급 카운터 (새 게임에서도 이어서 증가 - 한 실행 안에서 uid가 겹치지 않게)
@@ -53,6 +56,9 @@ export const ui = {
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
   titleCardRects: [], // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
   titleStartRect: null, // 시작 화면 '게임 시작' 버튼 영역
+  hubMap: 'ranch', hubWave: 1, hubDifficulty: 'normal', // 맵 선택 화면에서 고른 것 (session.js)
+  hubRects: [], // 맵 선택 화면 클릭 영역 (ui/mapSelect.js)
+  exitArmedUntil: 0, // 맵 나가기 두 번 누르기 (session.requestExitMap)
   cardRects: [], // 레벨업 카드 클릭 영역 (그릴 때마다 갱신, ui/cardPick.js)
   cardRerollRect: null
 };

@@ -22,7 +22,7 @@ it('한글 입력 상태에서 WASD로 이동하고, 키를 떼면 멈춘다 / �
     vi.resetModules();
     await import('../src/main.js');
     const { game, ui, input } = await import('../src/state.js');
-    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    env.frame(30); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(30);
     const x0 = game.hero.x;
     env.keyEvent(true, { key: 'ㅇ', code: 'KeyD' });
     expect(input.keys.d).toBe(true);
@@ -56,7 +56,7 @@ it('마우스 좌클릭 이동: 찍은 지점까지 가서 멈추고, 끌면 따
     const { game, input } = await import('../src/state.js');
     const { canvas } = await import('../src/core/context.js');
     const { screenToWorld } = await import('../src/world/camera.js');
-    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    env.frame(30); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(30);
     const cx = canvas.width / 2, cy = canvas.height / 2;
     const goal = screenToWorld(cx + 200, cy);
     env.pointer('pointerdown', cx + 200, cy, 0);
@@ -99,7 +99,7 @@ it('적 좌클릭: 사거리까지 걸어가서 공격 - 떼면 한 번, 누르�
     const { camera } = await import('../src/world/camera.js');
     const { Monster } = await import('../src/entities/monster.js');
     const { Body } = await import('../src/core/physics.js');
-    env.frame(30); env.key(' '); env.key(' ', false); env.frame(10);
+    env.frame(30); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(10);
     game.waveTransition = 999; // 웨이브가 끼어들지 않게
     const place = (dx) => {
       const c = new Monster(0.4, 'normal');
@@ -143,7 +143,7 @@ it('클릭 이동 중 Space를 누르면 멈춰서 시전, WASD 이동 중에는
     await import('../src/main.js');
     const { game, input } = await import('../src/state.js');
     const { canvas } = await import('../src/core/context.js');
-    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    env.frame(30); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(30);
     game.waveTransition = 999;
     env.pointer('pointerdown', canvas.width / 2 + 300, canvas.height / 2, 0);
     env.windowPointerUp(0);
@@ -171,7 +171,7 @@ it('Shift+좌클릭 = 제자리에서 커서 방향 기본 공격(누르는 동�
     await import('../src/main.js');
     const { game, input } = await import('../src/state.js');
     const { canvas } = await import('../src/core/context.js');
-    env.frame(30); env.key(' '); env.key(' ', false); env.frame(30);
+    env.frame(30); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(30);
     game.waveTransition = 999;
     const h = game.hero;
     const cx = canvas.width / 2, cy = canvas.height / 2;
@@ -218,6 +218,8 @@ it('시작 화면: 카드 클릭은 고르기만, 게임 시작 버튼(또는 Sp
     env.frame(2);
     expect(game.gameState).toBe('title');
     env.pointer('pointerdown', ...center(ui.titleStartRect), 0);
+    expect(game.gameState).toBe('hub'); // 맵 선택 화면
+    env.key(' '); env.key(' ', false);
     expect(game.gameState).toBe('playing');
     expect(game.hero.classKey).toBe('sorc');
   } finally {

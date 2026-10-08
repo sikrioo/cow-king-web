@@ -90,12 +90,13 @@ export function killCow(c) {
   c.deadTimer = 0.3;
   World.remove(world, c.body);
   game.kills++;
-  gainExp((MONSTERS[c.kind] || MONSTERS.normal).exp);
+  const exp = (MONSTERS[c.kind] || MONSTERS.normal).exp;
+  gainExp(game.run.expMul === 1 ? exp : Math.round(exp * game.run.expMul)); // 파밍 맵 난이도 배율
   spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
   // 종류별 처치 효과 (냉기 노바/자폭/보스 승리) - behaviors[kind].onDeath. true면 자체 드랍을 했으므로 기본 드랍 생략
   const b = c.behavior;
   if (b && b.onDeath && b.onDeath(c)) return;
-  dropLoot(c.x, c.y, c.kind !== 'normal', 1); // 엘리트는 장비 드랍 보장
+  dropLoot(c.x, c.y, c.kind !== 'normal' || c.mapBoss, c.dropCount || 1); // 엘리트는 장비 드랍 보장, 파밍 맵 우두머리는 여러 번
 }
 
 export function spawnColdNova(x, y) {

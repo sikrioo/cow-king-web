@@ -149,7 +149,7 @@ it('마법사로 실제 진행(그리기 포함): 예외 없음, 체력 정수, 
     await import('../src/main.js');
     const { game, ui } = await import('../src/state.js');
     ui.selectedClass = 'sorc';
-    env.frame(20); env.key(' '); env.key(' ', false); env.frame(20);
+    env.frame(20); env.key(' '); env.key(' ', false); env.key(' '); env.key(' ', false); env.frame(20); // 타이틀 → 맵 선택 → 목장
     expect(game.hero.classKey).toBe('sorc');
     const keys = [' ', 'e', 'q', 'r', 'w', 'a', 's', 'd', 'l'];
     let r = 7;

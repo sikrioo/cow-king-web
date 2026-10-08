@@ -1,8 +1,13 @@
-// 맵 정의 (지금은 목장 하나). 색 테마는 data/palette.js
-// 맵은 화면 크기와 상관없는 고정 크기(px) - 화면은 카메라가 주인공을 따라감
+// 맵 정의. 색 테마는 data/palette.js. 맵은 화면 크기와 상관없는 고정 크기(px) - 화면은 카메라가 주인공을 따라감
+//   mode: 'wave' = 레벨업 공간(웨이브가 계속 옴, 시작 웨이브 선택) / 'farm' = 파밍 공간(인스턴스 - 들어갈 때마다 무리를 새로 배치, 난이도 선택)
+//   진행은 systems/mapRun.js, 맵 선택 화면은 ui/mapSelect.js
+export const MAP_ORDER = ['ranch', 'barn'];
 export const MAPS = {
   ranch: {
     name: '목장',
+    mode: 'wave',
+    desc: '웨이브가 계속 몰려오는 레벨업 장소',
+    start: { x: 0.5, y: 0.5 }, // 주인공 시작 위치 (맵 크기 비율)
     size: 1900,             // 정사각형 한 변(px). 2026-10-05: 화면 맞춤(PC 약 950) → 고정 1900(넓이 약 4배)
     wallThickness: 24,      // 울타리 벽 두께(px)
     spawnMarginRatio: 0.14, // 무작위 위치를 뽑을 때 가장자리에서 띄우는 비율
@@ -22,9 +27,39 @@ export const MAPS = {
         { type: 'stone',  every: 70,  chance: 0.28, size: 4,   colors: ['#8a8578'], light: '#aaa598', onDirt: true }
       ]
     }
+  },
+  // 첫 파밍 맵: 무리가 곳곳에 미리 있고(가만히 있다가 가까이 가면 덤빔), 맨 끝 무리에 우두머리. 다 잡으면 클리어
+  barn: {
+    name: '버려진 외양간',
+    mode: 'farm',
+    desc: '흙먼지 날리는 폐허 - 물리·화염 면역 무리가 섞여 나옴',
+    size: 1700,
+    wallThickness: 24,
+    spawnMarginRatio: 0.1,
+    start: { x: 0.5, y: 0.92 },   // 아래쪽 가운데에서 시작
+    packs: 9,                     // 무리 수 (마지막 하나가 우두머리 무리)
+    packSize: [4, 7],             // 무리당 마리 수 (최소, 최대)
+    packRadius: 70,
+    packMinDistFromStart: 380,    // 시작 지점에서 이만큼은 떨어져서 배치
+    kinds: { normal: 6, tough: 2, fast: 2, charger: 1, burning: 1, exploder: 1, fanatic: 1 }, // 무리 몬스터 비중
+    immune: ['phys', 'fire'],     // 이 맵에서 나오는 면역 종류 (무리 단위로 하나)
+    boss: { kind: 'tough', scale: 0.62, hpMul: 5, drops: 3 }, // 우두머리: 장비 확정 드랍 횟수
+    ground: {
+      base: '#5a4a34',
+      shades: ['#54452f', '#5a4a34', '#615038', '#68573d'],
+      dirt: '#7a6a48', dirtEdge: '#5f5236',
+      dirtThreshold: 0.62,
+      patchScale: 260,
+      cell: 10,
+      decor: [
+        { type: 'tuft',   every: 34,  chance: 0.30, size: 6,   colors: ['#8a7a4a', '#a8935a', '#6e6038'] }, // 마른 풀/짚
+        { type: 'stone',  every: 90,  chance: 0.40, size: 7,   colors: ['#6c6658', '#5e594d'], light: '#8f887a' },
+        { type: 'speck',  every: 22,  chance: 0.60, size: 1.8, colors: ['#3e3424', '#7d6b4a', '#2e271b'], onDirt: true },
+        { type: 'stone',  every: 60,  chance: 0.30, size: 4,   colors: ['#7a7468'], light: '#9c9688', onDirt: true }
+      ]
+    }
   }
 };
-export const CURRENT_MAP = MAPS.ranch;
 export const GROUND_CHUNK = 512; // 바닥 무늬 캐시 조각 크기(px)
 
 // 카메라: 화면 짧은 변 기준으로 최소 이만큼(px)은 보이게 줌을 줄임(모바일). PC는 줌 1

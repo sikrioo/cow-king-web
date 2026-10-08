@@ -29,8 +29,9 @@ export function dropLoot(x, y, guaranteed, count) {
     const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
 
     const rates = guaranteed ? DROP_RATES.guaranteed : DROP_RATES.normal;
-    if (Math.random() < rates.gear) {
-      game.items.push(new Item(px, py, 'gear', rollGearItem()));
+    // 파밍 맵 난이도: 장비 드랍 확률 배율(최대 1), 높은 등급 비중 배율 (목장은 1 = 기본)
+    if (Math.random() < Math.min(1, rates.gear * game.run.gearDropMul)) {
+      game.items.push(new Item(px, py, 'gear', rollGearItem(game.run.rarityBoost === 1 ? {} : { rarityBoost: game.run.rarityBoost })));
       continue;
     }
     if (Math.random() < rates.material) {

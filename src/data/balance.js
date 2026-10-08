@@ -133,7 +133,8 @@ export const WAVE_SPAWN_DIST_MAX = 800;
 export const WAVE_SPAWN_TOO_CLOSE = 400;  // 맵 끝에 걸려 이보다 가까워지면 다른 방향으로 다시 뽑음
 export const WAVE_PACK_RADIUS = 70;       // 무리 안에서 흩어지는 반경
 export const WAVE_SPAWN_EDGE_MARGIN = 60; // 맵 끝에서 띄우는 거리
-export const HUNT_SPEED_MULT = 2.2;       // 주인공을 아직 못 본(어그로 밖) 웨이브 몬스터의 이동 속도 배율
+export const HUNT_SPEED_MULT = 2.2;
+export const HOME_WANDER_RADIUS = 110; // 파밍 맵 몬스터가 무리 자리에서 배회하는 반경(px)       // 주인공을 아직 못 본(어그로 밖) 웨이브 몬스터의 이동 속도 배율
 
 // --- 몬스터 특수 행동 (보스/돌진/자폭/번개/광신 오라)
 export const BOSS_SLAM_COOLDOWN = 4.5;

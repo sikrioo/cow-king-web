@@ -14,13 +14,14 @@
 ## 구조 (의존 방향: 위가 아래를 import, 역방향 금지)
 ```
 main.js            부팅만 (boot: 화면/목장 → createHero → 입력 연결 → resetGame → 타이틀 → 루프)
-game.js            새 게임(resetGame), 상태(title/playing/gameover/victory + paused), fixedUpdate 순서, 키 의도 처리
+game.js            상태(title/hub/playing/gameover/victory + paused), fixedUpdate 순서, 키 의도 처리
+session.js         새 캐릭터(newCharacter) → 맵 선택(goHub) → 맵 입장(enterMap) 흐름. resetGame = 새 캐릭터 + 목장
 input.js           KEY_INTENTS(키 → 의도 한 테이블), 키보드/캔버스/조이스틱 리스너
 render/            그리기만 (renderer.js = 프레임 그리기 순서·월드/화면 좌표 구분, monster/heroSprites, arena, ground(바닥 무늬 조각 캐시), fx, hud, minimap, items)
 ui/                overlays(타이틀·배너·일시정지), dom(HTML 버튼·동기화), itemView(아이템 표시 규칙 한 곳), menu/(캔버스 메뉴)
 entities/          monster(일반 AI) + behaviors(종류별 훅), hero(createHero/updatePlayer), drop(바닥 아이템), actor(team)
 systems/           combat, skills, gear, loot, potions, progression, waves, fx(이펙트 생성/갱신)
-world/arena.js     목장 배치(고정 크기 data/maps.js)·벽·안쪽 좌표
+world/arena.js     지금 맵(currentMap/setMap) 배치(고정 크기 data/maps.js)·벽·안쪽 좌표
 world/camera.js    카메라(주인공 추적, 맵 끝 멈춤, 작은 화면 줌) - 보기 전용, 게임 결과에 영향 금지
 state.js           game / ui / input 상태 그룹 (주인공은 game.hero)
 core/              context(canvas), physics(Matter 엔진·별칭), loop(고정 타임스텝)
@@ -77,6 +78,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 감정 대상은 인덱스가 아니라 객체 참조. 메뉴 클릭 영역은 그릴 때마다 재등록, 입력은 직전 프레임 영역 사용.
 - 히트 판정: 근접은 몬스터 중심(발) + `getCowHitRadius`. 투사체·폭발·클릭은 그림 기준 `combat.cowEdgeDist`(몸통 원 = 발에서 위로 40*scale, 반지름 30*scale + 발밑 원) - 소 그림의 몸통은 발보다 위에 그려진다. `hitPlayer` 무적시간이 지속 피해 틱을 제한한다.
 - 맵은 화면보다 크다(카메라): 월드 좌표 그림은 renderer의 applyCamera 블록 안, HUD·배너는 밖. 화면 밖 몬스터는 그리지 않으므로 그림 코드가 게임 상태/난수를 건드리면 화면 크기에 따라 결과가 달라진다.
+- 맵 구조: 타이틀(직업) → 맵 선택(`ui/mapSelect.js`) → 목장(mode 'wave', 시작 웨이브 선택) / 파밍 맵(mode 'farm', 난이도 `data/difficulty.js`, 인스턴스 - 들어갈 때마다 `systems/mapRun.js`가 무리 배치) → 죽음/승리/나가기(T 두 번) → 맵 선택. 캐릭터(레벨·장비·가방·카드)는 유지(영구 저장은 서버 이후). 지금 맵의 배율은 `game.run`(목장은 전부 1). 맵 추가 = `data/maps.js` 항목 + `MAP_ORDER`.
 - 웨이브 몬스터는 `hunt`(어그로 밖이어도 주인공 쪽으로 이동). 생성 위치 규칙은 `systems/waves.js`, 수치는 `data/balance.js`의 WAVE_*/HUNT_*.
 - 몬스터 40마리 이상도 나온다: 몬스터마다 `ctx.filter`나 매 프레임 그라데이션 생성 금지.
 - `localStorage`는 항상 try/catch, 저장 키 `cowking_release_meta_v1` 유지.
