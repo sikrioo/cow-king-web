@@ -1,5 +1,6 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
-import { hexToRgba, hash01 } from '../util.js';
+import { hexToRgba, hash01, resistOf } from '../util.js';
+import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
 import { game, ui, input } from '../state.js';
 import { drawOrb, drawShard } from './iceFx.js';
 
@@ -200,6 +201,30 @@ export function drawHeroFortify(ctx, t) {
     ctx.globalAlpha = (1 - life) * 0.9 * blink;
     ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
   }
+  ctx.restore();
+}
+
+// 면역 표시: 면역인 속성마다 머리 위에 "물리 면역" 같은 글자 (cows = 화면에 보이는 몬스터만)
+const IMMUNE_KEYS = ['phys', ...ELEMENTS];
+const IMMUNE_LABEL = { phys: { text: '물리 면역', color: '#e0e0e0' }, ...Object.fromEntries(ELEMENTS.map((el) => [el, { text: `${ELEMENT_DEF[el].label} 면역`, color: ELEMENT_DEF[el].color }])) };
+export function drawImmuneLabels(ctx, cows) {
+  ctx.save();
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+  cows.forEach((c) => {
+    if (c.state === 'dead') return;
+    const keys = IMMUNE_KEYS.filter((k) => resistOf(c, k) >= 1);
+    if (!keys.length) return;
+    const top = c.y - 70 * c.scale - 8; // 몸통 원(발 위 40*scale, 반지름 30*scale) 위
+    keys.forEach((k, i) => {
+      const y = top - (keys.length - 1 - i) * 12;
+      ctx.strokeText(IMMUNE_LABEL[k].text, c.x, y);
+      ctx.fillStyle = IMMUNE_LABEL[k].color;
+      ctx.fillText(IMMUNE_LABEL[k].text, c.x, y);
+    });
+  });
   ctx.restore();
 }
 

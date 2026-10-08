@@ -11,7 +11,7 @@ import { game, dev } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot } from './loot.js';
-import { attackSpeedMul, skillMul } from '../util.js';
+import { attackSpeedMul, skillMul, resistOf } from '../util.js';
 import { COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import {
   toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath
@@ -57,7 +57,8 @@ export function registerComboHit() {
   game.hero.comboTimer = COMBO_WINDOW;
 }
 
-export function tryPlayerAttack() {
+// onHit(c): 맞은 몬스터마다 추가 효과 (무기 원소 피해 - 순환 import를 피하려고 skills.js가 넘김)
+export function tryPlayerAttack(onHit) {
   if (!game.hero.alive || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
   const ws = nextSwingWeapon();
   const spdMul = attackSpeedMul(game.hero);
@@ -78,7 +79,7 @@ export function tryPlayerAttack() {
     if (dist > atkRange + getCowHitRadius(c)) return;
     let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
-    if (diff < getAttackArc() / 2) { damageCow(c, dmg); landed = true; }
+    if (diff < getAttackArc() / 2) { damageCow(c, dmg); if (onHit) onHit(c); landed = true; }
   });
   if (landed) registerComboHit();
 }
@@ -131,10 +132,9 @@ export function heroHitDamage(ws = game.hero.weaponStats.main) {
   return rollWeaponDamage(ws) + game.hero.attackBonus + game.hero.gearAtkPower;
 }
 
-// 몬스터 저항 (data/monsters.js의 resist: phys/fire/cold/lightning/poison, 0~1 - 1이면 면역)
+// 몬스터 저항 (phys/fire/cold/lightning/poison, 0~1 - 1이면 면역). 규칙은 util.resistOf
 export function cowResist(c, key) {
-  const r = (MONSTERS[c.kind] || MONSTERS.normal).resist;
-  return (r && r[key]) || 0;
+  return resistOf(c, key);
 }
 
 // 주인공의 물리 피해 → 물리 저항 적용 (면역이면 0, 저항이 없으면 그대로)

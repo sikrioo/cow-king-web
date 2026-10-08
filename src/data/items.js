@@ -54,8 +54,15 @@ export const STAT_DEF = {
   evasion:   { label: '회피율',   min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   health:    { label: '체력',     min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },
-  mana:      { label: '마나',     min: 5,    max: 15,   flat: true, fmt: (v) => `+${Math.round(v)}` }
+  mana:      { label: '마나',     min: 5,    max: 15,   flat: true, fmt: (v) => `+${Math.round(v)}` },
+  // 무기 원소 피해 (타격마다 추가 원소 피해, ×10 정수) - noRoll: 아직 드랍 옵션으로는 안 나옴 (개발자 모드 테스트 무기에만)
+  fireDmg:      { label: '화염 피해', min: 15, max: 40, flat: true, element: 'fire', noRoll: true, fmt: (v) => `+${Math.round(v)}` },
+  coldDmg:      { label: '냉기 피해', min: 15, max: 40, flat: true, element: 'cold', noRoll: true, fmt: (v) => `+${Math.round(v)}` },
+  lightningDmg: { label: '번개 피해', min: 15, max: 40, flat: true, element: 'lightning', noRoll: true, fmt: (v) => `+${Math.round(v)}` },
+  poisonDmg:    { label: '독 피해',   min: 15, max: 40, flat: true, element: 'poison', noRoll: true, fmt: (v) => `+${Math.round(v)}` }
 };
+// 개발자 모드 테스트 무기의 원소 피해 값
+export const TEST_ELEMENT_WEAPON_DMG = 30;
 
 // --- 등급
 export const RARITY_DEF = {

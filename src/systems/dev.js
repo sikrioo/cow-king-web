@@ -69,11 +69,15 @@ export function devJumpWave(n) {
   say(`웨이브 ${n}로`);
 }
 
-export function devSpawn(kind) {
+// immune: 면역으로 만들 속성 목록 (['phys', 'fire', ...]) - 개체 저항 c.resist에 1로 덮어씀 (종류 기본 저항은 그대로)
+export function devSpawn(kind, immune = []) {
   const a = game.hero.facing;
   const p = clampToPen(game.hero.x + Math.cos(a) * 170, game.hero.y + Math.sin(a) * 170, 40);
   const scale = kind === 'boss' ? 1.0 : (1.05 + Math.random() * 0.5) * 0.3;
-  game.cows.push(new Monster(scale, kind, { pos: p, hunt: true }));
+  const c = new Monster(scale, kind, { pos: p, hunt: true });
+  if (immune.length) c.resist = Object.fromEntries(immune.map((k) => [k, 1]));
+  game.cows.push(c);
+  return c;
 }
 
 export function devGiveGear(rarity) {

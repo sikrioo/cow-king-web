@@ -2,6 +2,14 @@
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
 import { SKILL_LEVEL_UP } from './data/skills.js';
+import { MONSTERS } from './data/monsters.js';
+
+// 몬스터 저항 (0~1, 1이면 면역): 개체 덮어쓰기(c.resist - 개발자 소환 등) → 종류 기본값(data/monsters.js resist)
+export function resistOf(c, key) {
+  if (c.resist && c.resist[key] != null) return c.resist[key];
+  const r = (MONSTERS[c.kind] || MONSTERS.normal).resist;
+  return (r && r[key]) || 0;
+}
 
 // 스킬 레벨 (0 = 안 배움). 레벨업 카드로 오름 (systems/levelCards.js)
 export function skillLevel(hero, id) {

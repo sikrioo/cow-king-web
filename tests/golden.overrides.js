@@ -4,7 +4,9 @@ export const GOLDEN_OVERRIDES = {
   // 2026-10-05: '방어력'과 '블락률'이 같은 수치인데 화면마다 이름이 달라서 '블락률'로 통일 (사용자 결정 A)
   'exact.statDef.defense.label': '블락률',
   // 2026-10-07: 스킬은 레벨이 아니라 레벨업 카드(뱀서식)로 배움 (사용자 결정) - 카드를 안 고른 새 캐릭터는 레벨과 상관없이 시작 스킬만
-  'exact.slot2OptionsByLevel': { 1: ['warcry'], 2: ['warcry'], 3: ['warcry'], 4: ['warcry'], 5: ['warcry'] }
+  'exact.slot2OptionsByLevel': { 1: ['warcry'], 2: ['warcry'], 3: ['warcry'], 4: ['warcry'], 5: ['warcry'] },
+  // 2026-10-08: 개발자 모드 테스트 가방에 원소별 테스트 무기 4개 추가 (사용자 결정: 전사로 면역 몬스터 시험)
+  'exact.start.testStashCount': 11
 };
 
 // 골든에 없던 항목을 **새로 추가**한 경우 (부모 경로는 있어야 함). 값은 현재 단위(×10)
@@ -24,7 +26,12 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.perPoint.castSpeed': 0.03,
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,
-  'exact.progression.skillUnlockLevel.teleport': 3
+  'exact.progression.skillUnlockLevel.teleport': 3,
+  // 2026-10-08: 무기 원소 피해 옵션 (지금은 드랍 안 됨 - 개발자 테스트 무기에만)
+  'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
+  'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },
+  'exact.statDef.lightningDmg': { label: '번개 피해', min: 15, max: 40, fmtAtMax: '+40' },
+  'exact.statDef.poisonDmg': { label: '독 피해', min: 15, max: 40, fmtAtMax: '+40' }
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

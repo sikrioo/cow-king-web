@@ -46,6 +46,15 @@ export function damageCowPacket(c, packet, opts = {}) {
   return total;
 }
 
+// 무기 원소 피해 (장비 원소 옵션 합계 hero.gearElemDmg): 물리 타격과 따로 한 번 더 들어감 (숫자도 따로)
+// 근접 타격/스킬 타격을 한 곳(skills.js)에서 부름 - 원소 옵션이 없으면 아무 일 없음
+export function weaponElementHit(c) {
+  const e = game.hero.gearElemDmg;
+  if (!e || !c || c.state === 'dead') return;
+  if (!(e.fire || e.cold || e.lightning || e.poison)) return;
+  damageCowPacket(c, { fire: e.fire, cold: e.cold, lightning: e.lightning, poison: e.poison });
+}
+
 function setCowDot(c, kind, total, duration) {
   const s = c[kind];
   const dps = total / duration;

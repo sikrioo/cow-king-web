@@ -6,7 +6,7 @@ import {
 } from '../data/balance.js';
 import {
   GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR,
-  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT
+  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG
 } from '../data/items.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
@@ -65,7 +65,7 @@ export function rollGearItem(opts = {}) {
   const rarity = opts.rarity || rollRarity();
   const rDef = RARITY_DEF[rarity];
 
-  const statKeys = Object.keys(STAT_DEF);
+  const statKeys = Object.keys(STAT_DEF).filter((k) => !STAT_DEF[k].noRoll);
   const numStats = rDef.statMin + Math.floor(Math.random() * (rDef.statMax - rDef.statMin + 1));
   const chosen = [];
   while (chosen.length < numStats) {
@@ -180,6 +180,10 @@ export function giveTestStash() {
   });
   game.hero.inventory.push(rollGearItem({ category: 'weapon', handedness: 'two', rarity: 'normal', variant: 'sword', identified: true }));
   game.hero.inventory.push(rollGearItem({ category: 'shield', rarity: 'normal', identified: true }));
+  // 원소별 테스트 무기 (한손검, 원소 피해 옵션 하나) - 전사로 면역 몬스터를 시험할 때
+  Object.keys(STAT_DEF).filter((k) => STAT_DEF[k].element).forEach((k) => {
+    game.hero.inventory.push({ category: 'weapon', handedness: 'one', rarity: 'magic', stats: { [k]: TEST_ELEMENT_WEAPON_DMG }, upgradeLevel: 0, identified: true, variant: 'sword', uid: nextItemUid() });
+  });
 }
 
 export function equipFromInventory(index, slot = null) {
@@ -242,6 +246,7 @@ export function armorReduction(armor) {
 }
 
 export function recalcGearStats() {
+  const elemDmg = { fire: 0, cold: 0, lightning: 0, poison: 0 }; // 무기 원소 피해 (STAT_DEF의 element 옵션)
   let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
@@ -255,6 +260,7 @@ export function recalcGearStats() {
     if (it.stats.moveSpeed) moveSpeed += it.stats.moveSpeed;
     if (it.stats.health) health += it.stats.health;
     if (it.stats.mana) mana += it.stats.mana;
+    for (const k in it.stats) { const el = STAT_DEF[k] && STAT_DEF[k].element; if (el) elemDmg[el] += it.stats[k]; }
   });
 
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
@@ -275,6 +281,7 @@ export function recalcGearStats() {
 
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;
+  game.hero.gearElemDmg = elemDmg;
   game.hero.gearCastSpeed = castSpeed;
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;

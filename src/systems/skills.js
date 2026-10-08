@@ -17,6 +17,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
 import { tryFortify } from './physSkills.js';
+import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
@@ -79,12 +80,12 @@ export function whirlwindHit(c) {
 
   const dmg = physDamageTo(c, Math.round(heroHitDamage() * skillMul(game.hero, 'whirlwind', 'damage')));
   showCowDamage(c, dmg);
-  if (dmg <= 0) return; // 물리 면역
-  c.hp -= dmg;
-  registerComboHit();
-  if (c.hp <= 0 && c.state !== 'dead') {
-    killCow(c);
+  if (dmg > 0) { // 0 = 물리 면역
+    c.hp -= dmg;
+    registerComboHit();
+    if (c.hp <= 0 && c.state !== 'dead') killCow(c);
   }
+  weaponElementHit(c);
 }
 
 export function tryLeap() {
@@ -142,12 +143,12 @@ export function leapHitCow(c) {
 
   const dmg = physDamageTo(c, Math.round(heroHitDamage() * skillMul(game.hero, 'leap', 'damage')));
   showCowDamage(c, dmg);
-  if (dmg <= 0) return; // 물리 면역
-  c.hp -= dmg;
-  registerComboHit();
-  if (c.hp <= 0 && c.state !== 'dead') {
-    killCow(c);
+  if (dmg > 0) { // 0 = 물리 면역
+    c.hp -= dmg;
+    registerComboHit();
+    if (c.hp <= 0 && c.state !== 'dead') killCow(c);
   }
+  weaponElementHit(c);
 }
 
 export function tryRush() {
@@ -193,6 +194,7 @@ export function updateRush(dt) {
     if (Math.hypot(c.x - nx, c.y - ny) <= RUSH_HIT_RADIUS + getCowHitRadius(c)) {
       game.hero.rushHitSet.add(c);
       skillDamageCow(c, Math.round((rollWeaponDamage() + RUSH_DAMAGE_BONUS) * skillMul(game.hero, 'rush', 'damage')), 8.5, '#ff9b63');
+      weaponElementHit(c);
     }
   });
 
@@ -237,6 +239,7 @@ export function updateGroundSmash(dt) {
       if (!canHit(game.hero, c)) return;
       if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius + getCowHitRadius(c)) {
         skillDamageCow(c, Math.round((rollWeaponDamage() + SMASH_DAMAGE_BONUS) * skillMul(game.hero, 'smash', 'damage')), 11, '#ffd36a');
+        weaponElementHit(c);
         c.stunTimer = Math.max(c.stunTimer || 0, 0.35);
       }
     });
@@ -246,7 +249,7 @@ export function updateGroundSmash(dt) {
 }
 
 export const SKILLS = {
-  attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(), cd: () => game.hero.attackCooldown,    cdMax: () => game.hero.attackCooldownMax || ATTACK_COOLDOWN },
+  attack:    { ...SKILL_META.attack,    try: () => tryPlayerAttack(weaponElementHit), cd: () => game.hero.attackCooldown,    cdMax: () => game.hero.attackCooldownMax || ATTACK_COOLDOWN },
   warcry:    { ...SKILL_META.warcry,    try: () => tryWarCry(),       cd: () => game.hero.warcryCooldown,    cdMax: () => WARCRY_COOLDOWN * castSpeedMul(game.hero) },
   whirlwind: { ...SKILL_META.whirlwind, try: () => tryWhirlwind(),    cd: () => game.hero.whirlwindCooldown, cdMax: () => WHIRLWIND_COOLDOWN * castSpeedMul(game.hero) + WHIRLWIND_DURATION },
   leap:      { ...SKILL_META.leap,      try: () => tryLeap(),         cd: () => game.hero.leapCooldown,      cdMax: () => LEAP_COOLDOWN * castSpeedMul(game.hero) },
@@ -275,7 +278,7 @@ export function learnableSkills() {
 // 기본 공격 (적 클릭/Shift+클릭): 전사 = 근접 휘두르기, 마법사 = 마력탄
 const isCaster = () => (CLASSES[game.hero.classKey] || CLASSES.warrior).basic === 'bolt';
 export function tryBasicAttack() {
-  if (isCaster()) tryBolt(); else tryPlayerAttack();
+  if (isCaster()) tryBolt(); else tryPlayerAttack(weaponElementHit);
 }
 export function basicAttackReady() {
   return isCaster() ? game.hero.spellCd.bolt <= 0 : game.hero.attackCooldown <= 0;

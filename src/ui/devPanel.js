@@ -2,6 +2,7 @@
 // 버튼 연결과 몬스터 소환 버튼 생성은 처음 열 때 한 번 (부팅/테스트 환경에서는 DOM을 건드리지 않음)
 import { ELITE_KINDS } from '../data/monsters.js';
 import { RARITY_DEF } from '../data/items.js';
+import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
 import { BOSS_WAVE } from '../data/balance.js';
 import { ui } from '../state.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
@@ -11,6 +12,7 @@ import {
 } from '../systems/dev.js';
 
 let built = false;
+const spawnImmune = new Set(); // 소환할 때 붙일 면역 (여러 개 가능)
 let panelActions = { newGameAs: () => {} };
 
 const TOGGLES = [
@@ -59,8 +61,17 @@ function build() {
   for (let w = 1; w <= BOSS_WAVE; w++) button(prog, w === BOSS_WAVE ? `${w} (보스)` : `${w}`, () => devJumpWave(w));
   button(prog, '몬스터 전부 제거', devKillAll);
 
+  const imm = row(body, '면역 (켜고 소환)');
+  [['phys', '물리'], ...ELEMENTS.map((el) => [el, ELEMENT_DEF[el].label])].forEach(([key, label]) => {
+    const b = button(imm, `${label}: 끔`, () => {
+      if (spawnImmune.has(key)) spawnImmune.delete(key); else spawnImmune.add(key);
+      const on = spawnImmune.has(key);
+      b.textContent = `${label}: ${on ? '켬' : '끔'}`;
+      b.classList.toggle('on', on);
+    });
+  });
   const spawn = row(body, '소환');
-  ['normal', ...ELITE_KINDS, 'boss'].forEach((k) => button(spawn, k, () => devSpawn(k)));
+  ['normal', ...ELITE_KINDS, 'boss'].forEach((k) => button(spawn, k, () => devSpawn(k, [...spawnImmune])));
 
   const items = row(body, '아이템');
   Object.keys(RARITY_DEF).forEach((r) => button(items, `${RARITY_DEF[r].label} 장비`, () => devGiveGear(r)));
