@@ -6,7 +6,7 @@ import {
 } from '../data/balance.js';
 import {
   GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR,
-  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG
+  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG, OPTION_ROLL_SKEW
 } from '../data/items.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
@@ -68,7 +68,8 @@ export function rollGearItem(opts = {}) {
   const rarity = opts.rarity || rollRarity(opts.rarityBoost || 1);
   const rDef = RARITY_DEF[rarity];
 
-  const statKeys = Object.keys(STAT_DEF).filter((k) => !STAT_DEF[k].noRoll);
+  // opts.noElement: 원소 피해 옵션 제외 (시작 장비는 기본 무기)
+  const statKeys = Object.keys(STAT_DEF).filter((k) => !STAT_DEF[k].noRoll && (!STAT_DEF[k].cats || STAT_DEF[k].cats.includes(category)) && !(opts.noElement && STAT_DEF[k].element));
   const numStats = rDef.statMin + Math.floor(Math.random() * (rDef.statMax - rDef.statMin + 1));
   const chosen = [];
   while (chosen.length < numStats) {
@@ -76,17 +77,20 @@ export function rollGearItem(opts = {}) {
     if (!chosen.includes(k)) chosen.push(k);
   }
   const stats = {};
+  const quality = {}; // 옵션마다 범위 안 위치 0~1 (꽝/최상 표시)
   chosen.forEach((k) => {
     const d = STAT_DEF[k];
-    const v = (d.min + Math.random() * (d.max - d.min)) * rDef.mult;
+    const q = Math.pow(Math.random(), OPTION_ROLL_SKEW);
+    const v = (d.min + q * (d.max - d.min)) * rDef.mult;
     stats[k] = d.flat ? Math.round(v) : v; // 고정 수치 옵션(공격력/체력/마나)은 정수
+    quality[k] = Math.round(q * 100) / 100;
   });
   let variant = opts.variant || null;
   if (!variant) {
     if (category === 'weapon') variant = WEAPON_VARIANTS[Math.floor(Math.random() * WEAPON_VARIANTS.length)];
     else if (category === 'accessory') variant = ACCESSORY_VARIANTS[Math.floor(Math.random() * ACCESSORY_VARIANTS.length)];
   }
-  return { category, handedness, rarity, stats, upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
+  return { category, handedness, rarity, stats, quality, upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
 }
 
 // 아이템 고유 번호 - 장비는 메서드 없는 순수 데이터(JSON 직렬화 가능) + uid (트레이드/저장 대비)
@@ -169,7 +173,7 @@ export function equipItem(gear, opts = {}) {
 // 시작할 때 맨손 대신 기본 장비를 쥐어줌 - 한손검+방패 또는 도끼+방패 중 랜덤
 export function giveStarterGear() {
   const weaponVariant = Math.random() < 0.5 ? 'sword' : 'axe';
-  const weapon = rollGearItem({ category: 'weapon', handedness: 'one', rarity: 'normal', variant: weaponVariant, identified: true });
+  const weapon = rollGearItem({ category: 'weapon', handedness: 'one', rarity: 'normal', variant: weaponVariant, identified: true, noElement: true });
   const shield = rollGearItem({ category: 'shield', rarity: 'normal', identified: true });
   equipItem(weapon, { silent: true });
   equipItem(shield, { silent: true });

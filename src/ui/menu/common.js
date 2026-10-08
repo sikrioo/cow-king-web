@@ -1,5 +1,6 @@
 // 캔버스 메뉴 공용 도우미 (클릭 영역 판정, 보고 있는 가방 칸, 글자 맞춤, 비교 대상 장비)
 import { STAT_DEF, ARMOR_LABEL, WEAPON_DAMAGE_LABEL, WEAPON_SPEED_LABEL } from '../../data/items.js';
+import { optionText } from '../itemView.js';
 import { gearArmor, weaponStats } from '../../systems/gear.js';
 import { game, ui } from '../../state.js';
 
@@ -41,7 +42,7 @@ export function wrapStatLines(ctx, gear, maxW) {
   let line = '';
   const parts = [
     ...gearBaseParts(gear).map((p) => `${p.label} ${p.text}`),
-    ...Object.entries(gear.stats).map(([k, v]) => `${STAT_DEF[k].label}${STAT_DEF[k].fmt(v)}`)
+    ...Object.entries(gear.stats).map(([k, v]) => optionText(gear, k, v))
   ];
   parts.forEach((part) => {
     const test = line ? `${line}  ${part}` : part;

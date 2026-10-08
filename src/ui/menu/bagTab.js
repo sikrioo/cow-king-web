@@ -6,7 +6,7 @@ import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
 import { discardFromInventory } from '../../systems/loot.js';
-import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR } from '../itemView.js';
+import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR, rollTag, optionText } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareTargets, gearBaseParts } from './common.js';
 
 const WORN_COLOR = '#9be39b';
@@ -117,8 +117,9 @@ function drawGearLines(ctx, gear, x, y) {
     y += 15;
   });
   Object.entries(gear.stats).forEach(([k, v]) => {
-    ctx.fillStyle = '#dfe9d8';
-    ctx.fillText(`${STAT_DEF[k].label} ${STAT_DEF[k].fmt(v)}`, x, y);
+    const r = rollTag(gear, k);
+    ctx.fillStyle = r && r.tag ? r.color : '#dfe9d8'; // 꽝은 흐리게, 최상은 금색
+    ctx.fillText(optionText(gear, k, v, { pct: true }), x, y);
     y += 15;
   });
   return y;

@@ -49,3 +49,33 @@ it('버리기: 발밑에 떨어지고, 바로 다시 줍지 않으며, 벗어났
     env.restore();
   }
 });
+
+it('옵션 굴림: 낮은 값이 흔하고 최상은 드묾(꽝/최상 표시), 원소 피해 옵션은 무기에만', async () => {
+  const env = installBrowserEnv({ seed: 9 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { rollGearItem } = await import('../src/systems/gear.js');
+    const { rollTag, optionText } = await import('../src/ui/itemView.js');
+    const { STAT_DEF, ROLL_QUALITY } = await import('../src/data/items.js');
+    let n = 0, dud = 0, top = 0;
+    for (let i = 0; i < 1500; i++) {
+      const g = rollGearItem();
+      Object.keys(g.stats).forEach((k) => {
+        if (STAT_DEF[k].element) expect(g.category).toBe('weapon');
+        const q = g.quality[k];
+        expect(q).toBeGreaterThanOrEqual(0); expect(q).toBeLessThanOrEqual(1);
+        n++; if (q <= ROLL_QUALITY.dud) dud++; if (q >= ROLL_QUALITY.top) top++;
+      });
+    }
+    expect(dud / n).toBeGreaterThan(top / n * 2); // 꽝이 최상보다 훨씬 흔함
+    expect(top).toBeGreaterThan(0);
+    const g = { stats: { health: 30 }, quality: { health: 0.95 } };
+    expect(rollTag(g, 'health').tag).toBe('최상');
+    expect(optionText(g, 'health', 30)).toContain('최상');
+    expect(rollTag({ stats: { health: 1 } }, 'health')).toBe(null); // quality 없는 장비
+    let weaponElem = 0;
+    for (let i = 0; i < 400; i++) { const w = rollGearItem({ category: 'weapon' }); if (Object.keys(w.stats).some((k) => STAT_DEF[k].element)) weaponElem++; }
+    expect(weaponElem).toBeGreaterThan(0);
+  } finally { env.restore(); }
+});
