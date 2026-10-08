@@ -22,7 +22,6 @@ export function devLevelUp(n = 1) {
 export function devMaxLevel() {
   devLevelUp(MAX_LEVEL);
   [...CLASSES[game.hero.classKey].skills, ...COMMON_SKILLS].forEach((id) => { game.hero.skillLevels[id] = SKILL_MAX_LEVEL; });
-  if (!game.hero.slot3) game.hero.slot3 = COMMON_SKILLS[0];
   devSkipCards();
 }
 

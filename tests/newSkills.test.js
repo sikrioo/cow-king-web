@@ -1,4 +1,4 @@
-// 물리 스킬 투지(잠깐 최대 체력 증가), 공통 스킬 순간이동(공통 슬롯 F), 스킬 분류
+// 물리 스킬 투지(잠깐 최대 체력 증가), 공통 스킬 순간이동(Q/R로 슬롯에, 우클릭), 스킬 분류
 import { it, expect, vi } from 'vitest';
 import { installBrowserEnv } from './helpers/browserEnv.js';
 
@@ -60,26 +60,27 @@ it('투지: 최대 체력이 늘고 그만큼 회복, 끝나면 되돌아감 (�
   } finally { env.restore(); }
 });
 
-it('순간이동: 카드로 배우면 공통 슬롯에, F로 바라보는 쪽 사거리만큼 이동 (목장 밖으론 안 나감)', async () => {
+it('순간이동: 카드로 배우면 R로 슬롯2에 넣고, 바라보는 쪽 사거리만큼 이동 (목장 밖으론 안 나감)', async () => {
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot('sorc');
     const h = m.game.hero;
-    expect(h.slot3).toBe(null);
-    m.trySlot(3); // 빈 슬롯 → 아무 일 없음
+    m.cycleSkillSlot(2);
+    expect(h.slot2).not.toBe('teleport'); // 안 배웠으면 전환 목록에 없음
     h.level = 3;
     m.game.cardOffer = { cards: [{ type: 'newSkill', id: 'teleport', from: 0, to: 1 }] };
     m.pickCard(0);
-    expect(h.slot3).toBe('teleport');
+    for (let i = 0; i < 8 && h.slot2 !== 'teleport'; i++) m.cycleSkillSlot(2);
+    expect(h.slot2).toBe('teleport');
     const x0 = h.x, y0 = h.y;
     h.facing = 0;
     m.input.mouseScreen = null; // 모바일처럼 바라보는 방향
-    m.trySlot(3);
+    m.trySlot(2);
     expect(h.x - x0).toBeCloseTo(m.SKILL_STATS.teleport.range, 0);
     expect(h.y).toBeCloseTo(y0, 5);
     expect(h.spellCd.teleport).toBeGreaterThan(0);
     m.tick(m.SKILL_STATS.teleport.cooldown + 0.1);
-    for (let i = 0; i < 10; i++) { m.tick(m.SKILL_STATS.teleport.cooldown + 0.1); h.mana = h.maxMana; m.trySlot(3); }
+    for (let i = 0; i < 10; i++) { m.tick(m.SKILL_STATS.teleport.cooldown + 0.1); h.mana = h.maxMana; m.trySlot(2); }
     expect(h.x).toBeLessThanOrEqual(m.PEN.x + m.PEN.size - h.r); // 벽 안쪽
   } finally { env.restore(); }
 });

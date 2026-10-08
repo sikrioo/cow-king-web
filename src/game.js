@@ -159,7 +159,6 @@ export function resetGame() {
   game.kills = 0;
   game.hero.slot1 = CLASSES[game.hero.classKey].slots[0];
   game.hero.slot2 = CLASSES[game.hero.classKey].slots[1];
-  game.hero.slot3 = null;
   game.hero.fortifyTimer = 0;
   game.hero.fortifyMax = 0;
   game.hero.fortifyHp = 0;
@@ -348,8 +347,6 @@ export function handleKeyDown(intent, k, e) {
     if (game.gameState !== 'playing') { resetGame(); }
     else if (!input.holdSlot2) { stopClickOrders(); input.holdSlot2 = true; trySlot(2); }
   }
-  // F = 공통 슬롯 (탭 한 번에 한 번 시전)
-  if (intent === 'slot3' && game.gameState === 'playing') { stopClickOrders(); trySlot(3); }
   // Q/R = 슬롯1/슬롯2에 배정된 스킬을 다음 스킬로 전환(탭)
   if (intent === 'cycleSlot1') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(1); }
   if (intent === 'cycleSlot2') { if (game.gameState !== 'playing') resetGame(); else cycleSkillSlot(2); }

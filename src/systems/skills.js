@@ -261,11 +261,11 @@ export const SKILLS = {
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
 
-// 지금 캐릭터의 스킬 목록 (슬롯1/2 전환 순서)
+// 지금 캐릭터의 스킬 목록
 export function classSkills() {
   return (CLASSES[game.hero.classKey] || CLASSES.warrior).skills;
 }
-// 배울 수 있는 스킬 전부 = 캐릭터 스킬 + 공통 스킬
+// 배울 수 있는 스킬 전부 = 캐릭터 스킬 + 공통 스킬 (슬롯1/2 Q/R 전환 순서)
 export function learnableSkills() {
   return [...classSkills(), ...COMMON_SKILLS];
 }
@@ -285,10 +285,9 @@ export function basicAttackReach(c) {
 }
 
 export function cycleSkillSlot(slotNum) {
-  if (slotNum === 3) { cycleCommonSlot(); return; }
   const key = slotNum === 1 ? 'slot1' : 'slot2';
   const otherKey = slotNum === 1 ? 'slot2' : 'slot1';
-  const order = classSkills();
+  const order = learnableSkills();
   const cur = order.indexOf(game.hero[key]);
   for (let i = 1; i <= order.length; i++) {
     const next = order[(cur + i) % order.length];
@@ -298,13 +297,6 @@ export function cycleSkillSlot(slotNum) {
   const labelEl = document.getElementById(`${key}-label`);
   if (labelEl) labelEl.textContent = SKILLS[game.hero[key]].label;
   if (slotEl) slotEl.style.background = SKILLS[game.hero[key]].color;
-}
-
-// 공통 슬롯(F): 배운 공통 스킬 중 다음 것으로 (버튼 이름은 ui/dom.updateSkillButtonsUI가 매 프레임 맞춤)
-function cycleCommonSlot() {
-  const learned = COMMON_SKILLS.filter((id) => isSkillUnlocked(id));
-  if (!learned.length) return;
-  game.hero.slot3 = learned[(learned.indexOf(game.hero.slot3) + 1) % learned.length];
 }
 
 // PC(마우스를 쓴 적 있음): 시전 직전에 커서 쪽을 보게 함 → 공격/스킬이 커서 방향으로. 모바일은 바라보는 방향 그대로
@@ -317,10 +309,8 @@ export function aimAtCursor() {
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로
 export function trySlot(n) {
-  const id = n === 3 ? game.hero.slot3 : n === 2 ? game.hero.slot2 : game.hero.slot1;
-  if (!id) return; // 공통 슬롯이 아직 빔
   aimAtCursor();
-  SKILLS[id].try();
+  SKILLS[n === 2 ? game.hero.slot2 : game.hero.slot1].try();
 }
 
 export function updateSkillSlots() {

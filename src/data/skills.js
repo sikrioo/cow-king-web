@@ -1,8 +1,8 @@
 // 스킬 메타(이름/분류/슬롯 색/설명/새 스킬 카드 레벨), 스킬 레벨 보너스, 마법·기타 스킬 수치.
-// 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터, 공통 슬롯 F). 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
+// 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터). 배운 스킬은 전부 슬롯1/2에 Q/R로 넣음 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
 export const SKILL_ORDER = ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash']; // 전사 레거시 스킬 순서 (classes.warrior.skills 앞부분)
 export const SKILL_TYPE_LABEL = { physical: '물리', magic: '마법', common: '공통' };
-export const COMMON_SKILLS = ['teleport']; // 모든 캐릭터가 카드로 배울 수 있음 → 공통 슬롯(F)
+export const COMMON_SKILLS = ['teleport']; // 모든 캐릭터가 카드로 배울 수 있음 (Q/R 전환 목록 뒤쪽에 붙음)
 export const SKILL_META = {
   attack:    { label: '공격',   type: 'physical', color: 'rgba(220,70,60,0.35)',   desc: '앞의 적을 무기로 벰' },
   warcry:    { label: '함성',   type: 'physical', color: 'rgba(232,163,61,0.40)',  desc: '주변 적을 밀쳐내고 기절시킴' },

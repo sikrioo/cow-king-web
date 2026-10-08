@@ -14,7 +14,7 @@ export function setInventoryOpen(open) {
   if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; ui.selectedEquipSlot = null; ui.hoverEquipSlot = null; }
   const dim = open ? '0.15' : '1';
   const pe = open ? 'none' : 'auto';
-  ['joystick-base', 'action-buttons', 'potion-buttons', 'slot3'].forEach((id) => {
+  ['joystick-base', 'action-buttons', 'potion-buttons'].forEach((id) => {
     const el = document.getElementById(id);
     el.style.opacity = dim;
     el.style.pointerEvents = pe;

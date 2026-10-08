@@ -115,10 +115,7 @@ function applyCard(card) {
   if (card.type === 'newSkill' || card.type === 'skillUp') {
     h.skillLevels[card.id] = card.to;
     const label = SKILL_META[card.id].label;
-    if (card.type === 'newSkill' && SKILL_META[card.id].type === 'common') {
-      if (!h.slot3) h.slot3 = card.id; // 공통 슬롯(F)이 비어 있으면 바로 넣음
-      say(`새 스킬: ${label} (F)`, '#9be39b');
-    } else if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
+    if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
     else say(`${label} Lv.${card.to}`, '#ffe066');
     spawnHitParticles(h.x, h.y, '#ffe066', 10);
     return;
