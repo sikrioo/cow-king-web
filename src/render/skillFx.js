@@ -3,6 +3,7 @@
 import { game } from '../state.js';
 import { hash01 } from '../util.js';
 import { drawPlayer } from './heroSprites.js';
+import { SPELLS } from '../data/skills.js';
 
 // 미끼: 주인공 그림 함수에 미끼 위치·방향을 넣은 '보기용 복사본'을 넘겨 그림 (게임 상태는 안 바꿈)
 export function drawDecoy(ctx, t) {
@@ -95,9 +96,32 @@ export function drawGroundSpellsUnder(ctx, t) {
   });
 }
 
-// 지점 마법 - 위(몬스터 위): 눈보라 얼음 덩어리 낙하, 화염기둥 불기둥
+// 화염 파도: 부채꼴 불의 벽 (불꽃 혀가 줄지어 일렁임, 지나간 자리에 옅은 그을음) - 들쭉날쭉은 hash01
+function drawFireWave(ctx, g, t, gi) {
+  const n = 13, arc = SPELLS.firewave.arc, fade = 1 - Math.max(0, (g.front / g.range - 0.85) / 0.15) * 0.8;
+  ctx.save();
+  ctx.globalAlpha = 0.12 * fade; // 지나간 자리 그을음
+  ctx.fillStyle = '#5a2a12';
+  ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.arc(g.x, g.y, g.front, g.dir - arc / 2, g.dir + arc / 2); ctx.closePath(); ctx.fill();
+  for (let i = 0; i < n; i++) {
+    const a = g.dir - arc / 2 + (arc * (i + 0.5)) / n;
+    const flick = hash01(i, gi, Math.floor(t * 14)) * 0.5 + 0.5;
+    const hgt = (18 + hash01(i, gi, 7) * 16) * flick;
+    const x = g.x + Math.cos(a) * g.front, y = g.y + Math.sin(a) * g.front;
+    const w = (g.front * arc) / n * 0.7 + 4;
+    ctx.globalAlpha = 0.9 * fade;
+    ctx.fillStyle = '#ff5a1e';
+    ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x, y - hgt); ctx.lineTo(x + w / 2, y); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffb347';
+    ctx.beginPath(); ctx.moveTo(x - w / 4, y); ctx.lineTo(x, y - hgt * 0.6); ctx.lineTo(x + w / 4, y); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// 지점 마법 - 위(몬스터 위): 눈보라 얼음 덩어리 낙하, 화염기둥 불기둥, 화염 파도
 export function drawGroundSpellsOver(ctx, t) {
   game.groundSpells.forEach((g, gi) => {
+    if (g.kind === 'firewave') { drawFireWave(ctx, g, t, gi); return; }
     ctx.save();
     if (g.kind === 'blizzard' && g.age < g.duration) {
       ctx.fillStyle = '#e8f7ff';

@@ -11,7 +11,7 @@ export const SKILL_CODE = {
   leap: ['tryLeap', 'updateLeap', 'leapLand', 'leapHitCow'], rush: ['tryRush', 'updateRush'], smash: ['tryGroundSmash', 'updateGroundSmash'],
   fortify: ['tryFortify', 'updateSkillBuffs'], flurry: ['tryFlurry', 'updateFlurry'], concuss: ['tryConcuss'], berserk: ['tryBerserk', 'berserkMul', 'heroDamageTaken'],
   decoy: ['tryDecoy', 'decoyFor', 'hitDecoy', 'updateSkillBuffs'], energyshield: ['tryEnergyShield', 'heroDamageTaken'], blizzard: ['tryBlizzard', 'updateGroundSpells'],
-  flamepillar: ['tryFlamePillar', 'updateGroundSpells'], bolt: ['tryBolt', 'spellDamage'], fireball: ['tryFireballSpell'], frostnova: ['tryFrostNova'],
+  flamepillar: ['tryFlamePillar', 'updateGroundSpells'], firewave: ['tryFireWave', 'updateFireWave'], bolt: ['tryBolt', 'spellDamage'], fireball: ['tryFireballSpell'], frostnova: ['tryFrostNova'],
   chain: ['tryChain'], orb: ['tryOrb'], teleport: ['tryTeleport']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)

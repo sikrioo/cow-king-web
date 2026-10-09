@@ -29,7 +29,9 @@ function faceCow(c) {
 }
 
 // 시전 직전에 부름 (skills.trySlot, 제자리 공격). 반환: 겨눈 적(없으면 null)
-export function aim(mode = 'target') {
+// range: 이 스킬의 사거리 - 자동 조준·흡착은 이 안의 적만 (없으면 AUTO_AIM_RANGE)
+export function aim(mode = 'target', range = AUTO_AIM_RANGE) {
+  const reach = Math.min(range, AUTO_AIM_RANGE);
   const h = game.hero;
   if (!h.alive) return null;
   const assist = mode !== 'free' && autoAimOn();
@@ -45,7 +47,7 @@ export function aim(mode = 'target') {
       let best = null, bestD = AIM_ASSIST_ANGLE;
       cows.forEach((c) => {
         const b = getCowBody(c);
-        if (Math.hypot(b.x - h.x, b.y - h.y) > AUTO_AIM_RANGE) return;
+        if (Math.hypot(b.x - h.x, b.y - h.y) > reach) return;
         const d = angleDiff(Math.atan2(b.y - h.y, b.x - h.x), a);
         if (d <= bestD) { bestD = d; best = c; }
       });
@@ -60,7 +62,7 @@ export function aim(mode = 'target') {
     alive().forEach((c) => {
       const b = getCowBody(c);
       const d = Math.hypot(b.x - h.x, b.y - h.y);
-      if (d > AUTO_AIM_RANGE) return;
+      if (d > reach) return;
       const score = d * (1 + angleDiff(Math.atan2(b.y - h.y, b.x - h.x), h.facing) * AUTO_AIM_FACING_WEIGHT);
       if (score < bestScore) { bestScore = score; best = c; }
     });

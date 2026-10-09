@@ -17,7 +17,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
-import { tryEnergyShield, tryBlizzard, tryFlamePillar } from './groundSpells.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
@@ -269,6 +269,7 @@ export const SKILLS = {
   berserk:   { ...SKILL_META.berserk,   try: () => tryBerserk(),       cd: () => game.hero.spellCd.berserk,   cdMax: () => SKILL_STATS.berserk.cooldown * castSpeedMul(game.hero) },
   decoy:     { ...SKILL_META.decoy,     try: () => tryDecoy(),         cd: () => game.hero.spellCd.decoy,     cdMax: () => SKILL_STATS.decoy.cooldown * castSpeedMul(game.hero) },
   energyshield: { ...SKILL_META.energyshield, try: () => tryEnergyShield(), cd: () => game.hero.spellCd.energyshield, cdMax: () => SPELLS.energyshield.cooldown * castSpeedMul(game.hero) },
+  firewave:  { ...SKILL_META.firewave,  try: () => tryFireWave(),      cd: () => game.hero.spellCd.firewave,  cdMax: () => SPELLS.firewave.cooldown * castSpeedMul(game.hero) },
   blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
@@ -314,7 +315,8 @@ export function cycleSkillSlot(slotNum) {
 
 // 시전 직전 조준 (자동 조준·커서 흡착 - systems/aim.js). 스킬 메타 aim: 'free'면 적 보정 없이
 export function aimAtCursor(id) {
-  aim(id && SKILL_META[id] && SKILL_META[id].aim === 'free' ? 'free' : 'target');
+  const range = id && ((SPELLS[id] && SPELLS[id].range) || (SKILL_STATS[id] && SKILL_STATS[id].range));
+  aim(id && SKILL_META[id] && SKILL_META[id].aim === 'free' ? 'free' : 'target', range || undefined);
 }
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로

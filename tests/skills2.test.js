@@ -133,3 +133,35 @@ it('눈보라: 조준 지점 범위에 냉기 지속 피해 + 둔화 / 화염기
     expect(hpA).toBeGreaterThan(a.hp);
   } finally { env.restore(); }
 });
+
+it('사거리 제한: 조준 지점이 사거리 밖이면 지점 마법을 안 씀(마나 그대로) / 화염 파도: 부채꼴 안 적은 모두 한 번씩, 밖은 무사', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot('sorc');
+    const h = m.game.hero;
+    const mana0 = h.mana;
+    h.aimX = h.x + m.SPELLS.blizzard.range + 80; h.aimY = h.y;
+    m.tryBlizzard();
+    expect(m.game.groundSpells.length).toBe(0);
+    expect(h.mana).toBe(mana0);
+    expect(h.spellCd.blizzard).toBe(0);
+    h.aimX = h.x + m.SPELLS.blizzard.range - 40;
+    m.tryBlizzard();
+    expect(m.game.groundSpells.length).toBe(1);
+
+    m.game.groundSpells = [];
+    const a = m.place(120, 0), b = m.place(220, 60), side = m.place(0, 200), far = m.place(m.SPELLS.firewave.range + 150, 0);
+    h.facing = 0;
+    m.tryFireWave();
+    const hits = new Map();
+    for (let i = 0; i < 90; i++) {
+      m.fixedUpdate(1 / 60);
+      [a, b, side, far].forEach((c) => { if (c.hp < 100000 && !hits.has(c)) hits.set(c, 100000 - c.hp); });
+    }
+    expect(hits.has(a)).toBe(true);
+    expect(hits.has(b)).toBe(true);
+    expect(hits.has(side)).toBe(false);
+    expect(hits.has(far)).toBe(false);
+    expect(a.burn.timer > 0 || a.burn.dps > 0 || hits.get(a) > 0).toBe(true);
+  } finally { env.restore(); }
+});

@@ -24,6 +24,7 @@ export const SKILL_META = {
   orb:       { label: '얼음보주', type: 'magic', color: 'rgba(191,234,255,0.45)', desc: '얼음 조각을 뿌리며 날아가다 터짐' },
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '켜져 있는 동안 받는 피해 일부를 마나로 대신 받음' },
   blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(200,235,255,0.45)', desc: '지정한 곳에 얼음이 쏟아짐 - 냉기 지속 피해 + 둔화' },
+  firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 부채꼴 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
   flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳에 잠깐 뒤 불기둥이 솟음 - 큰 화염 피해 + 화상' },
   // 공통
   teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' }
@@ -31,7 +32,7 @@ export const SKILL_META = {
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
   attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
-  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, blizzard: 8,
+  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8,
   teleport: 3
 };
 
@@ -58,7 +59,8 @@ export const SKILL_LEVEL_UP = {
   decoy:     { duration: 0.15, life: 0.15 },  // life: 미끼 체력 비율에 더함
   energyshield: { duration: 0.15, absorb: 0.05 }, // absorb: 흡수율에 더함
   blizzard:  { damage: 0.12, radius: 0.06 },
-  flamepillar: { damage: 0.15, radius: 0.08 }
+  flamepillar: { damage: 0.15, radius: 0.08 },
+  firewave:  { damage: 0.12, range: 0.08 }
 };
 // 카드에 쓰는 이름 (pct: 배율이면 %, 아니면 개수)
 export const SKILL_LEVEL_STAT = {
@@ -103,5 +105,7 @@ export const SPELLS = {
 
   // 지점 스킬 (자동 조준 지점, range까지): 눈보라 = duration초 동안 tick초마다 반경 안 냉기 피해 / 화염기둥 = delay초 뒤 반경 안 화염 피해
   blizzard:  { mana: 22, cooldown: 5,   damage: 14, tick: 0.3, duration: 3, radius: 120, range: 380 },
-  flamepillar: { mana: 16, cooldown: 2.5, damage: 70, delay: 0.55, radius: 64, range: 380 }
+  flamepillar: { mana: 16, cooldown: 2.5, damage: 70, delay: 0.55, radius: 64, range: 380 },
+  // 화염 파도: 주인공에서 바라보는 쪽으로 speed(px/초)로 range까지 퍼지는 부채꼴(arc 라디안) 불의 벽, 두께 thick - 지나가는 적은 한 번씩 맞음
+  firewave:  { mana: 20, cooldown: 3.5, damage: 45, speed: 300, range: 340, arc: 1.0, thick: 46 }
 };

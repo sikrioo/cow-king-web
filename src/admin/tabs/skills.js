@@ -28,6 +28,7 @@ function skillInfo(id) {
   if (WARRIOR[id]) return WARRIOR[id];
   if (id === 'energyshield') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 받는 피해 ${pct(s.absorb)}를 마나로 (피해 1당 마나 ${s.manaPerDmg})` }; }
   if (id === 'blizzard') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage}, 사거리 ${s.range}` }; }
+  if (id === 'firewave') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `앞쪽 부채꼴(${Math.round(s.arc * 57)}°) 불의 벽이 ${s.range}까지 퍼짐, 지나가는 적 화염 ${s.damage} + 화상` }; }
   if (id === 'flamepillar') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 뒤 반경 ${s.radius} 화염 ${s.damage}, 사거리 ${s.range}` }; }
   if (SPELLS[id]) {
     const s = SPELLS[id];
