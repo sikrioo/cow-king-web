@@ -180,6 +180,20 @@ export function drawHeldShield(ctx, x, y, angle, r, alpha = 1) {
   ctx.restore();
 }
 
+// 찌르기 잔상: 손에서 앞으로 뻗는 가늘어지는 직선 (창)
+export function drawThrustTrail(ctx, hx, hy, angle, len, alpha) {
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = `rgba(255,230,170,${alpha})`;
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(hx + dx * len * 0.25, hy + dy * len * 0.25); ctx.lineTo(hx + dx * len, hy + dy * len); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.6})`;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(hx + dx * len * 0.35, hy + dy * len * 0.35); ctx.lineTo(hx + dx * len * 1.05, hy + dy * len * 1.05); ctx.stroke();
+  ctx.restore();
+}
+
 export function drawAbstractSlashTrail(ctx, cx, cy, radius, angleFrom, angleTo, alpha) {
   ctx.save();
   ctx.strokeStyle = `rgba(255,230,170,${alpha})`;

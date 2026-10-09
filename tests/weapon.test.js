@@ -172,3 +172,32 @@ it('양손 무기 휘두르는 방향: 왼쪽·오른쪽 어느 쪽을 봐도 �
     }
   } finally { env.restore(); }
 });
+
+it('창: 찌르기 - 사거리 가장 길고 공격 각도는 좁음 (앞쪽 멀리 있는 적은 맞고, 옆에 있는 적은 안 맞음)', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game } = await import('../src/state.js');
+    const { resetGame } = await import('../src/session.js');
+    const { getWeaponRange, getAttackArc, tryPlayerAttack } = await import('../src/systems/combat.js');
+    const { WEAPON_RANGE } = await import('../src/data/balance.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { Body } = await import('../src/core/physics.js');
+    resetGame(); game.waveTransition = 999;
+    const h = game.hero;
+    Object.keys(WEAPON_RANGE).filter((v) => v !== 'spear').forEach((v) => expect(WEAPON_RANGE.spear).toBeGreaterThan(WEAPON_RANGE[v]));
+    h.equipment.weaponMain = { category: 'weapon', variant: 'spear', handedness: 'one', rarity: 'normal', stats: {}, upgradeLevel: 0 };
+    h.equipment.weaponOff = null;
+    expect(getWeaponRange()).toBe(WEAPON_RANGE.spear);
+    expect(getAttackArc()).toBeLessThan(Math.PI * 0.5);
+    const put = (dx, dy) => { const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000; c.speed = 0; const p = { x: h.x + dx, y: h.y + dy }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y; game.cows.push(c); return c; };
+    game.cows = [];
+    const far = put(WEAPON_RANGE.spear, 0), side = put(25, 45);
+    h.facing = 0; h.attackCooldown = 0;
+    tryPlayerAttack();
+    expect(far.hp).toBeLessThan(100000);   // 앞쪽 멀리 - 찔림
+    expect(side.hp).toBe(100000);          // 옆 - 범위 밖
+    for (let i = 0; i < 12; i++) env.frame(1); // 찌르기 그림
+  } finally { env.restore(); }
+});

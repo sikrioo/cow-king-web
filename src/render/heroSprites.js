@@ -4,7 +4,7 @@ import { clamp01, lerpAngle, easeOutCubic } from '../util.js';
 import { game, ui } from '../state.js';
 import { CLASSES } from '../data/classes.js';
 import { drawHeroStaff } from './heroStaff.js';
-import { drawAbstractSword, drawHeldShield, drawAbstractSlashTrail } from './heroWeapons.js';
+import { drawAbstractSword, drawHeldShield, drawAbstractSlashTrail, drawThrustTrail } from './heroWeapons.js';
 import { WEAPON_HEAVY } from '../data/items.js';
 
 const heroClass = () => CLASSES[game.hero.classKey] || CLASSES.warrior;
@@ -125,6 +125,21 @@ function drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDep
   hand(leftDepth >= rightDepth ? 'left' : 'right', 1);
 }
 
+// 창 찌르기 자세 (공격 진행 0~1): 살짝 당김 → 앞으로 쭉 내지름 → 거둬들임. 칼날(창끝)은 늘 바라보는 방향
+//   side: 손이 몸 어느 쪽에서 출발하는지 (+1 오른쪽 / 0 가운데)
+function thrustPose(h, at, side) {
+  const pull = easeOutCubic(clamp01(at / 0.3));
+  const jab = easeOutCubic(clamp01((at - 0.3) / 0.25));
+  const back = clamp01((at - 0.7) / 0.3);
+  return {
+    handAngle: h.facing + side * (1 - jab * 0.85),
+    handDist: h.r * (0.6 - pull * 0.25 + jab * 0.95 - back * 0.55),
+    bladeAngle: h.facing,
+    bladeScale: 1.25 + jab * 0.25,
+    trail: jab > 0 && back < 1 ? { thrust: true, len: 3.4, alpha: Math.min(0.45, jab * 0.5) * (1 - back) } : null
+  };
+}
+
 // 등에 멘 대검이 늘어진 각도: 바라보는 쪽 반대(뒤)에서 GREATSWORD_HANG만큼 더 아래로 → 오른쪽을 보면 7시, 왼쪽을 보면 5시 방향
 //   손잡이는 어깨 위로 나오고 칼날은 등을 따라 아래 뒤로 (공격은 이 각도에서 시작해 뒤로 끌어 올렸다가 머리 위를 지나 내리침)
 const GREATSWORD_HANG = 0.97;
@@ -240,6 +255,12 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
     };
   }
 
+  // 한손 창: 기본 공격은 휘두르기 대신 찌르기
+  if (h.attackTimer > 0 && !isTwoHanded(h) && h.equipment && h.equipment.weaponMain && h.equipment.weaponMain.variant === 'spear'
+    && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
+    pose.right = thrustPose(h, 1 - h.attackTimer / h.currentAttackDuration, 0.9);
+  }
+
   // 양손 무기 (스킬 동작 중이 아닐 때): 평소엔 몸 앞에 비스듬히 세워 들고, 공격은 뒤로 크게 젖혔다가 앞으로 넓게 휩쓺
   const mainW = h.equipment && h.equipment.weaponMain;
   const heavy = isTwoHanded(h) && WEAPON_HEAVY[mainW.variant];
@@ -263,7 +284,9 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림
     }
   } else if (isTwoHanded(h) && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
-    if (h.attackTimer > 0) {
+    if (h.attackTimer > 0 && mainW.variant === 'spear') {
+      pose.right = thrustPose(h, 1 - h.attackTimer / h.currentAttackDuration, 0.6); // 양손 창: 두 손으로 자루를 잡고 찌르기
+    } else if (h.attackTimer > 0) {
       const at = 1 - h.attackTimer / h.currentAttackDuration;
       const wind = easeOutCubic(clamp01(at / 0.25));
       const hit = easeOutCubic(clamp01((at - 0.25) / 0.6));
@@ -313,7 +336,9 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  if (handPose.trail && heldKind === 'weapon') {
+  if (handPose.trail && heldKind === 'weapon' && handPose.trail.thrust) {
+    drawThrustTrail(ctx, hx, hy, handPose.bladeAngle, r * handPose.trail.len, handPose.trail.alpha * alpha); // 창 찌르기
+  } else if (handPose.trail && heldKind === 'weapon') {
     drawAbstractSlashTrail(ctx, hx, hy, r * (heldVariant === 'greatsword' ? 3.4 : 2.25), handPose.trail.from, handPose.trail.to, handPose.trail.alpha * alpha);
   }
 
