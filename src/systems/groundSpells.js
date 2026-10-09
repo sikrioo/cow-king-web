@@ -43,18 +43,25 @@ export function tryBlizzard() {
   });
 }
 
-// 화염기둥: 예고 원이 뜨고 delay초 뒤 불기둥 - 반경 안 큰 화염 피해(→ 화상)
+// 화염기둥: 예고 원이 뜨고 delay초 뒤부터 반경 안 곳곳에서 불기둥 count개가 interval초 간격으로 솟음 (기둥마다 화염 피해 → 화상)
+//   기둥 자리는 시전 때 정함(게임 난수) - 가운데 하나 + 나머지는 반경 안 고르게 흩어짐
 export function tryFlamePillar() {
   const s = SPELLS.flamepillar, h = game.hero;
   const p = targetPoint(s.range);
   if (!p || !begin('flamepillar')) return;
+  const radius = s.radius * skillMul(h, 'flamepillar', 'radius');
+  const pillars = [];
+  for (let i = 0; i < s.count; i++) {
+    const a = (i / s.count) * Math.PI * 2 + Math.random() * 0.8, r = i === 0 ? 0 : radius * (0.45 + Math.random() * 0.55);
+    pillars.push({ x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r * 0.62, t: s.delay + i * s.interval, fired: false });
+  }
   game.groundSpells.push({
-    kind: 'flamepillar', x: p.x, y: p.y, age: 0, duration: s.delay + 0.5, delay: s.delay, fired: false,
-    radius: s.radius * skillMul(h, 'flamepillar', 'radius'), dmg: spellDamage(s.damage, 'flamepillar')
+    kind: 'flamepillar', x: p.x, y: p.y, age: 0, duration: s.delay + s.count * s.interval + 0.5, delay: s.delay,
+    radius, pillars, dmg: spellDamage(s.damage, 'flamepillar')
   });
 }
 
-// 화염 파도: 주인공 자리에서 바라보는 쪽으로 퍼져 나감 (이동 중에도 시전 때의 자리·방향 기준)
+// 화염 파도: 주인공 자리에서 바라보는 쪽으로 곧은 불의 벽이 나아감 (이동 중에도 시전 때의 자리·방향 기준)
 export function tryFireWave() {
   const s = SPELLS.firewave, h = game.hero;
   if (!begin('firewave')) return;
@@ -67,17 +74,16 @@ export function tryFireWave() {
   game.shake = Math.min(game.shake + 3, 12);
 }
 
-// 화염 파도 한 틱: 불의 벽(앞쪽 반지름 front, 두께 thick, 부채꼴 arc) 안에 들어온 적은 한 번씩 화염 피해
+// 화염 파도 한 틱: 곧은 불의 벽(앞쪽 거리 front, 두께 thick, 폭 width - 시전 방향에 수직) 안에 들어온 적은 한 번씩 화염 피해
 function updateFireWave(g, dt) {
   const s = SPELLS.firewave;
   g.front = Math.min(g.range, g.front + s.speed * dt);
+  const fx = Math.cos(g.dir), fy = Math.sin(g.dir);
   game.cows.forEach((c) => {
     if (c.state === 'dead' || g.hit.has(c) || !canHit(game.hero, c)) return;
-    const dx = c.x - g.x, dy = c.y - g.y, d = Math.hypot(dx, dy);
-    if (d > g.front + getCowHitRadius(c) || d < g.front - s.thick - getCowHitRadius(c)) return;
-    let diff = Math.abs(Math.atan2(dy, dx) - g.dir) % (Math.PI * 2);
-    if (diff > Math.PI) diff = Math.PI * 2 - diff;
-    if (diff > s.arc / 2) return;
+    const dx = c.x - g.x, dy = c.y - g.y, cr = getCowHitRadius(c);
+    const along = dx * fx + dy * fy, across = Math.abs(-dx * fy + dy * fx); // 앞쪽 거리, 옆으로 벗어난 거리
+    if (along > g.front + cr || along < g.front - s.thick - cr || across > s.width / 2 + cr) return;
     g.hit.add(c);
     damageCowPacket(c, { fire: g.dmg }, { knock: 4, fromX: g.x, fromY: g.y });
   });
@@ -99,12 +105,14 @@ export function updateGroundSpells(dt) {
     else if (g.kind === 'blizzard') {
       g.tickT -= dt;
       if (g.tickT <= 0 && g.age < g.duration) { g.tickT += s.tick; hitArea(g, { cold: g.dmg }, 0); }
-    } else if (g.kind === 'flamepillar' && !g.fired && g.age >= g.delay) {
-      g.fired = true;
-      hitArea(g, { fire: g.dmg }, 5);
-      spawnShockwave(g.x, g.y, g.radius + 10, '#ff7a1a');
-      spawnHitParticles(g.x, g.y, '#ffb347', 16);
-      game.shake = Math.min(game.shake + 5, 12);
+    } else if (g.kind === 'flamepillar') {
+      g.pillars.forEach((p) => {
+        if (p.fired || g.age < p.t) return;
+        p.fired = true;
+        hitArea({ x: p.x, y: p.y, radius: SPELLS.flamepillar.pillarRadius }, { fire: g.dmg }, 3);
+        spawnHitParticles(p.x, p.y, '#ffb347', 8);
+        game.shake = Math.min(game.shake + 2, 12);
+      });
     }
     if (g.age >= g.duration) game.groundSpells.splice(i, 1);
   }

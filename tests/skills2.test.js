@@ -165,3 +165,25 @@ it('사거리 제한: 조준 지점이 사거리 밖이면 지점 마법을 안 
     expect(a.burn.timer > 0 || a.burn.dps > 0 || hits.get(a) > 0).toBe(true);
   } finally { env.restore(); }
 });
+
+it('화염기둥: 불기둥 여러 개가 간격을 두고 차례로 솟음 (가운데 적은 여러 번 맞을 수 있음)', async () => {
+  const env = installBrowserEnv({ seed: 2 });
+  try {
+    const m = await boot('sorc');
+    const h = m.game.hero;
+    const c = m.place(220, 0);
+    h.aimX = c.x; h.aimY = c.y;
+    m.tryFlamePillar();
+    const g = m.game.groundSpells[0];
+    const s = m.SPELLS.flamepillar;
+    expect(g.pillars.length).toBe(s.count);
+    const firedAt = [];
+    for (let i = 0; i < 120; i++) {
+      m.fixedUpdate(1 / 60);
+      g.pillars.forEach((p, k) => { if (p.fired && firedAt[k] === undefined) firedAt[k] = g.age; });
+    }
+    expect(firedAt.filter((v) => v !== undefined).length).toBe(s.count);
+    for (let k = 1; k < s.count; k++) expect(firedAt[k]).toBeGreaterThan(firedAt[k - 1]); // 차례로
+    expect(c.hp).toBeLessThan(100000);
+  } finally { env.restore(); }
+});

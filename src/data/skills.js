@@ -24,8 +24,8 @@ export const SKILL_META = {
   orb:       { label: '얼음보주', type: 'magic', color: 'rgba(191,234,255,0.45)', desc: '얼음 조각을 뿌리며 날아가다 터짐' },
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '켜져 있는 동안 받는 피해 일부를 마나로 대신 받음' },
   blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(200,235,255,0.45)', desc: '지정한 곳에 얼음이 쏟아짐 - 냉기 지속 피해 + 둔화' },
-  firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 부채꼴 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
-  flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳에 잠깐 뒤 불기둥이 솟음 - 큰 화염 피해 + 화상' },
+  firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
+  flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
   // 공통
   teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' }
 };
@@ -103,9 +103,10 @@ export const SPELLS = {
   // 에너지 쉴드: duration초 동안 받는 피해의 absorb 비율을 마나로 (피해 1당 마나 manaPerDmg), 마나가 모자라면 그만큼만
   energyshield: { mana: 18, cooldown: 4, duration: 25, absorb: 0.5, manaPerDmg: 0.25 },
 
-  // 지점 스킬 (자동 조준 지점, range까지): 눈보라 = duration초 동안 tick초마다 반경 안 냉기 피해 / 화염기둥 = delay초 뒤 반경 안 화염 피해
+  // 지점 스킬 (자동 조준 지점, range 밖이면 시전 안 함): 눈보라 = duration초 동안 tick초마다 반경 안 냉기 피해
+  //   화염기둥 = delay초 뒤부터 interval초마다 불기둥 count개가 반경(radius) 안 곳곳에서 솟음, 기둥마다 pillarRadius 안 화염 피해
   blizzard:  { mana: 22, cooldown: 5,   damage: 14, tick: 0.3, duration: 3, radius: 120, range: 380 },
-  flamepillar: { mana: 16, cooldown: 2.5, damage: 70, delay: 0.55, radius: 64, range: 380 },
-  // 화염 파도: 주인공에서 바라보는 쪽으로 speed(px/초)로 range까지 퍼지는 부채꼴(arc 라디안) 불의 벽, 두께 thick - 지나가는 적은 한 번씩 맞음
-  firewave:  { mana: 20, cooldown: 3.5, damage: 45, speed: 300, range: 340, arc: 1.0, thick: 46 }
+  flamepillar: { mana: 16, cooldown: 2.5, damage: 32, delay: 0.4, count: 6, interval: 0.13, pillarRadius: 36, radius: 85, range: 380 },
+  // 화염 파도: 주인공에서 바라보는 쪽으로 speed(px/초)로 range까지 나아가는 곧은 불의 벽(폭 width, 두께 thick) - 지나가는 적은 한 번씩 맞음
+  firewave:  { mana: 20, cooldown: 3.5, damage: 45, speed: 300, range: 340, width: 150, thick: 46 }
 };

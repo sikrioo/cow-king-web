@@ -82,33 +82,50 @@ export function drawGroundSpellsUnder(ctx, t) {
       ctx.strokeStyle = '#e8f7ff';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
-    } else if (g.kind === 'flamepillar' && !g.fired) {
-      const p = Math.min(1, g.age / g.delay);
-      ctx.globalAlpha = 0.25 + p * 0.25;
-      ctx.fillStyle = '#ff5a1e';
-      ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius * p, g.radius * p * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.9;
-      ctx.strokeStyle = '#ffb347';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+    } else if (g.kind === 'flamepillar') {
+      // 범위 예고 원 (마지막 기둥이 솟을 때까지) + 아직 안 솟은 기둥 자리마다 작은 달아오르는 원
+      const last = g.pillars[g.pillars.length - 1].t;
+      if (g.age < last) {
+        const p = Math.min(1, g.age / g.delay);
+        ctx.globalAlpha = 0.18 + p * 0.12;
+        ctx.fillStyle = '#ff5a1e';
+        ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius * p, g.radius * p * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.8;
+        ctx.strokeStyle = '#ffb347';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      g.pillars.forEach((pl) => {
+        if (pl.fired) return;
+        const k = Math.max(0, 1 - (pl.t - g.age) / 0.3);
+        ctx.globalAlpha = 0.3 + k * 0.5;
+        ctx.fillStyle = '#ff7a1a';
+        ctx.beginPath(); ctx.ellipse(pl.x, pl.y, 14 * k + 4, (14 * k + 4) * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+      });
     }
     ctx.restore();
   });
 }
 
-// 화염 파도: 부채꼴 불의 벽 (불꽃 혀가 줄지어 일렁임, 지나간 자리에 옅은 그을음) - 들쭉날쭉은 hash01
+// 화염 파도: 곧은 불의 벽(시전 방향에 수직, 폭 일정)이 앞으로 나아감 - 불꽃 혀가 줄지어 일렁이고 지나간 자리에 옅은 그을음 (들쭉날쭉은 hash01)
 function drawFireWave(ctx, g, t, gi) {
-  const n = 13, arc = SPELLS.firewave.arc, fade = 1 - Math.max(0, (g.front / g.range - 0.85) / 0.15) * 0.8;
+  const s = SPELLS.firewave, n = 11, fade = 1 - Math.max(0, (g.front / g.range - 0.85) / 0.15) * 0.8;
+  const fx = Math.cos(g.dir), fy = Math.sin(g.dir), px = -fy, py = fx, half = s.width / 2;
   ctx.save();
-  ctx.globalAlpha = 0.12 * fade; // 지나간 자리 그을음
+  ctx.globalAlpha = 0.12 * fade; // 지나간 자리 그을음 (직사각형)
   ctx.fillStyle = '#5a2a12';
-  ctx.beginPath(); ctx.moveTo(g.x, g.y); ctx.arc(g.x, g.y, g.front, g.dir - arc / 2, g.dir + arc / 2); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(g.x + px * half, g.y + py * half);
+  ctx.lineTo(g.x + px * half + fx * g.front, g.y + py * half + fy * g.front);
+  ctx.lineTo(g.x - px * half + fx * g.front, g.y - py * half + fy * g.front);
+  ctx.lineTo(g.x - px * half, g.y - py * half);
+  ctx.closePath(); ctx.fill();
   for (let i = 0; i < n; i++) {
-    const a = g.dir - arc / 2 + (arc * (i + 0.5)) / n;
+    const off = -half + (s.width * (i + 0.5)) / n;
     const flick = hash01(i, gi, Math.floor(t * 14)) * 0.5 + 0.5;
     const hgt = (18 + hash01(i, gi, 7) * 16) * flick;
-    const x = g.x + Math.cos(a) * g.front, y = g.y + Math.sin(a) * g.front;
-    const w = (g.front * arc) / n * 0.7 + 4;
+    const x = g.x + fx * g.front + px * off, y = g.y + fy * g.front + py * off;
+    const w = s.width / n * 0.8 + 4;
     ctx.globalAlpha = 0.9 * fade;
     ctx.fillStyle = '#ff5a1e';
     ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x, y - hgt); ctx.lineTo(x + w / 2, y); ctx.closePath(); ctx.fill();
@@ -138,16 +155,22 @@ export function drawGroundSpellsOver(ctx, t) {
         ctx.moveTo(x, fy - 7); ctx.lineTo(x + 4, fy); ctx.lineTo(x, fy + 6); ctx.lineTo(x - 4, fy); ctx.closePath();
         ctx.fill(); ctx.stroke();
       }
-    } else if (g.kind === 'flamepillar' && g.fired) {
-      const p = Math.min(1, (g.age - g.delay) / (g.duration - g.delay)); // 0 → 1 (사라짐)
-      const hgt = 150 * (1 - p * 0.4), w = g.radius * 0.7 * (1 - p * 0.5);
-      ctx.globalAlpha = 1 - p;
-      ctx.fillStyle = '#ff5a1e';
-      ctx.beginPath(); ctx.ellipse(g.x, g.y - hgt / 2, w, hgt / 2, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffb347';
-      ctx.beginPath(); ctx.ellipse(g.x, g.y - hgt * 0.45, w * 0.6, hgt * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff2b0';
-      ctx.beginPath(); ctx.ellipse(g.x, g.y - hgt * 0.4, w * 0.28, hgt * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (g.kind === 'flamepillar') {
+      // 솟은 기둥마다: 0.15초에 걸쳐 높이 솟았다가 0.4초에 걸쳐 줄며 사라짐
+      g.pillars.forEach((pl) => {
+        if (!pl.fired) return;
+        const e = g.age - pl.t;
+        if (e > 0.55) return;
+        const rise = Math.min(1, e / 0.15), p = Math.max(0, (e - 0.15) / 0.4);
+        const hgt = 120 * rise * (1 - p * 0.5), w = 16 * (1 - p * 0.4);
+        ctx.globalAlpha = 1 - p;
+        ctx.fillStyle = '#ff5a1e';
+        ctx.beginPath(); ctx.ellipse(pl.x, pl.y - hgt / 2, w, hgt / 2 + 2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffb347';
+        ctx.beginPath(); ctx.ellipse(pl.x, pl.y - hgt * 0.45, w * 0.6, hgt * 0.42 + 1, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff2b0';
+        ctx.beginPath(); ctx.ellipse(pl.x, pl.y - hgt * 0.4, w * 0.28, hgt * 0.3 + 1, 0, 0, Math.PI * 2); ctx.fill();
+      });
     }
     ctx.restore();
   });
