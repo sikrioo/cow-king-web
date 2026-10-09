@@ -24,6 +24,9 @@ function thrustPose(h, at, side) {
 //   손잡이는 어깨 위로 나오고 칼날은 등을 따라 아래 뒤로 (공격은 이 각도에서 시작해 뒤로 끌어 올렸다가 머리 위를 지나 내리침)
 export const GREATSWORD_HANG = 0.97;
 
+// 등에 멘 무기의 날 면 뒤집기: 날(자루의 -y 쪽)이 화면 아래(땅 쪽)를 향하게 - 무거운 머리가 아래로 매달린 모습 (도끼)
+export const carryFlip = (angle) => Math.cos(angle) >= 0;
+
 // 양손 무기를 휘두를 방향: 칼이 언제나 화면 위쪽(머리 위)을 지나가게 - 주인공의 오른쪽(+1)/왼쪽(-1) 중 화면 위에 가까운 쪽
 //   (예전엔 늘 오른쪽으로 돌아서, 오른쪽을 볼 때는 화면 아래를 지나 올려 치는 것처럼 보였음)
 export function overheadSide(facing) {
@@ -141,7 +144,9 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 머리 위를 지나 휩쓺
       pose.bodyTwist = side * (-0.14 * raise * (1 - strike) + strike * 0.22);
       // flip: 반대 방향(side -1)으로 휘두르면 날 면을 뒤집어 날이 늘 휘두르는 쪽(앞장)을 향하게 (도끼)
-      pose.right = { handAngle: h.facing + side * (1.2 - strike * 1.3), handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0, flip: side < 0,
+      //   들어 올리는 동안은 메던 모양(날이 아래) 그대로, 멈칫한 뒤 내리칠 때 날을 돌려 쥠
+      pose.right = { handAngle: h.facing + side * (1.2 - strike * 1.3), handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0,
+        flip: at >= w * 0.6 ? side < 0 : carryFlip(carry),
         trail: strike > 0 ? { from: a + side * 0.9, to: a + side * 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
     } else {
       pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림
