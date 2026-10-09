@@ -134,7 +134,7 @@ it('눈보라: 조준 지점 범위에 냉기 지속 피해 + 둔화 / 화염기
   } finally { env.restore(); }
 });
 
-it('사거리 제한: 조준 지점이 사거리 밖이면 지점 마법을 안 씀(마나 그대로) / 화염 파도: 부채꼴 안 적은 모두 한 번씩, 밖은 무사', async () => {
+it('사거리 제한: 조준 지점이 사거리 밖이면 지점 마법을 안 씀(마나 그대로) / 화염 파도: 불의 벽(폭·사거리) 안 적은 모두 한 번씩, 밖은 무사', async () => {
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot('sorc');
@@ -150,7 +150,7 @@ it('사거리 제한: 조준 지점이 사거리 밖이면 지점 마법을 안 
     expect(m.game.groundSpells.length).toBe(1);
 
     m.game.groundSpells = [];
-    const a = m.place(120, 0), b = m.place(220, 60), side = m.place(0, 200), far = m.place(m.SPELLS.firewave.range + 150, 0);
+    const a = m.place(90, 0), b = m.place(150, 70), side = m.place(0, 200), far = m.place(m.SPELLS.firewave.range + 150, 0);
     h.facing = 0;
     m.tryFireWave();
     const hits = new Map();

@@ -108,29 +108,49 @@ export function drawGroundSpellsUnder(ctx, t) {
 }
 
 // 화염 파도: 곧은 불의 벽(시전 방향에 수직, 폭 일정)이 앞으로 나아감 - 불꽃 혀가 줄지어 일렁이고 지나간 자리에 옅은 그을음 (들쭉날쭉은 hash01)
+//   두께 있는 불의 띠: 뒤쪽은 어두운 붉은 불꽃, 앞쪽은 높고 밝은 불꽃(3겹) + 띠 전체에 옅은 불빛. 멈춘 뒤엔 그을린 자국만 서서히 사라짐
 function drawFireWave(ctx, g, t, gi) {
-  const s = SPELLS.firewave, n = 11, fade = 1 - Math.max(0, (g.front / g.range - 0.85) / 0.15) * 0.8;
+  const s = SPELLS.firewave, n = 13;
   const fx = Math.cos(g.dir), fy = Math.sin(g.dir), px = -fy, py = fx, half = s.width / 2;
+  const after = Math.max(0, g.age - s.travel);                // 멈춘 뒤 지난 시간
+  const flame = Math.max(0, 1 - after / 0.2);                   // 불꽃은 멈추고 0.2초 안에 꺼짐
+  const scorch = Math.max(0, 1 - after / s.linger);             // 그을음은 linger초에 걸쳐 사라짐
+  const quad = (a, b) => { // 시전 자리에서 a ~ b 거리 사이 직사각형
+    ctx.beginPath();
+    ctx.moveTo(g.x + px * half + fx * a, g.y + py * half + fy * a);
+    ctx.lineTo(g.x + px * half + fx * b, g.y + py * half + fy * b);
+    ctx.lineTo(g.x - px * half + fx * b, g.y - py * half + fy * b);
+    ctx.lineTo(g.x - px * half + fx * a, g.y - py * half + fy * a);
+    ctx.closePath();
+  };
   ctx.save();
-  ctx.globalAlpha = 0.12 * fade; // 지나간 자리 그을음 (직사각형)
-  ctx.fillStyle = '#5a2a12';
-  ctx.beginPath();
-  ctx.moveTo(g.x + px * half, g.y + py * half);
-  ctx.lineTo(g.x + px * half + fx * g.front, g.y + py * half + fy * g.front);
-  ctx.lineTo(g.x - px * half + fx * g.front, g.y - py * half + fy * g.front);
-  ctx.lineTo(g.x - px * half, g.y - py * half);
-  ctx.closePath(); ctx.fill();
-  for (let i = 0; i < n; i++) {
-    const off = -half + (s.width * (i + 0.5)) / n;
-    const flick = hash01(i, gi, Math.floor(t * 14)) * 0.5 + 0.5;
-    const hgt = (18 + hash01(i, gi, 7) * 16) * flick;
-    const x = g.x + fx * g.front + px * off, y = g.y + fy * g.front + py * off;
-    const w = s.width / n * 0.8 + 4;
-    ctx.globalAlpha = 0.9 * fade;
-    ctx.fillStyle = '#ff5a1e';
-    ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x, y - hgt); ctx.lineTo(x + w / 2, y); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffb347';
-    ctx.beginPath(); ctx.moveTo(x - w / 4, y); ctx.lineTo(x, y - hgt * 0.6); ctx.lineTo(x + w / 4, y); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 0.2 * scorch; // 그을린 자국
+  ctx.fillStyle = '#3e1d0c';
+  quad(0, g.front); ctx.fill();
+  if (flame > 0) {
+    ctx.globalAlpha = 0.22 * flame; // 불의 띠 불빛
+    ctx.fillStyle = '#ff6a1e';
+    quad(Math.max(0, g.front - s.thick), g.front); ctx.fill();
+    const rows = [[0.85, '#b8301a', 0.55], [0.45, '#ff5a1e', 0.8], [0.05, '#ffb347', 1]]; // [두께 안 위치(뒤→앞), 색, 높이 배율]
+    rows.forEach(([depth, color, hk], ri) => {
+      const d = g.front - s.thick * depth;
+      if (d < 0) return;
+      for (let i = 0; i < n; i++) {
+        const off = -half + (s.width * (i + 0.5 + (ri % 2) * 0.5)) / n;
+        if (off > half) continue;
+        const flick = hash01(i, gi * 3 + ri, Math.floor(t * 14)) * 0.45 + 0.55;
+        const hgt = (30 + hash01(i, gi + ri, 7) * 26) * flick * hk;
+        const x = g.x + fx * d + px * off, y = g.y + fy * d + py * off;
+        const w = s.width / n + 8;
+        ctx.globalAlpha = 0.92 * flame;
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.quadraticCurveTo(x - w * 0.15, y - hgt * 0.6, x, y - hgt); ctx.quadraticCurveTo(x + w * 0.15, y - hgt * 0.6, x + w / 2, y); ctx.closePath(); ctx.fill();
+        if (ri === 2) { // 맨 앞줄 밝은 속불
+          ctx.fillStyle = '#fff2b0';
+          ctx.beginPath(); ctx.moveTo(x - w / 5, y); ctx.lineTo(x, y - hgt * 0.5); ctx.lineTo(x + w / 5, y); ctx.closePath(); ctx.fill();
+        }
+      }
+    });
   }
   ctx.restore();
 }

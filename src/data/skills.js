@@ -107,6 +107,7 @@ export const SPELLS = {
   //   화염기둥 = delay초 뒤부터 interval초마다 불기둥 count개가 반경(radius) 안 곳곳에서 솟음, 기둥마다 pillarRadius 안 화염 피해
   blizzard:  { mana: 22, cooldown: 5,   damage: 14, tick: 0.3, duration: 3, radius: 120, range: 380 },
   flamepillar: { mana: 16, cooldown: 2.5, damage: 32, delay: 0.4, count: 6, interval: 0.13, pillarRadius: 36, radius: 85, range: 380 },
-  // 화염 파도: 주인공에서 바라보는 쪽으로 speed(px/초)로 range까지 나아가는 곧은 불의 벽(폭 width, 두께 thick) - 지나가는 적은 한 번씩 맞음
-  firewave:  { mana: 20, cooldown: 3.5, damage: 45, speed: 300, range: 340, width: 150, thick: 46 }
+  // 화염 파도: 주인공에서 바라보는 쪽으로 곧은 불의 벽(폭 width, 두께 thick)이 travel초 동안 range까지 - 처음에 확 터져 나갔다가 점점 느려지며 멈춤(무게감)
+  //   지나가는 적은 한 번씩 맞고 벽이 나아가는 쪽으로 knock만큼 밀려남, 그을린 자국은 멈춘 뒤 linger초 동안 남음
+  firewave:  { mana: 20, cooldown: 3.5, damage: 45, travel: 0.6, range: 170, width: 180, thick: 64, knock: 9, linger: 0.8 }
 };

@@ -4,7 +4,7 @@
 // 진행 중인 지점 마법은 game.groundSpells, 그림은 render/skillFx.js
 import { SPELLS } from '../data/skills.js';
 import { game } from '../state.js';
-import { skillMul } from '../util.js';
+import { skillMul, easeOutCubic } from '../util.js';
 import { canHit, cowEdgeDist, getCowHitRadius } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave, floatText } from './fx.js';
@@ -66,27 +66,45 @@ export function tryFireWave() {
   const s = SPELLS.firewave, h = game.hero;
   if (!begin('firewave')) return;
   game.groundSpells.push({
-    kind: 'firewave', x: h.x, y: h.y, dir: h.facing, age: 0, front: 0, hit: new Set(),
-    range: s.range * skillMul(h, 'firewave', 'range'), duration: s.range * skillMul(h, 'firewave', 'range') / s.speed + 0.25,
+    kind: 'firewave', x: h.x, y: h.y, dir: h.facing, age: 0, front: 0, hit: new Set(), emberT: 0,
+    range: s.range * skillMul(h, 'firewave', 'range'), duration: s.travel + s.linger,
     dmg: spellDamage(s.damage, 'firewave')
   });
-  spawnHitParticles(h.x + Math.cos(h.facing) * 20, h.y + Math.sin(h.facing) * 20, '#ffb347', 10);
-  game.shake = Math.min(game.shake + 3, 12);
+  // 시전 순간: 앞에서 터지는 충격파 + 흔들림 + 짧은 번쩍임 (무게감)
+  const ox = h.x + Math.cos(h.facing) * 24, oy = h.y + Math.sin(h.facing) * 24;
+  spawnShockwave(ox, oy, 46, '#ff7a1a');
+  spawnHitParticles(ox, oy, '#ffb347', 14);
+  game.shake = Math.min(game.shake + 5, 12);
+  game.impactFlash = Math.max(game.impactFlash, 0.08);
 }
 
 // 화염 파도 한 틱: 곧은 불의 벽(앞쪽 거리 front, 두께 thick, 폭 width - 시전 방향에 수직) 안에 들어온 적은 한 번씩 화염 피해
+//   앞으로 나아가는 거리는 easeOut (처음에 확, 끝에서 느려지며 멈춤). 맞힌 틱엔 히트스톱·흔들림, 나아가는 동안 불씨가 튐
 function updateFireWave(g, dt) {
   const s = SPELLS.firewave;
-  g.front = Math.min(g.range, g.front + s.speed * dt);
+  if (g.age > s.travel) return; // 멈춘 뒤엔 그을린 자국만 (그림)
+  g.front = g.range * easeOutCubic(Math.min(1, g.age / s.travel));
   const fx = Math.cos(g.dir), fy = Math.sin(g.dir);
+  g.emberT -= dt;
+  if (g.emberT <= 0) { // 불씨
+    g.emberT += 0.05;
+    const off = (Math.random() - 0.5) * s.width;
+    spawnHitParticles(g.x + fx * g.front - fy * off, g.y + fy * g.front + fx * off, '#ffb347', 1);
+  }
+  let landed = false;
   game.cows.forEach((c) => {
     if (c.state === 'dead' || g.hit.has(c) || !canHit(game.hero, c)) return;
     const dx = c.x - g.x, dy = c.y - g.y, cr = getCowHitRadius(c);
     const along = dx * fx + dy * fy, across = Math.abs(-dx * fy + dy * fx); // 앞쪽 거리, 옆으로 벗어난 거리
     if (along > g.front + cr || along < g.front - s.thick - cr || across > s.width / 2 + cr) return;
     g.hit.add(c);
-    damageCowPacket(c, { fire: g.dmg }, { knock: 4, fromX: g.x, fromY: g.y });
+    damageCowPacket(c, { fire: g.dmg }, { knock: s.knock, fromX: c.x - fx * 30, fromY: c.y - fy * 30 }); // 벽이 나아가는 쪽으로 밀어냄
+    landed = true;
   });
+  if (landed) {
+    game.hitstop = Math.max(game.hitstop, 2);
+    game.shake = Math.min(game.shake + 3, 12);
+  }
 }
 
 function hitArea(g, packet, knock) {
