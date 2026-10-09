@@ -7,23 +7,38 @@ export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'swo
   ctx.globalAlpha = alpha;
 
   if (variant === 'axe') {
+    // 도끼: 긴 나무 자루 + 끝에 자루와 직각인 넓은 날(자루 쪽은 좁고 바깥으로 갈수록 넓어짐, 바깥 날은 둥글게) + 반대편 뭉툭한 뒷머리
     ctx.strokeStyle = '#8d623e';
-    ctx.lineWidth = 3.2;
+    ctx.lineWidth = 3.4;
     ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-r * 0.20, 0); ctx.lineTo(r * 1.30, 0); ctx.stroke();
+    ctx.strokeStyle = '#4a3322'; // 손잡이에 감은 가죽
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'butt';
+    [0.02, 0.16].forEach((p) => { ctx.beginPath(); ctx.moveTo(r * p, 0); ctx.lineTo(r * (p + 0.07), 0); ctx.stroke(); });
+    // 날
+    ctx.fillStyle = '#c9cfd6';
+    ctx.strokeStyle = '#4f565e';
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(-r * 0.10, 0);
-    ctx.lineTo(r * 0.80, 0);
-    ctx.stroke();
-    ctx.fillStyle = '#c7cdd4';
-    ctx.beginPath();
-    ctx.moveTo(r * 0.42, -r * 0.04);
-    ctx.quadraticCurveTo(r * 1.08, -r * 0.56, r * 0.98, -r * 0.02);
-    ctx.quadraticCurveTo(r * 1.02, r * 0.48, r * 0.48, r * 0.18);
+    ctx.moveTo(r * 0.98, -r * 0.08);
+    ctx.lineTo(r * 0.80, -r * 0.42);
+    ctx.quadraticCurveTo(r * 1.10, -r * 0.98, r * 1.52, -r * 0.48); // 바깥 날 (둥글게 부풂)
+    ctx.lineTo(r * 1.22, -r * 0.08);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#596068';
-    ctx.lineWidth = 1.3;
     ctx.stroke();
+    ctx.strokeStyle = 'rgba(245,248,252,0.9)'; // 날 선 부분
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(r * 0.86, -r * 0.48);
+    ctx.quadraticCurveTo(r * 1.11, -r * 0.90, r * 1.45, -r * 0.50);
+    ctx.stroke();
+    // 자루를 감싼 쇠 고리 + 반대편 뒷머리
+    ctx.fillStyle = '#5f666e';
+    ctx.fillRect(r * 0.96, -r * 0.12, r * 0.28, r * 0.24);
+    ctx.fillStyle = '#7d848c';
+    ctx.fillRect(r * 1.02, r * 0.10, r * 0.16, r * 0.16);
   } else if (variant === 'mace') {
     ctx.strokeStyle = '#8d623e';
     ctx.lineWidth = 3.2;
