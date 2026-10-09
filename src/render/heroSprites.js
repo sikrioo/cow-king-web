@@ -79,8 +79,9 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
   if (pose.carry) {
     // 대검을 메고 있음: 칼은 등에 비스듬히 (손잡이는 오른쪽 어깨 위, 칼날은 등을 가로질러 반대쪽 뒤로), 두 손은 빈손으로 몸 옆
     //   칼은 언제나 몸 뒤에 그림 - 위를 볼 때 몸 위에 그리면 칼날이 몸통을 가로질러 캐릭터를 덮음 (사용자 피드백)
-    const gx = rightBase.x * 0.55 + fx * h.r * 0.15, gy = rightBase.y * 0.55 + fy * h.r * 0.15;
-    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + Math.PI - 0.6, h.r, alpha, rightHeld.variant);
+    const side = overheadSide(h.facing), sb = side > 0 ? rightBase : leftBase; // 휘두를 쪽 어깨에 멤
+    const gx = sb.x * 0.55 + fx * h.r * 0.15, gy = sb.y * 0.55 + fy * h.r * 0.15;
+    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + side * (Math.PI - 0.6), h.r, alpha, rightHeld.variant);
     strap(0.95);
     drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
   } else if (isTwoHanded(h)) {
@@ -122,6 +123,14 @@ function drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDep
   hand(leftDepth < rightDepth ? 'left' : 'right', 0.86);
   drawBody();
   hand(leftDepth >= rightDepth ? 'left' : 'right', 1);
+}
+
+// 양손 무기를 휘두를 방향: 칼이 언제나 화면 위쪽(머리 위)을 지나가게 - 주인공의 오른쪽(+1)/왼쪽(-1) 중 화면 위에 가까운 쪽
+//   (예전엔 늘 오른쪽으로 돌아서, 오른쪽을 볼 때는 화면 아래를 지나 올려 치는 것처럼 보였음)
+export function overheadSide(facing) {
+  const up = -Math.PI / 2;
+  const d = (a) => { const x = Math.abs(a - up) % (Math.PI * 2); return x > Math.PI ? Math.PI * 2 - x : x; };
+  return d(facing + Math.PI / 2) <= d(facing - Math.PI / 2) ? 1 : -1;
 }
 
 // 주무기가 양손 무기인지 (대검 등 - 보조 칸이 잠김)
@@ -232,19 +241,20 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
   const heavy = isTwoHanded(h) && WEAPON_HEAVY[mainW.variant];
   if (heavy && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0) && !(h.flurryTimer > 0)) {
     // 손 위치(handDist)는 몸 가장자리(반지름 ≈ 1배) 밖 - 안쪽이면 손이 몸 한가운데(얼굴)에 겹쳐 보임
-    // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 오른쪽을 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
+    // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 머리 위를 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
     //   피해가 들어가는 순간 = windup 지점 (combat.updatePendingSwing)과 맞춤
-    const carry = h.facing + Math.PI - 0.45;
+    const side = overheadSide(h.facing); // 칼이 머리 위(화면 위쪽)를 지나는 방향
+    const carry = h.facing + side * (Math.PI - 0.45);
     if (h.attackTimer > 0) {
       const at = 1 - h.attackTimer / h.currentAttackDuration, w = heavy.windup;
       const raise = easeOutCubic(clamp01(at / (w * 0.5)));               // 들어 올리기 (0 ~ 0.5w)
       const strike = easeOutCubic(clamp01((at - w * 0.77) / 0.22));      // 0.5w ~ 0.77w 멈칫, 그다음 빠르게 내리침 - windup 지점에서 칼이 거의 정면
-      const back = h.facing + Math.PI - 0.15;
-      const end = h.facing - 0.4;
-      const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 오른쪽을 지나 휩쓺
-      pose.bodyTwist = -0.14 * raise * (1 - strike) + strike * 0.22;
-      pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0,
-        trail: strike > 0 ? { from: a + 0.9, to: a + 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
+      const back = h.facing + side * (Math.PI - 0.15);
+      const end = h.facing - side * 0.4;
+      const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 머리 위를 지나 휩쓺
+      pose.bodyTwist = side * (-0.14 * raise * (1 - strike) + strike * 0.22);
+      pose.right = { handAngle: h.facing + side * (1.2 - strike * 1.3), handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0,
+        trail: strike > 0 ? { from: a + side * 0.9, to: a + side * 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
     } else {
       pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림
     }
@@ -253,10 +263,12 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const at = 1 - h.attackTimer / h.currentAttackDuration;
       const wind = easeOutCubic(clamp01(at / 0.25));
       const hit = easeOutCubic(clamp01((at - 0.25) / 0.6));
-      const ra = lerpAngle(h.facing + 1.7 + wind * 0.45, h.facing - 1.3, hit);
-      pose.bodyTwist = -0.12 * wind + hit * 0.24;
-      pose.right = { handAngle: ra + 0.5, handDist: h.r * (0.95 + hit * 0.15), bladeAngle: ra, bladeScale: 1.0,
-        trail: { from: ra + 0.75, to: ra + 0.08, alpha: Math.min(0.34, hit * 0.4) } };
+      const side = overheadSide(h.facing); // 머리 위(화면 위쪽)를 지나 휩쓺
+      const r0 = h.facing + side * (1.7 + wind * 0.45), r1 = h.facing - side * 1.3;
+      const ra = r0 + (r1 - r0) * hit;
+      pose.bodyTwist = side * (-0.12 * wind + hit * 0.24);
+      pose.right = { handAngle: ra + side * 0.5, handDist: h.r * (0.95 + hit * 0.15), bladeAngle: ra, bladeScale: 1.0,
+        trail: { from: ra + side * 0.75, to: ra + side * 0.08, alpha: Math.min(0.34, hit * 0.4) } };
     } else {
       const drift = Math.sin(h.moveStep) * speedN * 0.06;
       pose.right = { handAngle: h.facing + 0.9 + drift, handDist: h.r * 0.95, bladeAngle: h.facing - 0.55 + drift * 0.5, bladeScale: 1.0, trail: null };

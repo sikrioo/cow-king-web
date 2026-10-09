@@ -158,3 +158,17 @@ it('대검 기본 공격: 누르는 순간이 아니라 내리치는 순간(동�
     expect(Math.abs(hitAt - impact)).toBeLessThan(0.05);
   } finally { env.restore(); }
 });
+
+it('양손 무기 휘두르는 방향: 왼쪽·오른쪽 어느 쪽을 봐도 칼이 머리 위(화면 위쪽)를 지나감', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { overheadSide } = await import('../src/render/heroSprites.js');
+    // 휘두르는 중간(옆) 방향 = facing + side·π/2 → 화면 위쪽(y < 0)이어야 함
+    for (const facing of [0, Math.PI, 0.6, Math.PI - 0.6, -0.4, Math.PI + 0.4]) {
+      const mid = facing + overheadSide(facing) * Math.PI / 2;
+      expect(Math.sin(mid), `facing ${facing}`).toBeLessThan(0);
+    }
+  } finally { env.restore(); }
+});
