@@ -26,7 +26,8 @@ export const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear', 'grea
 // 양손으로만 나오는 무기 (대검 - 몸보다 큰 칼)
 export const TWO_HAND_ONLY = ['greatsword'];
 // 무거운 무기: 기본 공격이 맞을 때 넉백·화면 흔들림·히트스톱(프레임)을 더함
-export const WEAPON_HEAVY = { greatsword: { knock: 13, shake: 3, hitstop: 3 } };
+//   windup: 휘두르는 동작의 이 비율 지점에서 피해가 들어감 (등 뒤에서 들어 올렸다가 앞으로 내리치는 딜레이 - 그림은 render/heroSprites)
+export const WEAPON_HEAVY = { greatsword: { knock: 13, shake: 3, hitstop: 3, windup: 0.45 } };
 export const ACCESSORY_VARIANTS = ['amulet', 'ring', 'charm'];
 // 무기 기본 속성 (한손 기준): 피해 min~max, 초당 공격 횟수(aps). 초당 피해는 비슷하게, 느릴수록 한 방이 셈
 // 등급 배율·강화(×1.25)는 피해에만 곱함. 양손은 피해 ×TWO_HAND_DAMAGE_MULT, 속도 ×TWO_HAND_SPEED_MULT

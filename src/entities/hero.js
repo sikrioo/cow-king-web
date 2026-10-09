@@ -91,6 +91,7 @@ export function createHero() {
     berserkTimer: 0, berserkMax: 0, berserkPower: 0, // 버서커
     shieldTimer: 0, shieldMax: 0, // 에너지 쉴드 (systems/groundSpells.js)
     aimX: null, aimY: null, // 조준 지점 (systems/aim.js)
+    pendingSwing: null, // 대검 내리치기 대기 { t, ws, onHit, heavy } (systems/combat.updatePendingSwing)
     potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
     potionCd: { heal: 0, mana: 0 }, // 종류별 대기시간 (생명 마신 직후에도 마나는 바로 마실 수 있게)
     moveOffsetX: 0,

@@ -134,6 +134,7 @@ function resetHeroRuntime() {
   h.aimX = null;
   h.aimY = null;
   h.potionCd = { heal: 0, mana: 0 };
+  h.pendingSwing = null;
   h.pendingCards = 0;
   game.cardOffer = null;
   h.hp = h.maxHp + h.gearMaxHp;

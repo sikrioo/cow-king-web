@@ -124,3 +124,33 @@ it('대검: 언제나 양손, 한 방 가장 셈·가장 느림·사거리 가�
     for (const f of [0, Math.PI / 2, -Math.PI / 2]) { h.facing = f; env.frame(2); h.attackCooldown = 0; h.attackTimer = 0.2; h.currentAttackDuration = 0.4; env.frame(3); }
   } finally { env.restore(); }
 });
+
+it('대검 기본 공격: 누르는 순간이 아니라 내리치는 순간(동작의 windup 지점)에 피해', async () => {
+  const env = installBrowserEnv({ seed: 2 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game } = await import('../src/state.js');
+    const { resetGame } = await import('../src/session.js');
+    const { fixedUpdate } = await import('../src/game.js');
+    const { equipFromInventory } = await import('../src/systems/gear.js');
+    const { tryPlayerAttack } = await import('../src/systems/combat.js');
+    const { WEAPON_HEAVY } = await import('../src/data/items.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { Body } = await import('../src/core/physics.js');
+    resetGame(); game.waveTransition = 999;
+    const h = game.hero;
+    equipFromInventory(h.inventory.findIndex((it) => it.variant === 'greatsword'));
+    const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000; c.speed = 0;
+    const p = { x: h.x + 50, y: h.y }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
+    game.cows = [c];
+    h.facing = 0;
+    tryPlayerAttack();
+    expect(c.hp).toBe(100000); // 아직 안 맞음 (들어 올리는 중)
+    const impact = h.currentAttackDuration * WEAPON_HEAVY.greatsword.windup;
+    let hitAt = null;
+    for (let i = 1; i <= 120 && hitAt === null; i++) { fixedUpdate(1 / 60); if (c.hp < 100000) hitAt = i / 60; }
+    expect(hitAt).not.toBe(null);
+    expect(Math.abs(hitAt - impact)).toBeLessThan(0.05);
+  } finally { env.restore(); }
+});

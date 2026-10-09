@@ -6,7 +6,7 @@ import { STEP_MS } from './core/loop.js';
 import { Engine, engine } from './core/physics.js';
 import { game, ui, input } from './state.js';
 import { updatePlayer } from './entities/hero.js';
-import { updateHazards } from './systems/combat.js';
+import { updateHazards, updatePendingSwing } from './systems/combat.js';
 import { updateMeteors } from './systems/spells.js';
 import { updateProjectiles } from './systems/projectiles.js';
 import { updateParticles, updateLightningBolts, updateShockwaves, updateIceRings, updateFloatTexts, floatText } from './systems/fx.js';
@@ -77,6 +77,7 @@ export function fixedUpdate(dt) {
   if (game.hitstop > 0) { game.hitstop--; return; }
   if (game.gameState === 'playing') {
     updatePlayer(dt);
+    updatePendingSwing(dt); // 대검처럼 내리치는 순간에 맞는 기본 공격
     updateHeroStatuses(dt);
     updateSpellCooldowns(dt);
     updateSkillBuffs(dt); // 투지·버서커·에너지 쉴드 시간, 미끼

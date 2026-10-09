@@ -71,10 +71,19 @@ export function tryPlayerAttack(onHit) {
   game.hero.attackTimer = game.hero.currentAttackDuration;
   game.hero.attackCooldown = ws.interval * spdMul;
   game.hero.attackCooldownMax = game.hero.attackCooldown;
-  const dmg = Math.round(heroHitDamage(ws) * skillMul(game.hero, 'attack', 'damage')); // 한 번 휘두를 때 한 번 굴림 (맞은 몬스터 모두 같은 피해)
   const mainW = game.hero.equipment.weaponMain;
   const heavy = mainW && mainW !== 'LOCKED' ? WEAPON_HEAVY[mainW.variant] : null; // 대검: 더 묵직하게
+  if (heavy && heavy.windup) {
+    // 무거운 무기: 들어 올렸다가 내리치는 순간에 맞음 (그 순간 앞에 있는 적, 그때 굴림) - updatePendingSwing
+    game.hero.pendingSwing = { t: game.hero.currentAttackDuration * heavy.windup, ws, onHit, heavy };
+    return;
+  }
+  swingHit(ws, onHit, null);
+}
 
+// 지금 앞쪽(무기 사거리·휘두르는 각도) 적에게 한 번 휘두른 피해
+function swingHit(ws, onHit, heavy) {
+  const dmg = Math.round(heroHitDamage(ws) * skillMul(game.hero, 'attack', 'damage')); // 한 번 휘두를 때 한 번 굴림 (맞은 몬스터 모두 같은 피해)
   let landed = false;
   const atkRange = getWeaponRange();
   game.cows.forEach((c) => {
@@ -95,6 +104,17 @@ export function tryPlayerAttack(onHit) {
     }
   });
   if (landed) registerComboHit();
+}
+
+// 매 틱: 무거운 무기의 내리치기가 떨어지는 순간 (주인공이 죽었으면 취소)
+export function updatePendingSwing(dt) {
+  const p = game.hero.pendingSwing;
+  if (!p) return;
+  if (!game.hero.alive) { game.hero.pendingSwing = null; return; }
+  p.t -= dt;
+  if (p.t > 0) return;
+  game.hero.pendingSwing = null;
+  swingHit(p.ws, p.onHit, p.heavy);
 }
 
 export function killCow(c) {

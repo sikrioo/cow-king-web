@@ -5,6 +5,7 @@ import { game } from '../state.js';
 import { CLASSES } from '../data/classes.js';
 import { drawHeroStaff } from './heroStaff.js';
 import { drawAbstractSword, drawHeldShield, drawAbstractSlashTrail } from './heroWeapons.js';
+import { WEAPON_HEAVY } from '../data/items.js';
 
 const heroClass = () => CLASSES[game.hero.classKey] || CLASSES.warrior;
 const look = () => heroClass().look;
@@ -78,7 +79,8 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
   if (isTwoHanded(h)) {
     // 양손 무기: 몸 가운데 앞에서 두 손으로 쥠 (왼손은 손잡이에 붙음). 위를 보면 칼이 몸 뒤, 아래를 보면 앞
     const centerBase = { x: fx * h.r * 0.12, y: fy * h.r * 0.12 };
-    const front = fy > -0.25;
+    // 칼이 등 뒤(메기·들어 올리기)면 아래를 볼 때 몸 뒤, 앞(내리친 뒤)이면 몸 앞
+    const front = pose.bladeBehind ? fy < 0 : fy > -0.25;
     if (!front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 0.9, rightHeld.variant, h);
     drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
     if (front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 1, rightHeld.variant, h);
@@ -212,7 +214,29 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
   }
 
   // 양손 무기 (스킬 동작 중이 아닐 때): 평소엔 몸 앞에 비스듬히 세워 들고, 공격은 뒤로 크게 젖혔다가 앞으로 넓게 휩쓺
-  if (isTwoHanded(h) && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
+  const mainW = h.equipment && h.equipment.weaponMain;
+  const heavy = isTwoHanded(h) && WEAPON_HEAVY[mainW.variant];
+  if (heavy && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0) && !(h.flurryTimer > 0)) {
+    // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 오른쪽을 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
+    //   피해가 들어가는 순간 = windup 지점 (combat.updatePendingSwing)과 맞춤
+    const carry = h.facing + Math.PI - 0.45;
+    if (h.attackTimer > 0) {
+      const at = 1 - h.attackTimer / h.currentAttackDuration, w = heavy.windup;
+      const raise = easeOutCubic(clamp01(at / (w * 0.5)));               // 들어 올리기 (0 ~ 0.5w)
+      const strike = easeOutCubic(clamp01((at - w * 0.77) / 0.22));      // 0.5w ~ 0.77w 멈칫, 그다음 빠르게 내리침 - windup 지점에서 칼이 거의 정면
+      const back = h.facing + Math.PI - 0.15;
+      const end = h.facing - 0.4;
+      const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 오른쪽을 지나 휩쓺
+      pose.bladeBehind = strike < 0.35;
+      pose.bodyTwist = -0.14 * raise * (1 - strike) + strike * 0.22;
+      pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.4 + strike * 0.3), bladeAngle: a, bladeScale: 1.0,
+        trail: strike > 0 ? { from: a + 0.9, to: a + 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
+    } else {
+      const drift = Math.sin(h.moveStep) * speedN * 0.05;
+      pose.bladeBehind = true;
+      pose.right = { handAngle: h.facing + 1.5 + drift, handDist: h.r * 0.42, bladeAngle: carry + drift, bladeScale: 1.0, trail: null };
+    }
+  } else if (isTwoHanded(h) && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
     if (h.attackTimer > 0) {
       const at = 1 - h.attackTimer / h.currentAttackDuration;
       const wind = easeOutCubic(clamp01(at / 0.25));
