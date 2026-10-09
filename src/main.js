@@ -16,6 +16,7 @@ import { bindDevButton } from './ui/devPanel.js';
 import { isDevMode } from './config.js';
 import { layoutArena } from './world/arena.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
+import { sandboxParams, sandboxClass, startSandbox } from './systems/sandbox.js';
 
 // 맵 선택 화면 클릭 (영역은 ui/mapSelect.js가 그릴 때 등록): 무엇을 눌렀는지 → session 함수
 function hubClick(r) {
@@ -35,6 +36,17 @@ function boot() {
   bindDomButtons({ restart: advanceScreen, pressAction, setPaused, toggleHelp, exitMap: requestExitMap });
   if (isDevMode()) {
     bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });
+  }
+
+  // 관리자 페이지 미리보기 창(?dev=1&sandbox=...): 타이틀 없이 바로 샌드박스 (systems/sandbox.js)
+  const sb = isDevMode() ? sandboxParams() : null;
+  if (sb) {
+    ui.selectedClass = sandboxClass(sb);
+    resetGame();
+    startSandbox(sb);
+    document.body.classList.add('sandbox-mode');
+    startLoop(fixedUpdate, render);
+    return;
   }
 
   resetGame();

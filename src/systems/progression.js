@@ -8,6 +8,7 @@ import { queueLevelCard } from './levelCards.js';
 import { skillLevel } from '../util.js';
 
 export function gainExp(amount) {
+  if (game.sandbox) return; // 관리자 미리보기에선 레벨업(카드) 없음
   if (game.hero.level >= MAX_LEVEL) return;
   game.hero.exp += amount;
   while (game.hero.level < MAX_LEVEL && game.hero.exp >= game.hero.expToNext) {

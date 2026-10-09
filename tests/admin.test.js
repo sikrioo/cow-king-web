@@ -45,3 +45,28 @@ it('관리자 탭 전부 그리기 (몬스터·스킬·장비·드랍·시뮬레
     expect(texts.sim).toContain('장비 등급');
   } finally { restore(); }
 });
+
+it('코드 보기: 모든 스킬의 관련 함수, 몬스터 종류별 행동, 공통 AI를 실제 소스에서 찾음', async () => {
+  const restore = installFakeDom();
+  try {
+    vi.resetModules();
+    const { SKILL_CODE, BEHAVIOR_FILES } = await import('../src/admin/detail.js');
+    const { findFunction, findEntry } = await import('../src/admin/source.js');
+    const { SKILL_META } = await import('../src/data/skills.js');
+    const { behaviors } = await import('../src/entities/behaviors.js');
+    for (const id of Object.keys(SKILL_META)) {
+      expect(SKILL_CODE[id], `스킬 ${id}의 코드 목록`).toBeTruthy();
+      for (const name of SKILL_CODE[id]) {
+        const f = await findFunction(name);
+        expect(f, name).not.toBe(null);
+        expect(f.code).toContain(`function ${name}(`);
+      }
+    }
+    for (const kind of Object.keys(behaviors)) {
+      const found = (await Promise.all(BEHAVIOR_FILES.map((f) => findEntry(f, kind)))).filter(Boolean);
+      expect(found.length, `행동 ${kind}`).toBe(1);
+    }
+    const upd = await findEntry('src/entities/monster.js', 'update', { method: true });
+    expect(upd.code).toContain('update(dt)');
+  } finally { restore(); }
+});

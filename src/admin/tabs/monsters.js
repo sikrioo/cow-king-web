@@ -8,6 +8,7 @@ import { MAPS } from '../../data/maps.js';
 import * as B from '../../data/balance.js';
 import { monsterLevel } from '../../util.js';
 import { el, table, h2, note, src, tag, pct } from '../ui.js';
+import { monsterCard, openMonsterDetail } from '../detail.js';
 
 const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<span class="dim">물리</span>');
 const resistText = (r) => (r ? Object.entries(r).map(([k, v]) => tag(`${k === 'phys' ? '물리' : ELEMENT_DEF[k].label} ${v >= 1 ? '면역' : pct(v)}`, k === 'phys' ? '#ddd' : ELEMENT_DEF[k].color)).join('') : null);
@@ -15,10 +16,14 @@ const resistText = (r) => (r ? Object.entries(r).map(([k, v]) => tag(`${k === 'p
 export function renderMonsters(root) {
   const kinds = Object.keys(MONSTERS);
   root.append(
+    h2('모습'),
+    note(`게임과 같은 그림 함수(${src('render/monsterSprites.drawCow')})로 그림 - 대기·걷기·공격·기절 반복. 버튼 = 실제 게임에서 행동하는 미리보기 + 데이터 + 코드`),
+    el('div', { class: 'cards' }, kinds.map(monsterCard)),
     h2('몬스터 종류'),
     note(`수치 ${src('src/data/monsters.js')} · 특수 행동 ${src('src/entities/behaviors.js')} · 체력·피해는 ×10 정수. 난이도 열은 체력 × 난이도 배율`),
     table([
       { label: '이름', get: (k) => `${MONSTER_LABEL[k] || k} <span class="dim">${k}</span>` },
+      { label: '상세', get: (k) => el('button', { onclick: () => openMonsterDetail(k) }, '보기') },
       { label: '체력', num: true, get: (k) => MONSTERS[k].hp },
       ...DIFFICULTY_ORDER.slice(1).map((d) => ({ label: `체력(${DIFFICULTY[d].label})`, num: true, get: (k) => Math.round(MONSTERS[k].hp * DIFFICULTY[d].hp) })),
       { label: '근접 피해', num: true, get: (k) => MONSTERS[k].dmg },

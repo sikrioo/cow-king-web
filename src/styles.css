@@ -73,6 +73,9 @@
   #btn-pause:active, #btn-full:active { background:rgba(255,255,255,.14); }
   body.title-mode #joystick-base, body.title-mode #action-buttons, body.title-mode #potion-buttons,
   body.title-mode #btn-inv, body.title-mode #btn-pause, body.title-mode #btn-exit { opacity:0; pointer-events:none; }
+  /* 관리자 미리보기 창: 버튼 전부 숨김 */
+  body.sandbox-mode #joystick-base, body.sandbox-mode #action-buttons, body.sandbox-mode #potion-buttons, body.sandbox-mode #btn-pause,
+  body.sandbox-mode #btn-exit, body.sandbox-mode #btn-inv, body.sandbox-mode #btn-help, body.sandbox-mode #btn-full, body.sandbox-mode #btn-dev { display:none; }
   /* 맵 선택 화면: 장비 버튼만 */
   body.hub-mode #joystick-base, body.hub-mode #action-buttons, body.hub-mode #potion-buttons,
   body.hub-mode #btn-pause, body.hub-mode #btn-exit { opacity:0; pointer-events:none; }

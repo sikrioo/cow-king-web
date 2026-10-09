@@ -10,6 +10,7 @@ import {
 } from '../../data/cards.js';
 import * as B from '../../data/balance.js';
 import { el, table, h2, note, src, tag, num, pct } from '../ui.js';
+import { openSkillDetail } from '../detail.js';
 
 // 전사 스킬 수치는 data/balance.js 상수 (마법은 SPELLS, 투지·순간이동은 SKILL_STATS)
 const WARRIOR = {
@@ -59,9 +60,10 @@ export function renderSkills(root) {
   COMMON_SKILLS.forEach((id) => rows.push({ id, cls: '공통' }));
   root.append(
     h2('스킬'),
-    note(`메타 ${src('src/data/skills.js')} · 전사 수치 ${src('src/data/balance.js')} · 동작 ${src('src/systems/skills.js')} 등. 대기시간은 시전속도(기본 공격은 공격속도) 영향. 레벨 보너스는 Lv1보다 레벨마다 더해짐 (최대 Lv${SKILL_MAX_LEVEL})`),
+    note(`'미리보기' = 실제 게임 코드로 허수아비 앞에서 반복 시전 + 데이터(JSON) + 동작 코드. 메타 ${src('src/data/skills.js')} · 전사 수치 ${src('src/data/balance.js')} · 동작 ${src('src/systems/skills.js')} 등. 대기시간은 시전속도(기본 공격은 공격속도) 영향. 레벨 보너스는 Lv1보다 레벨마다 더해짐 (최대 Lv${SKILL_MAX_LEVEL})`),
     table([
       { label: '스킬', get: (r) => SKILL_META[r.id].label },
+      { label: '상세', get: (r) => el('button', { onclick: () => openSkillDetail(r.id) }, '미리보기') },
       { label: '분류', get: (r) => tag(SKILL_TYPE_LABEL[SKILL_META[r.id].type]) },
       { label: '직업', key: 'cls' },
       { label: '카드 등장 Lv', num: true, get: (r) => SKILL_UNLOCK_LEVEL[r.id] },

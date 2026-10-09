@@ -26,6 +26,7 @@ import { toggleDevPanel } from './ui/devPanel.js';
 import { updateHeroStatuses } from './systems/elements.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 import { updateFortify } from './systems/physSkills.js';
+import { updateSandbox } from './systems/sandbox.js';
 import { updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
 import {
   advanceScreen, startFromTitle, enterSelectedMap, requestExitMap, hubCycleMap, hubChangeOption
@@ -77,6 +78,7 @@ export function fixedUpdate(dt) {
     updateSpellCooldowns(dt);
     updateFortify(dt);
     updateDev();
+    if (game.sandbox) updateSandbox(dt); // 관리자 미리보기
     updateSkillSlots();
     game.cows.forEach((c) => c.update(dt));
     for (let i = game.cows.length - 1; i >= 0; i--) {
