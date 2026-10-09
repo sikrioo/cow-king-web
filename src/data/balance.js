@@ -64,6 +64,11 @@ export const WALK_SPEED = 130;
 export const RUN_SPEED = 215;
 export const HERO_SLOW_MULT = 0.55; // 냉기 둔화 중 이동 속도 배율
 export const MOVE_ARRIVE_RADIUS = 10; // 클릭 이동: 목표 지점에 이만큼 가까워지면 도착(멈춤)
+// 자동 조준 (systems/aim.js): 사거리, 바라보는 쪽 가중치(각도 1라디안당 거리 +60%로 침), PC 커서 흡착 각도(라디안 ≈15°), 적이 없을 때 지점 스킬 거리
+export const AUTO_AIM_RANGE = 420;
+export const AUTO_AIM_FACING_WEIGHT = 0.6;
+export const AIM_ASSIST_ANGLE = 0.26;
+export const AIM_DEFAULT_DISTANCE = 200;
 export const CLICK_PICK_PADDING = 10;  // 적 클릭 판정: 몸 반경 + 이만큼 (작은 적도 잘 찍히게)
 export const CLICK_ATTACK_RANGE_SLACK = 6; // 클릭 공격: 사거리보다 이만큼 더 붙어서 휘두름 (헛치지 않게)
 export const MAX_MANA = 100;

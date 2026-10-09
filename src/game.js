@@ -9,7 +9,7 @@ import { updatePlayer } from './entities/hero.js';
 import { updateHazards } from './systems/combat.js';
 import { updateMeteors } from './systems/spells.js';
 import { updateProjectiles } from './systems/projectiles.js';
-import { updateParticles, updateLightningBolts, updateShockwaves, updateIceRings, updateFloatTexts } from './systems/fx.js';
+import { updateParticles, updateLightningBolts, updateShockwaves, updateIceRings, updateFloatTexts, floatText } from './systems/fx.js';
 import { updateIdentify, tryUpgradeSlot } from './systems/gear.js';
 import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
@@ -27,6 +27,8 @@ import { updateHeroStatuses } from './systems/elements.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 import { updateFortify } from './systems/physSkills.js';
 import { updateSandbox } from './systems/sandbox.js';
+import { autoAimOn } from './systems/aim.js';
+import { saveReleaseMeta } from './save.js';
 import { updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
 import {
   advanceScreen, startFromTitle, enterSelectedMap, requestExitMap, hubCycleMap, hubChangeOption
@@ -151,6 +153,12 @@ export function handleKeyDown(intent, k, e) {
   if (game.paused) return;
   if (intent === 'devPanel' && isDevMode()) { toggleDevPanel(); return; }
   if (intent === 'exitMap') { requestExitMap(); return; }
+  if (intent === 'toggleAutoAim') {
+    game.releaseMeta.autoAim = !autoAimOn();
+    saveReleaseMeta();
+    floatText(game.hero.x, game.hero.y - 60, `자동 조준 ${autoAimOn() ? '켬' : '끔'}`, '#ffe066');
+    return;
+  }
   if (intent === 'debugLevelUp' && game.gameState === 'playing' && isDevMode()) gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 개발자 모드: L = 한 레벨 업
   const num = intent === 'num' ? Number(k) : 0;
   if (!ui.showInventory && game.gameState === 'playing') {

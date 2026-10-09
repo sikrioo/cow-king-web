@@ -22,8 +22,8 @@ import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
-import { screenToWorld } from '../world/camera.js';
 import { castSpeedMul, attackSpeedMul, skillMul, skillBonus } from '../util.js';
+import { aim } from './aim.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
@@ -304,18 +304,16 @@ export function cycleSkillSlot(slotNum) {
   if (slotEl) slotEl.style.background = SKILLS[game.hero[key]].color;
 }
 
-// PC(마우스를 쓴 적 있음): 시전 직전에 커서 쪽을 보게 함 → 공격/스킬이 커서 방향으로. 모바일은 바라보는 방향 그대로
-export function aimAtCursor() {
-  if (!input.mouseScreen || !game.hero.alive) return;
-  const w = screenToWorld(input.mouseScreen.x, input.mouseScreen.y);
-  const dx = w.x - game.hero.x, dy = w.y - game.hero.y;
-  if (Math.hypot(dx, dy) > 4) game.hero.facing = Math.atan2(dy, dx);
+// 시전 직전 조준 (자동 조준·커서 흡착 - systems/aim.js). 스킬 메타 aim: 'free'면 적 보정 없이
+export function aimAtCursor(id) {
+  aim(id && SKILL_META[id] && SKILL_META[id].aim === 'free' ? 'free' : 'target');
 }
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로
 export function trySlot(n) {
-  aimAtCursor();
-  SKILLS[n === 2 ? game.hero.slot2 : game.hero.slot1].try();
+  const id = n === 2 ? game.hero.slot2 : game.hero.slot1;
+  aimAtCursor(id);
+  SKILLS[id].try();
 }
 
 export function updateSkillSlots() {

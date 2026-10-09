@@ -76,6 +76,7 @@ export const KEY_INTENTS = {
   q: 'cycleSlot1',       // 슬롯 스킬 전환
   r: 'cycleSlot2',
   i: 'toggleMenu',
+  g: 'toggleAutoAim',      // 자동 조준 켜기/끄기 (systems/aim.js)
   t: 'exitMap',           // 맵 나가기 (두 번 눌러야 - session.requestExitMap)
   h: 'help',             // 도움말 창
   1: 'num', 2: 'num', 3: 'num', 4: 'num', 5: 'num', 6: 'num', 7: 'num',
