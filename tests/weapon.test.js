@@ -117,5 +117,10 @@ it('대검: 언제나 양손, 한 방 가장 셈·가장 느림·사거리 가�
     const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000;
     damageCow(c, 10, WEAPON_HEAVY.greatsword);
     expect(c.knockback).toBeGreaterThan(0.18);
+    // 양손 그림(왼손이 손잡이에)으로 그리기 - 평소·공격·위/아래 방향 모두 예외 없음
+    const { isTwoHanded } = await import('../src/render/heroSprites.js');
+    expect(isTwoHanded(h)).toBe(true);
+    game.waveTransition = 999;
+    for (const f of [0, Math.PI / 2, -Math.PI / 2]) { h.facing = f; env.frame(2); h.attackCooldown = 0; h.attackTimer = 0.2; h.currentAttackDuration = 0.4; env.frame(3); }
   } finally { env.restore(); }
 });
