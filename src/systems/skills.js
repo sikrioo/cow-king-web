@@ -16,7 +16,8 @@ import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
-import { tryFortify } from './physSkills.js';
+import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
@@ -263,6 +264,13 @@ export const SKILLS = {
   orb:       { ...SKILL_META.orb,       try: () => tryOrb(),           cd: () => game.hero.spellCd.orb,       cdMax: () => SPELLS.orb.cooldown * castSpeedMul(game.hero) },
   // 물리 보조 (systems/physSkills.js), 공통 (systems/commonSkills.js)
   fortify:   { ...SKILL_META.fortify,   try: () => tryFortify(),       cd: () => game.hero.spellCd.fortify,   cdMax: () => SKILL_STATS.fortify.cooldown * castSpeedMul(game.hero) },
+  flurry:    { ...SKILL_META.flurry,    try: () => tryFlurry(),        cd: () => game.hero.spellCd.flurry,    cdMax: () => SKILL_STATS.flurry.cooldown * castSpeedMul(game.hero) },
+  concuss:   { ...SKILL_META.concuss,   try: () => tryConcuss(),       cd: () => game.hero.spellCd.concuss,   cdMax: () => SKILL_STATS.concuss.cooldown * castSpeedMul(game.hero) },
+  berserk:   { ...SKILL_META.berserk,   try: () => tryBerserk(),       cd: () => game.hero.spellCd.berserk,   cdMax: () => SKILL_STATS.berserk.cooldown * castSpeedMul(game.hero) },
+  decoy:     { ...SKILL_META.decoy,     try: () => tryDecoy(),         cd: () => game.hero.spellCd.decoy,     cdMax: () => SKILL_STATS.decoy.cooldown * castSpeedMul(game.hero) },
+  energyshield: { ...SKILL_META.energyshield, try: () => tryEnergyShield(), cd: () => game.hero.spellCd.energyshield, cdMax: () => SPELLS.energyshield.cooldown * castSpeedMul(game.hero) },
+  blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
+  flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
 

@@ -14,6 +14,7 @@ import { emptySpellCooldowns } from '../systems/sorcSkills.js';
 import { unarmedStats } from '../systems/gear.js';
 import { emptyResist, emptyDot } from '../systems/elements.js';
 import { tryBasicAttack, basicAttackReady, basicAttackReach } from '../systems/skills.js';
+import { updateFlurry } from '../systems/physSkills.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
 export function createHero() {
@@ -86,6 +87,10 @@ export function createHero() {
     slot1: 'attack',
     slot2: 'warcry',
     fortifyTimer: 0, fortifyMax: 0, fortifyHp: 0, // 투지 (systems/physSkills.js)
+    flurryTimer: 0, flurryHits: 0, flurryNext: 0, // 난타
+    berserkTimer: 0, berserkMax: 0, berserkPower: 0, // 버서커
+    shieldTimer: 0, shieldMax: 0, // 에너지 쉴드 (systems/groundSpells.js)
+    aimX: null, aimY: null, // 조준 지점 (systems/aim.js)
     potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
     potionCd: { heal: 0, mana: 0 }, // 종류별 대기시간 (생명 마신 직후에도 마나는 바로 마실 수 있게)
     moveOffsetX: 0,
@@ -185,6 +190,12 @@ export function updatePlayer(dt) {
     updatePlayerMotionReaction(dt, 0, 0);
     updateGroundSmash(dt);
     return; // 강타 중엔 이동을 잠깐 잠금
+  }
+
+  if (game.hero.flurryTimer > 0) {
+    updatePlayerMotionReaction(dt, 0, 0);
+    updateFlurry(dt);
+    return; // 난타 중엔 제자리
   }
 
   if (game.hero.whirlwindTimer > 0) {

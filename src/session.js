@@ -127,6 +127,12 @@ function resetHeroRuntime() {
   h.fortifyTimer = 0;
   h.fortifyMax = 0;
   h.fortifyHp = 0;
+  h.flurryTimer = 0;
+  h.flurryHits = 0;
+  h.berserkTimer = 0;
+  h.shieldTimer = 0;
+  h.aimX = null;
+  h.aimY = null;
   h.potionCd = { heal: 0, mana: 0 };
   h.pendingCards = 0;
   game.cardOffer = null;

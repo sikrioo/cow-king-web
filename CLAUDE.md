@@ -56,6 +56,9 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.
 - 원소(화염/냉기/번개/독): 수치·색 `data/elements.js`, 규칙 `systems/elements.js`(피해 묶음 `{phys, fire, cold, lightning, poison}` → 물리=방어력, 원소=저항(상한 75%), 화상/중독 지속 피해, 둔화). `hitPlayer`는 숫자(물리) 또는 묶음을 받음. 몬스터 근접 원소는 `data/monsters.js`의 `element`. 1단계(10-06) 주인공이 받는 쪽, 마법사(10-07)로 몬스터 저항·상태 추가. 남은 것: 무기 원소 피해 옵션·주인공 저항 옵션.
 - 방어력(피해 감소): 방어구 기본값 `data/items.js`의 `GEAR_BASE_ARMOR`(옵션 아님, ×등급 배율 ×강화), 공식 상수 `data/balance.js`의 `ARMOR_K`/`ARMOR_MAX_REDUCTION`, 계산 `systems/gear.js`의 `gearArmor`/`armorReduction`. 피격 순서: 회피 → 블락 → 방어력 감소(최소 1). 원소 저항(2안)은 나중에 `hitPlayer`에 공격 종류를 붙여 확장.
+- 조준: `systems/aim.js` 한 곳(자동 조준·커서 흡착, G 토글) - 시전 직전 facing + 지점 `hero.aimX/aimY`(지점 스킬). 적을 겨누면 안 되는 스킬은 SKILL_META `aim: 'free'`.
+- 주인공이 받는 피해 마지막 단계: `elements.heroDamageTaken`(버서커 증가·에너지 쉴드 흡수) - hitPlayer와 지속 피해 둘 다 거침. 주는 피해 배율: `util.berserkMul`.
+- 미끼(전사 더미): 몬스터 일반 AI의 추적·근접 대상만 바뀜(`physSkills.decoyFor/hitDecoy`). 종류별 특수 행동은 주인공 그대로.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 
 ## 규칙

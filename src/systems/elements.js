@@ -1,5 +1,7 @@
 // 원소 피해 규칙: 피해 묶음 → 방어력/저항 적용, 상태 효과(화상/중독/둔화), 지속 피해 틱, 주인공 사망 처리
 // 수치는 data/elements.js. 피해 묶음 = { phys, fire, cold, lightning, poison } (없는 항목은 0, 숫자 하나면 물리)
+import { SKILL_STATS, SPELLS, SHIELD_MAX_ABSORB } from '../data/skills.js';
+import { skillBonus } from '../util.js';
 import {
   ELEMENTS, ELEMENT_DEF, PHYSICAL_COLOR, RESIST_CAP, DOT_TICK, BURN_RATIO, BURN_DURATION,
   POISON_RATIO, POISON_DURATION, CHILL_DURATION, LIGHTNING_MIN, LIGHTNING_MAX
@@ -90,9 +92,28 @@ export function updateHeroStatuses(dt) {
 // 체력만 바로 깎음 (무적시간/넉백 없음) - 지속 피해용
 export function damageHeroDirect(amount, color) {
   if (dev.god) return;
+  amount = heroDamageTaken(amount);
+  if (amount <= 0) return;
   game.hero.hp -= amount;
   spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${amount}`, color);
   checkHeroDeath();
+}
+
+// 받는 피해 마지막 단계: 버서커 중이면 더 받고, 에너지 쉴드가 켜져 있으면 일부를 마나로 대신 받음 (마나가 모자라면 그만큼만)
+export function heroDamageTaken(total) {
+  const h = game.hero;
+  if (h.berserkTimer > 0) total = Math.round(total * (1 + SKILL_STATS.berserk.taken));
+  if (h.shieldTimer > 0 && total > 0) {
+    const s = SPELLS.energyshield;
+    const ratio = Math.min(SHIELD_MAX_ABSORB, s.absorb + skillBonus(h, 'energyshield', 'absorb'));
+    const absorbed = Math.min(Math.round(total * ratio), Math.floor(h.mana / s.manaPerDmg));
+    if (absorbed > 0) {
+      h.mana -= absorbed * s.manaPerDmg;
+      total -= absorbed;
+      spawnDamageNumber(h.x + 16, h.y - 50, `막음 ${absorbed}`, '#7fa8ff');
+    }
+  }
+  return total;
 }
 
 export function checkHeroDeath() {

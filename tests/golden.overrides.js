@@ -36,6 +36,14 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,
   'exact.progression.skillUnlockLevel.teleport': 3,
+  // 2026-10-09: 새 스킬 - 전사 난타·뇌진탕·버서커·더미, 마법사 에너지 쉴드·화염기둥·눈보라
+  'exact.progression.skillUnlockLevel.flurry': 2,
+  'exact.progression.skillUnlockLevel.concuss': 4,
+  'exact.progression.skillUnlockLevel.berserk': 6,
+  'exact.progression.skillUnlockLevel.decoy': 7,
+  'exact.progression.skillUnlockLevel.energyshield': 3,
+  'exact.progression.skillUnlockLevel.flamepillar': 5,
+  'exact.progression.skillUnlockLevel.blizzard': 8,
   // 2026-10-08: 무기 원소 피해 옵션 (지금은 드랍 안 됨 - 개발자 테스트 무기에만)
   'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },

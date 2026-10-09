@@ -26,7 +26,7 @@ export function updateSpellCooldowns(dt) {
 }
 
 // 시전 가능하면 마나/대기시간을 쓰고 시전 자세를 잡음 (대기시간: 스킬 = 시전속도, 마력탄 = 공격속도)
-function begin(id, cooldown = SPELLS[id].cooldown * castSpeedMul(game.hero)) {
+export function begin(id, cooldown = SPELLS[id].cooldown * castSpeedMul(game.hero)) {
   const h = game.hero, s = SPELLS[id];
   if (!h.alive || h.spellCd[id] > 0) return false;
   if (h.mana < s.mana) {

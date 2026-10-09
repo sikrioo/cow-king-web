@@ -20,6 +20,8 @@ export function clearWorld() {
   game.iceRings = [];
   game.hazards = [];
   game.meteors = [];
+  game.groundSpells = [];
+  game.decoy = null;
   game.projectiles = [];
   game.lightningBolts = [];
   game.floatTexts = [];

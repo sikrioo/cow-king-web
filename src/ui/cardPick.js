@@ -2,7 +2,7 @@
 // 넓은 화면은 가로 3장, 좁은 화면(모바일 세로)은 세로로 쌓음. 클릭 영역은 그릴 때마다 ui.cardRects / ui.cardRerollRect에 다시 등록
 import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
-import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT, SKILL_STATS, SKILL_TYPE_LABEL } from '../data/skills.js';
+import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT, SKILL_STATS, SPELLS, SKILL_TYPE_LABEL } from '../data/skills.js';
 import { FILLER_CARDS, UPGRADE_CARDS, CARD_RARITY, UPGRADE_MAX_PICKS } from '../data/cards.js';
 
 const TYPE_STYLE = {
@@ -18,7 +18,7 @@ function bonusLines(card) {
     const st = SKILL_LEVEL_STAT[key];
     const fmt = (lv) => {
       const v = up[key] * Math.max(0, lv - 1);
-      if (st.add) return `${Math.round((SKILL_STATS[card.id][key] + v) * 100)}%`;
+      if (st.add) return `${Math.round(((SKILL_STATS[card.id] || SPELLS[card.id])[key] + v) * 100)}%`;
       if (st.neg) return `-${Math.round(v * 100)}%`;
       return st.pct ? `+${Math.round(v * 100)}%` : `+${v}`;
     };

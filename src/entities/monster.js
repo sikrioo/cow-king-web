@@ -9,6 +9,7 @@ import { hitPlayer } from '../systems/combat.js';
 import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS } from '../data/balance.js';
 import { randomPointInPen, clampToPen } from '../world/arena.js';
 import { monsterLevel } from '../util.js';
+import { decoyFor, hitDecoy } from '../systems/physSkills.js';
 import { emptyDot } from '../systems/elements.js';
 import { updateCowStatuses } from '../systems/elementCombat.js';
 
@@ -137,9 +138,11 @@ export class Monster {
     this.stateElapsed += dt;
     const auraMult = getAuraSpeedMult(this);
 
-    const dxP = game.hero.x - this.x, dyP = game.hero.y - this.y;
+    // 노리는 대상: 미끼(전사 '더미')가 가까우면 미끼, 아니면 주인공 (종류별 특수 행동은 주인공 그대로)
+    const decoy = decoyFor(this);
+    const dxP = (decoy ? decoy.x : game.hero.x) - this.x, dyP = (decoy ? decoy.y : game.hero.y) - this.y;
     const distP = Math.hypot(dxP, dyP);
-    const playerNear = game.hero.alive && distP < this.aggroRange;
+    const playerNear = decoy ? true : game.hero.alive && distP < this.aggroRange;
 
     // 종류별 이동 규칙 (번개: 사거리 밖이면 접근 + 가까우면 후퇴, 주술사: 가까우면 후퇴)
     if (b && b.steer && b.steer(this, dxP, dyP, distP, auraMult)) return;
@@ -167,7 +170,11 @@ export class Monster {
       if (this.state !== 'attack') { this.setState('attack', 0.6); this.attackHit = false; this.attackingPlayer = true; }
       if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
       if (!this.attackHit && this.stateElapsed > 0.12 && this.stateElapsed < 0.22) {
-        if (distP <= this.meleeRange + 10) { hitPlayer(this.x, this.y, this.element ? { [this.element]: this.dmg } : this.dmg); this.attackHit = true; }
+        if (distP <= this.meleeRange + 10) {
+          const dmg = this.element ? { [this.element]: this.dmg } : this.dmg;
+          if (decoy) hitDecoy(dmg); else hitPlayer(this.x, this.y, dmg);
+          this.attackHit = true;
+        }
       }
       this.timer -= dt;
       if (this.timer <= 0) this.setState('idle', auraMult > 1 ? 0.08 : 0.18);

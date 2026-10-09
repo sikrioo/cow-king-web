@@ -25,7 +25,8 @@ import { updateDev } from './systems/dev.js';
 import { toggleDevPanel } from './ui/devPanel.js';
 import { updateHeroStatuses } from './systems/elements.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
-import { updateFortify } from './systems/physSkills.js';
+import { updateSkillBuffs } from './systems/physSkills.js';
+import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateSandbox } from './systems/sandbox.js';
 import { autoAimOn } from './systems/aim.js';
 import { saveReleaseMeta } from './save.js';
@@ -78,7 +79,7 @@ export function fixedUpdate(dt) {
     updatePlayer(dt);
     updateHeroStatuses(dt);
     updateSpellCooldowns(dt);
-    updateFortify(dt);
+    updateSkillBuffs(dt); // 투지·버서커·에너지 쉴드 시간, 미끼
     updateDev();
     if (game.sandbox) updateSandbox(dt); // 관리자 미리보기
     updateSkillSlots();
@@ -102,6 +103,7 @@ export function fixedUpdate(dt) {
   updateIceRings(dt);
   updateHazards(dt);
   updateMeteors(dt);
+  updateGroundSpells(dt);
   updateProjectiles(dt);
   updateLightningBolts(dt);
   updateFloatTexts(dt);

@@ -24,6 +24,9 @@ const WARRIOR = {
 
 function skillInfo(id) {
   if (WARRIOR[id]) return WARRIOR[id];
+  if (id === 'energyshield') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 받는 피해 ${pct(s.absorb)}를 마나로 (피해 1당 마나 ${s.manaPerDmg})` }; }
+  if (id === 'blizzard') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage}, 사거리 ${s.range}` }; }
+  if (id === 'flamepillar') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 뒤 반경 ${s.radius} 화염 ${s.damage}, 사거리 ${s.range}` }; }
   if (SPELLS[id]) {
     const s = SPELLS[id];
     const effect = id === 'orb' ? `조각 피해 ${s.shardDamage} (${s.shardEvery}초마다), 끝에서 ${s.burst}개` : `피해 ${s.damage}${s.explode ? `, 폭발 ${s.explode}` : ''}${s.radius && !s.speed ? `, 반경 ${s.radius}` : ''}${s.jumps ? `, 튕김 ${s.jumps}` : ''}`;
@@ -32,6 +35,10 @@ function skillInfo(id) {
   const s = SKILL_STATS[id];
   if (id === 'fortify') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 최대 체력 +${pct(s.life)}` };
   if (id === 'teleport') return { mana: s.mana, cd: s.cooldown, effect: `최대 ${s.range}px 순간이동` };
+  if (id === 'flurry') return { mana: s.mana, cd: s.cooldown, effect: `${s.hits}번 × 무기 피해 ${pct(s.ratio)} (${s.interval}초 간격), 제자리` };
+  if (id === 'concuss') return { mana: s.mana, cd: s.cooldown, effect: `앞쪽 무기 피해 + ${s.bonus}, 기절 ${s.stun}초` };
+  if (id === 'berserk') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초: 주는 피해 +${pct(s.power)}, 공격속도 +${pct(s.speed)}, 받는 피해 +${pct(s.taken)}` };
+  if (id === 'decoy') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 미끼 (체력 = 내 최대 체력 × ${pct(s.life)}), ${s.taunt}px 안 몬스터가 공격` };
   return { mana: s ? s.mana : '-', cd: s ? s.cooldown : '-', effect: '' };
 }
 

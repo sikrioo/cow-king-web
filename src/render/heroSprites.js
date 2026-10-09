@@ -8,89 +8,89 @@ import { drawHeroStaff } from './heroStaff.js';
 const heroClass = () => CLASSES[game.hero.classKey] || CLASSES.warrior;
 const look = () => heroClass().look;
 
-export function drawPlayer(ctx, t = 0) {
-  if (!game.hero.alive) return;
-  const flashBlink = game.hero.invuln > 0 && Math.floor(game.hero.invuln * 12) % 2 === 0;
+export function drawPlayer(ctx, t = 0, h = game.hero) {
+  if (!h.alive) return;
+  const flashBlink = h.invuln > 0 && Math.floor(h.invuln * 12) % 2 === 0;
 
   let jumpHeight = 0;
-  if (game.hero.leapTimer > 0) {
-    const jt = 1 - game.hero.leapTimer / LEAP_DURATION;
+  if (h.leapTimer > 0) {
+    const jt = 1 - h.leapTimer / LEAP_DURATION;
     jumpHeight = Math.sin(jt * Math.PI) * 40;
   }
 
-  const speedN = game.hero.moveSpeedN;
-  const fx = Math.cos(game.hero.facing);
-  const fy = Math.sin(game.hero.facing);
+  const speedN = h.moveSpeedN;
+  const fx = Math.cos(h.facing);
+  const fy = Math.sin(h.facing);
   const sx = -fy;
   const sy = fx;
   const idle = Math.sin(t * 2.0) * 0.35;
-  const rigidBob = Math.abs(Math.sin(game.hero.moveStep)) * speedN * 0.7 + idle;
-  const pose = getAbstractHeroPose(t, speedN);
+  const rigidBob = Math.abs(Math.sin(h.moveStep)) * speedN * 0.7 + idle;
+  const pose = getAbstractHeroPose(t, speedN, h);
 
   ctx.save();
   ctx.globalAlpha = flashBlink ? 0.35 : 1;
-  if (game.hero.flash > 0) ctx.filter = 'brightness(2.15) saturate(0.45)';
-  ctx.translate(game.hero.x, game.hero.y);
+  if (h.flash > 0) ctx.filter = 'brightness(2.15) saturate(0.45)';
+  ctx.translate(h.x, h.y);
 
   const shadowScale = 1 - Math.min(jumpHeight / 60, 0.5);
   ctx.fillStyle = 'rgba(0,0,0,0.30)';
   ctx.beginPath();
-  ctx.ellipse(0, game.hero.r * 0.90, game.hero.r * (0.95 + speedN * 0.12) * shadowScale,
-    game.hero.r * (0.33 - speedN * 0.02) * shadowScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, h.r * 0.90, h.r * (0.95 + speedN * 0.12) * shadowScale,
+    h.r * (0.33 - speedN * 0.02) * shadowScale, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  if (game.hero.moveReaction > 0 && jumpHeight <= 0) {
+  if (h.moveReaction > 0 && jumpHeight <= 0) {
     ctx.save();
-    ctx.globalAlpha = game.hero.moveReaction * 0.16;
+    ctx.globalAlpha = h.moveReaction * 0.16;
     ctx.strokeStyle = '#efe3ca';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.ellipse(0, game.hero.r * 0.83,
-      game.hero.r * (1.08 + game.hero.moveReaction * 0.50),
-      game.hero.r * (0.35 + game.hero.moveReaction * 0.09), 0, 0, Math.PI * 2);
+    ctx.ellipse(0, h.r * 0.83,
+      h.r * (1.08 + h.moveReaction * 0.50),
+      h.r * (0.35 + h.moveReaction * 0.09), 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
 
   ctx.translate(0, -jumpHeight + rigidBob * 0.2);
-  if (game.hero.leapTimer <= 0) {
-    ctx.translate(game.hero.moveOffsetX * 0.72, game.hero.moveOffsetY * 0.72);
-    ctx.rotate(game.hero.moveLean * 0.75 + pose.bodyTwist);
+  if (h.leapTimer <= 0) {
+    ctx.translate(h.moveOffsetX * 0.72, h.moveOffsetY * 0.72);
+    ctx.rotate(h.moveLean * 0.75 + pose.bodyTwist);
   }
 
-  drawAbstractScarf(ctx, fx, fy, sx, sy, game.hero.r, speedN, t);
+  drawAbstractScarf(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
 
-  const leftBase = { x: -sx * game.hero.r * 0.67, y: -sy * game.hero.r * 0.67 };
-  const rightBase = { x: sx * game.hero.r * 0.67, y: sy * game.hero.r * 0.67 };
+  const leftBase = { x: -sx * h.r * 0.67, y: -sy * h.r * 0.67 };
+  const rightBase = { x: sx * h.r * 0.67, y: sy * h.r * 0.67 };
   const leftDepth = (-sy > 0 ? 1 : 0);
   const rightDepth = (sy > 0 ? 1 : 0);
 
   // 오른손 = 주무기, 왼손 = 보조무기 또는 방패 (실제 장착한 것을 그대로 반영)
-  const mainGear = game.hero.equipment.weaponMain;
-  const offGear = game.hero.equipment.weaponOff;
+  const mainGear = h.equipment.weaponMain;
+  const offGear = h.equipment.weaponOff;
   const rightHeld = mainGear && mainGear !== 'LOCKED' ? { kind: 'weapon', variant: mainGear.variant || 'sword' }
     : heroClass().staff ? { kind: 'staff', variant: null } : { kind: 'none', variant: null }; // 마법사는 빈손이면 지팡이
   const leftHeld = offGear && offGear !== 'LOCKED'
     ? (offGear.category === 'shield' ? { kind: 'shield', variant: null } : { kind: 'weapon', variant: offGear.variant || 'sword' })
     : { kind: 'none', variant: null };
 
-  if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, game.hero.r, 0.86, leftHeld.kind, leftHeld.variant);
-  else drawFloatingHandAndBlade(ctx, rightBase, pose.right, game.hero.r, 0.86, rightHeld.kind, rightHeld.variant);
+  if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 0.86, leftHeld.kind, leftHeld.variant, h);
+  else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 0.86, rightHeld.kind, rightHeld.variant, h);
 
-  drawAbstractHeroBody(ctx, fx, fy, sx, sy, game.hero.r, speedN, t);
+  drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
 
-  if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, game.hero.r, 1, leftHeld.kind, leftHeld.variant);
-  else drawFloatingHandAndBlade(ctx, rightBase, pose.right, game.hero.r, 1, rightHeld.kind, rightHeld.variant);
+  if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 1, leftHeld.kind, leftHeld.variant, h);
+  else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 1, rightHeld.kind, rightHeld.variant, h);
 
-  if (game.hero.rushTimer > 0) {
+  if (h.rushTimer > 0) {
     ctx.save();
     ctx.globalAlpha = 0.22;
     ctx.strokeStyle = '#ffd27a';
     ctx.lineWidth = 5;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(-fx * game.hero.r * 1.35, -fy * game.hero.r * 1.35);
-    ctx.lineTo(fx * game.hero.r * 1.75, fy * game.hero.r * 1.75);
+    ctx.moveTo(-fx * h.r * 1.35, -fy * h.r * 1.35);
+    ctx.lineTo(fx * h.r * 1.75, fy * h.r * 1.75);
     ctx.stroke();
     ctx.restore();
   }
@@ -98,54 +98,54 @@ export function drawPlayer(ctx, t = 0) {
   ctx.restore();
 }
 
-export function getAbstractHeroPose(t, speedN) {
+export function getAbstractHeroPose(t, speedN, h = game.hero) {
   // 왼손(보조)에 실제로 무기가 들려있을 때만 "쌍수"로 보고 양손 다 휘두름 - 방패/빈손이면 주무기 쪽만 동작
-  const offGear = game.hero.equipment.weaponOff;
+  const offGear = h.equipment.weaponOff;
   const dualWield = !!(offGear && offGear !== 'LOCKED' && offGear.category === 'weapon');
-  const drift = Math.sin(game.hero.moveStep) * speedN * 0.08;
+  const drift = Math.sin(h.moveStep) * speedN * 0.08;
   const pose = {
     bodyTwist: Math.sin(t * 1.4) * 0.008,
-    left:  { handAngle: game.hero.facing - 1.02 + drift, handDist: game.hero.r * 0.40, bladeAngle: game.hero.facing - 0.62 + drift, bladeScale: 0.95, trail: null },
-    right: { handAngle: game.hero.facing + 1.02 - drift, handDist: game.hero.r * 0.40, bladeAngle: game.hero.facing + 0.62 - drift, bladeScale: 0.95, trail: null }
+    left:  { handAngle: h.facing - 1.02 + drift, handDist: h.r * 0.40, bladeAngle: h.facing - 0.62 + drift, bladeScale: 0.95, trail: null },
+    right: { handAngle: h.facing + 1.02 - drift, handDist: h.r * 0.40, bladeAngle: h.facing + 0.62 - drift, bladeScale: 0.95, trail: null }
   };
 
-  if (game.hero.leapTimer > 0) {
-    pose.left  = { handAngle: game.hero.facing - 0.24, handDist: game.hero.r * 0.62, bladeAngle: game.hero.facing - 0.10, bladeScale: 1.05, trail: null };
-    pose.right = { handAngle: game.hero.facing + 0.24, handDist: game.hero.r * 0.62, bladeAngle: game.hero.facing + 0.10, bladeScale: 1.05, trail: null };
-  } else if (game.hero.rushTimer > 0) {
+  if (h.leapTimer > 0) {
+    pose.left  = { handAngle: h.facing - 0.24, handDist: h.r * 0.62, bladeAngle: h.facing - 0.10, bladeScale: 1.05, trail: null };
+    pose.right = { handAngle: h.facing + 0.24, handDist: h.r * 0.62, bladeAngle: h.facing + 0.10, bladeScale: 1.05, trail: null };
+  } else if (h.rushTimer > 0) {
     pose.bodyTwist = 0;
-    pose.left  = { handAngle: game.hero.facing - 0.20, handDist: game.hero.r * 0.74, bladeAngle: game.hero.facing - 0.08, bladeScale: 1.08, trail: null };
-    pose.right = { handAngle: game.hero.facing + 0.20, handDist: game.hero.r * 0.74, bladeAngle: game.hero.facing + 0.08, bladeScale: 1.08, trail: null };
-  } else if (game.hero.smashTimer > 0) {
-    const elapsed = SMASH_DURATION - game.hero.smashTimer;
+    pose.left  = { handAngle: h.facing - 0.20, handDist: h.r * 0.74, bladeAngle: h.facing - 0.08, bladeScale: 1.08, trail: null };
+    pose.right = { handAngle: h.facing + 0.20, handDist: h.r * 0.74, bladeAngle: h.facing + 0.08, bladeScale: 1.08, trail: null };
+  } else if (h.smashTimer > 0) {
+    const elapsed = SMASH_DURATION - h.smashTimer;
     const p = Math.min(elapsed / SMASH_IMPACT_TIME, 1);
     const open = (1 - p) * 1.20 + 0.22;
     pose.bodyTwist = (1 - p) * -0.08;
-    pose.left  = { handAngle: game.hero.facing - open, handDist: game.hero.r * (0.44 + p * 0.28), bladeAngle: game.hero.facing - open * 0.82, bladeScale: 1.02, trail: null };
-    pose.right = { handAngle: game.hero.facing + open, handDist: game.hero.r * (0.44 + p * 0.28), bladeAngle: game.hero.facing + open * 0.82, bladeScale: 1.02, trail: null };
-  } else if (game.hero.whirlwindTimer > 0) {
-    const a = game.hero.whirlAngle;
+    pose.left  = { handAngle: h.facing - open, handDist: h.r * (0.44 + p * 0.28), bladeAngle: h.facing - open * 0.82, bladeScale: 1.02, trail: null };
+    pose.right = { handAngle: h.facing + open, handDist: h.r * (0.44 + p * 0.28), bladeAngle: h.facing + open * 0.82, bladeScale: 1.02, trail: null };
+  } else if (h.whirlwindTimer > 0) {
+    const a = h.whirlAngle;
     pose.bodyTwist = Math.sin(a * 2) * 0.045;
     if (dualWield) {
-      pose.left  = { handAngle: a, handDist: game.hero.r * 0.75, bladeAngle: a + 0.15, bladeScale: 1.02, trail: { from: a - 0.55, to: a + 0.14, alpha: 0.18 } };
+      pose.left  = { handAngle: a, handDist: h.r * 0.75, bladeAngle: a + 0.15, bladeScale: 1.02, trail: { from: a - 0.55, to: a + 0.14, alpha: 0.18 } };
     } else {
       // 한손무기 + 방패(또는 빈손) - 왼손은 회전시키지 않고 몸 앞에 붙여서 버팀
-      pose.left = { handAngle: game.hero.facing - Math.PI * 0.6, handDist: game.hero.r * 0.40, bladeAngle: game.hero.facing - Math.PI * 0.6, bladeScale: 1.0, trail: null };
+      pose.left = { handAngle: h.facing - Math.PI * 0.6, handDist: h.r * 0.40, bladeAngle: h.facing - Math.PI * 0.6, bladeScale: 1.0, trail: null };
     }
-    pose.right = { handAngle: a + Math.PI, handDist: game.hero.r * 0.75, bladeAngle: a + Math.PI + 0.15, bladeScale: 1.02, trail: { from: a + Math.PI - 0.55, to: a + Math.PI + 0.14, alpha: 0.18 } };
-  } else if (game.hero.attackTimer > 0) {
-    // game.hero.currentAttackDuration은 콤보로 빨라진 실제 스윙 시간(공격속도 스탯 반영) - 기존 ATTACK_DURATION 대신 사용
-    const at = 1 - game.hero.attackTimer / game.hero.currentAttackDuration;
+    pose.right = { handAngle: a + Math.PI, handDist: h.r * 0.75, bladeAngle: a + Math.PI + 0.15, bladeScale: 1.02, trail: { from: a + Math.PI - 0.55, to: a + Math.PI + 0.14, alpha: 0.18 } };
+  } else if (h.attackTimer > 0) {
+    // h.currentAttackDuration은 콤보로 빨라진 실제 스윙 시간(공격속도 스탯 반영) - 기존 ATTACK_DURATION 대신 사용
+    const at = 1 - h.attackTimer / h.currentAttackDuration;
     const wind = easeOutCubic(clamp01(at / 0.18));
     const hit = easeOutCubic(clamp01((at - 0.18) / 0.72));
     const settle = easeOutCubic(clamp01((at - 0.82) / 0.18));
 
-    const l0 = game.hero.facing - 1.55 - wind * 0.16;
-    const l1 = game.hero.facing + 0.58;
-    const r0 = game.hero.facing + 1.55 + wind * 0.16;
-    const r1 = game.hero.facing - 0.58;
+    const l0 = h.facing - 1.55 - wind * 0.16;
+    const l1 = h.facing + 0.58;
+    const r0 = h.facing + 1.55 + wind * 0.16;
+    const r1 = h.facing - 0.58;
     const ra = lerpAngle(r0, r1, hit);
-    const ext = game.hero.r * (0.50 + hit * 0.28 - settle * 0.10);
+    const ext = h.r * (0.50 + hit * 0.28 - settle * 0.10);
 
     pose.bodyTwist = -0.09 + hit * 0.18 - settle * 0.09;
     if (dualWield) {
@@ -159,10 +159,10 @@ export function getAbstractHeroPose(t, speedN) {
       };
     } else {
       // 한손무기 + 방패(또는 빈손) - 왼손은 휘두르지 않고 몸 앞으로 살짝 당겨 막는 자세만
-      const braceAngle = game.hero.facing - Math.PI * 0.62;
+      const braceAngle = h.facing - Math.PI * 0.62;
       pose.left = {
         handAngle: braceAngle,
-        handDist: game.hero.r * (0.42 + hit * 0.06),
+        handDist: h.r * (0.42 + hit * 0.06),
         bladeAngle: braceAngle,
         bladeScale: 1.0,
         trail: null
@@ -180,8 +180,8 @@ export function getAbstractHeroPose(t, speedN) {
   return pose;
 }
 
-export function drawAbstractScarf(ctx, fx, fy, sx, sy, r, speedN, t) {
-  const sway = Math.sin(t * 4.0 + game.hero.moveStep * 0.35) * r * (0.06 + speedN * 0.08);
+export function drawAbstractScarf(ctx, fx, fy, sx, sy, r, speedN, t, h = game.hero) {
+  const sway = Math.sin(t * 4.0 + h.moveStep * 0.35) * r * (0.06 + speedN * 0.08);
   const backX = -fx * r * 0.56;
   const backY = -fy * r * 0.56;
   const tailX = -fx * r * (1.25 + speedN * 0.32) + sx * sway;
@@ -204,7 +204,7 @@ export function drawAbstractScarf(ctx, fx, fy, sx, sy, r, speedN, t) {
   ctx.restore();
 }
 
-export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, heldKind = 'weapon', heldVariant = 'sword') {
+export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, heldKind = 'weapon', heldVariant = 'sword', h = game.hero) {
   const hx = base.x + Math.cos(handPose.handAngle) * handPose.handDist;
   const hy = base.y + Math.sin(handPose.handAngle) * handPose.handDist;
 
@@ -229,12 +229,12 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
   } else if (heldKind === 'weapon') {
     drawAbstractSword(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, heldVariant);
   } else if (heldKind === 'staff') {
-    drawHeroStaff(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, game.hero.renderBreath);
+    drawHeroStaff(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, h.renderBreath);
   }
   ctx.restore();
 }
 
-export function drawAbstractHeroBody(ctx, fx, fy, sx, sy, r, speedN, t) {
+export function drawAbstractHeroBody(ctx, fx, fy, sx, sy, r, speedN, t, h = game.hero) {
   ctx.save();
 
   ctx.beginPath();
@@ -270,7 +270,7 @@ export function drawAbstractHeroBody(ctx, fx, fy, sx, sy, r, speedN, t) {
   const vy = fy * r * 0.19 - r * 0.10;
   ctx.save();
   ctx.translate(vx, vy);
-  ctx.rotate(game.hero.facing);
+  ctx.rotate(h.facing);
   ctx.fillStyle = '#12161b';
   ctx.beginPath();
   ctx.roundRect(-r * 0.40, -r * 0.16, r * 0.80, r * 0.32, r * 0.15);

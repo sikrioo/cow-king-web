@@ -40,6 +40,8 @@ export function drawComboCounter(ctx) {
 
 export function drawBuffIcons(ctx) {
   const buffs = [];
+  if (game.hero.berserkTimer > 0) buffs.push({ color: '#ff3b3b', frac: game.hero.berserkTimer / (game.hero.berserkMax || 1) }); // 버서커
+  if (game.hero.shieldTimer > 0) buffs.push({ color: '#7fa8ff', frac: game.hero.shieldTimer / (game.hero.shieldMax || 1) }); // 에너지 쉴드
   if (game.hero.fortifyTimer > 0) buffs.push({ color: '#ff6b6b', frac: game.hero.fortifyTimer / game.hero.fortifyMax }); // 투지
   if (game.hero.vitalityTimer > 0) buffs.push({ color: ITEM_STYLE.vitality.color, frac: game.hero.vitalityTimer / VITALITY_DURATION });
   if (game.hero.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: game.hero.speedBuffTimer / SPEED_BUFF_DURATION });

@@ -12,6 +12,8 @@ export const game = {
   items: [],
   hazards: [],
   meteors: [], // 떨어지는 중인 메테오 (systems/spells.js)
+  groundSpells: [], // 눈보라·화염기둥 (systems/groundSpells.js)
+  decoy: null, // 전사 '더미' 미끼 { x, y, hp, timer, ... } (systems/physSkills.js)
   projectiles: [], // 날아가는 투사체 (systems/projectiles.js)
   lightningBolts: [],
   shockwaves: [],

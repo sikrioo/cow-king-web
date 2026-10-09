@@ -11,10 +11,10 @@ import { game, dev } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot, dropSource } from './loot.js';
-import { attackSpeedMul, skillMul, resistOf } from '../util.js';
+import { attackSpeedMul, skillMul, resistOf, berserkMul } from '../util.js';
 import { COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import {
-  toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath
+  toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath, heroDamageTaken
 } from './elements.js';
 import { gainExp } from './progression.js';
 
@@ -130,7 +130,9 @@ export function rollWeaponDamage(ws = game.hero.weaponStats.main) {
 
 // 주인공 한 타 피해 = 무기 굴림 + 공격력(장비/레벨) + 공격물약
 export function heroHitDamage(ws = game.hero.weaponStats.main) {
-  return rollWeaponDamage(ws) + game.hero.attackBonus + game.hero.gearAtkPower;
+  const d = rollWeaponDamage(ws) + game.hero.attackBonus + game.hero.gearAtkPower;
+  const m = berserkMul(game.hero); // 버서커 중이면 더 셈
+  return m === 1 ? d : Math.round(d * m);
 }
 
 // 몬스터 저항 (phys/fire/cold/lightning/poison, 0~1 - 1이면 면역). 규칙은 util.resistOf
@@ -183,8 +185,9 @@ export function hitPlayer(fromX, fromY, dmg) {
   const blocked = Math.random() < totalBlock;
   if (!blocked) {
     const r = resolveHeroDamage(toPacket(dmg)); // 물리 = 방어력, 원소 = 저항
-    game.hero.hp -= r.total;
-    spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${r.total}`, damageColor(r.dominant));
+    const taken = heroDamageTaken(r.total); // 버서커(더 받음)·에너지 쉴드(마나로 받음)
+    game.hero.hp -= taken;
+    if (taken > 0) spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, damageColor(r.dominant));
     applyHeroStatuses(r.parts);
   } else {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'BLOCK', '#8fd0ff');
@@ -225,7 +228,9 @@ export function skillDamageCow(c, bonusDamage, knockForce, color) {
   c.flash = 0.13;
   applyKnockback(c.body, game.hero.x, game.hero.y, knockForce);
   c.knockback = Math.max(c.knockback || 0, 0.22);
-  const dmg = physDamageTo(c, Math.max(1, bonusDamage + game.hero.attackBonus + game.hero.gearAtkPower));
+  const raw = Math.max(1, bonusDamage + game.hero.attackBonus + game.hero.gearAtkPower);
+  const m = berserkMul(game.hero);
+  const dmg = physDamageTo(c, m === 1 ? raw : Math.round(raw * m));
   showCowDamage(c, dmg, color || '#fff');
   spawnHitParticles(c.x, c.y, color || PALETTE.hide, 8);
   if (dmg <= 0) return; // 물리 면역

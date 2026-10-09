@@ -1,7 +1,7 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
-import { SKILL_LEVEL_UP } from './data/skills.js';
+import { SKILL_LEVEL_UP, SKILL_STATS } from './data/skills.js';
 import { MONSTERS } from './data/monsters.js';
 import { MAPS } from './data/maps.js';
 import { DIFFICULTY, WAVE_MLVL_STEP, MLVL_BONUS } from './data/difficulty.js';
@@ -37,12 +37,18 @@ export function skillMul(hero, id, key) {
 }
 
 // 기본 공격의 시간 배율(작을수록 빠름, 공격 대기/동작 시간에 곱함) = 1 / 속도 배율
-//   속도 배율 = 1 + 장비/레벨 공격속도 + 콤보 (최대 ATTACK_SPEED_MAX_MULT). 공격(combat)과 HUD 표시가 같이 쓴다
+//   속도 배율 = 1 + 장비/레벨 공격속도 + 콤보 + 버서커 (최대 ATTACK_SPEED_MAX_MULT). 공격(combat)과 HUD 표시가 같이 쓴다
 export function attackSpeedMul(hero) {
   const comboBonus = Math.min(hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
-  const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus, ATTACK_SPEED_MAX_MULT);
+  const berserk = hero.berserkTimer > 0 ? SKILL_STATS.berserk.speed : 0;
+  const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus + berserk, ATTACK_SPEED_MAX_MULT);
   const chill = hero.slowTimer > 0 ? CHILL_ATTACK_SPEED_MULT : 1; // 냉기 둔화 중엔 공격도 느려짐
   return 1 / (speed * chill);
+}
+
+// 버서커 중 주는 피해 배율 (systems/physSkills.tryBerserk가 berserkPower를 정함)
+export function berserkMul(hero) {
+  return hero.berserkTimer > 0 ? 1 + (hero.berserkPower || 0) : 1;
 }
 
 // 스킬 대기시간 배율(작을수록 자주) = 1 / (1 + 시전속도), 상한 CAST_SPEED_MAX_MULT. 전사·마법사 스킬 공통 (기본 공격은 attackSpeedMul)

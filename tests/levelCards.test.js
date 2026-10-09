@@ -13,7 +13,8 @@ async function boot(cls = 'warrior') {
     ...(await import('../src/systems/skills.js')),
     ...(await import('../src/systems/sorcSkills.js')),
     ...(await import('../src/data/skills.js')),
-    ...(await import('../src/data/cards.js'))
+    ...(await import('../src/data/cards.js')),
+    ...(await import('../src/data/classes.js'))
   };
   m.ui.selectedClass = cls;
   m.resetGame();
@@ -40,12 +41,13 @@ it('레벨업 → 카드 3장, 고르는 동안 게임 멈춤, 새 스킬을 고
     const m = await boot();
     const h = m.game.hero;
     m.noUpgrades();
+    h.skillLevels.flurry = m.SKILL_MAX_LEVEL; // Lv2에 같이 열리는 난타는 이미 다 배운 것으로 → 새 스킬 후보는 러시만
     m.levelUp();
     expect(h.level).toBe(2);
     expect(h.statPoints).toBeGreaterThan(0); // 스탯 포인트는 그대로
     const offer = m.game.cardOffer;
     expect(offer.cards.length).toBe(m.CARD_CHOICES);
-    // Lv2: 새 스킬은 러시만(해금 레벨 2), 나머지는 배운 스킬 강화
+    // Lv2: 새 스킬은 러시(해금 레벨 2), 나머지는 배운 스킬 강화
     const keys = offer.cards.map((c) => `${c.type}:${c.id}`).sort();
     expect(keys).toEqual(['newSkill:rush', 'skillUp:attack', 'skillUp:warcry']);
 
@@ -98,7 +100,7 @@ it('스킬을 전부 최대로 올리면 채우기 카드(재정비/물약)가 �
   try {
     const m = await boot();
     const h = m.game.hero;
-    ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash'].forEach((id) => { h.skillLevels[id] = m.SKILL_MAX_LEVEL; });
+    [...m.CLASSES.warrior.skills, ...m.COMMON_SKILLS].forEach((id) => { h.skillLevels[id] = m.SKILL_MAX_LEVEL; });
     m.noUpgrades();
     m.levelUp();
     expect(m.game.cardOffer.cards.map((c) => c.type)).toEqual(['filler', 'filler', 'filler']);
