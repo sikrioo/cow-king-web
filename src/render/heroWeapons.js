@@ -7,54 +7,54 @@ export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'swo
   ctx.globalAlpha = alpha;
 
   if (variant === 'axe') {
-    // 양손 도끼(흉악하게): 긴 자루 + 끝에 거대한 초승달 날(이빠진 홈 두 개) + 자루 끝 위쪽 가시 + 반대편 갈고리 뒷날
-    ctx.strokeStyle = '#6e4a2e';
-    ctx.lineWidth = 4;
+    // 양손 전투 도끼(벼린 쇠): 어두운 나무 자루 + 끝에 수염 도끼날
+    //   날: 자루 쪽 목은 좁고, 위쪽 모서리는 곧게, 바깥 날은 길게 부풀고, 아래(수염)는 자루 쪽으로 깊게 휘어 들어감
+    //   두 톤 쇠(날 면은 어둡게, 날 선 띠만 밝게) - 거친 홈은 없음
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-r * 0.55, 0); ctx.lineTo(r * 2.05, 0); ctx.stroke();
-    ctx.strokeStyle = '#3b2a1c'; // 손잡이 감개
+    ctx.strokeStyle = '#4b3423';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-r * 0.55, 0); ctx.lineTo(r * 2.0, 0); ctx.stroke();
+    ctx.strokeStyle = '#2a1f16'; // 손잡이 감개
     ctx.lineWidth = 4.6;
     ctx.lineCap = 'butt';
-    [-0.42, -0.24, 0.02, 0.2].forEach((p) => { ctx.beginPath(); ctx.moveTo(r * p, 0); ctx.lineTo(r * (p + 0.08), 0); ctx.stroke(); });
-    // 거대한 초승달 날 (자루 한쪽, 바깥 날에 이빠진 홈)
-    ctx.fillStyle = '#8e959d';
-    ctx.strokeStyle = '#33383e';
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(r * 1.40, -r * 0.10);
-    ctx.lineTo(r * 1.08, -r * 0.55);
-    ctx.quadraticCurveTo(r * 1.00, -r * 1.05, r * 1.30, -r * 1.25); // 아래쪽 수염(턱)
-    ctx.lineTo(r * 1.52, -r * 1.12); // 홈 1
-    ctx.lineTo(r * 1.62, -r * 1.28);
-    ctx.quadraticCurveTo(r * 1.92, -r * 1.22, r * 2.10, -r * 0.98);
-    ctx.lineTo(r * 1.98, -r * 0.84); // 홈 2
-    ctx.lineTo(r * 2.16, -r * 0.72);
-    ctx.quadraticCurveTo(r * 2.18, -r * 0.40, r * 1.92, -r * 0.10);
-    ctx.closePath();
+    [-0.36, -0.18, 0.04, 0.22].forEach((p) => { ctx.beginPath(); ctx.moveTo(r * p, 0); ctx.lineTo(r * (p + 0.08), 0); ctx.stroke(); });
+    ctx.fillStyle = '#5a6067'; // 자루 끝 쇠 마개
+    ctx.fillRect(-r * 0.62, -r * 0.09, r * 0.12, r * 0.18);
+    // 날 면
+    const blade = () => {
+      ctx.beginPath();
+      ctx.moveTo(r * 1.50, -r * 0.13);                                   // 목(자루 쪽, 아래)
+      ctx.quadraticCurveTo(r * 1.30, -r * 0.55, r * 0.98, -r * 1.10);    // 수염: 자루 쪽으로 깊게 휘어 내려감
+      ctx.quadraticCurveTo(r * 1.55, -r * 1.42, r * 2.12, -r * 1.12);    // 바깥 날 (길게 부풂)
+      ctx.lineTo(r * 1.92, -r * 0.13);                                   // 위쪽 모서리 (곧게)
+      ctx.closePath();
+    };
+    blade();
+    ctx.fillStyle = '#7c848d';
     ctx.fill();
+    // 날 선 띠 (바깥 날을 따라 밝게) - 날 면 안쪽으로 잘라 그림
+    ctx.save();
+    blade();
+    ctx.clip();
+    ctx.strokeStyle = '#dfe5eb';
+    ctx.lineWidth = r * 0.34;
+    ctx.beginPath();
+    ctx.moveTo(r * 0.98, -r * 1.10);
+    ctx.quadraticCurveTo(r * 1.55, -r * 1.42, r * 2.12, -r * 1.12);
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(235,240,245,0.85)'; // 날 선 부분
+    ctx.restore();
+    blade();
+    ctx.strokeStyle = '#262a2f';
     ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(r * 1.36, -r * 1.18);
-    ctx.quadraticCurveTo(r * 1.86, -r * 1.20, r * 2.06, -r * 0.92);
-    ctx.moveTo(r * 2.10, -r * 0.70);
-    ctx.quadraticCurveTo(r * 2.12, -r * 0.42, r * 1.94, -r * 0.20);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(40,44,50,0.35)'; // 날의 어두운 홈줄
-    ctx.beginPath(); ctx.moveTo(r * 1.45, -r * 0.25); ctx.lineTo(r * 1.30, -r * 0.62); ctx.lineTo(r * 1.62, -r * 0.62); ctx.lineTo(r * 1.78, -r * 0.25); ctx.closePath(); ctx.fill();
-    // 반대편 갈고리 뒷날 + 자루 끝 위쪽 가시 + 쇠 고리
-    ctx.fillStyle = '#6b7279';
-    ctx.strokeStyle = '#33383e';
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(r * 1.45, r * 0.10); ctx.lineTo(r * 1.62, r * 0.62); ctx.lineTo(r * 1.78, r * 0.10); ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(r * 2.0, -r * 0.09); ctx.lineTo(r * 2.42, 0); ctx.lineTo(r * 2.0, r * 0.09); ctx.closePath();
-    ctx.fill(); ctx.stroke();
+    // 쇠 고리(자루를 감쌈) + 짧고 날카로운 뒷가시 + 자루 끝 가시
     ctx.fillStyle = '#4a5057';
-    ctx.fillRect(r * 1.36, -r * 0.14, r * 0.62, r * 0.28);
+    ctx.strokeStyle = '#262a2f';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.rect(r * 1.45, -r * 0.16, r * 0.52, r * 0.32); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6b7279';
+    ctx.beginPath(); ctx.moveTo(r * 1.55, r * 0.16); ctx.lineTo(r * 1.72, r * 0.62); ctx.lineTo(r * 1.86, r * 0.16); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(r * 1.97, -r * 0.08); ctx.lineTo(r * 2.36, 0); ctx.lineTo(r * 1.97, r * 0.08); ctx.closePath(); ctx.fill(); ctx.stroke();
   } else if (variant === 'mace') {
     ctx.strokeStyle = '#8d623e';
     ctx.lineWidth = 3.2;
