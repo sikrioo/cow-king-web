@@ -140,7 +140,8 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const end = h.facing - side * 0.4;
       const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 머리 위를 지나 휩쓺
       pose.bodyTwist = side * (-0.14 * raise * (1 - strike) + strike * 0.22);
-      pose.right = { handAngle: h.facing + side * (1.2 - strike * 1.3), handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0,
+      // flip: 반대 방향(side -1)으로 휘두르면 날 면을 뒤집어 날이 늘 휘두르는 쪽(앞장)을 향하게 (도끼)
+      pose.right = { handAngle: h.facing + side * (1.2 - strike * 1.3), handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0, flip: side < 0,
         trail: strike > 0 ? { from: a + side * 0.9, to: a + side * 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
     } else {
       pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림

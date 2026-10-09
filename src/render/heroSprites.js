@@ -82,7 +82,7 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
     //   칼은 언제나 몸 뒤에 그림 - 위를 볼 때 몸 위에 그리면 칼날이 몸통을 가로질러 캐릭터를 덮음 (사용자 피드백)
     const side = overheadSide(h.facing), sb = side > 0 ? rightBase : leftBase; // 휘두를 쪽 어깨에 멤
     const gx = sb.x * 0.55 + fx * h.r * 0.15, gy = sb.y * 0.55 + fy * h.r * 0.15;
-    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + side * (Math.PI + GREATSWORD_HANG), h.r, alpha, rightHeld.variant);
+    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + side * (Math.PI + GREATSWORD_HANG), h.r, alpha, rightHeld.variant, side < 0);
     strap(0.95);
     drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
   } else if (isTwoHanded(h)) {
@@ -193,7 +193,7 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
   if (heldKind === 'shield') {
     drawHeldShield(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha);
   } else if (heldKind === 'weapon') {
-    drawAbstractSword(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, heldVariant);
+    drawAbstractSword(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, heldVariant, !!handPose.flip);
   } else if (heldKind === 'staff') {
     drawHeroStaff(ctx, hx, hy, handPose.bladeAngle, r * handPose.bladeScale, alpha, h.renderBreath);
   }
