@@ -1,0 +1,40 @@
+/* 관리자 페이지 (admin.html) - 게임 화면과 무관, 표 위주 */
+:root {
+  --bg: #0f1712; --panel: #17221b; --line: #2c3d31; --text: #e4ead9; --dim: #95a38f;
+  --accent: #ffe066; --good: #9be39b; --warn: #ff8a4d; --magic: #4d7fff; --rare: #ffd23f; --legend: #ff8c1a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, 'Malgun Gothic', sans-serif; }
+header { position: sticky; top: 0; z-index: 2; background: #0b120e; border-bottom: 1px solid var(--line); padding: 10px 16px 0; }
+h1 { margin: 0 0 8px; font-size: 18px; color: var(--accent); }
+h1 small { font-size: 12px; color: var(--dim); font-weight: normal; margin-left: 8px; }
+nav { display: flex; gap: 4px; overflow-x: auto; }
+nav button {
+  background: none; border: 1px solid transparent; border-bottom: none; color: var(--dim); padding: 8px 12px;
+  font: inherit; cursor: pointer; border-radius: 6px 6px 0 0; white-space: nowrap;
+}
+nav button.on { color: var(--text); background: var(--panel); border-color: var(--line); }
+main { padding: 16px; max-width: 1200px; margin: 0 auto; }
+h2 { font-size: 16px; color: var(--accent); margin: 24px 0 6px; }
+h2:first-child { margin-top: 0; }
+h3 { font-size: 14px; margin: 16px 0 4px; }
+p.note { color: var(--dim); margin: 2px 0 8px; font-size: 13px; }
+code { color: var(--good); font-size: 12px; }
+.wrap { overflow-x: auto; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; background: var(--panel); font-size: 13px; }
+th, td { padding: 5px 9px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; vertical-align: top; }
+th { color: var(--dim); font-weight: 600; background: #121b15; position: sticky; top: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: none; }
+.tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; border: 1px solid var(--line); margin-right: 3px; }
+.dim { color: var(--dim); }
+.bar { display: inline-block; height: 8px; background: var(--good); border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
+.controls label { display: flex; flex-direction: column; font-size: 12px; color: var(--dim); gap: 3px; }
+select, input, .controls button { background: #0b120e; color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 5px 8px; font: inherit; }
+.controls button { background: #2c3d31; cursor: pointer; color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; }
+.item b { display: block; margin-bottom: 2px; }
+.blocked { padding: 40px; text-align: center; color: var(--dim); }
+@media (max-width: 600px) { main { padding: 10px; } th, td { padding: 4px 6px; } }

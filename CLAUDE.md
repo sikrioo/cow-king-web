@@ -9,6 +9,7 @@
 
 ## 명령어
 - `npm run dev` 개발 서버 / `npm run build` 빌드 / `npm test` Vitest
+- 관리자 페이지: 개발 서버에서 `/admin.html` (배포본은 `admin.html?dev=1`). `src/data`와 생성 코드를 그대로 import해서 표·시뮬레이터로 보여줌(읽기 전용). 코드 `src/admin/`(탭별 `tabs/*.js`). 데이터 항목을 추가하면 해당 탭에도 표시되는지 확인할 것
 - 레거시 자체 점검: `node legacy/tools/smoke.cjs`, `node legacy/tools/baseline.cjs --check`
 
 ## 구조 (의존 방향: 위가 아래를 import, 역방향 금지)

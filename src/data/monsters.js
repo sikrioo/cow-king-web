@@ -39,6 +39,13 @@ export function weaponFor(kind, seed) {
   return list[Math.floor(Math.abs(seed) * 7919) % list.length];
 }
 
+// 몬스터 이름 (관리자 페이지·안내 문구용)
+export const MONSTER_LABEL = {
+  normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
+  burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
+  venom: '독 카우', boss: '카우킹'
+};
+
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
 
 // 엘리트 풀 - 웨이브 ELITE_MIN_WAVE부터 eliteChance = min(BASE + wave * PER_WAVE, MAX) 확률로 이 중 하나가 균등하게 뽑힘
