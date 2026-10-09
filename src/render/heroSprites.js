@@ -81,7 +81,7 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
     //   칼은 언제나 몸 뒤에 그림 - 위를 볼 때 몸 위에 그리면 칼날이 몸통을 가로질러 캐릭터를 덮음 (사용자 피드백)
     const side = overheadSide(h.facing), sb = side > 0 ? rightBase : leftBase; // 휘두를 쪽 어깨에 멤
     const gx = sb.x * 0.55 + fx * h.r * 0.15, gy = sb.y * 0.55 + fy * h.r * 0.15;
-    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + side * (Math.PI - 0.6), h.r, alpha, rightHeld.variant);
+    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + side * (Math.PI + GREATSWORD_HANG), h.r, alpha, rightHeld.variant);
     strap(0.95);
     drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
   } else if (isTwoHanded(h)) {
@@ -124,6 +124,10 @@ function drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDep
   drawBody();
   hand(leftDepth >= rightDepth ? 'left' : 'right', 1);
 }
+
+// 등에 멘 대검이 늘어진 각도: 바라보는 쪽 반대(뒤)에서 GREATSWORD_HANG만큼 더 아래로 → 오른쪽을 보면 7시, 왼쪽을 보면 5시 방향
+//   손잡이는 어깨 위로 나오고 칼날은 등을 따라 아래 뒤로 (공격은 이 각도에서 시작해 뒤로 끌어 올렸다가 머리 위를 지나 내리침)
+const GREATSWORD_HANG = 0.97;
 
 // 양손 무기를 휘두를 방향: 칼이 언제나 화면 위쪽(머리 위)을 지나가게 - 주인공의 오른쪽(+1)/왼쪽(-1) 중 화면 위에 가까운 쪽
 //   (예전엔 늘 오른쪽으로 돌아서, 오른쪽을 볼 때는 화면 아래를 지나 올려 치는 것처럼 보였음)
@@ -244,10 +248,10 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
     // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 머리 위를 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
     //   피해가 들어가는 순간 = windup 지점 (combat.updatePendingSwing)과 맞춤
     const side = overheadSide(h.facing); // 칼이 머리 위(화면 위쪽)를 지나는 방향
-    const carry = h.facing + side * (Math.PI - 0.45);
+    const carry = h.facing + side * (Math.PI + GREATSWORD_HANG); // 등에 늘어진 각도 (메고 있을 때와 같음)
     if (h.attackTimer > 0) {
       const at = 1 - h.attackTimer / h.currentAttackDuration, w = heavy.windup;
-      const raise = easeOutCubic(clamp01(at / (w * 0.5)));               // 들어 올리기 (0 ~ 0.5w)
+      const raise = easeOutCubic(clamp01(at / (w * 0.5)));               // 늘어진 칼을 뒤로 끌어 올리기 (0 ~ 0.5w)
       const strike = easeOutCubic(clamp01((at - w * 0.77) / 0.22));      // 0.5w ~ 0.77w 멈칫, 그다음 빠르게 내리침 - windup 지점에서 칼이 거의 정면
       const back = h.facing + side * (Math.PI - 0.15);
       const end = h.facing - side * 0.4;
