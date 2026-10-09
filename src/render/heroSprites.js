@@ -231,6 +231,7 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
   const mainW = h.equipment && h.equipment.weaponMain;
   const heavy = isTwoHanded(h) && WEAPON_HEAVY[mainW.variant];
   if (heavy && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0) && !(h.flurryTimer > 0)) {
+    // 손 위치(handDist)는 몸 가장자리(반지름 ≈ 1배) 밖 - 안쪽이면 손이 몸 한가운데(얼굴)에 겹쳐 보임
     // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 오른쪽을 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
     //   피해가 들어가는 순간 = windup 지점 (combat.updatePendingSwing)과 맞춤
     const carry = h.facing + Math.PI - 0.45;
@@ -242,7 +243,7 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const end = h.facing - 0.4;
       const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 오른쪽을 지나 휩쓺
       pose.bodyTwist = -0.14 * raise * (1 - strike) + strike * 0.22;
-      pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.4 + strike * 0.3), bladeAngle: a, bladeScale: 1.0,
+      pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.95 + strike * 0.15), bladeAngle: a, bladeScale: 1.0,
         trail: strike > 0 ? { from: a + 0.9, to: a + 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
     } else {
       pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림
@@ -254,11 +255,11 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const hit = easeOutCubic(clamp01((at - 0.25) / 0.6));
       const ra = lerpAngle(h.facing + 1.7 + wind * 0.45, h.facing - 1.3, hit);
       pose.bodyTwist = -0.12 * wind + hit * 0.24;
-      pose.right = { handAngle: ra + 0.5, handDist: h.r * (0.42 + hit * 0.22), bladeAngle: ra, bladeScale: 1.0,
+      pose.right = { handAngle: ra + 0.5, handDist: h.r * (0.95 + hit * 0.15), bladeAngle: ra, bladeScale: 1.0,
         trail: { from: ra + 0.75, to: ra + 0.08, alpha: Math.min(0.34, hit * 0.4) } };
     } else {
       const drift = Math.sin(h.moveStep) * speedN * 0.06;
-      pose.right = { handAngle: h.facing + 0.9 + drift, handDist: h.r * 0.5, bladeAngle: h.facing - 0.55 + drift * 0.5, bladeScale: 1.0, trail: null };
+      pose.right = { handAngle: h.facing + 0.9 + drift, handDist: h.r * 0.95, bladeAngle: h.facing - 0.55 + drift * 0.5, bladeScale: 1.0, trail: null };
     }
   }
 
