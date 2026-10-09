@@ -11,6 +11,8 @@ import {
 import * as B from '../../data/balance.js';
 import { el, table, h2, note, src, tag, num, pct } from '../ui.js';
 import { openSkillDetail } from '../detail.js';
+import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL, MASTERY_STAT } from '../../data/masteries.js';
+import { GEAR_VARIANT_LABEL } from '../../data/items.js';
 
 // 전사 스킬 수치는 data/balance.js 상수 (마법은 SPELLS, 투지·순간이동은 SKILL_STATS)
 const WARRIOR = {
@@ -85,7 +87,7 @@ export function renderSkills(root) {
   const spellIds = Object.keys(SPELLS);
   root.append(
     h2('마법 피해 표 (주인공 레벨 × 스킬 레벨)'),
-    note(`피해 = 기본 × (1 + ${SPELL_LEVEL_SCALE} × (주인공 레벨 − 1)) × (1 + 스킬 피해 보너스). 원소 강화 카드·몬스터 저항은 별도. 얼음보주는 조각 하나 기준`),
+    note(`피해 = 기본 × (1 + ${SPELL_LEVEL_SCALE} × (주인공 레벨 − 1)) × (1 + 스킬 피해 보너스). 원소 마스터리·몬스터 저항은 별도. 얼음보주는 조각 하나 기준`),
     table([
       { label: '마법', get: (id) => SKILL_META[id].label },
       ...heroLv.flatMap((h) => skillLv.map((s) => ({
@@ -117,6 +119,15 @@ export function renderSkills(root) {
       { label: '직업', get: (id) => (UPGRADE_CARDS[id].classes || ['전체']).map((c) => (CLASSES[c] ? CLASSES[c].label : c)).join(', ') },
       { label: '최대', num: true, get: () => `${UPGRADE_MAX_PICKS}회` }
     ], UPGRADE_ORDER),
+    h2('마스터리 (패시브)'),
+    note(`레벨업 카드로 Lv1~${MASTERY_MAX_LEVEL}. 카드 한 장당 비중 ${CARD_WEIGHT.mastery} (강화 카드 ${CARD_WEIGHT.upgrade}보다 30% 드묾). 무기 마스터리는 주무기가 그 종류일 때만. ${src('src/data/masteries.js')} · 계산 ${src('util.masteryBonus')}`),
+    table([
+      { label: '마스터리', get: (id) => MASTERIES[id].label },
+      { label: '직업', get: (id) => MASTERIES[id].classes.map((c) => CLASSES[c].label).join(', ') },
+      { label: '조건', get: (id) => (MASTERIES[id].weapon ? `${GEAR_VARIANT_LABEL[MASTERIES[id].weapon]} 주무기` : '') },
+      { label: '레벨당', get: (id) => Object.entries(MASTERIES[id].per).map(([k, v]) => `${MASTERY_STAT[k]} +${pct(v)}`).join(', ') },
+      { label: `Lv${MASTERY_MAX_LEVEL}`, get: (id) => Object.entries(MASTERIES[id].per).map(([k, v]) => `${MASTERY_STAT[k]} +${pct(v * MASTERY_MAX_LEVEL)}`).join(', ') }
+    ], MASTERY_ORDER),
     note(`채우기 카드(뽑을 카드가 모자랄 때): ${FILLER_ORDER.map((k) => `${FILLER_CARDS[k].label} - ${FILLER_CARDS[k].desc}`).join(' · ')}`)
   );
   root.append(el('div'));

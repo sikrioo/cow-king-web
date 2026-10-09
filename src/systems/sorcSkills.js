@@ -2,7 +2,7 @@
 // 방향은 주인공이 바라보는 방향(PC는 시전 직전에 커서 쪽으로 돌아봄 - skills.aimAtCursor)
 import { SPELLS, SPELL_LEVEL_SCALE, SKILL_STATS } from '../data/skills.js';
 import { game } from '../state.js';
-import { attackSpeedMul, castSpeedMul, skillMul, skillBonus } from '../util.js';
+import { attackSpeedMul, castSpeedMul, skillMul, skillBonus, masteryBonus } from '../util.js';
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
@@ -104,7 +104,7 @@ export function tryChain() {
     const at = getCowBody(cur); // 번개는 몸통으로
     spawnLightningBolt(from.x, from.y, at.x, at.y);
     hit.add(cur);
-    damageCowPacket(cur, { lightning: rollLightning(dmg) }, { knock: 2, fromX: from.x, fromY: from.y });
+    damageCowPacket(cur, { lightning: rollLightning(dmg, masteryBonus(h, 'lightningMin')) }, { knock: 2, fromX: from.x, fromY: from.y });
     dmg = Math.max(1, Math.round(dmg * s.falloff));
     from = at;
     let next = null, nd = Infinity;

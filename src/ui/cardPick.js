@@ -4,11 +4,14 @@ import { canvas, ctx } from '../core/context.js';
 import { game, ui } from '../state.js';
 import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT, SKILL_STATS, SPELLS, SKILL_TYPE_LABEL } from '../data/skills.js';
 import { FILLER_CARDS, UPGRADE_CARDS, CARD_RARITY, UPGRADE_MAX_PICKS } from '../data/cards.js';
+import { MASTERIES, MASTERY_STAT } from '../data/masteries.js';
+import { GEAR_VARIANT_LABEL } from '../data/items.js';
 
 const TYPE_STYLE = {
   newSkill: { tag: '새 스킬', color: '#9be39b' },
   skillUp:  { tag: '스킬 강화', color: '#ffe066' },
-  filler:   { tag: '보급', color: '#c9c3e8' }
+  filler:   { tag: '보급', color: '#c9c3e8' },
+  mastery:  { tag: '마스터리', color: '#e0a8ff' }
 };
 
 // 레벨업 보너스 한 줄: "피해 +15% → +30%" (Lv1 대비 누적). add면 기본값에 더한 실제 값("체력 증가 36% → 42%"), neg면 감소("-8%")
@@ -41,7 +44,19 @@ function cardStyle(card) {
   return meta ? { tag: `${st.tag} · ${SKILL_TYPE_LABEL[meta.type]}`, color: st.color } : st; // 스킬 카드는 분류(물리/마법/공통)도
 }
 
+// 마스터리 줄: "화염 피해 +10% → +20%" (+ 무기 마스터리는 "검을 들었을 때")
+export function masteryLines(id, from, to) {
+  const m = MASTERIES[id];
+  const lines = Object.entries(m.per).map(([k, v]) => `${MASTERY_STAT[k]} +${Math.round(v * from * 100)}% → +${Math.round(v * to * 100)}%`);
+  if (m.weapon) lines.push(`(${GEAR_VARIANT_LABEL[m.weapon]}을 주무기로 들었을 때)`);
+  return lines;
+}
+
 function cardText(card) {
+  if (card.type === 'mastery') {
+    const m = MASTERIES[card.id];
+    return { title: m.label, level: `Lv.${card.from} → Lv.${card.to}`, lines: masteryLines(card.id, card.from, card.to), swatch: m.color };
+  }
   if (card.type === 'upgrade') {
     const u = UPGRADE_CARDS[card.id];
     const picks = game.hero.cardPicks[card.id] || 0;

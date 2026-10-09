@@ -1,16 +1,17 @@
-// 주인공 → 몬스터 원소 피해: 카드 원소 강화(hero.cardBonus) → 몬스터 저항(data/monsters.js resist) → 피해 숫자(원소 색) → 상태 효과(화상/중독/둔화) → 처치
+// 주인공 → 몬스터 원소 피해: 원소 마스터리(util.masteryBonus) → 몬스터 저항(data/monsters.js resist) → 피해 숫자(원소 색) → 상태 효과(화상/중독/둔화) → 처치
 // 몬스터 상태 갱신(지속 피해 틱, 둔화 시간). 주인공이 받는 쪽은 systems/elements.js
 import {
   ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF
 } from '../data/elements.js';
 import { game } from '../state.js';
+import { masteryBonus } from '../util.js';
 import { applyKnockback } from '../entities/actor.js';
 import { killCow, registerComboHit, cowResist } from './combat.js';
 import { damageColor } from './elements.js';
 import { spawnDamageNumber, spawnHitParticles } from './fx.js';
 
-// 레벨업 카드 강화 (없으면 0)
-const cardBonus = (key) => (game.hero && game.hero.cardBonus && game.hero.cardBonus[key]) || 0;
+// 원소 마스터리 (없으면 0)
+const cardBonus = (key) => masteryBonus(game.hero, key);
 
 // packet = { phys, fire, cold, lightning, poison }, opts = { knock(밀어내는 힘), fromX, fromY } → 준 피해
 export function damageCowPacket(c, packet, opts = {}) {

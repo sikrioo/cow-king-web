@@ -1,4 +1,4 @@
-// 레벨업 카드(뱀서식): 레벨이 오르면 카드 3장 중 하나를 고름 - 새 스킬 배우기 / 배운 스킬 레벨 +1 / 강화(능력치·원소, 등급) / (모자라면) 채우기 카드
+// 레벨업 카드(뱀서식): 레벨이 오르면 카드 3장 중 하나를 고름 - 새 스킬 배우기 / 배운 스킬 레벨 +1 / 강화(능력치, 등급) / 마스터리(원소·무기, Lv) / (모자라면) 채우기 카드
 // 고르는 동안 게임은 멈춤(game.cardOffer가 있으면 game.fixedUpdate가 전투를 건너뜀). 한 번에 여러 레벨이 오르면 차례로 고름
 // 카드 뽑기는 게임 난수(Math.random) - systems에서만. 수치는 data/cards.js, data/skills.js / 화면은 ui/cardPick.js
 import {
@@ -6,6 +6,7 @@ import {
 } from '../data/cards.js';
 import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL, COMMON_SKILLS } from '../data/skills.js';
 import { POTION_MAX } from '../data/balance.js';
+import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL } from '../data/masteries.js';
 import { CLASSES } from '../data/classes.js';
 import { game, input } from '../state.js';
 import { skillLevel } from '../util.js';
@@ -14,7 +15,7 @@ import { recalcGearStats } from './gear.js';
 
 // 카드 강화 합계 (gear.recalcGearStats와 elementCombat이 읽음)
 export function emptyCardBonus() {
-  return { health: 0, mana: 0, manaRegen: 0, castSpeed: 0, atkSpeed: 0, moveSpeed: 0, atkPower: 0, fire: 0, cold: 0, lightning: 0, burn: 0, chill: 0 };
+  return { health: 0, mana: 0, manaRegen: 0, castSpeed: 0, atkSpeed: 0, moveSpeed: 0, atkPower: 0 };
 }
 
 // 새 게임: 시작 슬롯 2개만 Lv1
@@ -25,6 +26,7 @@ export function resetSkillLevels(cls) {
   h.cardRerolls = CARD_REROLLS;
   h.cardBonus = emptyCardBonus();
   h.cardPicks = {};
+  h.masteries = {}; // 마스터리 레벨 (계산은 util.masteryBonus)
   game.cardOffer = null;
 }
 
@@ -62,6 +64,12 @@ function skillCardPool() {
     if (u.classes && !u.classes.includes(h.classKey)) return;
     if ((h.cardPicks[id] || 0) >= UPGRADE_MAX_PICKS) return;
     pool.push({ type: 'upgrade', id, weight: CARD_WEIGHT.upgrade });
+  });
+  MASTERY_ORDER.forEach((id) => {
+    const m = MASTERIES[id];
+    if (m.classes && !m.classes.includes(h.classKey)) return;
+    const lv = h.masteries[id] || 0;
+    if (lv < MASTERY_MAX_LEVEL) pool.push({ type: 'mastery', id, from: lv, to: lv + 1, weight: CARD_WEIGHT.mastery });
   });
   return pool;
 }
@@ -118,6 +126,14 @@ function applyCard(card) {
     if (card.type === 'newSkill') say(`새 스킬: ${label} (Q/R로 슬롯에)`, '#9be39b');
     else say(`${label} Lv.${card.to}`, '#ffe066');
     spawnHitParticles(h.x, h.y, '#ffe066', 10);
+    return;
+  }
+  if (card.type === 'mastery') {
+    const m = MASTERIES[card.id];
+    h.masteries[card.id] = card.to;
+    recalcGearStats(); // 표시용 합계(공격속도 등)는 매번 계산되지만 장비 화면 갱신 겸
+    say(`${m.label} Lv.${card.to}`, m.color);
+    spawnHitParticles(h.x, h.y, m.color, 12);
     return;
   }
   if (card.type === 'upgrade') {

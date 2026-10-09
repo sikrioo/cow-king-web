@@ -14,13 +14,17 @@ async function boot(cls = 'warrior') {
     ...(await import('../src/systems/sorcSkills.js')),
     ...(await import('../src/data/skills.js')),
     ...(await import('../src/data/cards.js')),
-    ...(await import('../src/data/classes.js'))
+    ...(await import('../src/data/classes.js')),
+    ...(await import('../src/data/masteries.js'))
   };
   m.ui.selectedClass = cls;
   m.resetGame();
   m.levelUp = () => m.gainExp(Math.max(1, m.game.hero.expToNext - m.game.hero.exp));
   // 강화 카드를 다 고른 것으로 → 스킬 카드만 남김
-  m.noUpgrades = () => m.UPGRADE_ORDER.forEach((id) => { m.game.hero.cardPicks[id] = m.UPGRADE_MAX_PICKS; });
+  m.noUpgrades = () => {
+    m.UPGRADE_ORDER.forEach((id) => { m.game.hero.cardPicks[id] = m.UPGRADE_MAX_PICKS; });
+    m.MASTERY_ORDER.forEach((id) => { m.game.hero.masteries[id] = m.MASTERY_MAX_LEVEL; }); // 마스터리도 다 올린 것으로
+  };
   return m;
 }
 
@@ -110,7 +114,7 @@ it('스킬을 전부 최대로 올리면 채우기 카드(재정비/물약)가 �
   } finally { env.restore(); }
 });
 
-it('강화 카드: 등급만큼 수치, 체력/원소 피해/화상에 반영, 원소 카드는 마법사만, 같은 카드는 최대 횟수까지', async () => {
+it('강화 카드: 등급만큼 수치, 체력에 반영, 같은 카드는 최대 횟수까지 / 원소 마스터리: 원소 피해·화상, 마법사만', async () => {
   const env = installBrowserEnv({ seed: 3 });
   try {
     const m = await boot('sorc');
@@ -125,11 +129,13 @@ it('강화 카드: 등급만큼 수치, 체력/원소 피해/화상에 반영, �
 
     const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000;
     const base = damageCowPacket(c, { fire: 100 });
-    offer({ type: 'upgrade', id: 'pyro', rarity: 'common', amount: 0.5 });
-    expect(damageCowPacket(c, { fire: 100 })).toBe(Math.round(base * 1.5));
-    offer({ type: 'upgrade', id: 'ember', rarity: 'common', amount: 1 });
-    damageCowPacket(c, { fire: 100 });
-    expect(c.burn.dps).toBeGreaterThan(0);
+    const burn0 = c.burn.dps;
+    offer({ type: 'mastery', id: 'fire', from: 0, to: 1 });
+    offer({ type: 'mastery', id: 'fire', from: 1, to: 2 });
+    expect(h.masteries.fire).toBe(2);
+    c.burn = { timer: 0, dps: 0, tick: 0 };
+    expect(damageCowPacket(c, { fire: 100 })).toBe(Math.round(100 * (1 + 2 * m.MASTERIES.fire.per.fire)));
+    expect(c.burn.dps).toBeGreaterThan(burn0);
 
     // 같은 카드는 UPGRADE_MAX_PICKS번까지만 나옴
     for (let i = 0; i < m.UPGRADE_MAX_PICKS; i++) offer({ type: 'upgrade', id: 'haste', rarity: 'common', amount: 0.01 });
@@ -141,7 +147,34 @@ it('강화 카드: 등급만큼 수치, 체력/원소 피해/화상에 반영, �
     });
 
     m.ui.selectedClass = 'warrior'; m.resetGame();
-    for (let i = 0; i < 60; i++) m.rollCards().forEach((k) => { if (k.type === 'upgrade') expect(m.UPGRADE_CARDS[k.id].classes || ['warrior']).toContain('warrior'); });
-    expect(m.game.hero.cardBonus.fire).toBe(0); // 새 게임이면 초기화
+    for (let i = 0; i < 60; i++) m.rollCards().forEach((k) => {
+      if (k.type === 'upgrade') expect(m.UPGRADE_CARDS[k.id].classes || ['warrior']).toContain('warrior');
+      if (k.type === 'mastery') expect(m.MASTERIES[k.id].classes).toContain('warrior'); // 전사엔 무기 마스터리만
+    });
+    expect(m.game.hero.masteries).toEqual({}); // 새 캐릭터면 초기화
+  } finally { env.restore(); }
+});
+
+it('무기 마스터리: 그 무기를 주무기로 들었을 때만 피해·공격속도·사거리·기절', async () => {
+  const env = installBrowserEnv({ seed: 5 });
+  try {
+    const m = await boot('warrior');
+    const h = m.game.hero;
+    const { masteryBonus, attackSpeedMul, berserkMul } = await import('../src/util.js');
+    const { getWeaponRange } = await import('../src/systems/combat.js');
+    h.masteries.sword = 3; h.masteries.spear = 2;
+    h.equipment.weaponMain = { category: 'weapon', variant: 'sword', handedness: 'one', stats: {} };
+    expect(masteryBonus(h, 'damage')).toBeCloseTo(3 * m.MASTERIES.sword.per.damage, 5);
+    expect(berserkMul(h)).toBeCloseTo(1 + 3 * m.MASTERIES.sword.per.damage, 5);
+    const spd = attackSpeedMul(h);
+    h.equipment.weaponMain = { category: 'weapon', variant: 'axe', handedness: 'one', stats: {} };
+    expect(masteryBonus(h, 'damage')).toBe(0);           // 도끼를 들면 검 마스터리 무효
+    expect(attackSpeedMul(h)).toBeGreaterThan(spd);        // (느려짐 = 배율 커짐)
+    const r0 = getWeaponRange();
+    h.equipment.weaponMain = { category: 'weapon', variant: 'spear', handedness: 'one', stats: {} };
+    expect(masteryBonus(h, 'range')).toBeCloseTo(2 * m.MASTERIES.spear.per.range, 5);
+    expect(getWeaponRange()).toBeGreaterThan(r0);
+    h.equipment.weaponMain = null;
+    expect(masteryBonus(h, 'damage')).toBe(0);
   } finally { env.restore(); }
 });

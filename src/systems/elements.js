@@ -16,8 +16,10 @@ export function toPacket(dmg) {
 }
 
 // 번개 피해 굴림: 기준값의 LIGHTNING_MIN~MAX배 (정수)
-export function rollLightning(base) {
-  return Math.max(1, Math.round(base * (LIGHTNING_MIN + Math.random() * (LIGHTNING_MAX - LIGHTNING_MIN))));
+// minBonus: 하한을 올림(주인공 번개 마스터리 - 편차가 위로, 상한은 그대로)
+export function rollLightning(base, minBonus = 0) {
+  const lo = Math.min(LIGHTNING_MAX, LIGHTNING_MIN + minBonus);
+  return Math.max(1, Math.round(base * (lo + Math.random() * (LIGHTNING_MAX - lo))));
 }
 
 export function heroResist(el) {

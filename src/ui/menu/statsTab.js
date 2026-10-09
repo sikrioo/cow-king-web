@@ -8,6 +8,7 @@ import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
 import { SKILLS, learnableSkills } from '../../systems/skills.js';
 import { UPGRADE_CARDS, UPGRADE_ORDER } from '../../data/cards.js';
+import { MASTERIES, MASTERY_ORDER } from '../../data/masteries.js';
 import { formatUpgrade } from '../cardPick.js';
 
 export function drawStatsTab(ctx, x, startRow, w) {
@@ -89,11 +90,15 @@ export function drawStatsTab(ctx, x, startRow, w) {
 // 고른 강화 카드 합계 (예: "화염 피해 +24% · 최대 체력 +80"), 폭에 맞춰 줄바꿈
 function drawCardUpgrades(ctx, x, y, w) {
   const cb = game.hero.cardBonus || {};
-  const parts = UPGRADE_ORDER.filter((id) => game.hero.cardPicks && game.hero.cardPicks[id])
-    .map((id) => { const u = UPGRADE_CARDS[id]; return `${u.statLabel} ${formatUpgrade(u.unit, cb[u.stat])}`; });
+  const ms = game.hero.masteries || {};
+  const parts = [
+    ...MASTERY_ORDER.filter((id) => ms[id]).map((id) => `${MASTERIES[id].label} Lv.${ms[id]}`),
+    ...UPGRADE_ORDER.filter((id) => game.hero.cardPicks && game.hero.cardPicks[id])
+      .map((id) => { const u = UPGRADE_CARDS[id]; return `${u.statLabel} ${formatUpgrade(u.unit, cb[u.stat])}`; })
+  ];
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#ffe066';
-  ctx.fillText('카드 강화', x + 16, y);
+  ctx.fillText('마스터리 · 카드 강화', x + 16, y);
   ctx.font = '11px sans-serif';
   ctx.fillStyle = parts.length ? '#dfe9d8' : '#777';
   const lines = [];

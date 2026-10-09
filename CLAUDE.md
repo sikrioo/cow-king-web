@@ -46,9 +46,10 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
   마법 수치는 `SPELLS`, 그 밖의 새 스킬 수치는 `SKILL_STATS`(대기시간은 `hero.spellCd`). 물리 보조 `systems/physSkills.js`(투지), 공통 `systems/commonSkills.js`(순간이동). 등록은 `systems/skills.js`의 `SKILLS`.
 - 스킬 해금 규칙: `systems/progression.js`의 `isSkillUnlocked` 한 곳(= 스킬 레벨 1 이상).
 - 레벨업 카드(뱀서식): 레벨업마다 카드 3장 중 하나 - 새 스킬 배우기/스킬 레벨 +1/강화 카드(능력치·원소, 등급 일반/희귀/전설)/채우기 카드.
-  강화 카드 합계는 `hero.cardBonus` → 능력치는 `gear.recalcGearStats`, 원소 피해·화상·둔화는 `elementCombat.damageCowPacket`이 읽음. 동작 `systems/levelCards.js`, 수치 `data/cards.js`, 화면 `ui/cardPick.js`.
+  강화 카드 합계는 `hero.cardBonus` → 능력치는 `gear.recalcGearStats`가 읽음. (원소 강화 카드는 원소 마스터리로 통일 - 2026-10-09) 동작 `systems/levelCards.js`, 수치 `data/cards.js`, 화면 `ui/cardPick.js`.
   고르는 동안 `game.cardOffer`가 있고 게임이 멈춤. 스킬 레벨 보너스는 `data/skills.js`의 `SKILL_LEVEL_UP` → `util.skillMul/skillBonus`로 각 스킬에서 곱함. 스탯 포인트는 그대로 유지(사용자 결정). 슬롯은 2개 + Q/R 전환 유지.
-  새 카드 종류(원소 강화·일반 강화·수습생의 마법)는 `rollCards`의 뽑기 풀에 추가.
+  마스터리(패시브, Lv1~5): `data/masteries.js` - 원소(마법사: 화염·냉기·번개)·무기 종류별(전사: 검·도끼·메이스·단검·창, 주무기가 그 종류일 때만). 계산은 `util.masteryBonus` 한 곳(원소 피해·화상·둔화·번개 하한 / 무기 피해·공격속도·사거리·기절). 강화 카드보다 30% 드묾.
+  새 카드 종류(수습생의 마법 등)는 `rollCards`의 뽑기 풀에 추가.
 - 아이템 표시: `ui/itemView.js` 한 곳. 장비는 순수 데이터 + `uid` + 접사 기록(`affixes`) + 능력치 합계(`stats`).
 - 아이템 생성(디아식 핵심만, 고유 이름·세트 없음): `systems/itemGen.js`. 접사 = `data/affixes.js`(접두/접미, 그룹 중복 금지, 티어별 접사 레벨·수치·가중치, 부위 제한, 매직 전용 최상위 티어, 하이브리드). 등급별 개수 `AFFIX_RULES`(일반 0 / 매직 1~2 / 레어 3~6 / 레전드 5~6).
   아이템 레벨 = 몬스터 레벨(`util.monsterLevel`: 난이도 `mlvl` + 웨이브/맵 + 엘리트·보스) → 붙을 수 있는 티어. 드랍 테이블 `data/drops.js`(출처 normal/elite/boss/mapBoss별 드랍 종류·등급 비중, `loot.dropSource`). 새 옵션 = `STAT_DEF`(능력치 이름) + affixes 계열 하나 + 적용 코드(recalcGearStats 등).

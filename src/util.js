@@ -6,6 +6,21 @@ import { MONSTERS } from './data/monsters.js';
 import { MAPS } from './data/maps.js';
 import { DIFFICULTY, WAVE_MLVL_STEP, MLVL_BONUS } from './data/difficulty.js';
 import { MAX_ITEM_LEVEL } from './data/affixes.js';
+import { MASTERIES } from './data/masteries.js';
+
+// 마스터리 보너스 합계 (key: data/masteries.js per의 키). 무기 마스터리는 주무기가 그 종류일 때만
+export function masteryBonus(hero, key) {
+  const ms = hero && hero.masteries;
+  if (!ms) return 0;
+  let sum = 0;
+  for (const id in ms) {
+    const m = MASTERIES[id];
+    if (!m || !m.per[key] || !ms[id]) continue;
+    if (m.weapon) { const w = hero.equipment && hero.equipment.weaponMain; if (!w || w === 'LOCKED' || w.variant !== m.weapon) continue; }
+    sum += m.per[key] * ms[id];
+  }
+  return sum;
+}
 
 // 몬스터 레벨 (= 떨군 장비의 아이템 레벨): 난이도 기본 + 맵(목장은 웨이브마다, 파밍 맵은 맵 보탬) + 종류(엘리트/보스/우두머리)
 export function monsterLevel(run, wave, kind, mapBoss = false) {
@@ -41,14 +56,14 @@ export function skillMul(hero, id, key) {
 export function attackSpeedMul(hero) {
   const comboBonus = Math.min(hero.combo * COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP);
   const berserk = hero.berserkTimer > 0 ? SKILL_STATS.berserk.speed : 0;
-  const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus + berserk, ATTACK_SPEED_MAX_MULT);
+  const speed = Math.min(1 + Math.min(hero.gearAtkSpeed, ATTACK_SPEED_GEAR_CAP) + comboBonus + berserk + masteryBonus(hero, 'atkSpeed'), ATTACK_SPEED_MAX_MULT);
   const chill = hero.slowTimer > 0 ? CHILL_ATTACK_SPEED_MULT : 1; // 냉기 둔화 중엔 공격도 느려짐
   return 1 / (speed * chill);
 }
 
-// 버서커 중 주는 피해 배율 (systems/physSkills.tryBerserk가 berserkPower를 정함)
+// 무기 피해 배율 = 버서커(systems/physSkills.tryBerserk가 berserkPower를 정함) × 무기 마스터리
 export function berserkMul(hero) {
-  return hero.berserkTimer > 0 ? 1 + (hero.berserkPower || 0) : 1;
+  return (hero.berserkTimer > 0 ? 1 + (hero.berserkPower || 0) : 1) * (1 + masteryBonus(hero, 'damage'));
 }
 
 // 스킬 대기시간 배율(작을수록 자주) = 1 / (1 + 시전속도), 상한 CAST_SPEED_MAX_MULT. 전사·마법사 스킬 공통 (기본 공격은 attackSpeedMul)

@@ -11,7 +11,8 @@ import { game, dev } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot, dropSource } from './loot.js';
-import { attackSpeedMul, skillMul, resistOf, berserkMul } from '../util.js';
+import { attackSpeedMul, skillMul, resistOf, berserkMul, masteryBonus } from '../util.js';
+import { MASTERY_STUN_TIME } from '../data/masteries.js';
 import { COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import {
   toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath, heroDamageTaken
@@ -42,8 +43,9 @@ export function cowEdgeDist(c, x, y) {
 
 export function getWeaponRange() {
   const w = game.hero.equipment.weaponMain;
-  if (w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined) return WEAPON_RANGE[w.variant];
-  return ATTACK_RANGE;
+  const base = w && w !== 'LOCKED' && WEAPON_RANGE[w.variant] !== undefined ? WEAPON_RANGE[w.variant] : ATTACK_RANGE;
+  const m = masteryBonus(game.hero, 'range'); // 창 마스터리
+  return m ? base * (1 + m) : base;
 }
 
 export function getAttackArc() {
@@ -79,7 +81,13 @@ export function tryPlayerAttack(onHit) {
     if (dist > atkRange + getCowHitRadius(c)) return;
     let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
-    if (diff < getAttackArc() / 2) { damageCow(c, dmg); if (onHit) onHit(c); landed = true; }
+    if (diff < getAttackArc() / 2) {
+      damageCow(c, dmg);
+      if (onHit) onHit(c);
+      const stun = masteryBonus(game.hero, 'stun'); // 메이스 마스터리: 확률로 잠깐 기절
+      if (stun > 0 && c.state !== 'dead' && Math.random() < stun) c.stunTimer = Math.max(c.stunTimer || 0, MASTERY_STUN_TIME);
+      landed = true;
+    }
   });
   if (landed) registerComboHit();
 }
