@@ -15,7 +15,7 @@ function thrustPose(h, at, side) {
     handAngle: h.facing + side * (1 - jab * 0.85),
     handDist: h.r * (0.6 - pull * 0.25 + jab * 0.95 - back * 0.55),
     bladeAngle: h.facing,
-    bladeScale: 1.25 + jab * 0.25,
+    bladeScale: 1.0, // 창 길이는 그대로 - 멀리 닿는 건 손이 앞으로 나가서
     trail: jab > 0 && back < 1 ? { thrust: true, len: 3.4, alpha: Math.min(0.45, jab * 0.5) * (1 - back) } : null
   };
 }

@@ -96,20 +96,24 @@ export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'swo
     ctx.strokeStyle = 'rgba(30,32,36,0.45)'; // 가운데 홈
     ctx.beginPath(); ctx.moveTo(r * 0.6, r * 0.02); ctx.lineTo(r * 2.6, r * 0.02); ctx.stroke();
   } else if (variant === 'spear') {
+    // 창: 원래부터 긴 자루 (뒤 끝 -0.95r ~ 창끝 2.65r) - 찌를 때 늘어나지 않고 손이 앞으로 나감
     ctx.strokeStyle = '#8d623e';
-    ctx.lineWidth = 2.6;
+    ctx.lineWidth = 2.8;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(-r * 0.55, 0);
-    ctx.lineTo(r * 1.05, 0);
+    ctx.moveTo(-r * 0.95, 0);
+    ctx.lineTo(r * 2.15, 0);
     ctx.stroke();
+    ctx.strokeStyle = '#5b3f27'; // 창끝 아래 묶은 끈
+    ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.moveTo(r * 2.0, 0); ctx.lineTo(r * 2.12, 0); ctx.stroke();
     ctx.fillStyle = '#d7dde2';
     ctx.strokeStyle = '#596068';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(r * 0.98, -r * 0.09);
-    ctx.lineTo(r * 1.42, 0);
-    ctx.lineTo(r * 0.98, r * 0.09);
+    ctx.moveTo(r * 2.08, -r * 0.11);
+    ctx.lineTo(r * 2.65, 0);
+    ctx.lineTo(r * 2.08, r * 0.11);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
