@@ -7,38 +7,54 @@ export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'swo
   ctx.globalAlpha = alpha;
 
   if (variant === 'axe') {
-    // 도끼: 긴 나무 자루 + 끝에 자루와 직각인 넓은 날(자루 쪽은 좁고 바깥으로 갈수록 넓어짐, 바깥 날은 둥글게) + 반대편 뭉툭한 뒷머리
-    ctx.strokeStyle = '#8d623e';
-    ctx.lineWidth = 3.4;
-    ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-r * 0.20, 0); ctx.lineTo(r * 1.30, 0); ctx.stroke();
-    ctx.strokeStyle = '#4a3322'; // 손잡이에 감은 가죽
+    // 양손 도끼(흉악하게): 긴 자루 + 끝에 거대한 초승달 날(이빠진 홈 두 개) + 자루 끝 위쪽 가시 + 반대편 갈고리 뒷날
+    ctx.strokeStyle = '#6e4a2e';
     ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-r * 0.55, 0); ctx.lineTo(r * 2.05, 0); ctx.stroke();
+    ctx.strokeStyle = '#3b2a1c'; // 손잡이 감개
+    ctx.lineWidth = 4.6;
     ctx.lineCap = 'butt';
-    [0.02, 0.16].forEach((p) => { ctx.beginPath(); ctx.moveTo(r * p, 0); ctx.lineTo(r * (p + 0.07), 0); ctx.stroke(); });
-    // 날
-    ctx.fillStyle = '#c9cfd6';
-    ctx.strokeStyle = '#4f565e';
-    ctx.lineWidth = 1.4;
+    [-0.42, -0.24, 0.02, 0.2].forEach((p) => { ctx.beginPath(); ctx.moveTo(r * p, 0); ctx.lineTo(r * (p + 0.08), 0); ctx.stroke(); });
+    // 거대한 초승달 날 (자루 한쪽, 바깥 날에 이빠진 홈)
+    ctx.fillStyle = '#8e959d';
+    ctx.strokeStyle = '#33383e';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.moveTo(r * 0.98, -r * 0.08);
-    ctx.lineTo(r * 0.80, -r * 0.42);
-    ctx.quadraticCurveTo(r * 1.10, -r * 0.98, r * 1.52, -r * 0.48); // 바깥 날 (둥글게 부풂)
-    ctx.lineTo(r * 1.22, -r * 0.08);
+    ctx.moveTo(r * 1.40, -r * 0.10);
+    ctx.lineTo(r * 1.08, -r * 0.55);
+    ctx.quadraticCurveTo(r * 1.00, -r * 1.05, r * 1.30, -r * 1.25); // 아래쪽 수염(턱)
+    ctx.lineTo(r * 1.52, -r * 1.12); // 홈 1
+    ctx.lineTo(r * 1.62, -r * 1.28);
+    ctx.quadraticCurveTo(r * 1.92, -r * 1.22, r * 2.10, -r * 0.98);
+    ctx.lineTo(r * 1.98, -r * 0.84); // 홈 2
+    ctx.lineTo(r * 2.16, -r * 0.72);
+    ctx.quadraticCurveTo(r * 2.18, -r * 0.40, r * 1.92, -r * 0.10);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(245,248,252,0.9)'; // 날 선 부분
+    ctx.strokeStyle = 'rgba(235,240,245,0.85)'; // 날 선 부분
     ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.moveTo(r * 0.86, -r * 0.48);
-    ctx.quadraticCurveTo(r * 1.11, -r * 0.90, r * 1.45, -r * 0.50);
+    ctx.moveTo(r * 1.36, -r * 1.18);
+    ctx.quadraticCurveTo(r * 1.86, -r * 1.20, r * 2.06, -r * 0.92);
+    ctx.moveTo(r * 2.10, -r * 0.70);
+    ctx.quadraticCurveTo(r * 2.12, -r * 0.42, r * 1.94, -r * 0.20);
     ctx.stroke();
-    // 자루를 감싼 쇠 고리 + 반대편 뒷머리
-    ctx.fillStyle = '#5f666e';
-    ctx.fillRect(r * 0.96, -r * 0.12, r * 0.28, r * 0.24);
-    ctx.fillStyle = '#7d848c';
-    ctx.fillRect(r * 1.02, r * 0.10, r * 0.16, r * 0.16);
+    ctx.fillStyle = 'rgba(40,44,50,0.35)'; // 날의 어두운 홈줄
+    ctx.beginPath(); ctx.moveTo(r * 1.45, -r * 0.25); ctx.lineTo(r * 1.30, -r * 0.62); ctx.lineTo(r * 1.62, -r * 0.62); ctx.lineTo(r * 1.78, -r * 0.25); ctx.closePath(); ctx.fill();
+    // 반대편 갈고리 뒷날 + 자루 끝 위쪽 가시 + 쇠 고리
+    ctx.fillStyle = '#6b7279';
+    ctx.strokeStyle = '#33383e';
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(r * 1.45, r * 0.10); ctx.lineTo(r * 1.62, r * 0.62); ctx.lineTo(r * 1.78, r * 0.10); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(r * 2.0, -r * 0.09); ctx.lineTo(r * 2.42, 0); ctx.lineTo(r * 2.0, r * 0.09); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4a5057';
+    ctx.fillRect(r * 1.36, -r * 0.14, r * 0.62, r * 0.28);
   } else if (variant === 'mace') {
     ctx.strokeStyle = '#8d623e';
     ctx.lineWidth = 3.2;

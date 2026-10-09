@@ -126,7 +126,7 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
   // 양손 무기 (스킬 동작 중이 아닐 때): 평소엔 몸 앞에 비스듬히 세워 들고, 공격은 뒤로 크게 젖혔다가 앞으로 넓게 휩쓺
   const mainW = h.equipment && h.equipment.weaponMain;
   const heavy = isTwoHanded(h) && WEAPON_HEAVY[mainW.variant];
-  if (heavy && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0) && !(h.flurryTimer > 0)) {
+  if (heavy && heavy.windup && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0) && !(h.flurryTimer > 0)) {
     // 손 위치(handDist)는 몸 가장자리(반지름 ≈ 1배) 밖 - 안쪽이면 손이 몸 한가운데(얼굴)에 겹쳐 보임
     // 대검: 평소엔 등에 멤(칼날이 어깨 너머 뒤로). 공격 = 더 들어 올림 → 멈칫(딜레이) → 뒤에서 머리 위를 지나 앞으로 크게 내리침 → 앞 아래로 늘어짐
     //   피해가 들어가는 순간 = windup 지점 (combat.updatePendingSwing)과 맞춤

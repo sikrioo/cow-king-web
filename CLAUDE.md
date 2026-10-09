@@ -7,6 +7,9 @@
 경위와 결정 사항은 `docs/REFACTOR_BRIEF.md`, 동작 기준은 `docs/BEHAVIOR_BASELINE.md`, 레거시 코드 지도는 `docs/CODE_MAP.md`.
 다음 예정: 강화 탭을 가방 탭으로 통합 + 버리기(장착 장비는 장비 탭에서 강화/해제, 버리기 = 발밑에 떨어뜨림).
 
+## 할 일
+미룬 기능·아이디어·결정 대기는 `docs/TODO.md` 한곳에 (수습생의 마법, 무기 옵션 출혈·방어 깨기 등). 새로 미루는 것도 여기에 날짜와 함께 추가.
+
 ## 명령어
 - `npm run dev` 개발 서버 / `npm run build` 빌드 / `npm test` Vitest
 - 관리자 페이지: 개발 서버에서 `/admin.html` (배포본은 `admin.html?dev=1`). `src/data`와 생성 코드를 그대로 import해서 표·시뮬레이터로 보여줌(읽기 전용). 코드 `src/admin/`(탭별 `tabs/*.js`). 데이터 항목을 추가하면 해당 탭에도 표시되는지 확인할 것

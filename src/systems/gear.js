@@ -125,7 +125,7 @@ export function equipItem(gear, opts = {}) {
 
 // 시작할 때 맨손 대신 기본 장비를 쥐어줌 - 한손검+방패 또는 도끼+방패 중 랜덤
 export function giveStarterGear() {
-  const weaponVariant = Math.random() < 0.5 ? 'sword' : 'axe';
+  const weaponVariant = Math.random() < 0.5 ? 'sword' : 'mace'; // 한손 무기 + 방패 (도끼는 양손 전용이 됨 - 2026-10-10)
   const weapon = rollGearItem({ category: 'weapon', handedness: 'one', rarity: 'normal', variant: weaponVariant, identified: true, noElement: true });
   const shield = rollGearItem({ category: 'shield', rarity: 'normal', identified: true });
   equipItem(weapon, { silent: true });

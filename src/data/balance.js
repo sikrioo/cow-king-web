@@ -10,7 +10,7 @@ export const ATTACK_SPEED_MAX_MULT = 2;
 export const CAST_SPEED_MAX_MULT = 2;
 export const ATTACK_RANGE = 50; // 맨손/기본값
 export const WEAPON_RANGE = { sword: 50, axe: 46, mace: 46, dagger: 38, spear: 88, greatsword: 78 }; // 창: 찌르기라 가장 김
-export const WEAPON_ARC = { greatsword: Math.PI * 0.85, spear: Math.PI * 0.38 }; // 무기별 공격 각도 (없으면 아래 기본 - 대검은 크게 휩쓺, 창은 찌르기라 좁음)
+export const WEAPON_ARC = { greatsword: Math.PI * 0.85, axe: Math.PI * 0.75, spear: Math.PI * 0.38 }; // 무기별 공격 각도 (없으면 아래 기본 - 대검은 크게 휩쓺, 창은 찌르기라 좁음)
 export const ATTACK_ARC = Math.PI * 0.9; // 쌍수(양손 다 무기)일 때 - 두 칼날이 넓게 휩쓺
 export const ATTACK_ARC_SINGLE = Math.PI * 0.62; // 한손무기+방패(또는 빈손)일 때 - 한 자루라 더 좁고 집중됨
 
