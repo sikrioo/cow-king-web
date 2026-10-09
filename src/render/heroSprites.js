@@ -76,7 +76,20 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
     ? (offGear.category === 'shield' ? { kind: 'shield', variant: null } : { kind: 'weapon', variant: offGear.variant || 'sword' })
     : { kind: 'none', variant: null };
 
-  if (isTwoHanded(h)) {
+  if (pose.carry) {
+    // 대검을 메고 있음: 칼은 등에 비스듬히 (손잡이는 오른쪽 어깨 위, 칼날은 등을 가로질러 반대쪽 뒤로), 두 손은 빈손으로 몸 옆
+    //   위를 보면(등이 보임) 칼이 몸 위에, 아래를 보면 몸 뒤에 가려짐
+    const onBack = fy < 0;
+    const gx = rightBase.x * 0.55 + fx * h.r * 0.15, gy = rightBase.y * 0.55 + fy * h.r * 0.15;
+    const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + Math.PI - 0.6, h.r, alpha, rightHeld.variant);
+    if (!onBack) strap(0.95);
+    if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 0.86, 'none', null, h);
+    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 0.86, 'none', null, h);
+    drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
+    if (onBack) strap(1);
+    if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 1, 'none', null, h);
+    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 1, 'none', null, h);
+  } else if (isTwoHanded(h)) {
     // 양손 무기: 몸 가운데 앞에서 두 손으로 쥠 (왼손은 손잡이에 붙음). 위를 보면 칼이 몸 뒤, 아래를 보면 앞
     const centerBase = { x: fx * h.r * 0.12, y: fy * h.r * 0.12 };
     // 칼이 등 뒤(메기·들어 올리기)면 아래를 볼 때 몸 뒤, 앞(내리친 뒤)이면 몸 앞
@@ -232,9 +245,7 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.4 + strike * 0.3), bladeAngle: a, bladeScale: 1.0,
         trail: strike > 0 ? { from: a + 0.9, to: a + 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
     } else {
-      const drift = Math.sin(h.moveStep) * speedN * 0.05;
-      pose.bladeBehind = true;
-      pose.right = { handAngle: h.facing + 1.5 + drift, handDist: h.r * 0.42, bladeAngle: carry + drift, bladeScale: 1.0, trail: null };
+      pose.carry = true; // 메고 있음 - 손은 기본(빈손) 자세 그대로, 칼은 drawPlayer가 등에 그림
     }
   } else if (isTwoHanded(h) && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
     if (h.attackTimer > 0) {
