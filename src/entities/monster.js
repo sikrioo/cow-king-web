@@ -8,6 +8,7 @@ import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
 import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS } from '../data/balance.js';
 import { randomPointInPen, clampToPen } from '../world/arena.js';
+import { monsterLevel } from '../util.js';
 import { emptyDot } from '../systems/elements.js';
 import { updateCowStatuses } from '../systems/elementCombat.js';
 
@@ -75,6 +76,7 @@ export class Monster {
     this.home = opts.home || null;
     this.dropCount = opts.dropCount || 1;
     this.mapBoss = !!opts.mapBoss;
+    this.level = monsterLevel(game.run, game.wave, kind, this.mapBoss); // 떨군 장비의 아이템 레벨
     this.hunt = !!opts.hunt;
     this.burn = emptyDot(); // 주인공 원소 공격으로 걸리는 상태 (systems/elementCombat.js)
     this.poison = emptyDot();

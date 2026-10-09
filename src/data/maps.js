@@ -38,6 +38,7 @@ export const MAPS = {
     wallThickness: 24,
     spawnMarginRatio: 0.1,
     start: { x: 0.5, y: 0.92 },   // 아래쪽 가운데에서 시작
+    mlvl: 4,                      // 몬스터 레벨 보탬 (data/difficulty.js mlvl에 더함)
     packs: 9,                     // 무리 수 (마지막 하나가 우두머리 무리)
     packSize: [4, 7],             // 무리당 마리 수 (최소, 최대)
     packRadius: 70,

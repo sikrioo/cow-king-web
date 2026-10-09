@@ -1,13 +1,16 @@
-// 장비: 굴리기(등급/옵션), 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산
+// 장비: 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산 (생성은 systems/itemGen.js - 여기서 다시 내보냄)
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
   MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, UPGRADE_STAT_MULT,
   ARMOR_K, ARMOR_MAX_REDUCTION, BASE_DAMAGE, ATTACK_COOLDOWN
 } from '../data/balance.js';
 import {
-  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, ACCESSORY_VARIANTS, STAT_DEF, RARITY_DEF, RARITY_TOTAL_WEIGHT, GEAR_BASE_ARMOR,
-  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG, OPTION_ROLL_SKEW
+  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, STAT_DEF, RARITY_DEF, GEAR_BASE_ARMOR,
+  WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG
 } from '../data/items.js';
+import { rollGearItem, nextItemUid } from './itemGen.js';
+
+export { rollGearItem, rollRarity, nextItemUid } from './itemGen.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
 
@@ -47,56 +50,6 @@ export function revealIdentifiedGear(gear) {
   // 메뉴가 월드를 덮고 있어서 월드 연출은 안 보이니, 메뉴 안에서도 등급색 번쩍임 + 안내를 보여줌
   showInvToast(gear.rarity === 'legendary' ? '전설 등급 발견!' : `[${rDef.label}] 감정 완료`, rDef.color);
   ui.invReveal = { item: gear, color: rDef.color, until: performance.now() + 1100 };
-}
-
-// boost: 일반('normal') 외 등급 비중 배율 (파밍 맵 난이도 - data/difficulty.js rarity). 1이면 기본 확률
-export function rollRarity(boost = 1) {
-  const w = (key) => (key === 'normal' ? 1 : boost) * RARITY_DEF[key].weight;
-  const total = boost === 1 ? RARITY_TOTAL_WEIGHT : Object.keys(RARITY_DEF).reduce((s, k) => s + w(k), 0);
-  let roll = Math.random() * total;
-  for (const key of Object.keys(RARITY_DEF)) {
-    roll -= w(key);
-    if (roll <= 0) return key;
-  }
-  return 'normal';
-}
-
-export function rollGearItem(opts = {}) {
-  const categories = ['armor', 'weapon', 'greaves', 'boots', 'accessory', 'shield'];
-  const category = opts.category || categories[Math.floor(Math.random() * categories.length)];
-  const handedness = category === 'weapon' ? (opts.handedness || (Math.random() < 0.5 ? 'two' : 'one')) : null;
-  const rarity = opts.rarity || rollRarity(opts.rarityBoost || 1);
-  const rDef = RARITY_DEF[rarity];
-
-  // opts.noElement: 원소 피해 옵션 제외 (시작 장비는 기본 무기)
-  const statKeys = Object.keys(STAT_DEF).filter((k) => !STAT_DEF[k].noRoll && (!STAT_DEF[k].cats || STAT_DEF[k].cats.includes(category)) && !(opts.noElement && STAT_DEF[k].element));
-  const numStats = rDef.statMin + Math.floor(Math.random() * (rDef.statMax - rDef.statMin + 1));
-  const chosen = [];
-  while (chosen.length < numStats) {
-    const k = statKeys[Math.floor(Math.random() * statKeys.length)];
-    if (!chosen.includes(k)) chosen.push(k);
-  }
-  const stats = {};
-  const quality = {}; // 옵션마다 범위 안 위치 0~1 (꽝/최상 표시)
-  chosen.forEach((k) => {
-    const d = STAT_DEF[k];
-    const q = Math.pow(Math.random(), OPTION_ROLL_SKEW);
-    const v = (d.min + q * (d.max - d.min)) * rDef.mult;
-    stats[k] = d.flat ? Math.round(v) : v; // 고정 수치 옵션(공격력/체력/마나)은 정수
-    quality[k] = Math.round(q * 100) / 100;
-  });
-  let variant = opts.variant || null;
-  if (!variant) {
-    if (category === 'weapon') variant = WEAPON_VARIANTS[Math.floor(Math.random() * WEAPON_VARIANTS.length)];
-    else if (category === 'accessory') variant = ACCESSORY_VARIANTS[Math.floor(Math.random() * ACCESSORY_VARIANTS.length)];
-  }
-  return { category, handedness, rarity, stats, quality, upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
-}
-
-// 아이템 고유 번호 - 장비는 메서드 없는 순수 데이터(JSON 직렬화 가능) + uid (트레이드/저장 대비)
-export function nextItemUid() {
-  game.itemSeq += 1;
-  return game.itemSeq;
 }
 
 // opts.slot: 한손 무기를 넣을 칸 지정('weaponMain' | 'weaponOff'). 없으면 빈 칸 우선 자동 배치
@@ -215,9 +168,12 @@ export function tryUpgradeSlot(slotIndex) {
   }
   game.hero.materials -= 1;
   if (Math.random() < UPGRADE_SUCCESS_CHANCE) {
+    // 옵션 하나가 커짐 (옵션이 없는 일반 장비는 베이스 성능만 - 강화 수치는 무기 피해·방어력에 곱해짐)
     const statKeys = Object.keys(it.stats);
-    const k = statKeys[Math.floor(Math.random() * statKeys.length)];
-    it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * UPGRADE_STAT_MULT) : it.stats[k] * UPGRADE_STAT_MULT;
+    if (statKeys.length) {
+      const k = statKeys[Math.floor(Math.random() * statKeys.length)];
+      it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * UPGRADE_STAT_MULT) : it.stats[k] * UPGRADE_STAT_MULT;
+    }
     it.upgradeLevel = (it.upgradeLevel || 0) + 1;
     recalcGearStats();
     floatText(game.hero.x, game.hero.y - 40, `${GEAR_SLOT_LABEL[slot]} 업그레이드 성공 +${it.upgradeLevel}`, RARITY_DEF[it.rarity].color);

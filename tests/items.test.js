@@ -50,32 +50,75 @@ it('버리기: 발밑에 떨어지고, 바로 다시 줍지 않으며, 벗어났
   }
 });
 
-it('옵션 굴림: 낮은 값이 흔하고 최상은 드묾(꽝/최상 표시), 원소 피해 옵션은 무기에만', async () => {
+it('접사 생성: 등급별 개수(일반 0 / 매직 1~2 / 레어 3~6 / 레전드 5~6), 방향당 최대·그룹 중복 금지·부위 제한·접사 레벨, 수치는 티어 범위 안', async () => {
   const env = installBrowserEnv({ seed: 9 });
   try {
     vi.resetModules();
     await import('../src/main.js');
-    const { rollGearItem } = await import('../src/systems/gear.js');
+    const { rollGearItem, rollAffixes } = await import('../src/systems/itemGen.js');
+    const { AFFIXES, AFFIX_RULES } = await import('../src/data/affixes.js');
     const { rollTag, optionText } = await import('../src/ui/itemView.js');
-    const { STAT_DEF, ROLL_QUALITY } = await import('../src/data/items.js');
-    let n = 0, dud = 0, top = 0;
-    for (let i = 0; i < 1500; i++) {
-      const g = rollGearItem();
-      Object.keys(g.stats).forEach((k) => {
-        if (STAT_DEF[k].element) expect(g.category).toBe('weapon');
-        const q = g.quality[k];
-        expect(q).toBeGreaterThanOrEqual(0); expect(q).toBeLessThanOrEqual(1);
-        n++; if (q <= ROLL_QUALITY.dud) dud++; if (q >= ROLL_QUALITY.top) top++;
+    const byId = Object.fromEntries(AFFIXES.map((a) => [a.id, a]));
+    const counts = { normal: new Set(), magic: new Set(), rare: new Set(), legendary: new Set() };
+    let magicOnlyInRare = 0, magicOnlyInMagic = 0;
+    for (let i = 0; i < 3000; i++) {
+      const rarity = ['normal', 'magic', 'rare', 'legendary'][i % 4];
+      const ilvl = 1 + (i % 30);
+      const g = rollGearItem({ rarity, ilvl });
+      counts[rarity].add(g.affixes.length);
+      const side = { prefix: 0, suffix: 0 }, groups = new Set();
+      const alvl = Math.min(30, ilvl + (AFFIX_RULES[rarity].alvlBonus || 0));
+      g.affixes.forEach((a) => {
+        const d = byId[a.id];
+        expect(d.types).toContain(g.category);         // 부위 제한
+        expect(d.alvl).toBeLessThanOrEqual(alvl);      // 접사 레벨
+        side[d.side]++;
+        const key = d.side + ':' + d.group;
+        expect(groups.has(key)).toBe(false);           // 같은 방향·그룹 중복 금지
+        groups.add(key);
+        for (const [k, [min, max]] of Object.entries(d.mods)) { expect(a.rolls[k]).toBeGreaterThanOrEqual(min); expect(a.rolls[k]).toBeLessThanOrEqual(max); }
+        if (d.magicOnly) { if (rarity === 'magic') magicOnlyInMagic++; else magicOnlyInRare++; }
       });
+      if (rarity === 'magic') { expect(side.prefix).toBeLessThanOrEqual(1); expect(side.suffix).toBeLessThanOrEqual(1); }
+      else { expect(side.prefix).toBeLessThanOrEqual(3); expect(side.suffix).toBeLessThanOrEqual(3); }
     }
-    expect(dud / n).toBeGreaterThan(top / n * 2); // 꽝이 최상보다 훨씬 흔함
-    expect(top).toBeGreaterThan(0);
-    const g = { stats: { health: 30 }, quality: { health: 0.95 } };
-    expect(rollTag(g, 'health').tag).toBe('최상');
-    expect(optionText(g, 'health', 30)).toContain('최상');
-    expect(rollTag({ stats: { health: 1 } }, 'health')).toBe(null); // quality 없는 장비
-    let weaponElem = 0;
-    for (let i = 0; i < 400; i++) { const w = rollGearItem({ category: 'weapon' }); if (Object.keys(w.stats).some((k) => STAT_DEF[k].element)) weaponElem++; }
-    expect(weaponElem).toBeGreaterThan(0);
+    expect([...counts.normal]).toEqual([0]);
+    expect(Math.max(...counts.magic)).toBeLessThanOrEqual(2);
+    expect(Math.min(...counts.magic)).toBeGreaterThanOrEqual(1);
+    expect(Math.max(...counts.rare)).toBeLessThanOrEqual(6);
+    expect(counts.rare.has(6)).toBe(true);
+    expect(Math.max(...counts.legendary)).toBeLessThanOrEqual(6);
+    expect(magicOnlyInRare).toBe(0);                    // 매직 전용 티어는 매직에만
+    expect(magicOnlyInMagic).toBeGreaterThan(0);
+    // 레벨 1 무기엔 1단계만, 레벨 30이면 높은 단계도
+    const tiers = (ilvl) => rollAffixes('weapon', 'rare', ilvl).map((a) => byId[a.id].tier);
+    for (let i = 0; i < 50; i++) expect(Math.max(0, ...tiers(1))).toBeLessThanOrEqual(1);
+    let high = 0; for (let i = 0; i < 200; i++) if (tiers(30).some((t) => t >= 3)) high++;
+    expect(high).toBeGreaterThan(0);
+    // 표시: 단계 + 꽝/최상
+    const g = rollGearItem({ rarity: 'magic', ilvl: 30, category: 'boots' });
+    const k = Object.keys(g.stats)[0];
+    expect(rollTag(g, k).tier).toBeGreaterThanOrEqual(1);
+    expect(optionText(g, k, g.stats[k])).toMatch(/단계/);
+    expect(rollTag({ stats: { health: 1 } }, 'health')).toBe(null); // 접사 기록 없는 장비(테스트 무기)
+  } finally { env.restore(); }
+});
+
+it('드랍 테이블: 출처(일반/엘리트/카우킹/우두머리)별 등급 비중, 아이템 레벨 = 몬스터 레벨(난이도·웨이브·종류)', async () => {
+  const env = installBrowserEnv({ seed: 4 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { rollRarity } = await import('../src/systems/itemGen.js');
+    const { monsterLevel } = await import('../src/util.js');
+    const { DIFFICULTY, MLVL_BONUS } = await import('../src/data/difficulty.js');
+    const share = (src) => { let hi = 0; for (let i = 0; i < 4000; i++) if (rollRarity(1, src) !== 'normal') hi++; return hi / 4000; };
+    expect(share('elite')).toBeGreaterThan(share('normal'));
+    expect(share('boss')).toBeGreaterThan(share('elite'));
+    const run = (difficulty, mapId = 'ranch') => ({ difficulty, mapId });
+    expect(monsterLevel(run('normal'), 1, 'normal')).toBe(DIFFICULTY.normal.mlvl);
+    expect(monsterLevel(run('normal'), 4, 'normal')).toBe(DIFFICULTY.normal.mlvl + 3);
+    expect(monsterLevel(run('hard'), 1, 'fast')).toBe(DIFFICULTY.hard.mlvl + MLVL_BONUS.elite);
+    expect(monsterLevel(run('extreme', 'barn'), 0, 'tough', true)).toBeGreaterThan(monsterLevel(run('normal', 'barn'), 0, 'tough', true));
   } finally { env.restore(); }
 });

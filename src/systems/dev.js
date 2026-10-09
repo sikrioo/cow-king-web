@@ -82,7 +82,7 @@ export function devSpawn(kind, immune = []) {
 
 export function devGiveGear(rarity) {
   if (game.hero.inventory.length >= INVENTORY_SIZE) { say('가방 가득!', '#ff5b52'); return; }
-  game.hero.inventory.push(rollGearItem({ rarity, identified: true }));
+  game.hero.inventory.push(rollGearItem({ rarity, identified: true, ilvl: Math.max(game.hero.level, 24) })); // 개발자: 높은 티어도 보이게
   say(`${rarity} 장비 지급`);
 }
 

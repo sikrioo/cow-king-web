@@ -3,6 +3,18 @@ import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
 import { SKILL_LEVEL_UP } from './data/skills.js';
 import { MONSTERS } from './data/monsters.js';
+import { MAPS } from './data/maps.js';
+import { DIFFICULTY, WAVE_MLVL_STEP, MLVL_BONUS } from './data/difficulty.js';
+import { MAX_ITEM_LEVEL } from './data/affixes.js';
+
+// 몬스터 레벨 (= 떨군 장비의 아이템 레벨): 난이도 기본 + 맵(목장은 웨이브마다, 파밍 맵은 맵 보탬) + 종류(엘리트/보스/우두머리)
+export function monsterLevel(run, wave, kind, mapBoss = false) {
+  const d = DIFFICULTY[run.difficulty] || DIFFICULTY.normal;
+  const map = MAPS[run.mapId] || MAPS.ranch;
+  const area = map.mode === 'wave' ? Math.max(0, wave - 1) * WAVE_MLVL_STEP : (map.mlvl || 0);
+  const bonus = mapBoss ? MLVL_BONUS.mapBoss : kind === 'boss' ? MLVL_BONUS.boss : kind !== 'normal' ? MLVL_BONUS.elite : 0;
+  return Math.max(1, Math.min(MAX_ITEM_LEVEL, d.mlvl + area + bonus));
+}
 
 // 몬스터 저항 (0~1, 1이면 면역): 개체 덮어쓰기(c.resist - 개발자 소환 등) → 종류 기본값(data/monsters.js resist)
 export function resistOf(c, key) {

@@ -22,16 +22,25 @@ export function discardFromInventory(index) {
   return gear;
 }
 
-export function dropLoot(x, y, guaranteed, count) {
+// 죽은 몬스터의 드랍 출처 (data/drops.js DROP_RATES 키)
+export function dropSource(c) {
+  if (c.mapBoss) return 'mapBoss';
+  if (c.kind === 'boss') return 'boss';
+  return c.kind !== 'normal' ? 'elite' : 'normal';
+}
+
+// source: 드랍 출처 키 (예전 호출 호환: true = elite, false = normal), ilvl: 장비 아이템 레벨(죽은 몬스터 레벨)
+export function dropLoot(x, y, source, count, ilvl = 1) {
+  const src = typeof source === 'string' ? source : source ? 'elite' : 'normal';
   for (let i = 0; i < count; i++) {
     const ang = Math.random() * Math.PI * 2;
     const dist = Math.random() * DROP_SCATTER;
     const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist;
 
-    const rates = guaranteed ? DROP_RATES.guaranteed : DROP_RATES.normal;
+    const rates = DROP_RATES[src] || DROP_RATES.normal;
     // 파밍 맵 난이도: 장비 드랍 확률 배율(최대 1), 높은 등급 비중 배율 (목장은 1 = 기본)
     if (Math.random() < Math.min(1, rates.gear * game.run.gearDropMul)) {
-      game.items.push(new Item(px, py, 'gear', rollGearItem(game.run.rarityBoost === 1 ? {} : { rarityBoost: game.run.rarityBoost })));
+      game.items.push(new Item(px, py, 'gear', rollGearItem({ source: src, ilvl, rarityBoost: game.run.rarityBoost })));
       continue;
     }
     if (Math.random() < rates.material) {

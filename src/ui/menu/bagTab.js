@@ -6,7 +6,7 @@ import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
 import { discardFromInventory } from '../../systems/loot.js';
-import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR, rollTag, optionText } from '../itemView.js';
+import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR, rollTag, optionText, statKeysInOrder } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareTargets, gearBaseParts } from './common.js';
 
 const WORN_COLOR = '#9be39b';
@@ -116,12 +116,17 @@ function drawGearLines(ctx, gear, x, y) {
     ctx.fillText(`${p.label} ${p.text}`, x, y);
     y += 15;
   });
-  Object.entries(gear.stats).forEach(([k, v]) => {
+  statKeysInOrder(gear).forEach((k) => {
     const r = rollTag(gear, k);
     ctx.fillStyle = r && r.tag ? r.color : '#dfe9d8'; // 꽝은 흐리게, 최상은 금색
-    ctx.fillText(optionText(gear, k, v, { pct: true }), x, y);
+    ctx.fillText(optionText(gear, k, gear.stats[k], { detail: true }), x, y);
     y += 15;
   });
+  if (gear.ilvl) { // 아이템 레벨 (붙을 수 있는 접사 티어를 정함)
+    ctx.fillStyle = '#7f8a7c';
+    ctx.fillText(`아이템 레벨 ${gear.ilvl}${gear.affixes && !gear.affixes.length ? ' · 옵션 없음' : ''}`, x, y);
+    y += 15;
+  }
   return y;
 }
 

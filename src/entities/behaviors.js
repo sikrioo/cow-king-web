@@ -53,7 +53,7 @@ export const behaviors = {
       recordRun('victory');
       game.shake = Math.min(game.shake + 12, 12);
       spawnShockwave(m.x, m.y, 220, '#c98bef');
-      dropLoot(m.x, m.y, true, 4);
+      dropLoot(m.x, m.y, 'boss', 4, m.level);
       return true;
     },
     drawOver(m, ctx, t, style) {

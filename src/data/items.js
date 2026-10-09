@@ -43,7 +43,8 @@ export const GEAR_BASE_ARMOR = { armor: 60, shield: 40, greaves: 30, boots: 20 }
 export const ARMOR_LABEL = '방어력';
 export const GEAR_CATEGORY_COLOR = { armor: '#c9a227', weapon: '#e05b4d', greaves: '#7fa8c9', boots: '#8fbf6b', accessory: '#c07fe0' };
 
-// --- 옵션 범위
+// --- 능력치 정의 (장비 옵션이 올리는 능력치의 이름·표시·단위)
+// 실제로 붙는 옵션과 수치는 접사 데이터(data/affixes.js)의 티어가 정함 - 여기 min/max는 레거시 기록(골든 비교용)이라 생성에는 안 씀
 // flat: 고정 수치 옵션 - 굴릴 때/강화할 때 정수로 반올림 (나머지는 % 옵션이라 소수 그대로)
 // defense = 블락률(피격 시 데미지를 통째로 막을 확률). 키 이름은 골든 호환 때문에 유지 - 피해 감소 방어력은 GEAR_BASE_ARMOR(옵션 아님)
 export const STAT_DEF = {
@@ -55,25 +56,24 @@ export const STAT_DEF = {
   moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   health:    { label: '체력',     min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },
   mana:      { label: '마나',     min: 5,    max: 15,   flat: true, fmt: (v) => `+${Math.round(v)}` },
-  // 무기 원소 피해 (타격마다 추가 원소 피해, ×10 정수) - cats: 이 분류 장비에만 붙음 (무기)
-  fireDmg:      { label: '화염 피해', min: 15, max: 40, flat: true, element: 'fire', cats: ['weapon'], fmt: (v) => `+${Math.round(v)}` },
-  coldDmg:      { label: '냉기 피해', min: 15, max: 40, flat: true, element: 'cold', cats: ['weapon'], fmt: (v) => `+${Math.round(v)}` },
-  lightningDmg: { label: '번개 피해', min: 15, max: 40, flat: true, element: 'lightning', cats: ['weapon'], fmt: (v) => `+${Math.round(v)}` },
-  poisonDmg:    { label: '독 피해',   min: 15, max: 40, flat: true, element: 'poison', cats: ['weapon'], fmt: (v) => `+${Math.round(v)}` }
+  // 무기 원소 피해 (타격마다 추가 원소 피해, ×10 정수) - 무기 접사로만 붙음 (data/affixes.js)
+  fireDmg:      { label: '화염 피해', min: 15, max: 40, flat: true, element: 'fire', fmt: (v) => `+${Math.round(v)}` },
+  coldDmg:      { label: '냉기 피해', min: 15, max: 40, flat: true, element: 'cold', fmt: (v) => `+${Math.round(v)}` },
+  lightningDmg: { label: '번개 피해', min: 15, max: 40, flat: true, element: 'lightning', fmt: (v) => `+${Math.round(v)}` },
+  poisonDmg:    { label: '독 피해',   min: 15, max: 40, flat: true, element: 'poison', fmt: (v) => `+${Math.round(v)}` }
 };
-// 옵션 수치 굴림: min~max 범위에서 r^OPTION_ROLL_SKEW 위치 (낮은 값이 흔하고 최상 값은 드묾 - 꽝이 있어야 대박이 빛남)
-//   옵션마다 굴린 위치(0~1)를 아이템 quality에 남겨서 표시 (ui/itemView.js rollTag)
-export const OPTION_ROLL_SKEW = 1.8;
+// 옵션 수치 굴림: 접사 티어의 min~max 범위에서 r^OPTION_ROLL_SKEW 위치 (낮은 값이 조금 더 흔함 - 꽝이 있어야 대박이 빛남)
+//   굴린 위치(0~1)를 아이템 접사 기록(affixes[].q)에 남겨서 표시 (ui/itemView.js rollTag)
+export const OPTION_ROLL_SKEW = 1.4;
 export const ROLL_QUALITY = { dud: 0.15, top: 0.92 }; // 이 이하 = 꽝, 이 이상 = 최상
-// STAT_DEF 표시 규칙: noRoll = 드랍 옵션으로 안 나옴, cats = 이 분류 장비에만
 // 개발자 모드 테스트 무기의 원소 피해 값
 export const TEST_ELEMENT_WEAPON_DMG = 30;
 
-// --- 등급
+// --- 등급: weight = 일반 카우 드랍의 등급 비중(출처별 비중은 data/drops.js quality), mult = 베이스 성능(무기 피해·방어력) 배율
+//   붙는 접사 개수 규칙은 data/affixes.js AFFIX_RULES
 export const RARITY_DEF = {
-  normal:    { label: '일반',   color: '#e8e8e8', weight: 55, statMin: 1, statMax: 1, mult: 1.0 },
-  magic:     { label: '매직',   color: '#4d7fff', weight: 28, statMin: 1, statMax: 2, mult: 1.15 },
-  rare:      { label: '레어',   color: '#ffd23f', weight: 13, statMin: 2, statMax: 3, mult: 1.35 },
-  legendary: { label: '레전드', color: '#ff8c1a', weight: 4,  statMin: 3, statMax: 4, mult: 1.7 }
+  normal:    { label: '일반',   color: '#e8e8e8', weight: 55, mult: 1.0 },
+  magic:     { label: '매직',   color: '#4d7fff', weight: 28, mult: 1.15 },
+  rare:      { label: '레어',   color: '#ffd23f', weight: 13, mult: 1.35 },
+  legendary: { label: '레전드', color: '#ff8c1a', weight: 4,  mult: 1.7 }
 };
-export const RARITY_TOTAL_WEIGHT = Object.values(RARITY_DEF).reduce((s, r) => s + r.weight, 0);
