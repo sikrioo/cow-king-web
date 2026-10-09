@@ -3,7 +3,7 @@
 // 장비 = 순수 데이터 + uid: { category, handedness, variant, rarity, ilvl, affixes: [{ id, rolls, q }], stats(합계), upgradeLevel, identified, uid }
 //   affixes는 원본 기록(어떤 접사·티어·굴림이었는지), stats는 능력치 합계(장착 계산·비교에 씀 - 강화하면 stats만 커짐)
 // 게임 난수(Math.random) 사용 - systems에서만
-import { STAT_DEF, RARITY_DEF, WEAPON_VARIANTS, ACCESSORY_VARIANTS, OPTION_ROLL_SKEW } from '../data/items.js';
+import { STAT_DEF, RARITY_DEF, WEAPON_VARIANTS, ACCESSORY_VARIANTS, OPTION_ROLL_SKEW, TWO_HAND_ONLY } from '../data/items.js';
 import { AFFIXES, AFFIX_RULES, MAX_ITEM_LEVEL } from '../data/affixes.js';
 import { DROP_RATES, GEAR_CATEGORY_WEIGHTS } from '../data/drops.js';
 import { game } from '../state.js';
@@ -100,5 +100,6 @@ export function rollGearItem(opts = {}) {
     if (category === 'weapon') variant = WEAPON_VARIANTS[Math.floor(Math.random() * WEAPON_VARIANTS.length)];
     else if (category === 'accessory') variant = ACCESSORY_VARIANTS[Math.floor(Math.random() * ACCESSORY_VARIANTS.length)];
   }
-  return { category, handedness, rarity, ilvl, affixes, stats: sumAffixStats(affixes), upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
+  const hand = TWO_HAND_ONLY.includes(variant) ? 'two' : handedness; // 대검은 언제나 양손
+  return { category, handedness: hand, rarity, ilvl, affixes, stats: sumAffixStats(affixes), upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
 }

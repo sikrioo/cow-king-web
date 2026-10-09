@@ -84,3 +84,38 @@ it('한손 무기는 주무기/보조무기 칸을 골라 장착하고, 바뀐 �
     expect(h.weaponStats.off).not.toBe(null); // 쌍수
   } finally { env.restore(); }
 });
+
+it('대검: 언제나 양손, 한 방 가장 셈·가장 느림·사거리 가장 김, 개발자 가방에 있음, 맞히면 더 크게 밀어냄', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game } = await import('../src/state.js');
+    const { resetGame } = await import('../src/session.js');
+    const { rollGearItem, weaponStats, equipFromInventory } = await import('../src/systems/gear.js');
+    const { getWeaponRange, getAttackArc, damageCow } = await import('../src/systems/combat.js');
+    const { WEAPON_VARIANTS, WEAPON_HEAVY } = await import('../src/data/items.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    resetGame();
+    const g = rollGearItem({ category: 'weapon', variant: 'greatsword', handedness: 'one', rarity: 'normal', identified: true });
+    expect(g.handedness).toBe('two');
+    const gs = weaponStats(g);
+    WEAPON_VARIANTS.filter((v) => v !== 'greatsword').forEach((v) => {
+      const o = weaponStats(rollGearItem({ category: 'weapon', variant: v, handedness: 'two', rarity: 'normal' }));
+      expect(gs.max).toBeGreaterThan(o.max);
+      expect(gs.interval).toBeGreaterThan(o.interval);
+    });
+    const h = game.hero;
+    const idx = h.inventory.findIndex((it) => it.variant === 'greatsword');
+    expect(idx).toBeGreaterThanOrEqual(0); // 개발자 모드 테스트 가방
+    const r0 = getWeaponRange();
+    equipFromInventory(idx);
+    expect(h.equipment.weaponMain.variant).toBe('greatsword');
+    expect(h.equipment.weaponOff).toBe('LOCKED'); // 양손이라 보조 칸 잠김
+    expect(getWeaponRange()).toBeGreaterThan(r0);
+    expect(getAttackArc()).toBeGreaterThan(Math.PI * 0.62);
+    const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000;
+    damageCow(c, 10, WEAPON_HEAVY.greatsword);
+    expect(c.knockback).toBeGreaterThan(0.18);
+  } finally { env.restore(); }
+});

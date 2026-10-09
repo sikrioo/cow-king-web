@@ -6,7 +6,7 @@ export const GOLDEN_OVERRIDES = {
   // 2026-10-07: 스킬은 레벨이 아니라 레벨업 카드(뱀서식)로 배움 (사용자 결정) - 카드를 안 고른 새 캐릭터는 레벨과 상관없이 시작 스킬만
   'exact.slot2OptionsByLevel': { 1: ['warcry'], 2: ['warcry'], 3: ['warcry'], 4: ['warcry'], 5: ['warcry'] },
   // 2026-10-08: 개발자 모드 테스트 가방에 원소별 테스트 무기 4개 추가 (사용자 결정: 전사로 면역 몬스터 시험)
-  'exact.start.testStashCount': 11,
+  'exact.start.testStashCount': 12, // 2026-10-09: + 대검(무기 종류마다 하나씩 넣는 테스트 가방)
   // 2026-10-09: 옵션 개수는 등급별 접사 규칙(data/affixes.js AFFIX_RULES - 일반 0 / 매직 1~2 / 레어 3~6 / 레전드 5~6)으로 바뀌어 RARITY_DEF의 statMin/statMax 제거 (사용자 결정: 디아식 접사 체계)
   'exact.rarity.normal.statMin': undefined,
   'exact.rarity.normal.statMax': undefined,
@@ -37,6 +37,8 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.fortify': 3,
   'exact.progression.skillUnlockLevel.teleport': 3,
   // 2026-10-09: 새 스킬 - 전사 난타·뇌진탕·버서커·더미, 마법사 에너지 쉴드·화염기둥·눈보라
+  // 2026-10-09: 대검(양손 전용, 사거리 가장 김) 추가 (사용자 요청)
+  'exact.weaponRange.greatsword': 78,
   'exact.progression.skillUnlockLevel.flurry': 2,
   'exact.progression.skillUnlockLevel.concuss': 4,
   'exact.progression.skillUnlockLevel.berserk': 6,

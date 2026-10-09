@@ -6,7 +6,7 @@
 //   단위 표시용 label은 MASTERY_STAT
 export const MASTERY_MAX_LEVEL = 5;
 export const MASTERY_STUN_TIME = 0.4; // 메이스 마스터리 기절 시간(초)
-export const MASTERY_ORDER = ['fire', 'cold', 'lightning', 'sword', 'axe', 'mace', 'dagger', 'spear'];
+export const MASTERY_ORDER = ['fire', 'cold', 'lightning', 'sword', 'axe', 'mace', 'dagger', 'spear', 'greatsword'];
 export const MASTERIES = {
   // 원소 마스터리 (마법사)
   fire:      { label: '화염 마스터리', classes: ['sorc'], per: { fire: 0.10, burn: 0.12 },        color: '#ff8a3d' },
@@ -17,7 +17,8 @@ export const MASTERIES = {
   axe:       { label: '도끼 마스터리', classes: ['warrior'], weapon: 'axe',    per: { damage: 0.12 },                 color: '#e05b4d' },
   mace:      { label: '메이스 마스터리', classes: ['warrior'], weapon: 'mace', per: { damage: 0.07, stun: 0.04 },     color: '#c9a227' },
   dagger:    { label: '단검 마스터리', classes: ['warrior'], weapon: 'dagger', per: { damage: 0.05, atkSpeed: 0.06 }, color: '#9be39b' },
-  spear:     { label: '창 마스터리',   classes: ['warrior'], weapon: 'spear',  per: { damage: 0.07, range: 0.05 },    color: '#7fa8c9' }
+  spear:     { label: '창 마스터리',   classes: ['warrior'], weapon: 'spear',  per: { damage: 0.07, range: 0.05 },    color: '#7fa8c9' },
+  greatsword: { label: '대검 마스터리', classes: ['warrior'], weapon: 'greatsword', per: { damage: 0.10, stun: 0.02 }, color: '#8a8f99' }
 };
 export const MASTERY_STAT = {
   fire: '화염 피해', cold: '냉기 피해', lightning: '번개 피해', burn: '화상 피해', chill: '둔화 시간', lightningMin: '번개 최소 피해',

@@ -1,6 +1,6 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
-  ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
+  ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, WEAPON_ARC, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
   BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
   BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
 } from '../data/balance.js';
@@ -13,6 +13,7 @@ import { spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { dropLoot, dropSource } from './loot.js';
 import { attackSpeedMul, skillMul, resistOf, berserkMul, masteryBonus } from '../util.js';
 import { MASTERY_STUN_TIME } from '../data/masteries.js';
+import { WEAPON_HEAVY } from '../data/items.js';
 import { COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import {
   toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath, heroDamageTaken
@@ -49,6 +50,8 @@ export function getWeaponRange() {
 }
 
 export function getAttackArc() {
+  const main = game.hero.equipment.weaponMain;
+  if (main && main !== 'LOCKED' && WEAPON_ARC[main.variant]) return WEAPON_ARC[main.variant]; // 대검처럼 무기 자체가 넓게 휩쓰는 것
   const off = game.hero.equipment.weaponOff;
   const dualWield = off && off !== 'LOCKED' && off.category === 'weapon';
   return dualWield ? ATTACK_ARC : ATTACK_ARC_SINGLE;
@@ -69,6 +72,8 @@ export function tryPlayerAttack(onHit) {
   game.hero.attackCooldown = ws.interval * spdMul;
   game.hero.attackCooldownMax = game.hero.attackCooldown;
   const dmg = Math.round(heroHitDamage(ws) * skillMul(game.hero, 'attack', 'damage')); // 한 번 휘두를 때 한 번 굴림 (맞은 몬스터 모두 같은 피해)
+  const mainW = game.hero.equipment.weaponMain;
+  const heavy = mainW && mainW !== 'LOCKED' ? WEAPON_HEAVY[mainW.variant] : null; // 대검: 더 묵직하게
 
   let landed = false;
   const atkRange = getWeaponRange();
@@ -82,7 +87,7 @@ export function tryPlayerAttack(onHit) {
     let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
     if (diff < getAttackArc() / 2) {
-      damageCow(c, dmg);
+      damageCow(c, dmg, heavy);
       if (onHit) onHit(c);
       const stun = masteryBonus(game.hero, 'stun'); // 메이스 마스터리: 확률로 잠깐 기절
       if (stun > 0 && c.state !== 'dead' && Math.random() < stun) c.stunTimer = Math.max(c.stunTimer || 0, MASTERY_STUN_TIME);
@@ -161,13 +166,14 @@ export function showCowDamage(c, dmg, color = '#fff') {
   spawnDamageNumber(c.x, c.y - 40 * c.scale, dmg > 0 ? `-${dmg}` : '면역', dmg > 0 ? color : '#9a9a9a');
 }
 
-export function damageCow(c, dmg) {
+// heavy: 무거운 무기 추가 타격감 { knock, shake, hitstop } (data/items.js WEAPON_HEAVY)
+export function damageCow(c, dmg, heavy = null) {
   dmg = physDamageTo(c, dmg);
   c.flash = 0.12;
-  applyKnockback(c.body, game.hero.x, game.hero.y, 7);
-  c.knockback = 0.18;
-  game.shake = Math.min(game.shake + 4, 10);
-  game.hitstop = 4;
+  applyKnockback(c.body, game.hero.x, game.hero.y, 7 + (heavy ? heavy.knock : 0));
+  c.knockback = heavy ? 0.3 : 0.18;
+  game.shake = Math.min(game.shake + 4 + (heavy ? heavy.shake : 0), heavy ? 12 : 10);
+  game.hitstop = 4 + (heavy ? heavy.hitstop : 0);
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
   showCowDamage(c, dmg);

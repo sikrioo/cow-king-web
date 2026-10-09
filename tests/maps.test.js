@@ -121,8 +121,8 @@ it('목장: 난이도를 골라 1웨이브부터 (몬스터 체력 배율, 면�
     expect(m.game.hero.mapRuns['ranch:extreme']).toBe(1);
 
     const lv = m.game.hero.level;
-    m.game.hero.invuln = 0;
-    hitPlayer(m.game.hero.x + 5, m.game.hero.y, 999999);
+    // 회피·막기는 확률이라 죽을 때까지 때림
+    for (let i = 0; i < 50 && m.game.gameState === 'playing'; i++) { m.game.hero.invuln = 0; hitPlayer(m.game.hero.x + 5, m.game.hero.y, 999999); }
     expect(m.game.gameState).toBe('gameover');
     env.key(' '); env.key(' ', false);
     expect(m.game.gameState).toBe('hub');

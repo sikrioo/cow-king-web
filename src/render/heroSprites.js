@@ -212,7 +212,7 @@ export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, held
   ctx.globalAlpha = alpha;
 
   if (handPose.trail && heldKind === 'weapon') {
-    drawAbstractSlashTrail(ctx, hx, hy, r * 2.25, handPose.trail.from, handPose.trail.to, handPose.trail.alpha * alpha);
+    drawAbstractSlashTrail(ctx, hx, hy, r * (heldVariant === 'greatsword' ? 3.4 : 2.25), handPose.trail.from, handPose.trail.to, handPose.trail.alpha * alpha);
   }
 
   ctx.fillStyle = look().hand;
@@ -368,6 +368,32 @@ export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'swo
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+  } else if (variant === 'greatsword') {
+    // 대검: 긴 양손 손잡이 + 투박한 가드 + 몸보다 긴 넓은 철판 칼날 (끝이 뭉툭)
+    ctx.strokeStyle = '#2f343b';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-r * 0.45, 0); ctx.lineTo(r * 0.40, 0); ctx.stroke();
+    ctx.fillStyle = '#4a4f57';
+    ctx.fillRect(r * 0.36, -r * 0.30, r * 0.12, r * 0.60);
+    ctx.fillStyle = '#7d848d';
+    ctx.strokeStyle = '#3b4047';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(r * 0.48, -r * 0.24);
+    ctx.lineTo(r * 3.05, -r * 0.20);
+    ctx.lineTo(r * 3.25, -r * 0.06);
+    ctx.lineTo(r * 3.22, r * 0.14);
+    ctx.lineTo(r * 3.00, r * 0.22);
+    ctx.lineTo(r * 0.48, r * 0.24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(220,226,232,0.65)'; // 날 쪽 밝은 줄
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(r * 0.55, -r * 0.19); ctx.lineTo(r * 3.0, -r * 0.16); ctx.stroke();
+    ctx.strokeStyle = 'rgba(30,32,36,0.45)'; // 가운데 홈
+    ctx.beginPath(); ctx.moveTo(r * 0.6, r * 0.02); ctx.lineTo(r * 2.6, r * 0.02); ctx.stroke();
   } else if (variant === 'spear') {
     ctx.strokeStyle = '#8d623e';
     ctx.lineWidth = 2.6;
