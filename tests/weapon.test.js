@@ -201,3 +201,34 @@ it('창: 찌르기 - 사거리 가장 길고 공격 각도는 좁음 (앞쪽 멀
     for (let i = 0; i < 12; i++) env.frame(1); // 찌르기 그림
   } finally { env.restore(); }
 });
+
+it('양손 도끼도 대검처럼: 등 뒤에서 내리치는 순간(windup)에 피해, 대검보다 빨리', async () => {
+  const env = installBrowserEnv({ seed: 4 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game } = await import('../src/state.js');
+    const { resetGame } = await import('../src/session.js');
+    const { fixedUpdate } = await import('../src/game.js');
+    const { equipFromInventory } = await import('../src/systems/gear.js');
+    const { tryPlayerAttack } = await import('../src/systems/combat.js');
+    const { WEAPON_HEAVY } = await import('../src/data/items.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { Body } = await import('../src/core/physics.js');
+    expect(WEAPON_HEAVY.axe.windup).toBeLessThan(WEAPON_HEAVY.greatsword.windup);
+    resetGame(); game.waveTransition = 999;
+    const h = game.hero;
+    equipFromInventory(h.inventory.findIndex((it) => it.variant === 'axe'));
+    expect(h.equipment.weaponMain.handedness).toBe('two');
+    const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000; c.speed = 0;
+    const p = { x: h.x + 40, y: h.y }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
+    game.cows = [c];
+    h.facing = 0;
+    tryPlayerAttack();
+    expect(c.hp).toBe(100000);
+    const impact = h.currentAttackDuration * WEAPON_HEAVY.axe.windup;
+    let hitAt = null;
+    for (let i = 1; i <= 120 && hitAt === null; i++) { fixedUpdate(1 / 60); if (c.hp < 100000) hitAt = i / 60; }
+    expect(Math.abs(hitAt - impact)).toBeLessThan(0.05);
+  } finally { env.restore(); }
+});
