@@ -117,10 +117,10 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
     };
   }
 
-  // 한손 창: 기본 공격은 휘두르기 대신 찌르기
-  if (h.attackTimer > 0 && !isTwoHanded(h) && h.equipment && h.equipment.weaponMain && h.equipment.weaponMain.variant === 'spear'
+  // 한손 창: 평소에도 창끝이 정면(찌르기 시작 자세), 기본 공격은 휘두르기 대신 찌르기
+  if (!isTwoHanded(h) && h.equipment && h.equipment.weaponMain && h.equipment.weaponMain.variant === 'spear'
     && !(h.leapTimer > 0) && !(h.rushTimer > 0) && !(h.smashTimer > 0) && !(h.whirlwindTimer > 0)) {
-    pose.right = thrustPose(h, 1 - h.attackTimer / h.currentAttackDuration, 0.9);
+    pose.right = thrustPose(h, h.attackTimer > 0 ? 1 - h.attackTimer / h.currentAttackDuration : 0, 0.9);
   }
 
   // 양손 무기 (스킬 동작 중이 아닐 때): 평소엔 몸 앞에 비스듬히 세워 들고, 공격은 뒤로 크게 젖혔다가 앞으로 넓게 휩쓺
@@ -160,7 +160,9 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
         trail: { from: ra + side * 0.75, to: ra + side * 0.08, alpha: Math.min(0.34, hit * 0.4) } };
     } else {
       const drift = Math.sin(h.moveStep) * speedN * 0.06;
-      pose.right = { handAngle: h.facing + 0.9 + drift, handDist: h.r * 0.95, bladeAngle: h.facing - 0.55 + drift * 0.5, bladeScale: 1.0, trail: null };
+      pose.right = mainW.variant === 'spear'
+        ? thrustPose(h, 0, 0.6) // 양손 창: 평소에도 창끝이 정면
+        : { handAngle: h.facing + 0.9 + drift, handDist: h.r * 0.95, bladeAngle: h.facing - 0.55 + drift * 0.5, bladeScale: 1.0, trail: null };
     }
   }
 
