@@ -90,8 +90,8 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
   } else if (isTwoHanded(h)) {
     // 양손 무기: 몸 가운데 앞에서 두 손으로 쥠 (왼손은 손잡이에 붙음). 위를 보면 칼이 몸 뒤, 아래를 보면 앞
     const centerBase = { x: fx * h.r * 0.12, y: fy * h.r * 0.12 };
-    // 칼이 등 뒤(메기·들어 올리기)면 아래를 볼 때 몸 뒤, 앞(내리친 뒤)이면 몸 앞
-    const front = pose.bladeBehind ? fy < 0 : fy > -0.25;
+    // 한 번 휘두르는 동안 순서를 바꾸지 않음(중간에 손이 앞뒤로 튀지 않게): 위를 보면 몸 뒤, 그 밖은 몸 앞
+    const front = fy > -0.25;
     if (!front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 0.9, rightHeld.variant, h);
     drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
     if (front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 1, rightHeld.variant, h);
@@ -238,7 +238,6 @@ export function getAbstractHeroPose(t, speedN, h = game.hero) {
       const back = h.facing + Math.PI - 0.15;
       const end = h.facing - 0.4;
       const a = strike > 0 ? back + (end - back) * strike : carry + (back - carry) * raise; // 각도를 그대로 보간 → 오른쪽을 지나 휩쓺
-      pose.bladeBehind = strike < 0.35;
       pose.bodyTwist = -0.14 * raise * (1 - strike) + strike * 0.22;
       pose.right = { handAngle: h.facing + 1.2 - strike * 1.3, handDist: h.r * (0.4 + strike * 0.3), bladeAngle: a, bladeScale: 1.0,
         trail: strike > 0 ? { from: a + 0.9, to: a + 0.06, alpha: Math.min(0.4, strike * 0.5) * (1 - clamp01((at - w - 0.2) / 0.2)) } : null };
