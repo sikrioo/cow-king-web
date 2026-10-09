@@ -78,15 +78,13 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
 
   if (pose.carry) {
     // 대검을 메고 있음: 칼은 등에 비스듬히 (손잡이는 오른쪽 어깨 위, 칼날은 등을 가로질러 반대쪽 뒤로), 두 손은 빈손으로 몸 옆
-    //   위를 보면(등이 보임) 칼이 몸 위에, 아래를 보면 몸 뒤에 가려짐
-    const onBack = fy < 0;
+    //   칼은 언제나 몸 뒤에 그림 - 위를 볼 때 몸 위에 그리면 칼날이 몸통을 가로질러 캐릭터를 덮음 (사용자 피드백)
     const gx = rightBase.x * 0.55 + fx * h.r * 0.15, gy = rightBase.y * 0.55 + fy * h.r * 0.15;
     const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + Math.PI - 0.6, h.r, alpha, rightHeld.variant);
-    if (!onBack) strap(0.95);
+    strap(0.95);
     if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 0.86, 'none', null, h);
     else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 0.86, 'none', null, h);
     drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
-    if (onBack) strap(1);
     if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 1, 'none', null, h);
     else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 1, 'none', null, h);
   } else if (isTwoHanded(h)) {
