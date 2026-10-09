@@ -51,6 +51,8 @@ function build() {
   button(ch, '카드 건너뛰기', devSkipCards);
   button(ch, '스탯 +5', () => devStatPoints(5));
   button(ch, '체력·마나 가득', devFill);
+  // 그림 비교: 주인공 손 - 3/4 시점(위를 보면 앞 손이 몸에 가려짐) / 탑뷰(늘 보임)
+  const view = button(ch, '손: 3/4 시점', () => { ui.heroTopView = !ui.heroTopView; view.textContent = `손: ${ui.heroTopView ? '탑뷰' : '3/4 시점'}`; view.classList.toggle('on', ui.heroTopView); });
 
   const cheat = row(body, '치트');
   TOGGLES.forEach(([flag, label]) => {

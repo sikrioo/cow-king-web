@@ -122,6 +122,10 @@ it('대검: 언제나 양손, 한 방 가장 셈·가장 느림·사거리 가�
     expect(isTwoHanded(h)).toBe(true);
     game.waveTransition = 999;
     for (const f of [0, Math.PI / 2, -Math.PI / 2]) { h.facing = f; env.frame(2); h.attackCooldown = 0; h.attackTimer = 0.2; h.currentAttackDuration = 0.4; env.frame(3); }
+    const { ui } = await import('../src/state.js');
+    ui.heroTopView = true; // 탑뷰 비교 모드로도
+    for (const f of [0, -Math.PI / 2]) { h.facing = f; env.frame(2); h.attackTimer = 0.2; env.frame(3); }
+    ui.heroTopView = false;
   } finally { env.restore(); }
 });
 

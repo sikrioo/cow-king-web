@@ -1,7 +1,7 @@
 // 주인공 그리기 (추상 히어로 포즈/스카프/손·무기/방패/베기 궤적) - 상태를 읽기만 함
 import { LEAP_DURATION, SMASH_DURATION, SMASH_IMPACT_TIME } from '../data/balance.js';
 import { clamp01, lerpAngle, easeOutCubic } from '../util.js';
-import { game } from '../state.js';
+import { game, ui } from '../state.js';
 import { CLASSES } from '../data/classes.js';
 import { drawHeroStaff } from './heroStaff.js';
 import { drawAbstractSword, drawHeldShield, drawAbstractSlashTrail } from './heroWeapons.js';
@@ -82,27 +82,17 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
     const gx = rightBase.x * 0.55 + fx * h.r * 0.15, gy = rightBase.y * 0.55 + fy * h.r * 0.15;
     const strap = (alpha) => drawAbstractSword(ctx, gx, gy, h.facing + Math.PI - 0.6, h.r, alpha, rightHeld.variant);
     strap(0.95);
-    if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 0.86, 'none', null, h);
-    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 0.86, 'none', null, h);
-    drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
-    if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 1, 'none', null, h);
-    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 1, 'none', null, h);
+    drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
   } else if (isTwoHanded(h)) {
     // 양손 무기: 몸 가운데 앞에서 두 손으로 쥠 (왼손은 손잡이에 붙음). 위를 보면 칼이 몸 뒤, 아래를 보면 앞
     const centerBase = { x: fx * h.r * 0.12, y: fy * h.r * 0.12 };
     // 한 번 휘두르는 동안 순서를 바꾸지 않음(중간에 손이 앞뒤로 튀지 않게): 위를 보면 몸 뒤, 그 밖은 몸 앞
-    const front = fy > -0.25;
+    const front = ui.heroTopView || fy > -0.25; // 탑뷰 비교 모드면 언제나 몸 위
     if (!front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 0.9, rightHeld.variant, h);
     drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
     if (front) drawTwoHandedGrip(ctx, centerBase, pose.right, h.r, 1, rightHeld.variant, h);
   } else {
-    if (leftDepth < rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 0.86, leftHeld.kind, leftHeld.variant, h);
-    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 0.86, rightHeld.kind, rightHeld.variant, h);
-
-    drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h);
-
-    if (leftDepth >= rightDepth) drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, 1, leftHeld.kind, leftHeld.variant, h);
-    else drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, 1, rightHeld.kind, rightHeld.variant, h);
+    drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, leftHeld, rightHeld, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
   }
 
   if (h.rushTimer > 0) {
@@ -119,6 +109,19 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
   }
 
   ctx.restore();
+}
+
+// 두 손 + 몸 그리기 순서
+//   3/4 시점(기본): 화면 뒤쪽 손은 몸 뒤(흐리게), 앞쪽 손은 몸 위 - 위를 보면(등) 앞으로 내민 손이 가려짐
+//   탑뷰 비교 모드(ui.heroTopView, 개발자 패널): 몸을 먼저 그리고 두 손 모두 몸 위
+function drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, leftHeld, rightHeld, drawBody) {
+  const hand = (side, alpha) => (side === 'left'
+    ? drawFloatingHandAndBlade(ctx, leftBase, pose.left, h.r, alpha, leftHeld.kind, leftHeld.variant, h)
+    : drawFloatingHandAndBlade(ctx, rightBase, pose.right, h.r, alpha, rightHeld.kind, rightHeld.variant, h));
+  if (ui.heroTopView) { drawBody(); hand('left', 1); hand('right', 1); return; }
+  hand(leftDepth < rightDepth ? 'left' : 'right', 0.86);
+  drawBody();
+  hand(leftDepth >= rightDepth ? 'left' : 'right', 1);
 }
 
 // 주무기가 양손 무기인지 (대검 등 - 보조 칸이 잠김)

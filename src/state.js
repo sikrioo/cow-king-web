@@ -56,6 +56,7 @@ export const ui = {
   identifyTimer: 0,
   moveMarker: null, // 클릭 이동 표시 {x, y, t0} (그리기 전용)
   devPanelOpen: false,
+  heroTopView: false, // 주인공 손 그리기 비교: false = 3/4 시점(위를 보면 앞 손이 가려짐), true = 탑뷰(손이 늘 보임) - 개발자 패널
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)
   titleCardRects: [], // 시작 화면 캐릭터 카드 클릭 영역 (그릴 때마다 갱신)
   titleStartRect: null, // 시작 화면 '게임 시작' 버튼 영역
