@@ -18,6 +18,9 @@ export const MONSTERS = {
   // 해골 카우 (2026-10-10, 관리자 페이지에만 - adminOnly: 웨이브·맵·개발자 소환 목록에 없음). skeleton: 해골 그림, boss: 보스 취급(CC 면역)
   skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  adminOnly: true, skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
   skeletonKing: { hp: 600, dmg: 40, scaleMul: 2.2, speedMul: 0.8,  aggroMul: 2.4, exp: 300, adminOnly: true, skeleton: true, boss: true, resist: { poison: 0.75, cold: 0.3 }, ring: '#7fffd4', colors: { hide: '#d6cfba', horn: '#b9ae92', snout: '#a99f86', eye: '#7fffd4' } },
+  // 궁수 (2026-10-10, 관리자 페이지에만): 거리를 두고 조준(조준선) → 화살 (entities/rangedBehaviors.js). 해골 궁수는 해골 그림
+  archer:         { hp: 50, dmg: 20, scaleMul: 1, speedMul: 1,    aggroMul: 1.6, exp: 25, adminOnly: true, ring: '#9be35a', colors: { hide: '#6b5a3a', horn: '#e8d8b0', snout: '#3e3322', eye: '#ffe066' } },
+  skeletonArcher: { hp: 40, dmg: 20, scaleMul: 1, speedMul: 1.05, aggroMul: 1.6, exp: 22, adminOnly: true, skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.7, speedMul: 0.85, aggroMul: 1,   exp: 400, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -36,7 +39,9 @@ export const MONSTER_WEAPONS = {
   pyro:     ['firestaff'],
   boss:     ['hammer'],
   skeleton: ['club', 'spear'],
-  skeletonKing: ['staff']
+  skeletonKing: ['staff'],
+  archer: ['bow'],
+  skeletonArcher: ['bow']
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
 export function weaponFor(kind, seed) {
@@ -48,7 +53,7 @@ export function weaponFor(kind, seed) {
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
-  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹'
+  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우'
 };
 
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };

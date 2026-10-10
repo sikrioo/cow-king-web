@@ -68,3 +68,34 @@ it('해골 카우 킹: 주문 → 해골 소환(부하 최대치까지), 뼈 창
     expect(minions().length).toBe(0);
   } finally { env.restore(); }
 });
+
+it('궁수 카우·해골 궁수 카우: 사거리 안이면 조준(방향 고정) → 화살, 경직이면 조준 취소, 관리자 전용', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    for (const kind of ['archer', 'skeletonArcher']) {
+      expect(m.MONSTERS[kind].adminOnly).toBe(true);
+      expect(m.ELITE_KINDS).not.toContain(kind);
+      m.game.cows.length = 0; m.game.projectiles.length = 0;
+      const a = new m.Monster(0.4, kind, { pos: { x: h.x + 260, y: h.y } });
+      m.game.cows.push(a);
+      a.shootCd = 0;
+      a.update(1 / 60);
+      expect(a.state).toBe('aiming');
+      const dir = { x: a.aimDirX, y: a.aimDirY };
+      for (let i = 0; i < m.ARCHER_AIM * 60 + 2; i++) a.update(1 / 60);
+      const arrow = m.game.projectiles.find((p) => p.kind === 'arrow');
+      expect(arrow).toBeTruthy();
+      expect(arrow.team).toBe('monster');
+      expect(arrow.dirX).toBeCloseTo(dir.x);
+      // 조준 중 경직 → 취소
+      a.shootCd = 0; a.state = 'idle';
+      a.update(1 / 60);
+      expect(a.state).toBe('aiming');
+      m.applyCC(a, 'stagger', 0.4);
+      expect(a.state).toBe('stunned');
+      expect(a.shootCd).toBe(m.ARCHER_COOLDOWN);
+    }
+  } finally { env.restore(); }
+});

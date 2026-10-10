@@ -29,6 +29,9 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-10: 해골 카우·해골 카우 킹 (관리자 페이지에만 - 사용자 요청)
   'exact.monsters.skeleton': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
   'exact.monsters.skeletonKing': { hp: 600, meleeDmg: 40, scaleRatio: 2.2 },
+  // 2026-10-10: 궁수 카우·해골 궁수 카우 (관리자 페이지에만 - 사용자 요청)
+  'exact.monsters.archer': { hp: 50, meleeDmg: 20, scaleRatio: 1 },
+  'exact.monsters.skeletonArcher': { hp: 40, meleeDmg: 20, scaleRatio: 1 },
   // 2026-10-07: 마법사 캐릭터 스킬 해금 레벨
   'exact.progression.skillUnlockLevel.bolt': 1,
   'exact.progression.skillUnlockLevel.fireball': 1,

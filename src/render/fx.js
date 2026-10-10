@@ -73,6 +73,7 @@ export function drawProjectiles(ctx) {
     if (p.kind === 'shard') { drawShard(ctx, p, i); return; }
     if (p.kind === 'orb') { drawOrb(ctx, p, t); return; }
     if (p.kind === 'bonespear') { drawBoneSpear(ctx, p); return; }
+    if (p.kind === 'arrow') { drawArrow(ctx, p); return; }
     ctx.save();
     for (let k = 4; k >= 1; k--) {
       ctx.globalAlpha = 0.5 - k * 0.1;
@@ -365,5 +366,25 @@ function drawBoneSpear(ctx, p) {
   ctx.fillStyle = '#f4efe2';
   ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(20, 0); ctx.lineTo(12, 4); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.arc(-18, -2.5, 2.5, 0, Math.PI * 2); ctx.arc(-18, 2.5, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// 화살 (궁수): 가는 나무 살 + 화살촉 + 깃 (해골 궁수는 초록빛 꼬리)
+function drawArrow(ctx, p) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(Math.atan2(p.dirY, p.dirX));
+  ctx.globalAlpha = 0.3;
+  ctx.strokeStyle = p.color || '#ffd36a';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(-10, 0); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#7a5230';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(10, 0); ctx.stroke();
+  ctx.fillStyle = '#c9ced6';
+  ctx.beginPath(); ctx.moveTo(10, -3); ctx.lineTo(16, 0); ctx.lineTo(10, 3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = p.color || '#ffd36a';
+  ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-18, -3.5); ctx.lineTo(-11, 0); ctx.lineTo(-18, 3.5); ctx.closePath(); ctx.fill();
   ctx.restore();
 }

@@ -133,10 +133,10 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
-  const visualState = c.state === 'charging' ? 'attack'
+  const visualState = c.state === 'charging' || c.state === 'aiming' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;
-  const visualElapsed = c.state === 'charging' ? 0.16 : c.stateElapsed;
+  const visualElapsed = c.state === 'charging' || c.state === 'aiming' ? 0.16 : c.stateElapsed;
 
   if (c.ccKind === 'poly' && c.stunTimer > 0) { // 변이: 소 대신 양 (체력바는 그대로)
     drawSheep(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, true, c.flash > 0);

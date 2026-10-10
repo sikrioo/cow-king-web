@@ -225,3 +225,14 @@ export const NECRO_BONE_CD = 2.8;
 export const NECRO_BONE_DAMAGE = 35;
 export const NECRO_BONE_SPEED = 300;
 export const NECRO_BONE_RADIUS = 8;
+
+// 궁수 카우·해골 궁수 카우 (관리자 페이지에만): ARCHER_RANGE 안이면 ARCHER_AIM초 조준(조준선이 보임, 그때 방향 고정) → 화살(곧게 - 옆으로 피할 수 있음)
+//   ARCHER_KITE 안이면 물러남, 화살 사이 ARCHER_COOLDOWN초. 해골 궁수 화살은 ARCHER_SKELETON_DAMAGE
+export const ARCHER_RANGE = 340;
+export const ARCHER_KITE = 170;
+export const ARCHER_AIM = 0.55;
+export const ARCHER_COOLDOWN = 2.2;
+export const ARROW_DAMAGE = 30;
+export const ARCHER_SKELETON_DAMAGE = 25;
+export const ARROW_SPEED = 430;
+export const ARROW_RADIUS = 6;

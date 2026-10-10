@@ -178,7 +178,22 @@ function drawFirestaff(ctx, animT) {
   ctx.fill();
 }
 
+// 활 (궁수): 손에서 앞쪽으로 휜 나무 활대 + 시위 (찌르기 회전이 들면 앞을 겨눔)
+function drawBow(ctx) {
+  ctx.strokeStyle = WOOD_DARK;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(4, -22); ctx.quadraticCurveTo(22, 0, 4, 22); ctx.stroke();
+  ctx.strokeStyle = WOOD;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(4, -22); ctx.quadraticCurveTo(22, 0, 4, 22); ctx.stroke();
+  ctx.strokeStyle = '#e8e2d0';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(4, -22); ctx.lineTo(0, 0); ctx.lineTo(4, 22); ctx.stroke();
+}
+
 export const WEAPON_DRAW = {
+  bow: drawBow,
   halberd: drawHalberd, pitchfork: drawPitchfork, club: drawClub, axe: drawAxe, spear: drawSpear,
   hammer: drawHammer, cleaver: drawCleaver, staff: drawStaff, torch: drawTorch, rod: drawRod, firestaff: drawFirestaff
 };

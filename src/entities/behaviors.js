@@ -28,6 +28,7 @@ import { frostAuraSlow } from '../systems/auras.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
+import { rangedBehaviors } from './rangedBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
@@ -396,3 +397,4 @@ export const behaviors = {
 
 // 마법 쓰는 몬스터(entities/spellBehaviors.js)도 같은 표에
 Object.assign(behaviors, spellBehaviors);
+Object.assign(behaviors, rangedBehaviors); // 활 쏘는 몬스터 (entities/rangedBehaviors.js)
