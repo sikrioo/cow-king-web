@@ -1,113 +1,95 @@
-// 해골 카우 그림 (관리자 전용 몬스터 - 2026-10-10 사용자: "흰 소가 아니라 앙상하고 속이 빈 해골, 네모여도 됨")
-//   소 그림과 같은 좌표계(발 = 0, 위가 -): 네모난 소 두개골(뿔·눈구멍·콧구멍·이빨) → 목뼈 → 선으로만 그린 갈비뼈(속이 비어 바닥이 보임) → 골반 → 뼈다리
-//   킹: 갈비뼈 뒤로 보라 망토 + 금관 + 더 밝은 눈빛. 상태는 읽기만, 흔들림·빛은 시간으로만(난수 없음)
+// 해골 카우 그림 (관리자 전용 몬스터 - 2026-10-10 사용자: 기존 카우 형태 그대로 단순하게, 앙상하고 속이 빈 해골 느낌, 네모여도 됨)
+//   소 그림과 같은 좌표계·크기(몸 = 가운데 (0,-40) 반지름 30쯤): 둥근 몸 대신 모서리가 둥근 네모 해골 + 뼈 뿔 + 퀭한 눈구멍(초록 눈빛)
+//   + 콧구멍 자리(코 대신 구멍) + 움푹 파인 볼 + 이빨 + 금. 킹은 금관 + 더 밝은 눈빛. 상태는 읽기만, 빛·흔들림은 시간으로만(난수 없음)
 import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 
-const BONE = '#e8e2d0', BONE_DARK = '#9c937c', OUTLINE = '#4a4538', HOLE = '#141210';
+const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#141210';
 
 // stunFn: 기절 별 그림(monsterSprites.drawStunDots - 순환 import를 피하려고 넘겨받음)
 export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, opts = {}) {
   const { king = false, flash = false, weapon = 'club', stunFn = null } = opts;
-  const walk = state === 'walk';
-  const bob = walk ? Math.abs(Math.sin(animT * 8)) * 6 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 1.5 : 0;
+  const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const poke = state === 'attack' ? Math.sin(Math.min(stateElapsed * 10, Math.PI)) : 0;
-  const rattle = Math.sin(animT * 11) * (walk ? 1.2 : 0.4); // 뼈가 달그락
-  const bone = flash ? '#ffffff' : BONE;
+  const jaw = state === 'attack' ? poke * 3 : Math.abs(Math.sin(animT * 6)) * (state === 'walk' ? 1.5 : 0.5); // 턱이 달그락
 
   ctx.save();
-  ctx.translate(x + shake, y);
+  ctx.translate(x + shake, y - bob);
   ctx.scale(scale * facing, scale);
-  ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
 
-  ctx.fillStyle = PALETTE.shadow; // 그림자 (몸이 떠도 땅에)
-  ctx.beginPath(); ctx.ellipse(0, 2, 15, 4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.translate(0, -bob);
+  ctx.fillStyle = PALETTE.shadow;
+  ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
 
-  // 다리뼈 (걸으면 번갈아)
-  const step = walk ? Math.sin(animT * 8) * 4 : 0;
-  [[-7, step], [7, -step]].forEach(([lx, s]) => {
-    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 5.5;
-    ctx.beginPath(); ctx.moveTo(lx, -12); ctx.lineTo(lx + s * 0.4, -6); ctx.lineTo(lx + s, bob); ctx.stroke();
-    ctx.strokeStyle = bone; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(lx, -12); ctx.lineTo(lx + s * 0.4, -6); ctx.lineTo(lx + s, bob); ctx.stroke();
-    ctx.fillStyle = bone; // 무릎 마디
-    ctx.beginPath(); ctx.arc(lx + s * 0.4, -6, 2.4, 0, Math.PI * 2); ctx.fill();
-  });
+  drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
 
-  if (king) { // 망토: 갈비뼈 뒤로 비침 (속이 비어서 망토가 보임)
-    ctx.fillStyle = 'rgba(70,30,95,0.9)';
-    ctx.beginPath();
-    ctx.moveTo(-20, -44); ctx.lineTo(20, -44); ctx.lineTo(26, -6 + rattle); ctx.lineTo(10, -2); ctx.lineTo(0, -7); ctx.lineTo(-10, -2); ctx.lineTo(-26, -6 - rattle);
-    ctx.closePath(); ctx.fill();
-  }
-
-  drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -34, poke, animT);
-
-  // 골반 (네모난 뼈)
-  ctx.fillStyle = bone; ctx.strokeStyle = OUTLINE; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.rect(-10, -15, 20, 5); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = HOLE;
-  ctx.beginPath(); ctx.arc(-4, -12.5, 1.4, 0, Math.PI * 2); ctx.arc(4, -12.5, 1.4, 0, Math.PI * 2); ctx.fill();
-
-  // 등뼈 (마디마디)
-  ctx.strokeStyle = OUTLINE; ctx.lineWidth = 5;
-  ctx.beginPath(); ctx.moveTo(0, -44); ctx.lineTo(0, -15); ctx.stroke();
-  ctx.fillStyle = bone;
-  for (let i = 0; i < 6; i++) { const vy = -43 + i * 5; ctx.fillRect(-2.5, vy, 5, 3.4); }
-
-  // 갈비뼈: 선만 (안이 비어 보임) - 좌우 4쌍, 아래로 갈수록 짧게
-  for (let i = 0; i < 4; i++) {
-    const ry = -40 + i * 6, w = 17 - i * 2.5 + (i % 2 ? rattle * 0.4 : -rattle * 0.4);
-    [-1, 1].forEach((sd) => {
-      ctx.strokeStyle = OUTLINE; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(0, ry); ctx.quadraticCurveTo(sd * w, ry - 3, sd * (w - 2), ry + 7); ctx.stroke();
-      ctx.strokeStyle = i === 3 ? BONE_DARK : bone; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, ry); ctx.quadraticCurveTo(sd * w, ry - 3, sd * (w - 2), ry + 7); ctx.stroke();
-    });
-  }
-
-  // 두개골 (네모 - 위가 넓은 이마, 아래로 좁아지는 주둥이), 몸보다 살짝 앞으로 숙임
-  ctx.save();
-  ctx.translate(0, rattle * 0.3);
-  // 뿔 (뼈 색, 소 뿔 모양)
+  // 뼈 뿔 (소 뿔 모양, 뼈 색 + 테두리)
   [-1, 1].forEach((sd) => {
-    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 8;
-    ctx.beginPath(); ctx.moveTo(sd * 14, -66); ctx.quadraticCurveTo(sd * 30, -70, sd * 30, -86); ctx.quadraticCurveTo(sd * 30, -94, sd * 20, -96); ctx.stroke();
-    ctx.strokeStyle = BONE_DARK; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(sd * 14, -66); ctx.quadraticCurveTo(sd * 30, -70, sd * 30, -86); ctx.quadraticCurveTo(sd * 30, -94, sd * 20, -96); ctx.stroke();
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 11;
+    ctx.beginPath(); ctx.moveTo(sd * 16, -58); ctx.quadraticCurveTo(sd * 33, -64, sd * 33, -82); ctx.quadraticCurveTo(sd * 33, -92, sd * 20, -95); ctx.stroke();
+    ctx.strokeStyle = BONE_SHADE; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(sd * 16, -58); ctx.quadraticCurveTo(sd * 33, -64, sd * 33, -82); ctx.quadraticCurveTo(sd * 33, -92, sd * 20, -95); ctx.stroke();
   });
-  ctx.fillStyle = bone; ctx.strokeStyle = OUTLINE; ctx.lineWidth = 2;
+
+  // 해골 (모서리가 둥근 네모 - 위는 넓고 아래 주둥이로 조금 좁아짐)
+  ctx.fillStyle = flash ? '#ffffff' : BONE;
+  ctx.strokeStyle = OUTLINE;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(-17, -72); ctx.lineTo(17, -72);   // 이마
-  ctx.lineTo(18, -58); ctx.lineTo(10, -50);    // 광대 → 주둥이
-  ctx.lineTo(9, -40); ctx.lineTo(-9, -40);
-  ctx.lineTo(-10, -50); ctx.lineTo(-18, -58);
-  ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = HOLE; // 눈구멍 (크게 퀭하게, 네모에 가깝게)
-  ctx.beginPath(); ctx.moveTo(-14, -64); ctx.lineTo(-4, -63); ctx.lineTo(-5, -55); ctx.lineTo(-12, -56); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(14, -64); ctx.lineTo(4, -63); ctx.lineTo(5, -55); ctx.lineTo(12, -56); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-3, -49); ctx.lineTo(-1, -45); ctx.lineTo(-4, -45); ctx.closePath(); ctx.fill(); // 콧구멍
-  ctx.beginPath(); ctx.moveTo(3, -49); ctx.lineTo(1, -45); ctx.lineTo(4, -45); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = OUTLINE; ctx.lineWidth = 1; // 이빨
-  for (let i = -6; i <= 6; i += 3) { ctx.beginPath(); ctx.moveTo(i, -43); ctx.lineTo(i, -40); ctx.stroke(); }
-  ctx.beginPath(); ctx.moveTo(-3, -72); ctx.lineTo(-1, -68); ctx.lineTo(-4, -66); ctx.stroke(); // 이마 금
-  const glow = (king ? 0.8 : 0.6) + Math.sin(animT * 5) * 0.25; // 눈빛
+  ctx.moveTo(-22, -68);
+  ctx.quadraticCurveTo(-27, -68, -27, -62);
+  ctx.lineTo(-25, -38);
+  ctx.quadraticCurveTo(-24, -30, -16, -26);
+  ctx.lineTo(-14, -16);
+  ctx.quadraticCurveTo(0, -11, 14, -16);
+  ctx.lineTo(16, -26);
+  ctx.quadraticCurveTo(24, -30, 25, -38);
+  ctx.lineTo(27, -62);
+  ctx.quadraticCurveTo(27, -68, 22, -68);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // 움푹 파인 볼 (양옆 어두운 홈 - 앙상한 느낌)
+  ctx.fillStyle = 'rgba(60,54,42,0.45)';
+  [-1, 1].forEach((sd) => {
+    ctx.beginPath(); ctx.moveTo(sd * 24, -40); ctx.quadraticCurveTo(sd * 15, -34, sd * 16, -26); ctx.quadraticCurveTo(sd * 21, -31, sd * 24, -40); ctx.fill();
+  });
+
+  // 퀭한 눈구멍 (크고 각진) + 초록 눈빛
+  ctx.fillStyle = HOLE;
+  [-1, 1].forEach((sd) => {
+    ctx.beginPath(); ctx.moveTo(sd * 20, -56); ctx.lineTo(sd * 6, -55); ctx.lineTo(sd * 7, -43); ctx.lineTo(sd * 18, -44); ctx.closePath(); ctx.fill();
+  });
+  const glow = (king ? 0.8 : 0.6) + Math.sin(animT * 5) * 0.25;
   ctx.globalAlpha = Math.max(0, Math.min(1, glow));
   ctx.fillStyle = '#7fffd4';
-  ctx.beginPath(); ctx.arc(-8.5, -59.5, king ? 2.6 : 2, 0, Math.PI * 2); ctx.arc(8.5, -59.5, king ? 2.6 : 2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-12.5, -49.5, king ? 3 : 2.4, 0, Math.PI * 2); ctx.arc(12.5, -49.5, king ? 3 : 2.4, 0, Math.PI * 2); ctx.fill();
   ctx.globalAlpha = 1;
+
+  // 콧구멍 자리 (코 대신 뒤집힌 하트 모양 구멍)
+  ctx.fillStyle = HOLE;
+  ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(-4.5, -30); ctx.lineTo(0, -32); ctx.lineTo(4.5, -30); ctx.closePath(); ctx.fill();
+
+  // 이빨 (아래 턱 - 살짝 벌어졌다 닫힘)
+  ctx.strokeStyle = OUTLINE; ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.moveTo(-10, -22); ctx.lineTo(10, -22); ctx.stroke();
+  for (let i = -8; i <= 8; i += 4) { ctx.beginPath(); ctx.moveTo(i, -22); ctx.lineTo(i, -18 + jaw * 0.5); ctx.stroke(); }
+
+  // 금 (이마·뺨)
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(-6, -68); ctx.lineTo(-3, -62); ctx.lineTo(-7, -58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(22, -60); ctx.lineTo(18, -57); ctx.stroke();
+
   if (king) { // 금관
-    ctx.fillStyle = '#e8c547'; ctx.strokeStyle = '#8a6a1a'; ctx.lineWidth = 1.2;
+    ctx.fillStyle = '#e8c547'; ctx.strokeStyle = '#8a6a1a'; ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(-15, -72); ctx.lineTo(-15, -82); ctx.lineTo(-8, -76); ctx.lineTo(-3, -86); ctx.lineTo(3, -76); ctx.lineTo(8, -86); ctx.lineTo(15, -78); ctx.lineTo(15, -72); ctx.closePath();
+    ctx.moveTo(-17, -66); ctx.lineTo(-17, -78); ctx.lineTo(-9, -71); ctx.lineTo(-3, -83); ctx.lineTo(3, -71); ctx.lineTo(9, -83); ctx.lineTo(17, -75); ctx.lineTo(17, -66); ctx.closePath();
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#7fffd4';
-    ctx.beginPath(); ctx.arc(0, -76, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -71, 2.2, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.restore();
 
   if (state === 'stunned' && stunFn) stunFn(ctx, animT);
   ctx.restore();
