@@ -38,8 +38,8 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-11: 해골 전사(대검·도끼) (사용자 요청)
   'exact.monsters.skeletonBrute': { hp: 110, meleeDmg: 60, scaleRatio: 1.2 },
   // 2026-10-11: 도살자 카우·도살자 악마 시안 (관리자 전용)
-  'exact.monsters.butcherCow': { hp: 140, meleeDmg: 35, scaleRatio: 2.8 },
-  'exact.monsters.butcherDemon': { hp: 170, meleeDmg: 40, scaleRatio: 2.8 },
+  'exact.monsters.butcherCow': { hp: 140, meleeDmg: 35, scaleRatio: 2.1 },
+  'exact.monsters.butcherDemon': { hp: 170, meleeDmg: 40, scaleRatio: 2.1 },
   'exact.monsters.burningSoul': { hp: 40, meleeDmg: 15, scaleRatio: 1 },
   'exact.monsters.paleSoul': { hp: 40, meleeDmg: 15, scaleRatio: 1 },
   // 2026-10-10: 궁수 카우·해골 궁수 카우 (관리자 페이지에만 - 사용자 요청)
