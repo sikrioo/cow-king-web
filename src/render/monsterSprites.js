@@ -125,6 +125,17 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
+  if (c.excitedTimer > 0) { // 흥분(카우킹 함성) - 발밑 붉은 고리
+    ctx.save();
+    ctx.globalAlpha = 0.5 + Math.sin(t * 12) * 0.2;
+    ctx.strokeStyle = '#ff5b4d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y + c.r * 0.5, c.r * 1.1, c.r * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   if (c.chillTimer > 0) {
     // 둔화(냉기) - 발밑 서리 고리
     ctx.save();
@@ -137,10 +148,11 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
-  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
+  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
+                     : c.state === 'dazed' ? 'stunned' // 카우킹 벽에 부딪혀 멍함
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;
-  const visualElapsed = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' ? 0.16 : c.stateElapsed;
+  const visualElapsed = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 0.16 : c.stateElapsed;
 
   if (c.ccKind === 'poly' && c.stunTimer > 0) { // 변이: 소 대신 양 (체력바는 그대로)
     drawSheep(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, true, c.flash > 0);

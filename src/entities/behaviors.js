@@ -9,7 +9,7 @@
 //   interrupt(m)                 기절·경직이 걸려 하던 특수 행동이 끊길 때 정리(대기시간 등) - systems/cc.js
 // 상태를 점유하는 상태머신(fusing/zapping/telegraph…)은 매 틱 true를 반환해야 일반 AI가 상태를 덮어쓰지 않는다.
 import {
-  BOSS_SLAM_COOLDOWN, CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
+  CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
   CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
   EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
   ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT, VENOM_CLOUD_TRIGGER_RANGE, VENOM_CLOUD_COOLDOWN
@@ -18,7 +18,7 @@ import { distToSegment, getHitPoint, hash01 } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { recordRun } from '../save.js';
-import { killCow, spawnColdNova, bossSlam, hitPlayer } from '../systems/combat.js';
+import { killCow, spawnColdNova, hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnFireHazard, spawnPoisonCloud, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
 import { rollLightning } from '../systems/elements.js';
 import { MONSTER_CHILL_MOVE_MULT } from '../data/elements.js';
@@ -28,6 +28,7 @@ import { frostAuraSlow } from '../systems/auras.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
+import { bossBehaviors } from './bossBehaviors.js';
 import { rangedBehaviors } from './rangedBehaviors.js';
 import { demonBehaviors } from './demonBehaviors.js';
 
@@ -35,7 +36,7 @@ import { demonBehaviors } from './demonBehaviors.js';
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
 export function getAuraSpeedMult(cow) {
   const chill = cow.chillTimer > 0 ? (isBossCow(cow) ? 1 - (1 - MONSTER_CHILL_MOVE_MULT) * BOSS_SLOW_SCALE : MONSTER_CHILL_MOVE_MULT) : 1;
-  let fan = cow.kind === 'fanatic' && !isSheep(cow);
+  let fan = (cow.kind === 'fanatic' && !isSheep(cow)) || cow.excitedTimer > 0; // 카우킹 함성으로 흥분해도 광신 오라만큼
   for (const other of game.cows) {
     if (fan) break;
     if (other === cow || other.kind !== 'fanatic' || other.state === 'dead' || isSheep(other)) continue; // 양이 되면 오라 꺼짐
@@ -47,55 +48,6 @@ export function getAuraSpeedMult(cow) {
 }
 
 export const behaviors = {
-  boss: {
-    init(m) { m.specialTimer = BOSS_SLAM_COOLDOWN; },
-    update(m, dt) {
-      m.specialTimer -= dt;
-      if (m.specialTimer <= 0) {
-        m.specialTimer = BOSS_SLAM_COOLDOWN;
-        bossSlam(m);
-      }
-      return false;
-    },
-    onDeath(m) {
-      game.gameState = 'victory';
-      recordRun('victory');
-      game.shake = Math.min(game.shake + 12, 12);
-      spawnShockwave(m.x, m.y, 220, '#c98bef');
-      dropLoot(m.x, m.y, 'boss', 4, m.level);
-      return true;
-    },
-    drawOver(m, ctx, t, style) {
-      const wp = getHitPoint(m);
-      const gemR = 9 + Math.sin(t * 5) * 2;
-
-      ctx.save();
-      ctx.globalAlpha = 0.25 + Math.sin(t * 5) * 0.08;
-      ctx.fillStyle = '#4dfff0';
-      ctx.beginPath();
-      ctx.arc(wp.x, wp.y, gemR * 2.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(wp.x, wp.y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = '#4dfff0';
-      ctx.fillRect(-gemR, -gemR, gemR * 2, gemR * 2);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-gemR, -gemR, gemR * 2, gemR * 2);
-      ctx.restore();
-
-      const w = 74;
-      const barY = m.y - 34 * m.scale - 96;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(m.x - w / 2, barY, w, 8);
-      ctx.fillStyle = style.ring;
-      ctx.fillRect(m.x - w / 2, barY, w * (m.hp / m.maxHp), 8);
-    }
-  },
-
   // 버닝소울 - 돌아다니는 동안 주기적으로 발밑에 불바닥을 남김
   burning: {
     init(m) { m.fireDropTimer = 0.5 + Math.random() * 0.4; },
@@ -397,6 +349,7 @@ export const behaviors = {
 };
 
 // 마법 쓰는 몬스터(entities/spellBehaviors.js)도 같은 표에
+Object.assign(behaviors, bossBehaviors); // 카우킹 (entities/bossBehaviors.js)
 Object.assign(behaviors, spellBehaviors);
 Object.assign(behaviors, rangedBehaviors); // 활 쏘는 몬스터 (entities/rangedBehaviors.js)
 Object.assign(behaviors, demonBehaviors); // 악마 카우 종족 (entities/demonBehaviors.js)

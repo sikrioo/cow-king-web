@@ -5,7 +5,8 @@ import {
   IMP_BLINK_CD, IMP_BLINK_RANGE, IMP_BLINK_NEAR, CURSER_RANGE, CURSER_KITE, CURSER_CAST, CURSER_CURSE_CD, CURSER_ORB_CD, CURSER_ORB,
   BERSERKER_LEAP_MIN, BERSERKER_LEAP_MAX, BERSERKER_LEAP_CD, BERSERKER_TELEGRAPH, BERSERKER_LEAP_TIME, BERSERKER_SLAM_RADIUS, BERSERKER_SLAM_DAMAGE,
   BERSERKER_ENRAGE_HP, DEMON_ENRAGE_SPEED, DEMON_ENRAGE_DAMAGE, DEMON_ENRAGE_CD, DKING_SUMMON_CD, DKING_SUMMON_COUNT, DKING_MAX_IMPS,
-  DKING_FIRE_CD, DKING_CAST, DKING_FIRE_COUNT, DKING_FIRE_SPREAD, DKING_ENRAGE_HP, CURSE_ORDER, CURSE_COLOR
+  DKING_FIRE_CD, DKING_CAST, DKING_FIRE_COUNT, DKING_FIRE_SPREAD, DKING_ENRAGE_HP, CURSE_ORDER, CURSE_COLOR,
+  DKING_NOVA_CD, DKING_NOVA_CAST, DKING_NOVA_RADIUS, DKING_NOVA_DAMAGE, DKING_NOVA_GAP, DKING_FIRE_COUNT_P2
 } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
@@ -163,20 +164,38 @@ export const demonBehaviors = {
     }
   },
 
-  // 악마 카우킹 - 근접 + 지옥문을 열어 임프 소환 + 주문으로 지옥불 원(주인공 자리 + 주변), 체력 절반 아래면 분노(날개를 펴고 빨라짐, 마법이 잦아짐)
+  // 악마 카우킹 - 근접 + ① 지옥문(임프 소환) ② 지옥불 원(주인공 자리 + 주변) ③ 지옥 폭발(몸 둘레 큰 원 예고 → 주변 전체 화염)
+  //   체력 절반 아래면 분노: 날개를 펴고 빨라짐, 마법이 잦아짐, 지옥불 원 5개, 지옥 폭발 2연속
   demonKing: {
-    init(m) { m.summonCd = 2; m.fireCd = 3.5; },
+    init(m) { m.summonCd = 2; m.fireCd = 3.5; m.novaCd = 6; },
     update(m, dt) {
       checkEnrage(m, DKING_ENRAGE_HP);
       const cdMul = m.enraged ? DEMON_ENRAGE_CD : 1;
-      m.summonCd -= dt; m.fireCd -= dt;
+      m.summonCd -= dt; m.fireCd -= dt; m.novaCd -= dt;
+      if (m.state === 'nova') { // 지옥 폭발: 예고가 차면 터짐 (분노면 한 번 더)
+        m.stateElapsed += dt;
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        if (m.stateElapsed >= DKING_NOVA_CAST) {
+          spawnShockwave(m.x, m.y, DKING_NOVA_RADIUS, '#b04dff');
+          spawnShockwave(m.x, m.y, DKING_NOVA_RADIUS * 0.7, '#ff5a1e');
+          spawnHitParticles(m.x, m.y, '#d98bff', 18);
+          game.shake = Math.min(game.shake + 9, 12);
+          game.impactFlash = Math.max(game.impactFlash, 0.12);
+          if (game.hero.alive && heroDist(m) <= DKING_NOVA_RADIUS + game.hero.r * 0.5) hitPlayer(m.x, m.y, { fire: DKING_NOVA_DAMAGE });
+          m.novaLeft--;
+          if (m.novaLeft > 0) m.stateElapsed = DKING_NOVA_CAST - DKING_NOVA_GAP; // 짧은 예고 뒤 한 번 더
+          else m.setState('idle', 0.4);
+        }
+        return true;
+      }
       if (m.state === 'casting') {
         m.stateElapsed += dt;
         Body.setVelocity(m.body, { x: 0, y: 0 });
         if (m.stateElapsed >= DKING_CAST) {
           const hx = game.hero.x, hy = game.hero.y;
           spawnHellfire(hx, hy);
-          for (let i = 1; i < DKING_FIRE_COUNT; i++) {
+          const count = m.enraged ? DKING_FIRE_COUNT_P2 : DKING_FIRE_COUNT;
+          for (let i = 1; i < count; i++) {
             const a = Math.random() * Math.PI * 2, r = DKING_FIRE_SPREAD * (0.5 + Math.random() * 0.5);
             const p = clampToPen(hx + Math.cos(a) * r, hy + Math.sin(a) * r, 20);
             spawnHellfire(p.x, p.y);
@@ -198,6 +217,7 @@ export const demonBehaviors = {
           spawnHitParticles(x, y - 10, '#d98bff', 8);
         }
       }
+      if (m.novaCd <= 0 && d < DKING_NOVA_RADIUS * 1.6) { m.novaCd = DKING_NOVA_CD * cdMul; m.novaLeft = m.enraged ? 2 : 1; m.setState('nova', 0); Body.setVelocity(m.body, { x: 0, y: 0 }); return true; }
       if (m.fireCd <= 0 && d < m.aggroRange) { m.fireCd = DKING_FIRE_CD * cdMul; m.setState('casting', 0); Body.setVelocity(m.body, { x: 0, y: 0 }); return true; }
       return false;
     },
@@ -207,6 +227,18 @@ export const demonBehaviors = {
     },
     drawUnder(m, ctx, t) {
       if (m.state === 'casting') castRing(ctx, m, t, Math.min(1, m.stateElapsed / DKING_CAST), '#ff5ad8');
+      if (m.state === 'nova') { // 지옥 폭발 예고: 안에서부터 차오르는 보라 원 + 깜빡이는 테두리
+        const p = Math.min(1, m.stateElapsed / DKING_NOVA_CAST);
+        ctx.save();
+        ctx.globalAlpha = 0.15 + p * 0.3;
+        ctx.fillStyle = '#7a1a8a';
+        ctx.beginPath(); ctx.ellipse(m.x, m.y, DKING_NOVA_RADIUS * p, DKING_NOVA_RADIUS * p * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.6 + Math.sin(t * 24) * 0.3;
+        ctx.strokeStyle = '#d98bff';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(m.x, m.y, DKING_NOVA_RADIUS, DKING_NOVA_RADIUS * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
       if (m.enraged) {
         ctx.save();
         ctx.globalAlpha = 0.3 + Math.sin(t * 8) * 0.12;

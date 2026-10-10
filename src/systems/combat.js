@@ -1,8 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, WEAPON_ARC, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  BASE_BLOCK, BASE_EVASION, BOSS_SLAM_RADIUS,
-  BOSS_SLAM_DAMAGE, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
+  BASE_BLOCK, BASE_EVASION, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
@@ -20,6 +19,7 @@ import {
 } from './elements.js';
 import { gainExp } from './progression.js';
 import { applyCC } from './cc.js';
+import { CORPSE_LIFE, CORPSE_MAX } from '../data/balance.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
 export function canHit(attacker, target) {
@@ -120,7 +120,9 @@ export function updatePendingSwing(dt) {
 
 export function killCow(c) {
   c.deadPos = { x: c.x, y: c.y };
-  c.sheepDead = c.stunTimer > 0 && c.ccKind === 'poly'; // 양으로 죽음 → 양 모습, 자폭 같은 처치 효과 없음
+  c.sheepDead = c.stunTimer > 0 && c.ccKind === 'poly';
+  game.corpses.push({ x: c.x, y: c.y, life: CORPSE_LIFE }); // 시체 자리 (해골 카우 킹)
+  if (game.corpses.length > CORPSE_MAX) game.corpses.shift(); // 양으로 죽음 → 양 모습, 자폭 같은 처치 효과 없음
   c.state = 'dead';
   c.deadTimer = 0.3;
   World.remove(world, c.body);
@@ -138,14 +140,6 @@ export function spawnColdNova(x, y) {
   spawnShockwave(x, y, 90, '#9fd8ff');
   if (game.hero.alive && Math.hypot(game.hero.x - x, game.hero.y - y) <= 90) {
     applyChill(COLD_NOVA_CHILL_DURATION);
-  }
-}
-
-export function bossSlam(c) {
-  spawnShockwave(c.x, c.y, BOSS_SLAM_RADIUS, '#b57bd6');
-  game.shake = Math.min(game.shake + 6, 12);
-  if (game.hero.alive && Math.hypot(game.hero.x - c.x, game.hero.y - c.y) <= BOSS_SLAM_RADIUS) {
-    hitPlayer(c.x, c.y, BOSS_SLAM_DAMAGE);
   }
 }
 

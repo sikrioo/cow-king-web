@@ -27,7 +27,7 @@ export const MONSTERS = {
   demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  adminOnly: true, demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
   demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  adminOnly: true, demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
   demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, adminOnly: true, demon: 'king', boss: true, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
-  boss:     { hp: 780, dmg: 30, scaleMul: 2.7, speedMul: 0.85, aggroMul: 1,   exp: 400, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
+  boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
 export const MONSTER_WEAPONS = {

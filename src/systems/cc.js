@@ -41,4 +41,5 @@ export function applyPoly(c, time) {
 // 매 틱 (Monster.update): 변이 반복 감소 시간
 export function updateCC(c, dt) {
   if (c.polyDrT > 0) c.polyDrT -= dt;
+  if (c.excitedTimer > 0) c.excitedTimer -= dt; // 카우킹 함성으로 흥분
 }

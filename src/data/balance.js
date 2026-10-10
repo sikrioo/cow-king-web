@@ -143,9 +143,31 @@ export const HUNT_SPEED_MULT = 2.2;
 export const HOME_WANDER_RADIUS = 110; // 파밍 맵 몬스터가 무리 자리에서 배회하는 반경(px)       // 주인공을 아직 못 본(어그로 밖) 웨이브 몬스터의 이동 속도 배율
 
 // --- 몬스터 특수 행동 (보스/돌진/자폭/번개/광신 오라)
-export const BOSS_SLAM_COOLDOWN = 4.5;
-export const BOSS_SLAM_RADIUS = 115;
+// 카우킹 기술 (entities/bossBehaviors.js): BOSS_PATTERN 차례로, 기술 사이 BOSS_SKILL_GAP초. 체력 BOSS_PHASE2_HP 이하면 2단계
+export const BOSS_SKILL_GAP = 2.2;
+export const BOSS_PATTERN = ['slam', 'charge', 'slam', 'herd'];
+export const BOSS_PHASE2_HP = 0.5;
+export const BOSS_SKILL_RANGE = 420; // 주인공이 이 안에 있으면 기술을 씀 (인식 범위와 따로)
+//   ① 대지 강타: BOSS_SLAM_TELEGRAPH초 예고 → 고리 구역(바깥 반지름 BOSS_SLAM_ZONES)이 안쪽부터 BOSS_SLAM_ZONE_GAP초 간격으로 터짐 (1단계 2겹, 2단계 3겹)
 export const BOSS_SLAM_DAMAGE = 60;
+export const BOSS_SLAM_TELEGRAPH = 0.6;
+export const BOSS_SLAM_ZONES = [90, 170, 250];
+export const BOSS_SLAM_ZONE_GAP = 0.45;
+//   ② 황소 돌진: 예고선 BOSS_CHARGE_TELEGRAPH초(2단계 두 번째는 ..2) → BOSS_CHARGE_TIME초에 BOSS_CHARGE_DIST까지, 맞으면 BOSS_CHARGE_DAMAGE + 크게 밀림
+//      벽에서 멈추면 BOSS_DAZE초 멍함(공격할 틈)
+export const BOSS_CHARGE_TELEGRAPH = 1.0;
+export const BOSS_CHARGE_TELEGRAPH2 = 0.5;
+export const BOSS_CHARGE_DIST = 420;
+export const BOSS_CHARGE_TIME = 0.55;
+export const BOSS_CHARGE_DAMAGE = 70;
+export const BOSS_CHARGE_WIDTH = 40;
+export const BOSS_CHARGE_KNOCK = 14;
+export const BOSS_DAZE = 1.5;
+//   ③ 무리의 함성: BOSS_HERD_CAST초 → 일반 카우 BOSS_HERD_COUNT마리(드랍 없음) + 반경 BOSS_HERD_RADIUS 카우는 BOSS_EXCITE_TIME초 흥분(광신 오라만큼 빨라짐)
+export const BOSS_HERD_CAST = 0.6;
+export const BOSS_HERD_COUNT = 4;
+export const BOSS_HERD_RADIUS = 320;
+export const BOSS_EXCITE_TIME = 5;
 export const CHARGE_DAMAGE = 60;
 export const EXPLODER_BLAST_DAMAGE = 60;
 export const ZAP_DAMAGE = 60;
@@ -286,3 +308,29 @@ export const CURSES = {
 };
 export const CURSE_ORDER = ['weak', 'slow', 'hex'];
 export const CURSE_COLOR = '#b04dff';
+
+// 해골 카우 킹 기술 추가 (2026-10-11): 소환은 근처 시체 자리(NECRO_CORPSE_RANGE)에서 먼저, 뼈 창 NECRO_BONE_FAN갈래(2단계 ..P2) 사이 NECRO_BONE_SPREAD 라디안
+//   시체 폭발: NECRO_BLAST_CD초마다 주인공 NECRO_BLAST_PICK 안 부하 최대 NECRO_BLAST_MAX마리가 NECRO_BLOAT초 부풀다 터짐(반경 NECRO_BLAST_RADIUS, 물리 NECRO_BLAST_DAMAGE)
+//   2단계(체력 NECRO_PHASE2_HP 이하): 부하 최대 NECRO_MAX_MINIONS_P2
+export const NECRO_CORPSE_RANGE = 400;
+export const CORPSE_LIFE = 20;          // 쓰러진 자리(시체)가 남는 시간(초) - game.corpses
+export const CORPSE_MAX = 20;
+export const NECRO_BONE_FAN = 3;
+export const NECRO_BONE_FAN_P2 = 5;
+export const NECRO_BONE_SPREAD = 0.22;
+export const NECRO_BLAST_CD = 8;
+export const NECRO_BLAST_PICK = 260;
+export const NECRO_BLAST_MAX = 3;
+export const NECRO_BLOAT = 0.8;
+export const NECRO_BLAST_RADIUS = 70;
+export const NECRO_BLAST_DAMAGE = 45;
+export const NECRO_PHASE2_HP = 0.5;
+export const NECRO_MAX_MINIONS_P2 = 8;
+// 악마 카우킹 ③ 지옥 폭발 (2026-10-11, 지옥 사슬 대신 - 사용자: 단순하고 강하게): DKING_NOVA_CD초마다 DKING_NOVA_CAST초 동안 몸 둘레 원 예고 → 반경 DKING_NOVA_RADIUS 화염 DKING_NOVA_DAMAGE
+//   2단계: DKING_NOVA_GAP초 뒤 한 번 더, 지옥불 원 DKING_FIRE_COUNT_P2개
+export const DKING_NOVA_CD = 8;
+export const DKING_NOVA_CAST = 1.0;
+export const DKING_NOVA_RADIUS = 170;
+export const DKING_NOVA_DAMAGE = 80;
+export const DKING_NOVA_GAP = 0.7;
+export const DKING_FIRE_COUNT_P2 = 5;

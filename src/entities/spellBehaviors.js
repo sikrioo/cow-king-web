@@ -9,6 +9,9 @@ import { spawnHitParticles } from '../systems/fx.js';
 import { spawnMeteor, castFireball, spawnFireWall } from '../systems/spells.js';
 import { killCow } from '../systems/combat.js';
 import { spawnProjectile } from '../systems/projectiles.js';
+import { NECRO_CORPSE_RANGE, NECRO_BONE_FAN, NECRO_BONE_FAN_P2, NECRO_BONE_SPREAD, NECRO_BLAST_CD, NECRO_BLAST_PICK, NECRO_BLAST_MAX, NECRO_BLOAT, NECRO_BLAST_RADIUS, NECRO_BLAST_DAMAGE, NECRO_PHASE2_HP, NECRO_MAX_MINIONS_P2 } from '../data/balance.js';
+import { hitPlayer } from '../systems/combat.js';
+import { spawnShockwave, floatText } from '../systems/fx.js';
 import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
@@ -35,26 +38,64 @@ function release(m) {
 }
 
 // 해골 카우 킹: 살아 있는 부하 수
+const maxMinions = (m) => (m.phase2 ? NECRO_MAX_MINIONS_P2 : NECRO_MAX_MINIONS);
 const minionsOf = (m) => game.cows.filter((c) => c.summoner === m && c.state !== 'dead').length + game.pendingSpawns.filter((p) => p.summoner === m).length;
 
 export const spellBehaviors = {
-  // 해골 카우 킹 (네크로맨서) - 거리를 두고 해골을 불러내고(주문 중엔 멈춤) 뼈 창을 던짐, 죽으면 부하도 쓰러짐
+  // 해골 카우 (부하): 해골 카우 킹의 '시체 폭발'에 걸리면 bloatTimer초 동안 초록빛으로 부풀다 터짐
+  skeleton: {
+    update(c, dt) {
+      if (!(c.bloatTimer > 0)) return false;
+      c.bloatTimer -= dt;
+      Body.setVelocity(c.body, { x: 0, y: 0 });
+      if (c.bloatTimer <= 0) {
+        spawnShockwave(c.x, c.y, NECRO_BLAST_RADIUS, '#7fffd4');
+        spawnHitParticles(c.x, c.y - 20, '#e8e2d0', 12);
+        game.shake = Math.min(game.shake + 4, 12);
+        if (game.hero.alive && Math.hypot(game.hero.x - c.x, game.hero.y - c.y) <= NECRO_BLAST_RADIUS + game.hero.r * 0.5) hitPlayer(c.x, c.y, { phys: NECRO_BLAST_DAMAGE });
+        killCow(c);
+      }
+      return true;
+    },
+    drawUnder(c, ctx, t) {
+      if (!(c.bloatTimer > 0)) return;
+      const p = 1 - c.bloatTimer / NECRO_BLOAT;
+      ctx.save();
+      ctx.globalAlpha = 0.25 + p * 0.4 + Math.sin(t * 30) * 0.1;
+      ctx.fillStyle = '#7fffd4';
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, NECRO_BLAST_RADIUS * (0.4 + p * 0.6), NECRO_BLAST_RADIUS * (0.4 + p * 0.6) * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  },
+
+  // 해골 카우 킹 (네크로맨서) - 거리를 두고 ① 해골 일으키기(근처 시체 자리 먼저) ② 뼈 창 3갈래 ③ 시체 폭발(주인공 근처 부하가 부풀다 터짐)
+  //   체력 절반 아래면 2단계: 부하 최대치 증가, 뼈 창 5갈래. 죽으면 부하도 쓰러짐
   skeletonKing: {
     ranged: true,
-    init(m) { m.summonCd = 1.2; m.boneCd = 2; },
+    init(m) { m.summonCd = 1.2; m.boneCd = 2; m.blastCd = 5; },
     interrupt(m) { if (m.state === 'casting') m.summonCd = NECRO_SUMMON_CD * 0.5; },
     update(m, dt) {
+      if (!m.phase2 && m.hp <= m.maxHp * NECRO_PHASE2_HP) { m.phase2 = true; floatText(m.x, m.y - 90 * m.scale, '죽음의 힘!', '#7fffd4'); spawnShockwave(m.x, m.y, 60 * m.scale, '#7fffd4'); }
       m.summonCd -= dt;
       m.boneCd -= dt;
+      m.blastCd -= dt;
       if (m.state === 'casting') {
         m.stateElapsed += dt;
         Body.setVelocity(m.body, { x: 0, y: 0 });
         if (m.stateElapsed >= NECRO_CAST_TIME) {
-          const n = Math.min(NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS - minionsOf(m)); // 남은 자리만큼만
-          for (let i = 0; i < n; i++) {
-            const a = Math.random() * Math.PI * 2, r = m.r + 30 + Math.random() * 30;
-            game.pendingSpawns.push({ kind: 'skeleton', x: m.x + Math.cos(a) * r, y: m.y + Math.sin(a) * r, summoner: m });
-            spawnHitParticles(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r, '#7fffd4', 8);
+          if (m.castKind === 'blast') { // 시체 폭발: 주인공 근처 부하가 부풀기 시작
+            game.cows.filter((c) => c.summoner === m && c.state !== 'dead' && !(c.bloatTimer > 0) && Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= NECRO_BLAST_PICK)
+              .slice(0, NECRO_BLAST_MAX).forEach((c) => { c.bloatTimer = NECRO_BLOAT; });
+          } else { // 해골 일으키기: 근처 시체 자리 먼저, 모자라면 곁에서
+            const n = Math.min(NECRO_SUMMON_COUNT, maxMinions(m) - minionsOf(m)); // 남은 자리만큼만
+            for (let i = 0; i < n; i++) {
+              const ci = game.corpses.findIndex((p) => Math.hypot(p.x - m.x, p.y - m.y) <= NECRO_CORPSE_RANGE);
+              let x, y;
+              if (ci >= 0) { ({ x, y } = game.corpses[ci]); game.corpses.splice(ci, 1); }
+              else { const a = Math.random() * Math.PI * 2, r = m.r + 30 + Math.random() * 30; x = m.x + Math.cos(a) * r; y = m.y + Math.sin(a) * r; }
+              game.pendingSpawns.push({ kind: 'skeleton', x, y, summoner: m });
+              spawnHitParticles(x, y, '#7fffd4', 8);
+            }
           }
           m.setState('idle', 0.3);
         }
@@ -62,16 +103,22 @@ export const spellBehaviors = {
       }
       if (!game.hero.alive) return false;
       const dx = game.hero.x - m.x, dy = game.hero.y - m.y, dist = Math.hypot(dx, dy);
-      if (m.summonCd <= 0 && dist < m.aggroRange && minionsOf(m) < NECRO_MAX_MINIONS) {
+      const nearMinions = game.cows.some((c) => c.summoner === m && c.state !== 'dead' && !(c.bloatTimer > 0) && Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= NECRO_BLAST_PICK);
+      if (m.blastCd <= 0 && nearMinions) { m.blastCd = NECRO_BLAST_CD; m.castKind = 'blast'; m.setState('casting', 0); Body.setVelocity(m.body, { x: 0, y: 0 }); return true; }
+      if (m.summonCd <= 0 && dist < m.aggroRange && minionsOf(m) < maxMinions(m)) {
         m.summonCd = NECRO_SUMMON_CD;
+        m.castKind = 'summon';
         m.setState('casting', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
         return true;
       }
       if (m.boneCd <= 0 && dist <= NECRO_RANGE) { // 뼈 창 (곧게 - 옆으로 움직이면 피함)
         m.boneCd = NECRO_BONE_CD;
-        const oy = m.y - 40 * m.scale, d = Math.hypot(game.hero.x - m.x, game.hero.y - oy) || 1;
-        spawnProjectile({ kind: 'bonespear', x: m.x, y: oy, dirX: (game.hero.x - m.x) / d, dirY: (game.hero.y - oy) / d, speed: NECRO_BONE_SPEED, range: NECRO_RANGE + 80, radius: NECRO_BONE_RADIUS, packet: { phys: NECRO_BONE_DAMAGE }, color: '#e8e2d0' });
+        const oy = m.y - 40 * m.scale, base = Math.atan2(game.hero.y - oy, game.hero.x - m.x), fan = m.phase2 ? NECRO_BONE_FAN_P2 : NECRO_BONE_FAN;
+        for (let i = 0; i < fan; i++) { // 부채꼴 (가운데가 주인공)
+          const a = base + (i - (fan - 1) / 2) * NECRO_BONE_SPREAD;
+          spawnProjectile({ kind: 'bonespear', x: m.x, y: oy, dirX: Math.cos(a), dirY: Math.sin(a), speed: NECRO_BONE_SPEED, range: NECRO_RANGE + 80, radius: NECRO_BONE_RADIUS, packet: { phys: NECRO_BONE_DAMAGE }, color: '#e8e2d0' });
+        }
         if (Math.abs(dx) > 1) m.facing = dx > 0 ? 1 : -1;
       }
       return false;
@@ -107,6 +154,7 @@ export const spellBehaviors = {
       ctx.beginPath(); ctx.ellipse(m.x, m.y + m.r * 0.4, R, R * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
       if (m.state === 'casting') {
+        if (m.castKind === 'blast') ctx.strokeStyle = '#d6ff7f'; // 시체 폭발
         const p = Math.min(1, m.stateElapsed / NECRO_CAST_TIME), RR = R * (1 + p * 0.8);
         ctx.globalAlpha = 0.3 + p * 0.5;
         ctx.beginPath(); ctx.ellipse(m.x, m.y + m.r * 0.4, RR, RR * 0.5, 0, 0, Math.PI * 2); ctx.stroke();

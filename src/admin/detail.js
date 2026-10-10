@@ -24,7 +24,7 @@ export const SKILL_CODE = {
   apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)
-export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js', 'src/entities/demonBehaviors.js'];
+export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/bossBehaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js', 'src/entities/demonBehaviors.js'];
 
 const fnText = (v) => (typeof v === 'function' ? v.toString() : v);
 export function jsonBlock(obj) {

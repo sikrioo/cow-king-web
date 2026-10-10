@@ -28,7 +28,7 @@ import { pickCard, rerollCards } from './systems/levelCards.js';
 import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateThrows } from './systems/weaponThrows.js';
-import { processSpawns } from './systems/summons.js';
+import { processSpawns, updateCorpses } from './systems/summons.js';
 import { updateHellfires } from './systems/demonSpells.js';
 import { updateCurses } from './systems/curses.js';
 import { updateAuras } from './systems/auras.js';
@@ -114,6 +114,7 @@ export function fixedUpdate(dt) {
   updateGroundSpells(dt);
   updateThrows(dt);
   processSpawns();
+  updateCorpses(dt);
   updateHellfires(dt);
   updateCurses(dt);
   updateAuras(dt);

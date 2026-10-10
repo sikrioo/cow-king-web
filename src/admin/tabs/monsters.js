@@ -64,7 +64,7 @@ export function renderMonsters(root) {
   const specials = [
     ['돌진 카우 돌진', B.CHARGE_DAMAGE], ['자폭 카우 폭발', B.EXPLODER_BLAST_DAMAGE], ['전기 카우 번개 빔', B.ZAP_DAMAGE],
     ['화염술사 메테오', B.METEOR_DAMAGE], ['화염술사 화염구', B.FIREBALL_DAMAGE], ['불바닥(틱)', B.FIRE_HAZARD_DAMAGE],
-    ['독 구름(틱)', B.POISON_CLOUD_DAMAGE], ['카우킹 내려찍기', B.BOSS_SLAM_DAMAGE], ['주술사 치유량', B.SHAMAN_HEAL]
+    ['독 구름(틱)', B.POISON_CLOUD_DAMAGE], ['카우킹 대지 강타', B.BOSS_SLAM_DAMAGE], ['카우킹 돌진', B.BOSS_CHARGE_DAMAGE], ['주술사 치유량', B.SHAMAN_HEAL]
   ];
   root.append(
     h2('특수 공격'),

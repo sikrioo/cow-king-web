@@ -1,6 +1,8 @@
 // 골든(docs/baseline.golden.json = 레거시 동작 기록) 대비 **의도적으로 바꾼** 값 목록.
 // 골든 파일은 레거시 그대로 둔다(legacy/tools/baseline.cjs --check가 계속 통과하도록). 바꾼 이유와 날짜를 같이 적을 것.
 export const GOLDEN_OVERRIDES = {
+  // 2026-10-11: 카우킹 크기 2.7 → 2.0 (사용자: 너무 큼) - 기술 3개(대지 강타·황소 돌진·무리의 함성)와 함께
+  'exact.monsters.boss': { hp: 780, meleeDmg: 30, scaleRatio: 2 },
   // 2026-10-05: '방어력'과 '블락률'이 같은 수치인데 화면마다 이름이 달라서 '블락률'로 통일 (사용자 결정 A)
   'exact.statDef.defense.label': '블락률',
   // 2026-10-07: 스킬은 레벨이 아니라 레벨업 카드(뱀서식)로 배움 (사용자 결정) - 카드를 안 고른 새 캐릭터는 레벨과 상관없이 시작 스킬만

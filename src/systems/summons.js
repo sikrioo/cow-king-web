@@ -4,6 +4,11 @@ import { game } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { clampToPen } from '../world/arena.js';
 
+// 시체 자리 수명
+export function updateCorpses(dt) {
+  for (let i = game.corpses.length - 1; i >= 0; i--) { game.corpses[i].life -= dt; if (game.corpses[i].life <= 0) game.corpses.splice(i, 1); }
+}
+
 export function processSpawns() {
   if (!game.pendingSpawns.length) return;
   game.pendingSpawns.splice(0).forEach((s) => {

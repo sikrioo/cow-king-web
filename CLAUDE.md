@@ -39,7 +39,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 ## 확장할 때 고칠 곳
 - 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph/casting…)엔 매 틱 true.
-  마법형 몬스터 훅은 `entities/spellBehaviors.js`, 활 쏘는 몬스터(궁수)는 `entities/rangedBehaviors.js`, 악마 종족은 `entities/demonBehaviors.js`(모두 behaviors에 합쳐짐 - 관리자 코드 보기를 위해 항목은 `kind: { ... }` 형태로), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
+  마법형 몬스터 훅은 `entities/spellBehaviors.js`, 카우킹은 `entities/bossBehaviors.js`(기술 3개 차례로 + 2단계), 활 쏘는 몬스터(궁수)는 `entities/rangedBehaviors.js`, 악마 종족은 `entities/demonBehaviors.js`(모두 behaviors에 합쳐짐 - 관리자 코드 보기를 위해 항목은 `kind: { ... }` 형태로), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
+- 시체 자리: `killCow`가 `game.corpses`에 남김(해골 카우 킹이 여기서 해골을 일으킴, 수명 CORPSE_LIFE).
 - 몬스터 소환: behaviors는 `game.pendingSpawns`에 넣기만, `systems/summons.js`의 `processSpawns`가 Monster를 만듦(순환 import 방지). `MONSTERS[k].adminOnly` = 관리자 페이지에만(게임 생성 목록에 넣지 말 것), `boss: true` = 보스 취급(CC 면역).
 - 주인공 저주(악마): `systems/curses.js`(하나만, 건 몬스터가 죽으면 풀림) - 효과는 weak=heroDamageTaken / slow=hero 이동 / hex=util.castSpeedMul. 악마 꾸밈 그림 `render/demonSprites.js`(drawCow의 decor back/front).
 - 투사체: `systems/projectiles.js`의 `spawnProjectile({kind, x, y, dirX, dirY, speed, range, radius, packet, explodeRadius, color})` - 지금은 몬스터→주인공만. 그림은 `render/fx.js` drawProjectiles.
