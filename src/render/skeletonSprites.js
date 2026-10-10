@@ -1,6 +1,6 @@
 // 해골 카우 그림 (관리자 전용 몬스터 - 2026-10-10 사용자: 기존 카우 형태 그대로 단순하게, 앙상하고 속이 빈 해골 느낌, 네모여도 됨)
 //   소 그림과 같은 좌표계·크기(몸 = 가운데 (0,-40) 반지름 30쯤): 둥근 몸 대신 모서리가 둥근 네모 해골 + 뼈 뿔 + 퀭한 눈구멍(초록 눈빛)
-//   + 콧구멍 자리(코 대신 구멍) + 움푹 파인 볼 + 이빨 + 금. 킹은 금관 + 더 밝은 눈빛. 상태는 읽기만, 빛·흔들림은 시간으로만(난수 없음)
+//   + 콧구멍 자리(코 대신 구멍) + 움푹 파인 볼 + 금 (입·이빨은 지저분해서 뺌 - 사용자). 킹은 금관 + 더 밝은 눈빛. 상태는 읽기만, 빛·흔들림은 시간으로만(난수 없음)
 import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 
@@ -12,7 +12,6 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const poke = state === 'attack' ? Math.sin(Math.min(stateElapsed * 10, Math.PI)) : 0;
-  const jaw = state === 'attack' ? poke * 3 : Math.abs(Math.sin(animT * 6)) * (state === 'walk' ? 1.5 : 0.5); // 턱이 달그락
 
   ctx.save();
   ctx.translate(x + shake, y - bob);
@@ -71,11 +70,6 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   // 콧구멍 자리 (코 대신 뒤집힌 하트 모양 구멍)
   ctx.fillStyle = HOLE;
   ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(-4.5, -30); ctx.lineTo(0, -32); ctx.lineTo(4.5, -30); ctx.closePath(); ctx.fill();
-
-  // 이빨 (아래 턱 - 살짝 벌어졌다 닫힘)
-  ctx.strokeStyle = OUTLINE; ctx.lineWidth = 1.3;
-  ctx.beginPath(); ctx.moveTo(-10, -22); ctx.lineTo(10, -22); ctx.stroke();
-  for (let i = -8; i <= 8; i += 4) { ctx.beginPath(); ctx.moveTo(i, -22); ctx.lineTo(i, -18 + jaw * 0.5); ctx.stroke(); }
 
   // 금 (이마·뺨)
   ctx.lineWidth = 1.2;
