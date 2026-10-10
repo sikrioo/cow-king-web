@@ -23,7 +23,7 @@ export const SKILL_META = {
   chain:     { label: '연쇄번개', type: 'magic', color: 'rgba(255,233,77,0.40)', desc: '앞의 적에서 근처 적들로 튀는 번개' },
   orb:       { label: '얼음보주', type: 'magic', color: 'rgba(191,234,255,0.45)', desc: '얼음 조각을 뿌리며 날아가다 터짐' },
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '켜져 있는 동안 받는 피해 일부를 마나로 대신 받음' },
-  blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(200,235,255,0.45)', desc: '지정한 곳에 얼음이 쏟아짐 - 냉기 지속 피해 + 둔화' },
+  blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
   firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
   flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
   // 공통
@@ -104,8 +104,8 @@ export const SPELLS = {
   energyshield: { mana: 18, cooldown: 4, duration: 25, absorb: 0.5, manaPerDmg: 0.25 },
 
   // 지점 스킬 (자동 조준 지점, range 밖이면 시전 안 함): 눈보라 = duration초 동안 tick초마다 반경 안 냉기 피해
-  //   화염기둥 = delay초 뒤부터 interval초마다 불기둥 count개가 반경(radius) 안 곳곳에서 솟음, 기둥마다 pillarRadius 안 화염 피해
-  blizzard:  { mana: 22, cooldown: 5,   damage: 14, tick: 0.3, duration: 3, radius: 120, range: 380 },
+  //   눈보라 = delay초 동안 지역이 생기고 그다음 duration초 동안 피해 / 화염기둥 = delay초 뒤부터 interval초마다 불기둥 count개가 반경(radius) 안 곳곳에서 솟음, 기둥마다 pillarRadius 안 화염 피해
+  blizzard:  { mana: 22, cooldown: 5,   damage: 14, tick: 0.3, delay: 0.5, duration: 3, radius: 120, range: 380 }, // delay: 지역이 생기고 눈이 쏟아지기까지
   flamepillar: { mana: 16, cooldown: 2.5, damage: 32, delay: 0.4, count: 6, interval: 0.13, pillarRadius: 36, radius: 85, range: 380 },
   // 화염 파도: 주인공에서 바라보는 쪽으로 곧은 불의 벽(폭 width, 두께 thick)이 travel초 동안 range까지 - 처음에 확 터져 나갔다가 점점 느려지며 멈춤(무게감)
   //   지나가는 적은 한 번씩 맞고 벽이 나아가는 쪽으로 knock만큼 밀려남, 그을린 자국은 멈춘 뒤 linger초 동안 남음

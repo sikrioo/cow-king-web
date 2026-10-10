@@ -187,3 +187,18 @@ it('화염기둥: 불기둥 여러 개가 간격을 두고 차례로 솟음 (가
     expect(c.hp).toBeLessThan(100000);
   } finally { env.restore(); }
 });
+
+it('눈보라: 지역이 생기는 동안(delay)은 피해 없음, 그다음부터 냉기 피해', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot('sorc');
+    const h = m.game.hero;
+    const c = m.place(200, 0);
+    h.aimX = c.x; h.aimY = c.y;
+    m.tryBlizzard();
+    m.tick(m.SPELLS.blizzard.delay * 0.8);
+    expect(c.hp).toBe(100000);
+    m.tick(m.SPELLS.blizzard.delay);
+    expect(c.hp).toBeLessThan(100000);
+  } finally { env.restore(); }
+});

@@ -1,7 +1,7 @@
 // 새 스킬 그림: 더미(주인공과 같은 모습의 미끼), 에너지 쉴드 막, 버서커 기운, 눈보라·화염기둥
 // 상태는 읽기만. 들쭉날쭉한 모양은 시간 + hash01(결정적) - 게임 난수 안 씀
 import { game } from '../state.js';
-import { hash01 } from '../util.js';
+import { hash01, easeOutCubic } from '../util.js';
 import { drawPlayer } from './heroSprites.js';
 import { SPELLS } from '../data/skills.js';
 
@@ -74,14 +74,19 @@ export function drawGroundSpellsUnder(ctx, t) {
   game.groundSpells.forEach((g) => {
     ctx.save();
     if (g.kind === 'blizzard') {
-      const fade = Math.min(1, g.age * 4, (g.duration - g.age) * 3);
-      ctx.globalAlpha = 0.18 * fade;
-      ctx.fillStyle = '#bfeaff';
-      ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.6 * fade;
-      ctx.strokeStyle = '#e8f7ff';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      // 지역이 생김(delay): 하얀 원이 퍼지며 도는 점선 고리 → 그다음 하얀 서리 바닥
+      const form = Math.min(1, g.age / g.delay);
+      const r = g.radius * easeOutCubic(form);
+      const fade = Math.min(1, (g.duration - g.age) * 3);
+      ctx.globalAlpha = (0.12 + form * 0.12) * fade;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(g.x, g.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.8 * fade;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      if (form < 1) { ctx.setLineDash([10, 8]); ctx.lineDashOffset = -t * 60; } // 모여드는 바람
+      ctx.beginPath(); ctx.ellipse(g.x, g.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
     } else if (g.kind === 'flamepillar') {
       // 범위 예고 원 (마지막 기둥이 솟을 때까지) + 아직 안 솟은 기둥 자리마다 작은 달아오르는 원
       const last = g.pillars[g.pillars.length - 1].t;
@@ -160,20 +165,35 @@ export function drawGroundSpellsOver(ctx, t) {
   game.groundSpells.forEach((g, gi) => {
     if (g.kind === 'firewave') { drawFireWave(ctx, g, t, gi); return; }
     ctx.save();
-    if (g.kind === 'blizzard' && g.age < g.duration) {
-      ctx.fillStyle = '#e8f7ff';
-      ctx.strokeStyle = '#7fd4ff';
-      for (let i = 0; i < 14; i++) {
+    if (g.kind === 'blizzard' && g.age >= g.delay && g.age < g.duration) {
+      // 눈 결정(육각 별 - 선 3개)이 돌며 떨어지고, 닿은 자리에 작은 하얀 김 - 선만 써서 가벼움(성능)
+      const e = g.age - g.delay;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 16; i++) {
         const cycle = 0.45 + hash01(i, gi, 31) * 0.3;
-        const phase = ((g.age + hash01(i, gi, 32) * cycle) % cycle) / cycle; // 0 = 위, 1 = 바닥
-        const k = Math.floor((g.age + hash01(i, gi, 32) * cycle) / cycle);    // 몇 번째 낙하인지 → 떨어지는 자리 바뀜
+        const phase = ((e + hash01(i, gi, 32) * cycle) % cycle) / cycle; // 0 = 위, 1 = 바닥
+        const k = Math.floor((e + hash01(i, gi, 32) * cycle) / cycle);    // 몇 번째 낙하인지 → 떨어지는 자리 바뀜
         const a = hash01(i, k, 33 + gi) * Math.PI * 2, r = Math.sqrt(hash01(i, k, 34 + gi)) * g.radius;
         const x = g.x + Math.cos(a) * r, y = g.y + Math.sin(a) * r * 0.62;
-        ctx.globalAlpha = 0.9 * (1 - phase * 0.3);
-        const fy = y - (1 - phase) * 120;
-        ctx.beginPath();
-        ctx.moveTo(x, fy - 7); ctx.lineTo(x + 4, fy); ctx.lineTo(x, fy + 6); ctx.lineTo(x - 4, fy); ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        const fy = y - (1 - phase) * 130;
+        const size = 6 + hash01(i, k, 35) * 5, spin = e * 4 + i;
+        ctx.globalAlpha = 0.95;
+        for (const [color, lw] of [['rgba(150,185,215,0.8)', 3.2], ['#ffffff', 1.6]]) { // 옅은 파란 테두리 + 흰 결정
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lw;
+          ctx.beginPath();
+          for (let j = 0; j < 3; j++) {
+            const ang = spin + (j * Math.PI) / 3;
+            ctx.moveTo(x - Math.cos(ang) * size, fy - Math.sin(ang) * size);
+            ctx.lineTo(x + Math.cos(ang) * size, fy + Math.sin(ang) * size);
+          }
+          ctx.stroke();
+        }
+        if (phase > 0.85) { // 닿은 자리 하얀 김
+          ctx.globalAlpha = (1 - phase) * 4;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+        }
       }
     } else if (g.kind === 'flamepillar') {
       // 솟은 기둥마다: 0.15초에 걸쳐 높이 솟았다가 0.4초에 걸쳐 줄며 사라짐

@@ -32,13 +32,13 @@ function targetPoint(range) {
   return clampToPen(x, y, 20);
 }
 
-// 눈보라: duration초 동안 tick초마다 반경 안 모든 적에게 냉기 피해(→ 둔화)
+// 눈보라: delay초 동안 지역이 생기고(피해 없음), 그다음 duration초 동안 tick초마다 반경 안 모든 적에게 냉기 피해(→ 둔화)
 export function tryBlizzard() {
   const s = SPELLS.blizzard, h = game.hero;
   const p = targetPoint(s.range);
   if (!p || !begin('blizzard')) return;
   game.groundSpells.push({
-    kind: 'blizzard', x: p.x, y: p.y, age: 0, duration: s.duration, tickT: 0, seed: game.groundSpells.length + Math.round(p.x),
+    kind: 'blizzard', x: p.x, y: p.y, age: 0, delay: s.delay, duration: s.delay + s.duration, tickT: 0, seed: game.groundSpells.length + Math.round(p.x),
     radius: s.radius * skillMul(h, 'blizzard', 'radius'), dmg: spellDamage(s.damage, 'blizzard')
   });
 }
@@ -121,8 +121,10 @@ export function updateGroundSpells(dt) {
     g.age += dt;
     if (g.kind === 'firewave') updateFireWave(g, dt);
     else if (g.kind === 'blizzard') {
-      g.tickT -= dt;
-      if (g.tickT <= 0 && g.age < g.duration) { g.tickT += s.tick; hitArea(g, { cold: g.dmg }, 0); }
+      if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터
+        g.tickT -= dt;
+        if (g.tickT <= 0 && g.age < g.duration) { g.tickT += s.tick; hitArea(g, { cold: g.dmg }, 0); }
+      }
     } else if (g.kind === 'flamepillar') {
       g.pillars.forEach((p) => {
         if (p.fired || g.age < p.t) return;
