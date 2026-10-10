@@ -32,8 +32,8 @@ export const MONSTERS = {
   imp:           { hp: 35,  dmg: 20, scaleMul: 0.8,  speedMul: 1.6,  aggroMul: 1.5, exp: 15,  demon: 'imp', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#7a1a1a', horn: '#2a0a0a', snout: '#4a0d0d', eye: '#ffd34d' } },
   demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
   demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
-  demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
-  boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
+  demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
+  boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
 export const MONSTER_WEAPONS = {
@@ -62,7 +62,7 @@ export const MONSTER_WEAPONS = {
   imp: ['pitchfork'],
   demonCurser: ['staff'],
   demonBerserker: ['cleaver', 'axe'],
-  demonKing: ['greatsword']  // 악마 카우킹: 대검 (2026-10-11 사용자)
+  demonKing: ['demonblade']  // 악마 카우킹: 악마 대검 (2026-10-11 사용자 - 검붉은 톱니 날, render/monsterWeapons.js)
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
 export function weaponFor(kind, seed) {

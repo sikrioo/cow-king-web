@@ -1,14 +1,16 @@
 // 몬스터(카우) 그리기 - 상태를 읽기만 함
 import { MONSTERS, FLASH_COLORS, weaponScaleOf } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
-import { drawMonsterWeapon } from './monsterWeapons.js';
+import { drawMonsterWeapon, drawBigWeapon, bigSwingAngle, BIG_WEAPONS } from './monsterWeapons.js';
+import { BOSS_SLAM_TELEGRAPH } from '../data/balance.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
 import { demonDecor } from './demonSprites.js';
 import { drawSoul } from './soulSprites.js';
 
 // decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
 //   weaponSize: 무기 크기 배율 (data/monsters.js WEAPON_SCALE)
-export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null, weaponSize = 1) {
+//   hitAt: 큰 무기(BIG_WEAPONS)를 내리치는 순간 - 큰 무기는 몸 앞에서 머리 위로 크게 휘두름 (카우킹·악마 카우킹)
+export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null, weaponSize = 1, hitAt = 0.12) {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
   const hornColor  = colors ? colors.horn  : PALETTE.horn;
   const snoutColor = colors ? colors.snout : PALETTE.snout;
@@ -30,7 +32,8 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.fill();
 
   if (decor && decor.back) decor.back(ctx, animT);
-  drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT, weaponSize);
+  const big = BIG_WEAPONS.includes(weapon);
+  if (!big) drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT, weaponSize);
 
   ctx.fillStyle = hideColor;
   ctx.beginPath();
@@ -57,6 +60,7 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.fill();
 
   if (decor && decor.front) decor.front(ctx, animT);
+  if (big) drawBigWeapon(ctx, weapon, 24, -32, bigSwingAngle(state === 'attack', stateElapsed, hitAt), weaponSize, animT); // 몸 앞 (2026-10-11 사용자: 보스는 크게 휘두르기)
   if (state === 'stunned') drawStunDots(ctx, animT);
 
   ctx.restore();
@@ -151,7 +155,8 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
-  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
+  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 'attack'
+                     : c.state === 'slamPrep' ? 'attack' // 카우킹 대지 강타: 무기를 치켜들었다 내리침 // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
                      : c.state === 'dazed' ? 'stunned' // 카우킹 벽에 부딪혀 멍함
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;
@@ -164,7 +169,7 @@ export function drawMonster(c, ctx, t) {
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐)
   else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, weaponSize: weaponScaleOf(c.kind) }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind)); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE)
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
   ctx.restore();
   }
 

@@ -150,7 +150,8 @@ it('해골 전사: 대검·도끼, 내려치는 순간(hitAt)에야 맞음 / 카
     const h = m.game.hero;
     expect(m.MONSTER_WEAPONS.skeletonBrute).toEqual(['greatsword', 'battleaxe']);
     expect(m.MONSTER_WEAPONS.boss).toEqual(['battleaxe']);
-    expect(m.MONSTER_WEAPONS.demonKing).toEqual(['greatsword']);
+    expect(m.MONSTER_WEAPONS.demonKing).toEqual(['demonblade']);
+    expect(new m.Monster(0.4, 'boss', { pos: { x: h.x + 500, y: h.y } }).hitAt).toBe(m.MONSTERS.boss.hitAt); // 보스도 큰 무기가 내려올 때 맞음
     const b = new m.Monster(0.4, 'skeletonBrute', { pos: { x: h.x + 40, y: h.y } });
     m.game.cows.push(b);
     expect(b.hitAt).toBe(m.MONSTERS.skeletonBrute.hitAt);

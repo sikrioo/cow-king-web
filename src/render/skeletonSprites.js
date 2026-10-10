@@ -2,7 +2,7 @@
 //   소 그림과 같은 좌표계·크기(몸 = 가운데 (0,-40) 반지름 30쯤): 둥근 몸 대신 모서리가 둥근 네모 해골 + 뼈 뿔 + 퀭한 눈구멍(초록 눈빛)
 //   + 콧구멍 자리(코 대신 구멍) + 움푹 파인 볼 + 금 (입·이빨은 지저분해서 뺌 - 사용자). 킹은 금관 + 더 밝은 눈빛. 상태는 읽기만, 빛·흔들림은 시간으로만(난수 없음)
 import { PALETTE } from '../data/palette.js';
-import { drawMonsterWeapon, drawBigWeapon, BIG_WEAPONS } from './monsterWeapons.js';
+import { drawMonsterWeapon, drawBigWeapon, bigSwingAngle, BIG_WEAPONS } from './monsterWeapons.js';
 
 const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#141210';
 
@@ -87,12 +87,7 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   }
 
   if (big) { // 해골 전사: 손은 몸 오른쪽 옆, 평소엔 칼날이 머리 옆으로 곧게 섬 → 공격: 뒤로 들어 올렸다 머리 위로 크게 내리침 (맞는 순간 = hitAt)
-    let ang = -1.75;
-    if (state === 'attack') {
-      const p = Math.min(1, stateElapsed / hitAt);
-      ang = p < 1 ? -1.75 - Math.sin(Math.min(1, p / 0.75) * Math.PI / 2) * 0.95 + (p > 0.75 ? (p - 0.75) / 0.25 * 3.6 : 0) : 0.9; // 들어 올림 → 내리침 → 앞 아래
-    }
-    drawBigWeapon(ctx, 22, -30, ang);
+    drawBigWeapon(ctx, weapon, 22, -30, bigSwingAngle(state === 'attack', stateElapsed, hitAt), weaponSize, animT);
   }
 
   if (shield) { // 해골 방패병: 몸 앞 아래쪽에 낡은 둥근 나무 방패 (쇠테 + 가운데 징)
