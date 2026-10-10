@@ -2,13 +2,13 @@
 //   소 그림과 같은 좌표계·크기(몸 = 가운데 (0,-40) 반지름 30쯤): 둥근 몸 대신 모서리가 둥근 네모 해골 + 뼈 뿔 + 퀭한 눈구멍(초록 눈빛)
 //   + 콧구멍 자리(코 대신 구멍) + 움푹 파인 볼 + 금 (입·이빨은 지저분해서 뺌 - 사용자). 킹은 금관 + 더 밝은 눈빛. 상태는 읽기만, 빛·흔들림은 시간으로만(난수 없음)
 import { PALETTE } from '../data/palette.js';
-import { drawMonsterWeapon } from './monsterWeapons.js';
+import { drawMonsterWeapon, drawBigWeapon, BIG_WEAPONS } from './monsterWeapons.js';
 
 const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#141210';
 
 // stunFn: 기절 별 그림(monsterSprites.drawStunDots - 순환 import를 피하려고 넘겨받음)
 export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, opts = {}) {
-  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false } = opts;
+  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false, hitAt = 0.12 } = opts;
   const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const poke = state === 'attack' ? Math.sin(Math.min(stateElapsed * 10, Math.PI)) : 0;
@@ -22,7 +22,14 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   ctx.fillStyle = PALETTE.shadow;
   ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
 
-  drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
+  if (BIG_WEAPONS.includes(weapon)) { // 해골 전사: 주인공처럼 큰 무기를 등 뒤에서 머리 위로 크게 내려침 (맞는 순간 = hitAt)
+    let ang = -2.25; // 평소: 어깨에 메고 칼끝이 등 뒤 위로
+    if (state === 'attack') {
+      const p = Math.min(1, stateElapsed / hitAt);
+      ang = p < 1 ? -2.25 - Math.sin(p * Math.PI / 2) * 0.55 + (p > 0.75 ? (p - 0.75) / 0.25 * 3.4 : 0) : 0.9; // 들어 올림 → 내리침 → 앞 아래
+    }
+    drawBigWeapon(ctx, 10, -36, ang);
+  } else drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
 
   // 뼈 뿔 (소 뿔 모양, 뼈 색 + 테두리)
   [-1, 1].forEach((sd) => {

@@ -19,7 +19,7 @@ export const ACTS = [
   {
     id: 'graveyard', name: '2막 · 저주받은 묘지', sub: '죽은 자들이 깨어난다', waves: 4,
     boss: 'skeletonKing', bossName: 'THE SKELETON KING', bossSub: '묘지의 주인이 일어섰습니다', bossDrops: 5,
-    normals: { skeleton: 4, skeletonSpear: 2, skeletonArcher: 2, paleSoul: 1, normal: 2 }, elites: ['skeletonShield', 'tough', 'cold', 'fanatic', 'shaman', 'venom'],
+    normals: { skeleton: 4, skeletonSpear: 2, skeletonArcher: 2, paleSoul: 1, normal: 2 }, elites: ['skeletonShield', 'skeletonBrute', 'tough', 'cold', 'fanatic', 'shaman', 'venom'],
     ground: {
       base: '#2c3330', shades: ['#29302d', '#2c3330', '#313a35', '#36403a'], dirt: '#3e3a33', dirtEdge: '#343530',
       dirtThreshold: 0.66, patchScale: 280, cell: 10,
@@ -35,7 +35,7 @@ export const ACTS = [
   {
     id: 'hell', name: '3막 · 지옥문', sub: '불타는 땅이 열린다', waves: 4,
     boss: 'demonKing', bossName: 'THE DEMON COW KING', bossSub: '지옥의 군주가 내려왔습니다', bossDrops: 6,
-    normals: { imp: 5, burningSoul: 2, skeletonSpear: 1, skeletonArcher: 1 }, elites: ['demonCurser', 'demonBerserker', 'skeletonShield', 'pyro', 'burning'],
+    normals: { imp: 5, burningSoul: 2, skeletonSpear: 1, skeletonArcher: 1 }, elites: ['demonCurser', 'demonBerserker', 'skeletonShield', 'skeletonBrute', 'pyro', 'burning'],
     ground: {
       base: '#3a1414', shades: ['#341212', '#3a1414', '#421616', '#4a1a16'], dirt: '#241010', dirtEdge: '#5a1a10',
       dirtThreshold: 0.64, patchScale: 260, cell: 10,

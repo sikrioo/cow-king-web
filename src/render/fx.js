@@ -289,8 +289,8 @@ export function drawLightningBolts(ctx) {
     const segs = 6;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#fff066';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = b.color || '#fff066';
+    ctx.lineWidth = b.color ? 3.4 : 3;
     ctx.lineCap = 'round';
     ctx.beginPath();
     for (let i = 0; i <= segs; i++) {
@@ -301,6 +301,7 @@ export function drawLightningBolts(ctx) {
       if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
     }
     ctx.stroke();
+    if (b.color) { ctx.globalAlpha = alpha * 0.35; ctx.strokeStyle = '#bcd2ff'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalAlpha = alpha; } // 하얀 번개: 푸른빛 번짐
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 1.2;
     ctx.stroke();

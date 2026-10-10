@@ -57,6 +57,8 @@ export class Monster {
     this.stunTimer = 0;
     this.aggroRange = 150 * aggroMul;
     this.meleeRange = 46 * this.scale + 16 + (def.reach || 0); // reach: 창 같은 긴 무기 (해골 창병)
+    this.hitAt = def.hitAt || 0.12;           // 근접 공격이 맞는 순간(초) - 큰 무기는 늦게 (해골 전사)
+    this.attackTime = def.attackTime || 0.6;  // 근접 공격 동작 길이
     // 종류별 특수 타이머 - 기본은 사용 안 함(Infinity), 해당 종류는 behaviors[kind].init에서 설정
     this.specialTimer = Infinity;
     this.chargeCooldownTimer = Infinity;
@@ -193,11 +195,11 @@ export class Monster {
 
     if (playerNear && distP <= this.meleeRange && !isRangedKiter) {
       Body.setVelocity(this.body, { x: 0, y: 0 });
-      if (this.state !== 'attack') { this.setState('attack', 0.6); this.attackHit = false; this.attackingPlayer = true; }
+      if (this.state !== 'attack') { this.setState('attack', this.attackTime); this.attackHit = false; this.attackingPlayer = true; }
       const atkMul = 1 - frostAuraSlow(this); // 빙결 오라: 공격 동작도 느려짐
       if (atkMul < 1) this.stateElapsed -= dt * (1 - atkMul);
       if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
-      if (!this.attackHit && this.stateElapsed > 0.12 && this.stateElapsed < 0.22) {
+      if (!this.attackHit && this.stateElapsed > this.hitAt && this.stateElapsed < this.hitAt + 0.1) {
         if (distP <= this.meleeRange + 10) {
           const dmg = this.element ? { [this.element]: this.dmg } : this.dmg;
           if (decoy) hitDecoy(dmg); else reflectThorns(this, hitPlayer(this.x, this.y, dmg)); // 가시 오라: 받은 만큼 되돌려 줌

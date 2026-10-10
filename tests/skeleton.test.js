@@ -141,3 +141,24 @@ it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼
     }
   } finally { env.restore(); }
 });
+
+it('해골 전사: 대검·도끼, 내려치는 순간(hitAt)에야 맞음 / 카우킹 도끼·악마 카우킹 대검', async () => {
+  const env = installBrowserEnv({ seed: 5 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    expect(m.MONSTER_WEAPONS.skeletonBrute).toEqual(['greatsword', 'battleaxe']);
+    expect(m.MONSTER_WEAPONS.boss).toEqual(['battleaxe']);
+    expect(m.MONSTER_WEAPONS.demonKing).toEqual(['greatsword']);
+    const b = new m.Monster(0.4, 'skeletonBrute', { pos: { x: h.x + 40, y: h.y } });
+    m.game.cows.push(b);
+    expect(b.hitAt).toBe(m.MONSTERS.skeletonBrute.hitAt);
+    h.hp = 9999; h.invuln = 0;
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    for (let i = 0; i < Math.floor(b.hitAt * 60) - 2; i++) b.update(1 / 60);
+    expect(b.state).toBe('attack');
+    expect(h.hp).toBe(9999); // 아직 들어 올리는 중
+    for (let i = 0; i < 10; i++) b.update(1 / 60);
+    expect(h.hp).toBeLessThan(9999);
+  } finally { vi.restoreAllMocks(); env.restore(); }
+});

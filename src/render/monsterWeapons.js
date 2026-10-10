@@ -2,6 +2,7 @@
 // 새 무기: 여기 함수 하나 + WEAPON_DRAW에 등록 + data/monsters.js의 weapons 목록에 이름 추가
 // (몬스터 40마리 이상이 동시에 그려지므로 그라데이션/filter 없이 단색 도형만)
 import { PALETTE } from '../data/palette.js';
+import { drawAbstractSword } from './heroWeapons.js';
 
 const WOOD = '#7a5230';
 const WOOD_DARK = '#4e3320';
@@ -192,17 +193,27 @@ function drawBow(ctx) {
   ctx.beginPath(); ctx.moveTo(4, -22); ctx.lineTo(0, 0); ctx.lineTo(4, 22); ctx.stroke();
 }
 
+// 큰 무기 (보스·해골 전사): 주인공의 대검·양손 도끼 그림을 그대로 (render/heroWeapons.js)
+const BIG_WEAPON_SCALE = 21;
+function drawGreatsword(ctx) { drawAbstractSword(ctx, -8, 0, 0, BIG_WEAPON_SCALE, 1, 'greatsword'); }
+function drawBattleAxe(ctx) { drawAbstractSword(ctx, -8, 0, 0, BIG_WEAPON_SCALE, 1, 'axe'); }
+export const BIG_WEAPONS = ['greatsword', 'battleaxe'];
+export function drawBigWeapon(ctx, weapon, x, y, angle) { // 해골 전사가 직접 각도를 정해 휘두를 때
+  drawAbstractSword(ctx, x, y, angle, BIG_WEAPON_SCALE, 1, weapon === 'battleaxe' ? 'axe' : 'greatsword');
+}
+
 export const WEAPON_DRAW = {
-  bow: drawBow,
+  bow: drawBow, greatsword: drawGreatsword, battleaxe: drawBattleAxe,
   halberd: drawHalberd, pitchfork: drawPitchfork, club: drawClub, axe: drawAxe, spear: drawSpear,
   hammer: drawHammer, cleaver: drawCleaver, staff: drawStaff, torch: drawTorch, rod: drawRod, firestaff: drawFirestaff
 };
 
 // 무기 하나 그리기: 손 위치(x, y)로 옮기고, 찌르기(poke 0→1)만큼 앞으로 회전
+//   창(spear)은 휘두르지 않고 앞을 겨눈 채 곧게 찌름 (2026-10-11 사용자: 창이니 찌르기)
 export function drawMonsterWeapon(ctx, weapon, x, y, poke, animT) {
   ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-Math.PI / 4 + poke * (Math.PI / 4));
+  if (weapon === 'spear') { ctx.translate(x + poke * 24, y + 6); ctx.rotate(-0.08); }
+  else { ctx.translate(x, y); ctx.rotate(-Math.PI / 4 + poke * (Math.PI / 4)); }
   (WEAPON_DRAW[weapon] || drawHalberd)(ctx, animT);
   ctx.restore();
 }

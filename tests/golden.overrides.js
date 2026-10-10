@@ -35,6 +35,8 @@ export const GOLDEN_ADDITIONS = {
   'exact.monsters.skeletonShield': { hp: 90, meleeDmg: 30, scaleRatio: 1.15 },
   // 2026-10-11: 해골 창병·버닝 소울·창백한 원혼 (사용자 요청)
   'exact.monsters.skeletonSpear': { hp: 55, meleeDmg: 35, scaleRatio: 1 },
+  // 2026-10-11: 해골 전사(대검·도끼) (사용자 요청)
+  'exact.monsters.skeletonBrute': { hp: 110, meleeDmg: 60, scaleRatio: 1.2 },
   'exact.monsters.burningSoul': { hp: 40, meleeDmg: 15, scaleRatio: 1 },
   'exact.monsters.paleSoul': { hp: 40, meleeDmg: 15, scaleRatio: 1 },
   // 2026-10-10: 궁수 카우·해골 궁수 카우 (관리자 페이지에만 - 사용자 요청)

@@ -42,8 +42,9 @@ export function spawnPoisonCloud(x, y) {
 }
 
 // 번개카우가 쏘는 전기 줄기 - 아주 짧게 번쩍이는 시각 효과
-export function spawnLightningBolt(x1, y1, x2, y2) {
-  game.lightningBolts.push({ x1, y1, x2, y2, life: 0.18, maxLife: 0.18 });
+// color: 없으면 노란 번개, '#ffffff'면 하얀 번개(바깥에 푸른빛 번짐 - 영혼)
+export function spawnLightningBolt(x1, y1, x2, y2, color = null) {
+  game.lightningBolts.push({ x1, y1, x2, y2, life: 0.18, maxLife: 0.18, color });
 }
 
 export function updateLightningBolts(dt) {

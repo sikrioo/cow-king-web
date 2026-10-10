@@ -16,6 +16,7 @@ export const MONSTERS = {
   pyro:     { hp: 50, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 2.8, exp: 35,  element: 'fire', resist: { fire: 0.6 }, ring: '#ff4d1a', colors: { hide: '#5a1f1a', horn: '#ffb36b', snout: '#2e0f0c', eye: '#ffd34d' } },
   venom:    { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.95, aggroMul: 1,   exp: 28,  element: 'poison', resist: { poison: 0.5 }, ring: '#7fe05a', colors: { hide: '#3f6e2a', horn: '#d8f5b0', snout: '#1f3a14', eye: '#c6ff4d' } },
   // 해골 카우 (2026-10-10) - 2026-10-11부터 목장 2·3막에 나옴(data/acts.js). skeleton: 해골 그림, boss: 보스 취급(CC 면역), shield: 방패를 든 그림
+  skeletonBrute:  { hp: 110, dmg: 60, scaleMul: 1.2, speedMul: 0.85, aggroMul: 1.2, exp: 34, skeleton: true, reach: 18, hitAt: 0.45, attackTime: 1.0, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 전사: 대검·도끼 - 등 뒤에서 머리 위로 내리침, hitAt초에 맞음(묵직)
   skeletonSpear:  { hp: 55, dmg: 35, scaleMul: 1, speedMul: 1, aggroMul: 1.2, exp: 24, skeleton: true, reach: 30, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 창병: 창으로 멀리서 찌름(근접 사거리 + reach)
   // 영혼 (2026-10-11, 사용자 참고 그림): 불꽃 기둥 같은 영혼 - soul: 그림 색(render/soulSprites.js), 행동 entities/rangedBehaviors.js (불규칙하게 떠다니다 긴 번개)
   burningSoul: { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'fire',  element: 'lightning', resist: { lightning: 0.75, fire: 0.5 }, ring: null, colors: null },
@@ -48,11 +49,12 @@ export const MONSTER_WEAPONS = {
   shocker:  ['rod'],
   venom:    ['pitchfork', 'cleaver'],
   pyro:     ['firestaff'],
-  boss:     ['hammer'],
+  boss:     ['battleaxe'],   // 카우킹: 양손 도끼 (2026-10-11 사용자)
   skeleton: ['club', 'spear'],
   skeletonKing: ['staff'],
   skeletonShield: ['cleaver'],
   skeletonSpear: ['spear'],
+  skeletonBrute: ['greatsword', 'battleaxe'],
   burningSoul: ['rod'],   // 그림에 무기 없음 (목록만)
   paleSoul: ['rod'],
   archer: ['bow'],
@@ -60,7 +62,7 @@ export const MONSTER_WEAPONS = {
   imp: ['pitchfork'],
   demonCurser: ['staff'],
   demonBerserker: ['cleaver', 'axe'],
-  demonKing: ['halberd']
+  demonKing: ['greatsword']  // 악마 카우킹: 대검 (2026-10-11 사용자)
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
 export function weaponFor(kind, seed) {
@@ -78,7 +80,7 @@ export const SOUL_PALETTES = {
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
-  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
+  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 

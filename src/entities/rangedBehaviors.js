@@ -87,12 +87,12 @@ function soul() {
         if (m.stateElapsed >= SOUL_CHARGE) {
           const ox = m.x, oy = m.y - 50 * m.scale;
           const ex = ox + m.zapDirX * SOUL_BEAM_LENGTH, ey = oy + m.zapDirY * SOUL_BEAM_LENGTH;
-          spawnLightningBolt(ox, oy, ex, ey); // 굵게 보이도록 두 번
-          spawnLightningBolt(ox, oy, ex, ey);
+          spawnLightningBolt(ox, oy, ex, ey, '#ffffff'); // 하얀 번개, 굵게 보이도록 두 번
+          spawnLightningBolt(ox, oy, ex, ey, '#ffffff');
           for (let i = 1; i <= SOUL_BRANCHES; i++) { // 곁가지 (그림만)
             const k = i / (SOUL_BRANCHES + 1), bx = ox + (ex - ox) * k, by = oy + (ey - oy) * k;
             const a = Math.atan2(m.zapDirY, m.zapDirX) + (i % 2 ? 0.7 : -0.7);
-            spawnLightningBolt(bx, by, bx + Math.cos(a) * 70, by + Math.sin(a) * 70);
+            spawnLightningBolt(bx, by, bx + Math.cos(a) * 70, by + Math.sin(a) * 70, '#ffffff');
           }
           spawnHitParticles(ox, oy, '#ffffff', 6);
           if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, ox, oy, ex, ey) <= SOUL_BEAM_WIDTH + game.hero.r * 0.5) {
