@@ -146,6 +146,20 @@ export function giveTestStash() {
   });
 }
 
+// 착용 해제: 그 칸의 장비를 가방으로 (가방이 가득이면 못 함). 양손 무기를 빼면 잠긴 보조 칸도 풀림. 반환: 해제했는지
+export function unequipSlot(slot) {
+  const eq = game.hero.equipment;
+  const it = eq[slot];
+  if (!it || it === 'LOCKED') return false;
+  if (game.hero.inventory.length >= INVENTORY_SIZE) { showInvToast('가방이 가득 차서 해제할 수 없어', '#ff8a80'); return false; }
+  eq[slot] = null;
+  if (slot === 'weaponMain' && eq.weaponOff === 'LOCKED') eq.weaponOff = null;
+  game.hero.inventory.push(it);
+  recalcGearStats();
+  showInvToast(`${GEAR_SLOT_LABEL[slot]} 해제 → 가방`, '#c9d2c4');
+  return true;
+}
+
 export function equipFromInventory(index, slot = null) {
   const gear = game.hero.inventory[index];
   if (!gear || !gear.identified) return; // 미감정 장비는 장착 불가

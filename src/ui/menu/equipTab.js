@@ -1,7 +1,8 @@
-// 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비 합산 옵션)
+// 메뉴 - 장비 탭 (장착 슬롯 목록 + 장비마다 '해제' 버튼 + 장비 합산 옵션)
 import { GEAR_SLOTS, GEAR_SLOT_LABEL } from '../../data/items.js';
 import { ELEMENTS, ELEMENT_DEF, RESIST_CAP } from '../../data/elements.js';
-import { game } from '../../state.js';
+import { game, ui } from '../../state.js';
+import { unequipSlot } from '../../systems/gear.js';
 import { gearTitle, gearColor } from '../itemView.js';
 import { fitText, wrapStatLines } from './common.js';
 
@@ -33,9 +34,22 @@ export function drawEquipTab(ctx, x, startRow, w) {
       ctx.fillText('비어 있음', textX, row);
       row += 20;
     } else {
+      // '해제' 버튼 (누르면 가방으로)
+      const bw = 40, bh = 16, bx = x + w - 16 - bw, by = row - 12;
+      ui.invButtons.push({ x: bx, y: by, w: bw, h: bh, fn: () => unequipSlot(slot) });
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      ctx.font = '10px sans-serif';
+      ctx.fillStyle = '#e8e2d0';
+      ctx.textAlign = 'center';
+      ctx.fillText('해제', bx + bw / 2, by + 12);
+      ctx.textAlign = 'left';
       ctx.font = 'bold 11px sans-serif';
       ctx.fillStyle = gearColor(it);
-      ctx.fillText(fitText(ctx, gearTitle(it), maxW), textX, row);
+      ctx.fillText(fitText(ctx, gearTitle(it), maxW - bw - 6), textX, row);
       row += 13;
       ctx.font = '10px sans-serif';
       ctx.fillStyle = '#cfd8c8';

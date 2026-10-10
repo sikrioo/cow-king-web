@@ -232,3 +232,38 @@ it('양손 도끼도 대검처럼: 등 뒤에서 내리치는 순간(windup)에 
     expect(Math.abs(hitAt - impact)).toBeLessThan(0.05);
   } finally { env.restore(); }
 });
+
+it('착용 해제: 장비가 가방으로, 양손 무기를 빼면 보조 칸 잠김도 풀림, 가방이 가득이면 못 함, 장비 탭에 해제 버튼', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game, ui } = await import('../src/state.js');
+    const { resetGame } = await import('../src/session.js');
+    const { unequipSlot, equipFromInventory, rollGearItem } = await import('../src/systems/gear.js');
+    const { INVENTORY_SIZE } = await import('../src/data/balance.js');
+    resetGame(); game.waveTransition = 999;
+    const h = game.hero;
+    const main = h.equipment.weaponMain, n0 = h.inventory.length;
+    expect(unequipSlot('weaponMain')).toBe(true);
+    expect(h.equipment.weaponMain).toBe(null);
+    expect(h.inventory.length).toBe(n0 + 1);
+    expect(h.inventory.includes(main)).toBe(true);
+    equipFromInventory(h.inventory.findIndex((it) => it.variant === 'greatsword'));
+    expect(h.equipment.weaponOff).toBe('LOCKED');
+    unequipSlot('weaponMain');
+    expect(h.equipment.weaponOff).toBe(null); // 잠김 풀림
+    expect(unequipSlot('weaponOff')).toBe(false); // 빈 칸
+    while (h.inventory.length < INVENTORY_SIZE) h.inventory.push(rollGearItem({ identified: true }));
+    equipFromInventory(0); // 하나 착용 (가방 한 칸 빔 → 다시 채움)
+    while (h.inventory.length < INVENTORY_SIZE) h.inventory.push(rollGearItem({ identified: true }));
+    const slot = Object.keys(h.equipment).find((k) => h.equipment[k] && h.equipment[k] !== 'LOCKED');
+    expect(unequipSlot(slot)).toBe(false); // 가방 가득
+    // 장비 탭을 그리면 착용 중인 칸마다 해제 버튼이 등록됨
+    h.inventory.length = 5;
+    ui.showInventory = true; ui.invPanelTab = 'equip';
+    env.frame(2);
+    const worn = Object.values(h.equipment).filter((g) => g && g !== 'LOCKED').length;
+    expect(ui.invButtons.length).toBeGreaterThanOrEqual(worn);
+  } finally { env.restore(); }
+});

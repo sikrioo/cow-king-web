@@ -75,6 +75,10 @@ function build() {
   const spawn = row(body, '소환');
   ['normal', ...ELITE_KINDS, 'boss'].forEach((k) => button(spawn, k, () => devSpawn(k, [...spawnImmune])));
 
+  const tools = row(body, '도구');
+  // 관리자 페이지 (게임 데이터 보기·시뮬레이터·미리보기) - 새 탭. 배포본은 ?dev=1을 붙여야 열림
+  button(tools, '관리자 페이지 열기 ↗', () => { try { window.open('./admin.html?dev=1', '_blank'); } catch (_) { /* 팝업 막힘 */ } });
+
   const items = row(body, '아이템');
   Object.keys(RARITY_DEF).forEach((r) => button(items, `${RARITY_DEF[r].label} 장비`, () => devGiveGear(r)));
   button(items, '재료 +10', () => devMaterials(10));

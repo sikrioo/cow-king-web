@@ -4,7 +4,7 @@ import { INVENTORY_SIZE, IDENTIFY_DURATION } from '../../data/balance.js';
 import { STAT_DEF, GEAR_SLOTS } from '../../data/items.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
-import { tryIdentify, equipFromInventory } from '../../systems/gear.js';
+import { tryIdentify, equipFromInventory, unequipSlot } from '../../systems/gear.js';
 import { discardFromInventory } from '../../systems/loot.js';
 import { gearDisplayName, gearTitle, unidentifiedTitle, gearColor, UNIDENTIFIED_COLOR, rollTag, optionText, statKeysInOrder } from '../itemView.js';
 import { getInvViewIndex, fitText, getCompareTargets, gearBaseParts } from './common.js';
@@ -130,7 +130,7 @@ function drawGearLines(ctx, gear, x, y) {
   return y;
 }
 
-// 착용 중 장비 상세 (가방 탭에서는 보기만 - 강화/해제는 장비·강화 탭)
+// 착용 중 장비 상세 (해제 버튼은 drawBagDetailBody가 아래 버튼 줄에 - 강화는 강화 탭)
 function drawWornDetail(ctx, gear, x, y, w, bottom) {
   ctx.font = 'bold 10px sans-serif';
   ctx.fillStyle = WORN_COLOR;
@@ -144,6 +144,7 @@ function drawWornDetail(ctx, gear, x, y, w, bottom) {
   ctx.font = '10px sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.fillText('착용 중인 장비 · 강화는 강화 탭에서', x + 16, bottom - 4);
+  return y;
 }
 
 // 상세: 내용은 버튼 줄 위 영역에만 그리고(넘치면 잘림), 버튼 줄은 항상 패널 맨 아래에 고정
@@ -202,7 +203,10 @@ function drawBagDetailBody(ctx, x, top, w, bottom, out) {
   // 착용 중 칸을 고정했거나(우선), 가방 칸 고정이 없을 때 착용 중 칸에 올려둔 경우
   const wornSlot = ui.selectedEquipSlot || (ui.selectedInvIndex === null ? ui.hoverEquipSlot : null);
   if (wornSlot) {
-    drawWornDetail(ctx, game.hero.equipment[wornSlot], x, top + 10, w, bottom);
+    const worn = game.hero.equipment[wornSlot];
+    if (!worn || worn === 'LOCKED') return;
+    drawWornDetail(ctx, worn, x, top + 10, w, bottom);
+    out.buttons.push({ label: '착용 해제 (가방으로)', fn: () => { if (unequipSlot(wornSlot)) { ui.selectedEquipSlot = null; ui.hoverEquipSlot = null; } }, enabled: true, kind: 'main' });
     return;
   }
   const idx = getInvViewIndex();
