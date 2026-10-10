@@ -13,6 +13,7 @@ import { decoyFor, hitDecoy } from '../systems/physSkills.js';
 import { emptyDot } from '../systems/elements.js';
 import { updateCowStatuses } from '../systems/elementCombat.js';
 import { updateCC } from '../systems/cc.js';
+import { reflectThorns, frostAuraSlow } from '../systems/auras.js';
 import { spawnHitParticles } from '../systems/fx.js';
 import { SPELLS } from '../data/skills.js';
 
@@ -193,15 +194,17 @@ export class Monster {
     if (playerNear && distP <= this.meleeRange && !isRangedKiter) {
       Body.setVelocity(this.body, { x: 0, y: 0 });
       if (this.state !== 'attack') { this.setState('attack', 0.6); this.attackHit = false; this.attackingPlayer = true; }
+      const atkMul = 1 - frostAuraSlow(this); // 빙결 오라: 공격 동작도 느려짐
+      if (atkMul < 1) this.stateElapsed -= dt * (1 - atkMul);
       if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
       if (!this.attackHit && this.stateElapsed > 0.12 && this.stateElapsed < 0.22) {
         if (distP <= this.meleeRange + 10) {
           const dmg = this.element ? { [this.element]: this.dmg } : this.dmg;
-          if (decoy) hitDecoy(dmg); else hitPlayer(this.x, this.y, dmg);
+          if (decoy) hitDecoy(dmg); else reflectThorns(this, hitPlayer(this.x, this.y, dmg)); // 가시 오라: 받은 만큼 되돌려 줌
           this.attackHit = true;
         }
       }
-      this.timer -= dt;
+      this.timer -= dt * atkMul;
       if (this.timer <= 0) this.setState('idle', auraMult > 1 ? 0.08 : 0.18);
       return;
     }

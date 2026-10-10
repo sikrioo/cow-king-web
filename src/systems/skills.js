@@ -9,7 +9,7 @@ import {
 } from '../data/balance.js';
 import { applyCC } from './cc.js';
 import { PALETTE } from '../data/palette.js';
-import { SKILL_META, SPELLS, SKILL_STATS, COMMON_SKILLS } from '../data/skills.js';
+import { SKILL_META, SPELLS, SKILL_STATS, COMMON_SKILLS, AURA_SWITCH } from '../data/skills.js';
 import { CLASSES } from '../data/classes.js';
 import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
 import { Body } from '../core/physics.js';
@@ -21,11 +21,13 @@ import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physS
 import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
+import { pickAura, addTempAura, isAura } from './auras.js';
+import { tryApprentice } from './apprentice.js';
 import { trySpinBlade, trySkyfall, tryWhirlAxe, tryShieldBounce, tryRollMace, tryPierceSpear, tryVitalThrow, specialUsable } from './weaponThrows.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
-import { castSpeedMul, attackSpeedMul, skillMul, skillBonus, specialUsable as usableFor } from '../util.js';
+import { castSpeedMul, attackSpeedMul, skillMul, skillBonus, skillGearBonus, specialUsable as usableFor } from '../util.js';
 import { aim } from './aim.js';
 
 export function tryWarCry() {
@@ -282,8 +284,42 @@ export const SKILLS = {
     ['rollmace', tryRollMace], ['piercespear', tryPierceSpear], ['vitalthrow', tryVitalThrow]].map(([id, fn]) => [id, {
     ...SKILL_META[id], try: () => fn(), usable: () => specialUsable(id), cd: () => game.hero.spellCd[id], cdMax: () => SKILL_STATS[id].cooldown * castSpeedMul(game.hero)
   }])),
+  // 오라 (systems/auras.js): 누르면 그 오라로 (AURA_SWITCH초 뒤), 슬롯에서 빼면 꺼짐 - 대기 표시 = 바뀌는 중
+  ...Object.fromEntries(['aurathorns', 'aurafire', 'aurafrost'].map((id) => [id, {
+    ...SKILL_META[id], try: () => pickAura(id), cd: () => (game.hero.auraPending === id ? game.hero.auraSwitch : 0), cdMax: () => AURA_SWITCH
+  }])),
+  apprentice: { ...SKILL_META.apprentice, try: () => tryApprentice(), cd: () => game.hero.spellCd.apprentice, cdMax: () => SKILL_STATS.apprentice.cooldown * castSpeedMul(game.hero) },
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
+
+// 레벨을 정해서 마나·대기시간 없이 시전 (수습생의 마법 - 안 배운 스킬도). 그 순간 가장 가까운 적을 겨눔(지점 스킬은 사거리 안으로)
+//   주인공의 마나·대기시간·배운 레벨은 시전 뒤 그대로 되돌림 (내 스킬 대기시간에 영향 없음). 오라는 잠깐 임시로 켜짐
+const LEGACY_CD = ['warcryCooldown', 'whirlwindCooldown', 'leapCooldown', 'rushCooldown', 'smashCooldown'];
+export function castFree(id, level) {
+  const h = game.hero;
+  if (!h.alive) return;
+  if (isAura(id)) { addTempAura(id, level, SKILL_STATS.apprentice.tempAura); return; }
+  const target = game.cows.filter((c) => c.state !== 'dead' && canHit(h, c)).sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y))[0];
+  if (target) {
+    const d = Math.hypot(target.x - h.x, target.y - h.y), range = (SPELLS[id] && SPELLS[id].range) || Infinity;
+    h.facing = Math.atan2(target.y - h.y, target.x - h.x);
+    const k = d > range * 0.9 ? (range * 0.9) / d : 1;
+    h.aimX = h.x + (target.x - h.x) * k; h.aimY = h.y + (target.y - h.y) * k;
+  } else { h.aimX = null; h.aimY = null; }
+  const saved = { mana: h.mana, lv: h.skillLevels[id], cd: h.spellCd[id], legacy: LEGACY_CD.map((k) => h[k]) };
+  h.mana = Number.MAX_SAFE_INTEGER;
+  h.skillLevels[id] = Math.max(1, level - skillGearBonus(h, id)); // 장비 보너스가 또 붙지 않게
+  if (id in h.spellCd) h.spellCd[id] = 0;
+  LEGACY_CD.forEach((k) => { h[k] = 0; });
+  try {
+    SKILLS[id].try({});
+  } finally {
+    h.mana = saved.mana;
+    if (saved.lv === undefined) delete h.skillLevels[id]; else h.skillLevels[id] = saved.lv;
+    if (id in h.spellCd) h.spellCd[id] = saved.cd;
+    LEGACY_CD.forEach((k, i) => { h[k] = saved.legacy[i]; });
+  }
+}
 
 // 지금 캐릭터의 스킬 목록
 export function classSkills() {

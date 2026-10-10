@@ -54,6 +54,11 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.discharge': 3,
   'exact.progression.skillUnlockLevel.balllightning': 6,
   'exact.progression.skillUnlockLevel.polymorph': 9,
+  // 2026-10-10: 전사 오라 3종(기획서 예시 해금 순서 2/4/6), 공통 수습생의 마법
+  'exact.progression.skillUnlockLevel.aurathorns': 2,
+  'exact.progression.skillUnlockLevel.aurafire': 4,
+  'exact.progression.skillUnlockLevel.aurafrost': 6,
+  'exact.progression.skillUnlockLevel.apprentice': 5,
   // 2026-10-08: 무기 원소 피해 옵션 (지금은 드랍 안 됨 - 개발자 테스트 무기에만)
   'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },

@@ -67,6 +67,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
 - 군중 제어(변이·기절·경직): `systems/cc.js`의 `applyCC(c, kind, time)` 한 곳(변이는 `applyPoly` - 엘리트 절반·반복 감소, 양 배회는 `Monster.sheepWander`, 양으로 죽으면 `c.sheepDead` → onDeath 생략) - 우선순위 `CC_RANK`(변이 > 기절 > 경직), 보스(카우킹·맵 보스) 면역(둔화만 절반), 걸리면 특수 행동이 끊김(behaviors `interrupt` 훅). `c.stunTimer`를 직접 쓰지 말 것.
 - 무기 특수기(전사, 던진 무기): `systems/weaponThrows.js`(game.throws, 종류별 이동 함수 `UPDATE`) + 그림 `render/throwFx.js`. 수치 `SKILL_STATS`, 메타 `SKILL_META[id].weapon/offhand/mastery` - 그 마스터리 `SPECIAL_MASTERY_LEVEL`(3) 이상이면 카드에 나옴. 던진 동안 `hero.weaponOut/shieldOut`(기본 공격 못 함, 손에서 안 그림). 출혈은 `elementCombat.bleedCow`. 특수기마다 원소(`SKILL_STATS[id].elem/elemRatio`: 검·대검 화염, 도끼·창 번개, 단검 독, 방패·메이스 냉기). 그 무기를 들었을 때만 카드·Q/R에 보임(`util.specialUsable`, 무기를 바꾸면 `skills.validateSkillSlots`가 슬롯에서 뺌).
+- 전사 오라: `systems/auras.js` - 슬롯에 있는 동안만 켜짐(`hero.aura`, 바꾸면 `AURA_SWITCH`초), 효과는 가시 `reflectThorns`(monster 근접, hitPlayer 반환값) / 불꽃 `updateAuras` / 빙결 `frostAuraSlow`(getAuraSpeedMult에 광신과 더함). 임시 오라 `hero.tempAuras`.
+- 수습생의 마법(공통): `systems/apprentice.js` + `skills.castFree(id, level)`(레벨 지정·마나/대기시간 없이 시전, 끝나면 되돌림 - game.js가 인자로 넘김). 후보·규칙은 `SKILL_STATS.apprentice`.
 - 스킬 기획 정의서 v0.1(2026-10-10) 진행 상황·결정은 `docs/TODO.md` '스킬 기획 정의서' 항목.
 
 ## 규칙

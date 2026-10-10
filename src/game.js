@@ -28,6 +28,9 @@ import { pickCard, rerollCards } from './systems/levelCards.js';
 import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateThrows } from './systems/weaponThrows.js';
+import { updateAuras } from './systems/auras.js';
+import { updateApprentice } from './systems/apprentice.js';
+import { castFree } from './systems/skills.js';
 import { updateSandbox } from './systems/sandbox.js';
 import { autoAimOn } from './systems/aim.js';
 import { saveReleaseMeta } from './save.js';
@@ -107,6 +110,8 @@ export function fixedUpdate(dt) {
   updateMeteors(dt);
   updateGroundSpells(dt);
   updateThrows(dt);
+  updateAuras(dt);
+  updateApprentice(dt, castFree);
   updateProjectiles(dt);
   updateLightningBolts(dt);
   updateFloatTexts(dt);

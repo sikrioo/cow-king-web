@@ -24,6 +24,7 @@ import { rollLightning } from '../systems/elements.js';
 import { MONSTER_CHILL_MOVE_MULT } from '../data/elements.js';
 import { BOSS_SLOW_SCALE } from '../data/balance.js';
 import { isBossCow, isSheep } from '../systems/cc.js';
+import { frostAuraSlow } from '../systems/auras.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
@@ -32,12 +33,15 @@ import { spellBehaviors } from './spellBehaviors.js';
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
 export function getAuraSpeedMult(cow) {
   const chill = cow.chillTimer > 0 ? (isBossCow(cow) ? 1 - (1 - MONSTER_CHILL_MOVE_MULT) * BOSS_SLOW_SCALE : MONSTER_CHILL_MOVE_MULT) : 1;
-  if (cow.kind === 'fanatic' && !isSheep(cow)) return AURA_SPEED_MULT * chill;
+  let fan = cow.kind === 'fanatic' && !isSheep(cow);
   for (const other of game.cows) {
+    if (fan) break;
     if (other === cow || other.kind !== 'fanatic' || other.state === 'dead' || isSheep(other)) continue; // 양이 되면 오라 꺼짐
-    if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) return AURA_SPEED_MULT * chill;
+    if (Math.hypot(other.x - cow.x, other.y - cow.y) <= AURA_RADIUS) fan = true;
   }
-  return chill;
+  const frost = frostAuraSlow(cow); // 주인공 빙결 오라 - 광신 오라와 더해서 계산
+  if (!frost) return (fan ? AURA_SPEED_MULT : 1) * chill;
+  return Math.max(0.1, 1 + (fan ? AURA_SPEED_MULT - 1 : 0) - frost) * chill;
 }
 
 export const behaviors = {

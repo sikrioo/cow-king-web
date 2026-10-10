@@ -206,23 +206,25 @@ export function damageCow(c, dmg, heavy = null) {
   }
 }
 
-// dmg: 숫자(물리) 또는 피해 묶음 { phys, fire, cold, lightning, poison } - 회피/블락은 공격 전체에 적용
+// dmg: 숫자(물리) 또는 피해 묶음 { phys, fire, cold, lightning, poison } - 회피/블락은 공격 전체에 적용. 반환: 실제로 받은 피해(가시 오라가 씀)
 export function hitPlayer(fromX, fromY, dmg) {
-  if (!game.hero.alive || game.hero.invuln > 0 || dev.god) return;
+  if (!game.hero.alive || game.hero.invuln > 0 || dev.god) return 0;
 
   const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
   if (Math.random() < totalEvasion) {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'MISS', '#8fe8ff');
     game.hero.invuln = 0.25;
-    return;
+    return 0;
   }
 
   const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense + masteryBonus(game.hero, 'block'), 0.85); // 방패 마스터리
   const blocked = Math.random() < totalBlock;
+  let tookDamage = 0;
   if (!blocked) {
     const r = resolveHeroDamage(toPacket(dmg)); // 물리 = 방어력, 원소 = 저항
     const taken = heroDamageTaken(r.total); // 버서커(더 받음)·에너지 쉴드(마나로 받음)
     game.hero.hp -= taken;
+    tookDamage = taken;
     if (taken > 0) spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, damageColor(r.dominant));
     applyHeroStatuses(r.parts);
   } else {
@@ -238,6 +240,7 @@ export function hitPlayer(fromX, fromY, dmg) {
   spawnHitParticles(game.hero.x, game.hero.y, PALETTE.eye, blocked ? 4 : 8);
 
   checkHeroDeath();
+  return tookDamage;
 }
 
 export function updateHazards(dt) {

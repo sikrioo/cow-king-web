@@ -46,7 +46,7 @@ it('레벨업 → 카드 3장, 고르는 동안 게임 멈춤, 새 스킬을 고
     const m = await boot();
     const h = m.game.hero;
     m.noUpgrades();
-    h.skillLevels.flurry = m.SKILL_MAX_LEVEL; // Lv2에 같이 열리는 난타는 이미 다 배운 것으로 → 새 스킬 후보는 러시만
+    h.skillLevels.flurry = m.SKILL_MAX_LEVEL; h.skillLevels.aurathorns = m.SKILL_MAX_LEVEL; // Lv2에 같이 열리는 난타·가시 오라는 이미 다 배운 것으로 → 새 스킬 후보는 러시만
     m.levelUp();
     expect(h.level).toBe(2);
     expect(h.statPoints).toBeGreaterThan(0); // 스탯 포인트는 그대로

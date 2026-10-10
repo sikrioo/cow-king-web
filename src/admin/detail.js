@@ -16,7 +16,9 @@ export const SKILL_CODE = {
   balllightning: ['tryBallLightning', 'updateBall', 'burstBall'], polymorph: ['tryPolymorph', 'applyPoly', 'updateCC'],
   spinblade: ['trySpinBlade', 'updateSpinBlade', 'strike'], skyfall: ['trySkyfall', 'updateSkyfall'], whirlaxe: ['tryWhirlAxe', 'updateWhirlAxe'],
   shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
-  vitalthrow: ['tryVitalThrow', 'updateVitalThrow']
+  vitalthrow: ['tryVitalThrow', 'updateVitalThrow'],
+  aurathorns: ['pickAura', 'reflectThorns', 'updateAuras'], aurafire: ['pickAura', 'updateAuras'], aurafrost: ['pickAura', 'frostAuraSlow', 'getAuraSpeedMult'],
+  apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)
 export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/spellBehaviors.js'];

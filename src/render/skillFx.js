@@ -5,6 +5,8 @@ import { hash01, easeOutCubic } from '../util.js';
 import { drawPlayer } from './heroSprites.js';
 import { SPELLS } from '../data/skills.js';
 import { dischargeOrbs } from '../systems/groundSpells.js';
+import { activeAuras, auraRadius } from '../systems/auras.js';
+import { SKILL_STATS } from '../data/skills.js';
 
 // 미끼: 주인공 그림 함수에 미끼 위치·방향을 넣은 '보기용 복사본'을 넘겨 그림 (게임 상태는 안 바꿈)
 export function drawDecoy(ctx, t) {
@@ -285,5 +287,48 @@ function drawDischarge(ctx, g, t, gi) {
     ctx.lineTo(o.x + Math.cos(a) * len, o.y + Math.sin(a) * len);
     ctx.stroke();
   });
+  ctx.restore();
+}
+
+// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 몸 둘레 가시 고리. 바뀌는 중이면 점선
+export function drawAuraRings(ctx, t) {
+  const h = game.hero;
+  if (!h.alive) return;
+  ctx.save();
+  activeAuras(h).forEach(({ id, lv }, i) => {
+    const color = SKILL_STATS[id].ring;
+    if (id === 'aurathorns') {
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = color;
+      const R = h.r * 1.5, n = 12;
+      for (let k = 0; k < n; k++) { // 바깥으로 난 작은 가시
+        const a = (k / n) * Math.PI * 2 + t * 0.6;
+        const bx = h.x + Math.cos(a) * R, by = h.y + Math.sin(a) * R * 0.62;
+        ctx.beginPath();
+        ctx.moveTo(bx + Math.cos(a + 1.5) * 3, by + Math.sin(a + 1.5) * 2);
+        ctx.lineTo(bx + Math.cos(a) * 7, by + Math.sin(a) * 4.5);
+        ctx.lineTo(bx - Math.cos(a + 1.5) * 3, by - Math.sin(a + 1.5) * 2);
+        ctx.closePath(); ctx.fill();
+      }
+      return;
+    }
+    const r = auraRadius(id, lv);
+    ctx.globalAlpha = 0.08 + Math.sin(t * 3 + i) * 0.03;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(h.x, h.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(h.x, h.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+  });
+  if (h.auraPending) { // 켜지는 중
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = SKILL_STATS[h.auraPending].ring;
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -t * 40;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r * 2, h.r * 1.24, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.restore();
 }

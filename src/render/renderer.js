@@ -7,7 +7,7 @@ import { drawPlayer } from './heroSprites.js';
 import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
 import { drawIceRings } from './iceFx.js';
-import { drawDecoy, drawHeroBerserk, drawHeroShield, drawGroundSpellsUnder, drawGroundSpellsOver } from './skillFx.js';
+import { drawDecoy, drawHeroBerserk, drawHeroShield, drawGroundSpellsUnder, drawGroundSpellsOver, drawAuraRings } from './skillFx.js';
 import { drawThrowsUnder, drawThrowsOver } from './throwFx.js';
 import { applyCamera, updateCamera, inView } from '../world/camera.js';
 import { PEN } from '../world/arena.js';
@@ -57,6 +57,7 @@ export function render(t) {
   drawHeroFortify(ctx, t);
   drawHeroBerserk(ctx, t);
   drawGroundSpellsUnder(ctx, t);
+  drawAuraRings(ctx, t);
   drawThrowsUnder(ctx, t);
   drawHazards(ctx);
   drawMeteorMarkers(ctx);

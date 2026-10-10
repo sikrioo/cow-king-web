@@ -3,7 +3,7 @@
 // elem: 원소 스킬 분류(장비 '화염 스킬 +N' 같은 옵션) / 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터). 배운 스킬은 전부 슬롯1/2에 Q/R로 넣음 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
 export const SKILL_ORDER = ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash']; // 전사 레거시 스킬 순서 (classes.warrior.skills 앞부분)
 export const SKILL_TYPE_LABEL = { physical: '물리', magic: '마법', common: '공통' };
-export const COMMON_SKILLS = ['teleport']; // 모든 캐릭터가 카드로 배울 수 있음 (Q/R 전환 목록 뒤쪽에 붙음)
+export const COMMON_SKILLS = ['teleport', 'apprentice']; // 모든 캐릭터가 카드로 배울 수 있음 (Q/R 전환 목록 뒤쪽에 붙음)
 export const SKILL_META = {
   attack:    { label: '공격',   type: 'physical', color: 'rgba(220,70,60,0.35)',   desc: '앞의 적을 무기로 벰' },
   warcry:    { label: '함성',   type: 'physical', color: 'rgba(232,163,61,0.40)',  desc: '주변 적을 밀쳐내고 기절시킴' },
@@ -16,6 +16,10 @@ export const SKILL_META = {
   concuss:   { label: '뇌진탕', type: 'physical', color: 'rgba(230,210,120,0.42)', desc: '앞의 적을 세게 내리쳐 오래 기절시킴' },
   berserk:   { label: '버서커', type: 'physical', color: 'rgba(220,40,40,0.45)',   desc: '잠깐 공격력·공격속도가 크게 오르지만 받는 피해도 늘어남' },
   decoy:     { label: '더미',   type: 'physical', color: 'rgba(200,200,210,0.40)', desc: '나와 같은 모습의 미끼 - 주변 몬스터가 미끼를 공격함' },
+  // 오라 (전사, aura: true): 슬롯에 있는 동안만 켜짐(슬롯에 넣으면 AURA_SWITCH초 뒤), 하나만 - 두 슬롯 다 오라면 누른 쪽으로 바뀜. 마나 없음 (systems/auras.js)
+  aurathorns: { label: '가시 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(160,110,60,0.5)',  desc: '켜 두는 오라 - 근접 공격을 받으면 받은 피해의 일부를 되돌려 줌' },
+  aurafire:   { label: '불꽃 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(255,138,61,0.5)',  desc: '켜 두는 오라 - 1초마다 주변 적에게 화염 피해' },
+  aurafrost:  { label: '빙결 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(143,232,255,0.5)', desc: '켜 두는 오라 - 주변 적의 이동·공격속도가 느려짐 (보스는 절반)' },
   // 무기 특수기 (전사): 그 무기의 마스터리가 SPECIAL_MASTERY_LEVEL 이상이면 카드에 나옴, 그 무기를 들었을 때만 씀 (weapon = 주무기 종류, offhand = 보조 칸)
   spinblade:    { label: '회전검',     type: 'physical', weapon: 'sword',      mastery: 'sword',      color: 'rgba(216,216,224,0.45)', desc: '검을 회전시켜 던짐 - 갔다가 돌아오며 지나가는 적을 여러 번 벰' },
   skyfall:      { label: '내려찍기',   type: 'physical', weapon: 'greatsword', mastery: 'greatsword', color: 'rgba(138,143,153,0.5)',  desc: '지정한 곳 위에 대검이 떠올라 커지다가 내리꽂힘 - 착지 피해 + 앞쪽 충격파' },
@@ -38,13 +42,14 @@ export const SKILL_META = {
   polymorph: { label: '대규모 변이', type: 'magic', aim: 'free', color: 'rgba(240,240,240,0.5)', desc: '내 주변 적을 전부 양으로 바꿈 - 공격·특수 행동을 못 하고 느리게 돌아다님(맞아도 안 풀림). 엘리트는 짧게, 보스는 면역' },
   balllightning: { label: '볼 라이트닝', type: 'magic', elem: 'lightning', color: 'rgba(200,240,255,0.45)', desc: '지정한 곳에 전기 구체를 설치 - 주변 적에게 번개를 쏘다가 사라지며 폭발. 다시 누르면 바로 터짐' },
   // 공통
-  teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' }
+  teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' },
+  apprentice: { label: '수습생의 마법', type: 'common', aim: 'free', color: 'rgba(255,214,102,0.5)', desc: '여러 스킬이 무작위로 연달아 나감 (안 배운 스킬도) - 레벨이 오를수록 더 많이, 더 세게' }
 };
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
   attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
   bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9,
-  teleport: 3
+  teleport: 3, aurathorns: 2, aurafire: 4, aurafrost: 6, apprentice: 5
 };
 
 // 스킬 레벨: 카드로 배우면 Lv1, 같은 스킬 카드를 또 고르면 +1 (최대 SKILL_MAX_LEVEL)
@@ -74,6 +79,8 @@ export const SKILL_LEVEL_UP = {
   firewave:  { damage: 0.12, range: 0.08 },
   spinblade: { damage: 0.12 }, skyfall: { damage: 0.12, radius: 0.05 }, whirlaxe: { damage: 0.12 }, shieldbounce: { damage: 0.12 },
   rollmace: { damage: 0.12 }, piercespear: { damage: 0.12 }, vitalthrow: { damage: 0.12 },
+  // 오라: 기획서 Lv1→10을 Lv1→5에 (가시 반사 100%→280%, 불꽃 2→6.5·130→160, 빙결 -25%→-43%·150→180)
+  aurathorns: { reflect: 0.45 }, aurafire: { damage: 0.5625, radius: 0.058 }, aurafrost: { slow: 0.045, radius: 0.05 },
   // 방전·볼 라이트닝: 기획서(v0.1) Lv1→10 수치를 Lv1→5에 맞춤 (2026-10-10 결정: 최대 레벨 5 유지)
   discharge: { damage: 0.2, radius: 0.08, duration: 0.1 },
   polymorph: { radius: 0.055, duration: 0.125, cdr: 0.042 }, // Lv5: 반경 220, 3초, 대기시간 15초 근처
@@ -92,7 +99,9 @@ export const SKILL_LEVEL_STAT = {
   range:    { label: '거리', pct: true },
   cdr:      { label: '대기시간', pct: true, neg: true },
   targets:  { label: '대상 수', pct: false },
-  amount:   { label: '흡수량', pct: true }
+  amount:   { label: '흡수량', pct: true },
+  reflect:  { label: '반사', pct: true, add: true },
+  slow:     { label: '둔화', pct: true, add: true }
 };
 
 // 마법이 아닌 스킬 수치 (전사 보조·공통). 대기시간은 시전속도 영향
@@ -122,8 +131,18 @@ export const SKILL_STATS = {
   //   관통창: speed로 range까지 곧게 - 지나가는 적마다 ratio + 출혈(초당 무기 한 타 × bleed, bleedTime초, 겹치지 않고 갱신). 끝에서 pause초 멈췄다 돌아옴(돌아올 땐 안 맞음)
   piercespear:  { mana: 12, cooldown: 6,  elem: 'lightning', elemRatio: 0.4, range: 420, speed: 900, ratio: 1.0, bleed: 0.3, bleedTime: 3, pause: 0.3, radius: 24 },
   //   급소 투척: 커서 위 적(없으면 range 안 가까운 적) 하나 - charge초 뒤 speed로 날아가 ratio(엘리트·보스 ×(1+eliteBonus)), 대상 체력 execute 이하면 ×crit. 꽂힌 채 stick초 뒤 돌아옴
-  vitalthrow:   { mana: 12, cooldown: 6,  elem: 'poison', elemRatio: 0.4, range: 350, charge: 0.3, speed: 1300, ratio: 4.0, eliteBonus: 0.5, execute: 0.3, crit: 2, stick: 0.5 }
+  vitalthrow:   { mana: 12, cooldown: 6,  elem: 'poison', elemRatio: 0.4, range: 350, charge: 0.3, speed: 1300, ratio: 4.0, eliteBonus: 0.5, execute: 0.3, crit: 2, stick: 0.5 },
+  // 오라: 가시 = 근접 공격으로 받은 피해 × reflect를 때린 적에게 물리로 / 불꽃 = tick초마다 radius 안 화염 damage / 빙결 = radius 안 적 이동·공격속도 -slow(보스 × BOSS_SLOW_SCALE, 광신 오라와는 더해서 계산)
+  //   ring: 발밑 고리 색 (오라 반경 표시, 가시는 내 몸 둘레)
+  aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#a86e3c' },
+  aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 130, ring: '#ff8a3d' },
+  aurafrost:  { mana: 0, cooldown: 0, slow: 0.25, radius: 150, ring: '#8fe8ff' },
+  // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
+  //   pool: 나올 수 있는 스킬(안 배워도), 한 번에 같은 스킬 maxSame번까지, once는 한 번만. 오라가 나오면 tempAura초 동안 임시로 켜짐(지금 오라와 따로)
+  apprentice: { mana: 20, cooldown: 12, interval: 0.25, maxCasts: 5, maxSame: 2, tempAura: 8,
+                pool: ['discharge', 'balllightning', 'polymorph', 'warcry', 'rush', 'leap', 'smash', 'whirlwind', 'aurathorns', 'aurafire', 'aurafrost'], once: ['polymorph'] }
 };
+export const AURA_SWITCH = 1;          // 오라 켜기·바꾸기 대기(초)
 export const SPECIAL_MASTERY_LEVEL = 3; // 무기 특수기 카드가 나오는 마스터리 레벨 (2026-10-10 사용자 아이디어)
 export const THROW_RETURN_SPEED = 820;  // 던진 무기가 돌아오는 속도(px/초)
 export const THROW_TRAIL = 7;           // 던진 무기 뒤 원소 꼬리 길이(지난 위치 개수, 그림용)
