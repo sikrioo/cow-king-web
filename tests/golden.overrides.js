@@ -61,6 +61,10 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.apprentice': 5,
   // 2026-10-10: 마법사 메테오 (사용자 요청)
   'exact.progression.skillUnlockLevel.meteor': 10,
+  // 2026-10-10: 마법사 화염 토템·냉기 장판·전기충격 (사용자 요청)
+  'exact.progression.skillUnlockLevel.thunderstrike': 2,
+  'exact.progression.skillUnlockLevel.frostfield': 4,
+  'exact.progression.skillUnlockLevel.firetotem': 7,
   // 2026-10-08: 무기 원소 피해 옵션 (지금은 드랍 안 됨 - 개발자 테스트 무기에만)
   'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },

@@ -37,6 +37,9 @@ export const SKILL_META = {
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '일정 시간 동안 정해진 양까지 피해를 대신 막는 보호막 - 다 막으면 깨짐' },
   blizzard:  { label: '눈보라', type: 'magic', elem: 'cold', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
   firewave:  { label: '화염 파도', type: 'magic', elem: 'fire', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
+  firetotem: { label: '화염 토템', type: 'magic', elem: 'fire', color: 'rgba(255,120,40,0.5)', desc: '지면에 토템을 세움 - 가까운 적에게 불덩이를 계속 쏨' },
+  frostfield: { label: '냉기 장판', type: 'magic', elem: 'cold', aim: 'free', color: 'rgba(170,225,255,0.5)', desc: '발밑에 네모난 냉기 장판 - 안의 적은 느려지고 계속 냉기 피해' },
+  thunderstrike: { label: '전기충격', type: 'magic', elem: 'lightning', color: 'rgba(255,240,120,0.5)', desc: '적 하나에게 하늘에서 번개가 떨어짐 - 큰 번개 피해(옆 적은 조금)' },
   meteor:    { label: '메테오', type: 'magic', elem: 'fire', color: 'rgba(255,77,26,0.5)', desc: '지정한 곳에 잠시 뒤 거대한 불덩이가 떨어짐 - 큰 화염 피해 + 불타는 바닥' },
   flamepillar: { label: '화염기둥', type: 'magic', elem: 'fire', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
   discharge: { label: '방전', type: 'magic', elem: 'lightning', aim: 'free', color: 'rgba(143,232,255,0.45)', desc: '내 주위를 도는 전기 구체 - 가까이 온 적에게 번개, 처음 맞으면 짧은 경직(돌진·충전·시전을 끊음)' },
@@ -49,7 +52,7 @@ export const SKILL_META = {
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
   attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
-  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9, meteor: 10,
+  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9, meteor: 10, thunderstrike: 2, frostfield: 4, firetotem: 7,
   teleport: 3, aurathorns: 2, aurafire: 4, aurafrost: 6, apprentice: 5
 };
 
@@ -85,7 +88,8 @@ export const SKILL_LEVEL_UP = {
   // 방전·볼 라이트닝: 기획서(v0.1) Lv1→10 수치를 Lv1→5에 맞춤 (2026-10-10 결정: 최대 레벨 5 유지)
   discharge: { damage: 0.2, radius: 0.08, duration: 0.1 },
   polymorph: { radius: 0.055, duration: 0.125, cdr: 0.042 },
-  meteor: { damage: 0.15, radius: 0.06 }, // Lv5: 반경 220, 3초, 대기시간 15초 근처
+  meteor: { damage: 0.15, radius: 0.06 },
+  firetotem: { damage: 0.12, duration: 0.1 }, frostfield: { damage: 0.12, duration: 0.1 }, thunderstrike: { damage: 0.15 }, // Lv5: 반경 220, 3초, 대기시간 15초 근처
   balllightning: { damage: 0.19, duration: 0.06, targets: 0.5, radius: 0.03 } // targets: 동시에 쏘는 대상 수에 더함(내림)
 };
 // 카드에 쓰는 이름 (pct: 배율이면 %, 아니면 개수)
@@ -136,7 +140,7 @@ export const SKILL_STATS = {
   vitalthrow:   { mana: 12, cooldown: 6,  elem: 'poison', elemRatio: 0.4, range: 350, charge: 0.3, speed: 1300, ratio: 4.0, eliteBonus: 0.5, execute: 0.3, crit: 2, stick: 0.5 },
   // 오라: 가시 = 근접 공격으로 받은 피해 × reflect를 때린 적에게 물리로 / 불꽃 = tick초마다 radius 안 화염 damage / 빙결 = radius 안 적 이동·공격속도 -slow(보스 × BOSS_SLOW_SCALE, 광신 오라와는 더해서 계산)
   //   ring: 발밑 고리 색 (오라 반경 표시, 가시는 내 몸 둘레)
-  aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#a86e3c' },
+  aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#ffd84d' }, // 가시: 내 몸 둘레 작은 노란 원 (2026-10-10 사용자)
   aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 130, ring: '#ff8a3d' },
   aurafrost:  { mana: 0, cooldown: 0, slow: 0.25, radius: 150, ring: '#8fe8ff' },
   // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
@@ -180,6 +184,12 @@ export const SPELLS = {
   //   양: 공격·특수 행동·오라 멈춤, 이동속도 ×wanderMul로 무작위 배회(wanderTurn초마다 방향 바꿈), 맞아도 안 풀림, 피해 증가 없음
   // 메테오: range 안 지점에 delay초 뒤 낙하(마지막 fall초 동안 떨어지는 불덩이 - 몬스터 메테오와 같은 그림) → 반경 radius 화염 damage(+화상)
   //   착탄 자리에 fieldTime초 동안 불타는 바닥(반경 fieldRadius, fieldTick초마다 화염 fieldDamage)
+  // 화염 토템: range 안 지점에 duration초 - fireEvery초마다 seek 안 가까운 적에게 불덩이(speed, 화염 damage). 하나만(다시 쓰면 새로)
+  firetotem: { mana: 22, cooldown: 10, duration: 8, fireEvery: 0.7, damage: 22, range: 300, seek: 320, speed: 380, radius: 7 },
+  // 냉기 장판: 내 발밑에 너비 width × 높이 height 네모, duration초 - tick초마다 안의 적에게 냉기 damage(→ 둔화)
+  frostfield: { mana: 18, cooldown: 8, duration: 5, tick: 0.5, damage: 12, width: 220, height: 140 },
+  // 전기충격: range 안 적 하나(조준한 적, 없으면 조준 지점에 가까운 적) - delay초 뒤 하늘에서 번개 damage, 옆 splash 안 적은 × splashRatio
+  thunderstrike: { mana: 12, cooldown: 2.2, damage: 70, delay: 0.25, range: 380, splash: 45, splashRatio: 0.5 },
   meteor:    { mana: 26, cooldown: 7, damage: 90, delay: 1.0, fall: 0.45, radius: 90, range: 420, fieldTime: 3, fieldTick: 0.5, fieldDamage: 12, fieldRadius: 70 },
   polymorph: { mana: 25, cooldown: 18, radius: 180, duration: 2, eliteMul: 0.5, drWindow: 8, drMul: 0.5, wanderMul: 0.6, wanderTurn: 0.7 },
   balllightning: { mana: 18, cooldown: 6, range: 300, duration: 4, arcDamage: 20, arcEvery: 0.5, arcRadius: 140, targets: 3,

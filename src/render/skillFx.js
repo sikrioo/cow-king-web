@@ -5,6 +5,7 @@ import { hash01, easeOutCubic } from '../util.js';
 import { drawPlayer } from './heroSprites.js';
 import { SPELLS } from '../data/skills.js';
 import { dischargeOrbs } from '../systems/groundSpells.js';
+import { drawMagicUnder, drawMagicOver } from './magicFx.js';
 import { activeAuras, auraRadius } from '../systems/auras.js';
 import { SKILL_STATS } from '../data/skills.js';
 
@@ -74,8 +75,9 @@ export function drawHeroShield(ctx, t) {
 
 // 지점 마법 - 바닥(몬스터 아래): 눈보라 범위, 화염기둥 예고 원
 export function drawGroundSpellsUnder(ctx, t) {
-  game.groundSpells.forEach((g) => {
+  game.groundSpells.forEach((g, gi) => {
     ctx.save();
+    drawMagicUnder(ctx, g, t, gi); // 화염 토템·냉기 장판·전기충격 (render/magicFx.js)
     if (g.kind === 'firefield') { // 메테오 자리: 그을린 바닥 + 일렁이는 불꽃 (끝나 갈수록 옅어짐)
       const fade = Math.min(1, (g.duration - g.age) * 2);
       ctx.globalAlpha = 0.35 * fade;
@@ -183,6 +185,7 @@ export function drawGroundSpellsOver(ctx, t) {
     if (g.kind === 'firewave') { drawFireWave(ctx, g, t, gi); return; }
     if (g.kind === 'balllightning') { drawBall(ctx, g, t, gi); return; }
     if (g.kind === 'discharge') { drawDischarge(ctx, g, t, gi); return; }
+    if (g.kind === 'firetotem') { ctx.save(); drawMagicOver(ctx, g, t, gi); ctx.restore(); return; }
     ctx.save();
     if (g.kind === 'blizzard' && g.age >= g.delay && g.age < g.duration) {
       // 눈 결정(육각 별 - 선 3개)이 돌며 떨어지고, 닿은 자리에 작은 하얀 김 - 선만 써서 가벼움(성능)
@@ -304,26 +307,22 @@ function drawDischarge(ctx, g, t, gi) {
   ctx.restore();
 }
 
-// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 몸 둘레 가시 고리. 바뀌는 중이면 점선
+// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 몸 둘레 작은 노란 원. 바뀌는 중이면 점선
 export function drawAuraRings(ctx, t) {
   const h = game.hero;
   if (!h.alive) return;
   ctx.save();
   activeAuras(h).forEach(({ id, lv }, i) => {
     const color = SKILL_STATS[id].ring;
-    if (id === 'aurathorns') {
-      ctx.globalAlpha = 0.7;
+    if (id === 'aurathorns') { // 가시: 내 몸 둘레 작은 노란 원 (사용자 요청)
+      const R = h.r * 1.35;
+      ctx.globalAlpha = 0.12 + Math.sin(t * 4) * 0.04;
       ctx.fillStyle = color;
-      const R = h.r * 1.5, n = 12;
-      for (let k = 0; k < n; k++) { // 바깥으로 난 작은 가시
-        const a = (k / n) * Math.PI * 2 + t * 0.6;
-        const bx = h.x + Math.cos(a) * R, by = h.y + Math.sin(a) * R * 0.62;
-        ctx.beginPath();
-        ctx.moveTo(bx + Math.cos(a + 1.5) * 3, by + Math.sin(a + 1.5) * 2);
-        ctx.lineTo(bx + Math.cos(a) * 7, by + Math.sin(a) * 4.5);
-        ctx.lineTo(bx - Math.cos(a + 1.5) * 3, by - Math.sin(a + 1.5) * 2);
-        ctx.closePath(); ctx.fill();
-      }
+      ctx.beginPath(); ctx.ellipse(h.x, h.y, R, R * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(h.x, h.y, R, R * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
       return;
     }
     const r = auraRadius(id, lv);

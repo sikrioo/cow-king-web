@@ -14,6 +14,7 @@ export const SKILL_CODE = {
   flamepillar: ['tryFlamePillar', 'updateGroundSpells'], firewave: ['tryFireWave', 'updateFireWave'], bolt: ['tryBolt', 'spellDamage'], fireball: ['tryFireballSpell'], frostnova: ['tryFrostNova'],
   chain: ['tryChain'], orb: ['tryOrb'], teleport: ['tryTeleport'], discharge: ['tryDischarge', 'updateDischarge', 'applyCC'],
   balllightning: ['tryBallLightning', 'updateBall', 'burstBall'], polymorph: ['tryPolymorph', 'applyPoly', 'updateCC'], meteor: ['tryMeteor', 'meteorImpact', 'updateMeteors'],
+  firetotem: ['tryFireTotem', 'updateFireTotem'], frostfield: ['tryFrostField', 'updateFrostField'], thunderstrike: ['tryThunderStrike', 'updateThunder'],
   spinblade: ['trySpinBlade', 'updateSpinBlade', 'strike'], skyfall: ['trySkyfall', 'updateSkyfall'], whirlaxe: ['tryWhirlAxe', 'updateWhirlAxe'],
   shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
   vitalthrow: ['tryVitalThrow', 'updateVitalThrow'],

@@ -30,6 +30,9 @@ function skillInfo(id) {
   if (id === 'blizzard') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 동안 지역이 생기고 ${s.duration}초 동안 ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage}, 사거리 ${s.range}` }; }
   if (id === 'firewave') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `폭 ${s.width} 곧은 불의 벽이 ${s.travel}초 동안 앞으로 ${s.range}까지(점점 느려짐), 지나가는 적 화염 ${s.damage} + 화상 + 밀어냄` }; }
   if (id === 'discharge') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `구체 ${s.orbs}개가 ${s.duration}초 동안 내 주위를 돎 - ${s.tick}초마다 반경 ${s.radius} 안 적(구체마다 하나)에게 번개 ${s.damage}, 처음 맞으면 경직 ${s.stagger}초` }; }
+  if (id === 'firetotem') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range} 토템 ${s.duration}초: ${s.fireEvery}초마다 ${s.seek} 안 가까운 적에게 불덩이 화염 ${s.damage}` }; }
+  if (id === 'frostfield') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `발밑 ${s.width}×${s.height} 네모 ${s.duration}초: ${s.tick}초마다 냉기 ${s.damage} + 둔화` }; }
+  if (id === 'thunderstrike') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range} 적 하나에 ${s.delay}초 뒤 번개 ${s.damage}, 옆 ${s.splash} 안 × ${s.splashRatio}` }; }
   if (id === 'meteor') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range}, ${s.delay}초 뒤 반경 ${s.radius} 화염 ${s.damage} + 불타는 바닥 ${s.fieldTime}초(${s.fieldTick}초마다 ${s.fieldDamage})` }; }
   if (id === 'polymorph') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `반경 ${s.radius} 적을 ${s.duration}초 양으로 (엘리트 ×${s.eliteMul}, 보스 면역, ${s.drWindow}초 안 두 번째 ×${s.drMul}·세 번째 면역)` }; }
   if (id === 'balllightning') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range} 구체 ${s.duration}초: ${s.arcEvery}초마다 반경 ${s.arcRadius} 안 ${s.targets}명에게 번개 ${s.arcDamage}, 사라질 때 반경 ${s.burstRadius} 폭발 ${s.burst} (다시 누르면 바로 폭발, Lv${s.twoAt}부터 2개)` }; }

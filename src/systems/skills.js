@@ -18,7 +18,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
-import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge, tryMeteor } from './groundSpells.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge, tryMeteor, tryFireTotem, tryFrostField, tryThunderStrike } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { pickAura, addTempAura, isAura } from './auras.js';
@@ -277,6 +277,9 @@ export const SKILLS = {
   blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
+  ...Object.fromEntries([['firetotem', tryFireTotem], ['frostfield', tryFrostField], ['thunderstrike', tryThunderStrike]].map(([id, fn]) => [id, {
+    ...SKILL_META[id], try: () => fn(), cd: () => game.hero.spellCd[id], cdMax: () => SPELLS[id].cooldown * castSpeedMul(game.hero)
+  }])),
   meteor: { ...SKILL_META.meteor, try: () => tryMeteor(), cd: () => game.hero.spellCd.meteor, cdMax: () => SPELLS.meteor.cooldown * castSpeedMul(game.hero) },
   polymorph: { ...SKILL_META.polymorph, try: () => tryPolymorph(),     cd: () => game.hero.spellCd.polymorph, cdMax: () => SPELLS.polymorph.cooldown * (1 - skillBonus(game.hero, 'polymorph', 'cdr')) * castSpeedMul(game.hero) },
   balllightning: { ...SKILL_META.balllightning, try: (o) => tryBallLightning(o), cd: () => game.hero.spellCd.balllightning, cdMax: () => SPELLS.balllightning.cooldown * castSpeedMul(game.hero) },

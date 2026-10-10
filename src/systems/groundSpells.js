@@ -13,6 +13,7 @@ import { canHit, cowEdgeDist, getCowHitRadius, getCowBody } from './combat.js';
 import { rollLightning } from './elements.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
+import { spawnProjectile } from './projectiles.js';
 import { begin, spellDamage } from './sorcSkills.js';
 import { clampToPen } from '../world/arena.js';
 
@@ -41,6 +42,77 @@ function meteorImpact(m) {
   });
   game.hitstop = Math.max(game.hitstop, 3);
   game.groundSpells.push({ kind: 'firefield', x: m.x, y: m.y, age: 0, duration: s.fieldTime, tickT: s.fieldTick, radius: s.fieldRadius, dmg: Math.max(1, Math.round(s.fieldDamage * m.dmg / s.damage)) });
+}
+
+// 화염 토템: 지점에 토템(하나만) - 가까운 적에게 불덩이를 계속 쏨 (kind 'firetotem')
+export function tryFireTotem() {
+  const s = SPELLS.firetotem, h = game.hero;
+  const p = targetPoint(s.range);
+  if (!p || !begin('firetotem')) return;
+  game.groundSpells = game.groundSpells.filter((g) => g.kind !== 'firetotem');
+  game.groundSpells.push({ kind: 'firetotem', x: p.x, y: p.y, age: 0, fireT: 0.3, duration: s.duration * skillMul(h, 'firetotem', 'duration'), dmg: spellDamage(s.damage, 'firetotem') });
+  spawnHitParticles(p.x, p.y, '#ffb347', 10);
+}
+function updateFireTotem(g, dt) {
+  const s = SPELLS.firetotem, h = game.hero;
+  g.fireT -= dt;
+  if (g.fireT > 0) return;
+  const c = game.cows.filter((k) => k.state !== 'dead' && canHit(h, k) && Math.hypot(k.x - g.x, k.y - g.y) <= s.seek)
+    .sort((a, b) => Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y))[0];
+  if (!c) { g.fireT = 0.15; return; } // 적이 없으면 자주 살핌
+  g.fireT = s.fireEvery;
+  const ox = g.x, oy = g.y - 42, at = getCowBody(c);
+  const dx = at.x - ox, dy = at.y - oy, d = Math.hypot(dx, dy) || 1;
+  spawnProjectile({ kind: 'fireball', team: 'hero', x: ox, y: oy, dirX: dx / d, dirY: dy / d, speed: s.speed, range: s.seek + 60, radius: s.radius, packet: { fire: g.dmg }, knock: 2, color: '#ff7a1a' });
+}
+
+// 냉기 장판: 내 발밑에 네모 (kind 'frostfield') - 안의 적에게 냉기 지속 피해(둔화)
+export function tryFrostField() {
+  const s = SPELLS.frostfield, h = game.hero;
+  if (!begin('frostfield')) return;
+  game.groundSpells.push({ kind: 'frostfield', x: h.x, y: h.y, age: 0, tickT: 0, w: s.width, h: s.height, duration: s.duration * skillMul(h, 'frostfield', 'duration'), dmg: spellDamage(s.damage, 'frostfield') });
+  spawnHitParticles(h.x, h.y, '#dff3ff', 12);
+}
+function updateFrostField(g, dt) {
+  const s = SPELLS.frostfield, h = game.hero;
+  g.tickT -= dt;
+  if (g.tickT > 0) return;
+  g.tickT += s.tick;
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c)) return;
+    const cr = getCowHitRadius(c);
+    if (Math.abs(c.x - g.x) <= g.w / 2 + cr && Math.abs(c.y - g.y) <= g.h / 2 + cr * 0.6) damageCowPacket(c, { cold: g.dmg });
+  });
+}
+
+// 전기충격: 적 하나에게 잠시 뒤 하늘에서 번개 (kind 'thunder', 대상을 따라감)
+export function tryThunderStrike() {
+  const s = SPELLS.thunderstrike, h = game.hero;
+  const ax = h.aimX != null ? h.aimX : h.x + Math.cos(h.facing) * s.range * 0.5, ay = h.aimY != null ? h.aimY : h.y + Math.sin(h.facing) * s.range * 0.5;
+  const target = game.cows.filter((c) => c.state !== 'dead' && canHit(h, c) && Math.hypot(c.x - h.x, c.y - h.y) <= s.range)
+    .sort((a, b) => Math.hypot(a.x - ax, a.y - ay) - Math.hypot(b.x - ax, b.y - ay))[0];
+  if (!target) { if (!(h.noManaWarn > 0)) { floatText(h.x, h.y - 40, '대상 없음', '#ffd36a'); h.noManaWarn = 1; } return; }
+  if (!begin('thunderstrike')) return;
+  game.groundSpells.push({ kind: 'thunder', target, x: target.x, y: target.y, age: 0, duration: s.delay + 0.3, struck: false, dmg: spellDamage(s.damage, 'thunderstrike') });
+}
+function updateThunder(g) {
+  const s = SPELLS.thunderstrike, h = game.hero;
+  if (g.target && g.target.state !== 'dead' && !g.struck) { g.x = g.target.x; g.y = g.target.y; }
+  if (g.struck || g.age < s.delay) return;
+  g.struck = true;
+  const top = getCowBody(g.target);
+  spawnLightningBolt(g.x + 30, g.y - 420, top.x, top.y);
+  spawnLightningBolt(g.x - 20, g.y - 380, top.x, top.y);
+  spawnShockwave(g.x, g.y, s.splash + 10, '#fff9b0');
+  spawnHitParticles(g.x, g.y - 30, '#fff066', 12);
+  game.impactFlash = Math.max(game.impactFlash, 0.1);
+  game.shake = Math.min(game.shake + 4, 12);
+  const lmin = masteryBonus(h, 'lightningMin');
+  if (g.target.state !== 'dead') damageCowPacket(g.target, { lightning: rollLightning(g.dmg, lmin) }, { knock: 2, fromX: g.x, fromY: g.y - 1 });
+  game.cows.forEach((c) => {
+    if (c === g.target || c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, g.x, g.y) > s.splash) return;
+    damageCowPacket(c, { lightning: rollLightning(Math.round(g.dmg * s.splashRatio), lmin) });
+  });
 }
 
 // 방전: 전기 구체가 내 주위를 돎 (game.groundSpells kind 'discharge', 주인공을 따라감). 다시 쓰면 새로 (하나만)
@@ -243,6 +315,9 @@ export function updateGroundSpells(dt) {
     if (g.kind === 'firewave') updateFireWave(g, dt);
     else if (g.kind === 'balllightning') updateBall(g, dt);
     else if (g.kind === 'discharge') updateDischarge(g, dt);
+    else if (g.kind === 'firetotem') updateFireTotem(g, dt);
+    else if (g.kind === 'frostfield') updateFrostField(g, dt);
+    else if (g.kind === 'thunder') updateThunder(g);
     else if (g.kind === 'firefield') { g.tickT -= dt; if (g.tickT <= 0) { g.tickT += SPELLS.meteor.fieldTick; hitArea(g, { fire: g.dmg }, 0); } } // 메테오 불타는 바닥
     else if (g.kind === 'blizzard') {
       if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터
