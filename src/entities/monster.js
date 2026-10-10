@@ -12,6 +12,9 @@ import { monsterLevel } from '../util.js';
 import { decoyFor, hitDecoy } from '../systems/physSkills.js';
 import { emptyDot } from '../systems/elements.js';
 import { updateCowStatuses } from '../systems/elementCombat.js';
+import { updateCC } from '../systems/cc.js';
+import { spawnHitParticles } from '../systems/fx.js';
+import { SPELLS } from '../data/skills.js';
 
 export class Monster {
   // opts.pos: 생성 위치(없으면 목장 안 무작위), opts.hunt: 웨이브 몬스터 - 주인공을 못 봤어도 주인공 쪽으로 몰려감
@@ -97,6 +100,20 @@ export class Monster {
     return clampToPen(this.home.x + Math.cos(a) * r, this.home.y + Math.sin(a) * r, this.r + 10);
   }
 
+  // 양(변이): 느리게 무작위로 돌아다님 - 방향은 wanderTurn초마다 바뀜 (게임 난수)
+  sheepWander(dt) {
+    const s = SPELLS.polymorph;
+    this.sheepT = (this.sheepT || 0) - dt;
+    if (!this.sheepDir || this.sheepT <= 0) {
+      const a = Math.random() * Math.PI * 2;
+      this.sheepDir = { x: Math.cos(a), y: Math.sin(a) };
+      this.sheepT = s.wanderTurn * (0.6 + Math.random() * 0.8);
+    }
+    const sp = this.speed * s.wanderMul / 60;
+    Body.setVelocity(this.body, { x: this.sheepDir.x * sp, y: this.sheepDir.y * sp });
+    if (Math.abs(this.sheepDir.x) > 0.1) this.facing = this.sheepDir.x > 0 ? 1 : -1;
+  }
+
   setState(state, duration) {
     this.state = state;
     this.timer = duration;
@@ -117,14 +134,19 @@ export class Monster {
     updateCowStatuses(this, dt); // 화상/중독 피해, 둔화 시간
     if (this.state === 'dead') return;
 
-    // 기절·경직(systems/cc.js) 중엔 종류별 특수 행동도 일반 AI도 멈춤. 풀리면 잠깐 서 있다가 다시 움직임
+    // 기절·경직·변이(systems/cc.js) 중엔 종류별 특수 행동도 일반 AI도 멈춤. 풀리면 잠깐 서 있다가 다시 움직임
+    updateCC(this, dt);
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
       this.state = 'stunned';
       this.stateElapsed += dt;
       if (this.knockback > 0) this.knockback -= dt;
+      else if (this.ccKind === 'poly') this.sheepWander(dt);
       else Body.setVelocity(this.body, { x: 0, y: 0 });
-      if (this.stunTimer <= 0) this.setState('idle', 0.2);
+      if (this.stunTimer <= 0) {
+        if (this.ccKind === 'poly') spawnHitParticles(this.x, this.y - 30 * this.scale, '#f2f2f2', 10); // 다시 소로 - 펑 연기
+        this.setState('idle', 0.2);
+      }
       return;
     }
 

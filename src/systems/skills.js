@@ -16,7 +16,7 @@ import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
-import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryDischarge } from './sorcSkills.js';
+import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryDischarge, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
 import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
@@ -275,6 +275,7 @@ export const SKILLS = {
   blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
+  polymorph: { ...SKILL_META.polymorph, try: () => tryPolymorph(),     cd: () => game.hero.spellCd.polymorph, cdMax: () => SPELLS.polymorph.cooldown * (1 - skillBonus(game.hero, 'polymorph', 'cdr')) * castSpeedMul(game.hero) },
   balllightning: { ...SKILL_META.balllightning, try: (o) => tryBallLightning(o), cd: () => game.hero.spellCd.balllightning, cdMax: () => SPELLS.balllightning.cooldown * castSpeedMul(game.hero) },
   // 무기 특수기 (systems/weaponThrows.js) - usable: 맞는 무기를 들었는지 (아니면 슬롯이 흐려짐)
   ...Object.fromEntries([['spinblade', trySpinBlade], ['skyfall', trySkyfall], ['whirlaxe', tryWhirlAxe], ['shieldbounce', tryShieldBounce],

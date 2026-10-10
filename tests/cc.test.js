@@ -138,3 +138,56 @@ it('볼 라이트닝: 설치 → 주변 적에게 번개, 다시 누르면 바�
     expect(ball()).toBeFalsy();
   } finally { env.restore(); }
 });
+
+it('대규모 변이: 주변 적이 양이 됨(맞아도 안 풀림, 기절 무시, 배회), 엘리트 절반, 보스 면역, 반복 감소 → 세 번째 면역', async () => {
+  const env = installBrowserEnv({ seed: 6 });
+  try {
+    const m = await boot();
+    const h = m.game.hero, s = m.SPELLS.polymorph;
+    const c = m.cow('normal', 80), e = m.cow('tough', -80), boss = m.cow('boss', 0, 120), far = m.cow('normal', s.radius + 250);
+    m.tryPolymorph();
+    expect(m.isSheep(c)).toBe(true);
+    expect(c.stunTimer).toBeCloseTo(s.duration);
+    expect(e.stunTimer).toBeCloseTo(s.duration * s.eliteMul);
+    expect(m.isSheep(boss)).toBe(false);
+    expect(m.isSheep(far)).toBe(false);
+    expect(m.applyCC(c, 'stun', 5)).toBe(false); // 변이가 더 높음
+    const hp = c.hp;
+    m.tryDischarge(); // 피해는 정상, 양은 그대로
+    expect(c.hp).toBeLessThan(hp);
+    expect(m.isSheep(c)).toBe(true);
+    const x0 = c.x;
+    for (let i = 0; i < 30; i++) { c.update(1 / 60); m.Engine.update(m.engine, 1000 / 60); }
+    expect(Math.abs(c.x - x0) + Math.abs(c.y - m.game.hero.y)).toBeGreaterThan(0); // 돌아다님
+    expect(c.state).toBe('stunned');
+    // 반복 감소: 두 번째 절반, 세 번째 면역
+    c.stunTimer = 0;
+    expect(m.applyPoly(c, s.duration)).toBe(true);
+    expect(c.stunTimer).toBeCloseTo(s.duration * s.drMul);
+    c.stunTimer = 0;
+    expect(m.applyPoly(c, s.duration)).toBe(false);
+    c.polyDrT = 0; // 시간이 지나면 다시 걸림
+    expect(m.applyPoly(c, s.duration)).toBe(true);
+  } finally { env.restore(); }
+});
+
+it('대규모 변이: 양으로 죽은 자폭 카우는 안 터짐, 양이 된 광신 카우는 오라가 꺼짐', async () => {
+  const env = installBrowserEnv({ seed: 7 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const { getAuraSpeedMult } = await import('../src/entities/behaviors.js');
+    const { killCow } = await import('../src/systems/combat.js');
+    const ex = m.cow('exploder', 30);
+    m.applyPoly(ex, 2);
+    h.hp = 9999; const hp = h.hp; h.invuln = 0;
+    killCow(ex);
+    expect(ex.sheepDead).toBe(true);
+    expect(h.hp).toBe(hp); // 폭발 피해 없음
+
+    const fan = m.cow('fanatic', 200), buddy = m.cow('normal', 230);
+    expect(getAuraSpeedMult(buddy)).toBeGreaterThan(1);
+    m.applyPoly(fan, 2);
+    expect(getAuraSpeedMult(buddy)).toBe(1);
+  } finally { env.restore(); }
+});

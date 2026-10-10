@@ -120,6 +120,7 @@ export function updatePendingSwing(dt) {
 
 export function killCow(c) {
   c.deadPos = { x: c.x, y: c.y };
+  c.sheepDead = c.stunTimer > 0 && c.ccKind === 'poly'; // 양으로 죽음 → 양 모습, 자폭 같은 처치 효과 없음
   c.state = 'dead';
   c.deadTimer = 0.3;
   World.remove(world, c.body);
@@ -129,7 +130,7 @@ export function killCow(c) {
   spawnHitParticles(c.x, c.y, PALETTE.horn, c.kind === 'boss' ? 22 : 10);
   // 종류별 처치 효과 (냉기 노바/자폭/보스 승리) - behaviors[kind].onDeath. true면 자체 드랍을 했으므로 기본 드랍 생략
   const b = c.behavior;
-  if (b && b.onDeath && b.onDeath(c)) return;
+  if (b && b.onDeath && !c.sheepDead && b.onDeath(c)) return;
   dropLoot(c.x, c.y, dropSource(c), c.dropCount || 1, c.level); // 출처별 드랍 테이블(data/drops.js), 파밍 맵 우두머리는 여러 번
 }
 

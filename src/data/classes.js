@@ -16,7 +16,7 @@ export const CLASSES = {
   sorc: {
     label: '마법사', desc: '원소 마법 · 낮은 체력, 높은 마나',
     hp: 100, mana: 160, manaRegen: 9,
-    skills: ['bolt', 'fireball', 'frostnova', 'chain', 'orb', 'energyshield', 'flamepillar', 'firewave', 'blizzard', 'discharge', 'balllightning'], slots: ['bolt', 'fireball'],
+    skills: ['bolt', 'fireball', 'frostnova', 'chain', 'orb', 'energyshield', 'flamepillar', 'firewave', 'blizzard', 'discharge', 'balllightning', 'polymorph'], slots: ['bolt', 'fireball'],
     basic: 'bolt', starterGear: false, staff: true, // 무기를 안 들었으면 지팡이를 든 모습
     look: { body: ['#6a7cc8', '#2a2f6e', '#10122e'], trim: '#e8d9a8', scarf: ['#2a3f8a', '#4d6bff'], gem: '#7fd4ff', eyes: '#bfeaff', hand: '#c9c3e8' }
   }

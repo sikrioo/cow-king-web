@@ -96,7 +96,8 @@ export function drawMonster(c, ctx, t) {
     const p = c.deadPos;
     ctx.save();
     ctx.globalAlpha = fade;
-    drawCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0, null, c.weapon);
+    if (c.sheepDead) drawSheep(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, false); // 양 모습 그대로 쓰러짐
+    else drawCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0, null, c.weapon);
     ctx.restore();
     return;
   }
@@ -135,10 +136,14 @@ export function drawMonster(c, ctx, t) {
                      : c.state;
   const visualElapsed = c.state === 'charging' ? 0.16 : c.stateElapsed;
 
+  if (c.ccKind === 'poly' && c.stunTimer > 0) { // 변이: 소 대신 양 (체력바는 그대로)
+    drawSheep(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, true, c.flash > 0);
+  } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon);
   ctx.restore();
+  }
 
   if (c.state === 'attack' && c.attackingPlayer && c.stateElapsed < 0.16) {
     const warnScale = 1 + Math.sin((c.stateElapsed / 0.16) * Math.PI) * 0.5;
@@ -168,4 +173,31 @@ export function drawMonster(c, ctx, t) {
     ctx.fillStyle = style.ring || '#e05b4d';
     ctx.fillRect(c.x - w / 2, barY, w * (c.hp / c.maxHp), 4);
   }
+}
+
+// 양 (대규모 변이): 하얀 털뭉치(원 여러 개) + 검은 얼굴·귀·다리. 걸으면 통통 튐. 몸통 높이는 소와 비슷하게(맞는 판정이 그림과 맞게)
+export function drawSheep(ctx, x, y, scale, animT, facing = 1, walking = true, flash = false) {
+  const bob = walking ? Math.abs(Math.sin(animT * 9)) * 5 : 0;
+  ctx.save();
+  ctx.translate(x, y - bob);
+  ctx.scale(scale * facing, scale);
+  ctx.fillStyle = PALETTE.shadow;
+  ctx.beginPath(); ctx.ellipse(0, 2 + bob / scale, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
+  const step = walking ? Math.sin(animT * 9) * 3 : 0;
+  ctx.fillStyle = '#2a2a2a'; // 다리
+  [[-12, step], [-4, -step], [6, step], [14, -step]].forEach(([lx, dy]) => ctx.fillRect(lx - 2, -14 + dy * 0.3, 4, 14));
+  ctx.fillStyle = flash ? '#ffffff' : '#f4f2ec'; // 털
+  ctx.strokeStyle = '#d6d2c6';
+  ctx.lineWidth = 1.5;
+  [[-14, -30, 12], [0, -36, 15], [13, -30, 12], [-7, -22, 11], [8, -21, 11], [0, -27, 14]].forEach(([fx, fy, r]) => {
+    ctx.beginPath(); ctx.arc(fx, fy, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  });
+  ctx.fillStyle = '#2f2b28'; // 얼굴
+  ctx.beginPath(); ctx.ellipse(22, -30, 8, 10, 0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(17, -38, 6, 3, -0.6, 0, Math.PI * 2); ctx.fill(); // 귀
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(24, -32, 1.8, 0, Math.PI * 2); ctx.fill(); // 눈
+  ctx.fillStyle = '#f4f2ec';
+  ctx.beginPath(); ctx.arc(19, -40, 5, 0, Math.PI * 2); ctx.fill(); // 머리 털
+  ctx.restore();
 }

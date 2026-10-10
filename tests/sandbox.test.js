@@ -37,10 +37,11 @@ it('모든 스킬: 허수아비 앞에서 반복 시전 → 피해나 효과가 
       m.resetGame();
       m.startSandbox(sb);
       const h = m.game.hero;
+      let sheep = false;
       let hurt = 0, moved = 0, stunned = false, fort = false, berserk = false, shield = false, decoy = false;
       for (let i = 0; i < 360; i++) {
         env.frame(1);
-        m.game.cows.forEach((c) => { hurt = Math.max(hurt, c.maxHp - c.hp); if (c.stunTimer > 0) stunned = true; });
+        m.game.cows.forEach((c) => { hurt = Math.max(hurt, c.maxHp - c.hp); if (c.stunTimer > 0) stunned = true; if (c.ccKind === 'poly' && c.stunTimer > 0) sheep = true; });
         moved = Math.max(moved, Math.hypot(h.x - m.game.sandbox.anchor.x, h.y - m.game.sandbox.anchor.y));
         if (h.fortifyTimer > 0) fort = true;
         if (h.berserkTimer > 0) berserk = true;
@@ -49,7 +50,7 @@ it('모든 스킬: 허수아비 앞에서 반복 시전 → 피해나 효과가 
       }
       expect(m.game.gameState, id).toBe('playing');
       expect(m.game.cardOffer, id).toBe(null);
-      const special = { fortify: fort, teleport: moved > 100, warcry: stunned, berserk, energyshield: shield, decoy };
+      const special = { fortify: fort, teleport: moved > 100, warcry: stunned, berserk, energyshield: shield, decoy, polymorph: sheep };
       const effect = id in special ? special[id] : hurt > 0;
       expect(effect, id).toBe(true);
     }

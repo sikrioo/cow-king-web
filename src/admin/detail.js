@@ -13,7 +13,7 @@ export const SKILL_CODE = {
   decoy: ['tryDecoy', 'decoyFor', 'hitDecoy', 'updateSkillBuffs'], energyshield: ['tryEnergyShield', 'heroDamageTaken'], blizzard: ['tryBlizzard', 'updateGroundSpells'],
   flamepillar: ['tryFlamePillar', 'updateGroundSpells'], firewave: ['tryFireWave', 'updateFireWave'], bolt: ['tryBolt', 'spellDamage'], fireball: ['tryFireballSpell'], frostnova: ['tryFrostNova'],
   chain: ['tryChain'], orb: ['tryOrb'], teleport: ['tryTeleport'], discharge: ['tryDischarge', 'applyCC'],
-  balllightning: ['tryBallLightning', 'updateBall', 'burstBall'],
+  balllightning: ['tryBallLightning', 'updateBall', 'burstBall'], polymorph: ['tryPolymorph', 'applyPoly', 'updateCC'],
   spinblade: ['trySpinBlade', 'updateSpinBlade', 'strike'], skyfall: ['trySkyfall', 'updateSkyfall'], whirlaxe: ['tryWhirlAxe', 'updateWhirlAxe'],
   shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
   vitalthrow: ['tryVitalThrow', 'updateVitalThrow']

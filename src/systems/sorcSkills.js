@@ -8,7 +8,7 @@ import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
 import { spawnHitParticles, spawnIceRing, spawnLightningBolt, spawnShockwave, floatText } from './fx.js';
 import { spawnProjectile } from './projectiles.js';
-import { applyCC } from './cc.js';
+import { applyCC, applyPoly } from './cc.js';
 
 // 주인공 레벨 + 스킬 레벨에 따라 오르는 주문 피해 (정수)
 export function spellDamage(base, id) {
@@ -96,6 +96,22 @@ export function tryDischarge() {
     spawnLightningBolt(h.x, h.y - 10, at.x, at.y);
     damageCowPacket(c, { lightning: rollLightning(dmg, masteryBonus(h, 'lightningMin')) }, { knock: 2, fromX: h.x, fromY: h.y });
     applyCC(c, 'stagger', s.stagger);
+  });
+}
+
+// 대규모 변이: 내 주변 적을 전부 양으로 (피해 없음) - 흰 연기 + "메에~"
+export function tryPolymorph() {
+  const s = SPELLS.polymorph, h = game.hero;
+  if (!begin('polymorph', s.cooldown * (1 - skillBonus(h, 'polymorph', 'cdr')) * castSpeedMul(h))) return;
+  const radius = s.radius * skillMul(h, 'polymorph', 'radius');
+  const time = s.duration * skillMul(h, 'polymorph', 'duration');
+  spawnShockwave(h.x, h.y, radius, '#f4f4f4');
+  let n = 0;
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, h.x, h.y) > radius) return;
+    if (!applyPoly(c, time)) { floatText(c.x, c.y - 60 * c.scale, '면역', '#9a9a9a'); return; }
+    spawnHitParticles(c.x, c.y - 30 * c.scale, '#ffffff', 10);
+    if (n++ < 4) floatText(c.x, c.y - 70 * c.scale, '메에~', '#ffffff'); // 너무 많으면 글자가 겹쳐서 몇 마리만
   });
 }
 
