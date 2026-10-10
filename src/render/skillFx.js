@@ -307,22 +307,22 @@ function drawDischarge(ctx, g, t, gi) {
   ctx.restore();
 }
 
-// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 몸 둘레 작은 노란 원. 바뀌는 중이면 점선
+// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 내 둘레 은은한 노란 빛(정원). 바뀌는 중이면 점선
 export function drawAuraRings(ctx, t) {
   const h = game.hero;
   if (!h.alive) return;
   ctx.save();
   activeAuras(h).forEach(({ id, lv }, i) => {
     const color = SKILL_STATS[id].ring;
-    if (id === 'aurathorns') { // 가시: 내 몸 둘레 작은 노란 원 (사용자 요청)
-      const R = h.r * 1.35;
-      ctx.globalAlpha = 0.12 + Math.sin(t * 4) * 0.04;
-      ctx.fillStyle = color;
-      ctx.beginPath(); ctx.ellipse(h.x, h.y, R, R * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 0.85;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(h.x, h.y, R, R * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+    if (id === 'aurathorns') { // 가시: 내 둘레 은은한 노란 빛 - 정원(납작하지 않게), 가운데가 밝고 바깥으로 옅어짐 (주인공 하나라 그라데이션 괜찮음)
+      const R = SKILL_STATS.aurathorns.glow * (1 + Math.sin(t * 2.5) * 0.04), cy = h.y - h.r * 0.4;
+      const g = ctx.createRadialGradient(h.x, cy, R * 0.15, h.x, cy, R);
+      g.addColorStop(0, 'rgba(255,216,77,0.26)');
+      g.addColorStop(0.6, 'rgba(255,216,77,0.12)');
+      g.addColorStop(1, 'rgba(255,216,77,0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(h.x, cy, R, 0, Math.PI * 2); ctx.fill();
       return;
     }
     const r = auraRadius(id, lv);
