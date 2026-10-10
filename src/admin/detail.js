@@ -1,7 +1,8 @@
 // 관리자 - 상세 보기(오른쪽 서랍): 실제 게임 미리보기 창(샌드박스 iframe) + 데이터(JSON) + 관련 코드, 몬스터 모습 카드(움직이는 그림)
 import { MONSTERS, MONSTER_LABEL, MONSTER_WEAPONS, weaponFor, ELITE_KINDS } from '../data/monsters.js';
 import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_LEVEL_UP, SKILL_MAX_LEVEL, SPELLS, SKILL_STATS } from '../data/skills.js';
-import { drawCow } from '../render/monsterSprites.js';
+import { drawCow, drawStunDots } from '../render/monsterSprites.js';
+import { drawSkeletonCow } from '../render/skeletonSprites.js';
 import { findFunction, findEntry } from './source.js';
 import { el, select } from './ui.js';
 
@@ -118,7 +119,8 @@ function drawCard(cv, kind, t) {
     ctx.beginPath(); ctx.ellipse(x, y, 30 * scale + 8, (30 * scale + 8) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
-  drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0));
+  if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots });
+  else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0));
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '11px sans-serif';
   ctx.fillText(state, 6, 14);
