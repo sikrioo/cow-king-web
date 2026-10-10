@@ -1,5 +1,4 @@
 // 화면 오버레이 (타이틀/카운트다운/웨이브 배너/팁/일시정지)
-import { BOSS_WAVE } from '../data/balance.js';
 import { weaponFor } from '../data/monsters.js';
 import { RELEASE_VERSION } from '../config.js';
 import { canvas, ctx } from '../core/context.js';
@@ -10,6 +9,8 @@ import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import { viewSize } from '../world/camera.js';
 import { MAPS } from '../data/maps.js';
 import { DIFFICULTY } from '../data/difficulty.js';
+import { ACTS, ACT_SCENE } from '../data/acts.js';
+import { waveInfo } from '../util.js';
 
 export function drawTitleScene(t) {
   const sorted = [...ui.titleCows].sort((a, b) => a.y - b.y);
@@ -148,7 +149,7 @@ export function drawStartCountdown() {
 export function drawWavePresentation(t) {
   if (game.waveBannerTimer <= 0 || game.gameState !== 'playing' || ui.showInventory) return;
   const a = Math.min(1, game.waveBannerTimer * 2.2) * Math.min(1, (1.6 - game.waveBannerTimer) * 3.0 + 1);
-  const boss = game.wave === BOSS_WAVE && game.run.mode === 'wave';
+  const info = waveInfo(game.wave), boss = info.isBoss && game.run.mode === 'wave';
   const farm = game.run.mode === 'farm';
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, a));
@@ -157,11 +158,41 @@ export function drawWavePresentation(t) {
   ctx.shadowColor = 'rgba(0,0,0,.75)';
   ctx.shadowBlur = 12;
   ctx.font = boss ? '900 38px Georgia, serif' : '900 28px sans-serif';
-  ctx.fillText(farm ? MAPS[game.run.mapId].name : boss ? 'THE COW KING' : `WAVE ${game.wave}`, canvas.width / 2, canvas.height * 0.42);
+  ctx.fillText(farm ? MAPS[game.run.mapId].name : boss ? info.def.bossName : `WAVE ${info.actWave}`, canvas.width / 2, canvas.height * 0.42);
   ctx.shadowBlur = 0;
   ctx.font = '12px monospace';
   ctx.fillStyle = boss ? '#ffe8a1' : 'rgba(255,255,255,.75)';
-  ctx.fillText(farm ? `난이도 ${DIFFICULTY[game.run.difficulty].label} · ${game.hero.mapRuns[`${game.run.mapId}:${game.run.difficulty}`] || 1}번째 입장` : boss ? '왕의 목장에 입장했습니다' : 'SURVIVE THE PASTURE', canvas.width / 2, canvas.height * 0.42 + 24);
+  ctx.fillText(farm ? `난이도 ${DIFFICULTY[game.run.difficulty].label} · ${game.hero.mapRuns[`${game.run.mapId}:${game.run.difficulty}`] || 1}번째 입장` : boss ? info.def.bossSub : info.def.name, canvas.width / 2, canvas.height * 0.42 + 24);
+  ctx.restore();
+}
+
+// 막 전환 장면: 어두워졌다 밝아지며(가운데에서 바닥이 바뀜) 다음 막 이름 / 보스 처치 뒤엔 '다음 막까지 N초'
+export function drawActScene() {
+  if (game.gameState !== 'playing' || game.run.mode !== 'wave') return;
+  if (game.actClear > 0 && game.act < ACTS.length - 1) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillStyle = 'rgba(255,224,102,0.9)';
+    ctx.fillText(`다음 막까지 ${Math.ceil(game.actClear)}초 - 전리품을 챙기세요`, canvas.width / 2, canvas.height * 0.2);
+    ctx.restore();
+  }
+  if (!(game.actScene > 0)) return;
+  const k = 1 - game.actScene / ACT_SCENE;                 // 0 → 1
+  const dark = k < 0.5 ? k * 2 : (1 - k) * 2;              // 0 → 1 → 0
+  const next = ACTS[Math.min(ACTS.length - 1, k < 0.5 ? game.act + 1 : game.act)];
+  ctx.save();
+  ctx.globalAlpha = 0.88 * dark;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = Math.min(1, dark * 1.6);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f1d06b';
+  ctx.font = '900 34px Georgia, serif';
+  ctx.fillText(next.name, canvas.width / 2, canvas.height * 0.45);
+  ctx.font = '13px monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fillText(next.sub, canvas.width / 2, canvas.height * 0.45 + 26);
   ctx.restore();
 }
 

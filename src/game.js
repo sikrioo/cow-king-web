@@ -29,6 +29,7 @@ import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateThrows } from './systems/weaponThrows.js';
 import { processSpawns, updateCorpses } from './systems/summons.js';
+import { updateActFlow } from './systems/acts.js';
 import { updateHellfires } from './systems/demonSpells.js';
 import { updateCurses } from './systems/curses.js';
 import { updateAuras } from './systems/auras.js';
@@ -96,6 +97,7 @@ export function fixedUpdate(dt) {
       if (game.cows[i].state === 'dead' && game.cows[i].deadTimer <= 0) game.cows.splice(i, 1);
     }
     if (game.run.mode === 'farm') updateFarmProgress(); // 파밍 맵: 다 잡으면 클리어
+    else if (updateActFlow(dt)) { /* 보스 처치 뒤 대기·막 전환 장면 - 웨이브 진행 안 함 */ }
     else if (game.cows.length === 0) {
       game.waveTransition -= dt;
       if (game.waveTransition <= 0) {

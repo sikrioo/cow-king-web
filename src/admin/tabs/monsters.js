@@ -9,6 +9,8 @@ import * as B from '../../data/balance.js';
 import { monsterLevel } from '../../util.js';
 import { el, table, h2, note, src, tag, pct } from '../ui.js';
 import { monsterCard, openMonsterDetail } from '../detail.js';
+import { ACT_WAVE_SIZE, BOSS_ESCORTS, ACT_CLEAR_DELAY } from '../../data/acts.js';
+import { waveInfo, TOTAL_WAVES } from '../../util.js';
 
 const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<span class="dim">물리</span>');
 const resistText = (r) => (r ? Object.entries(r).map(([k, v]) => tag(`${k === 'phys' ? '물리' : ELEMENT_DEF[k].label} ${v >= 1 ? '면역' : pct(v)}`, k === 'phys' ? '#ddd' : ELEMENT_DEF[k].color)).join('') : null);
@@ -50,14 +52,19 @@ export function renderMonsters(root) {
     ], DIFFICULTY_ORDER)
   );
 
-  const waves = Array.from({ length: B.BOSS_WAVE }, (_, i) => i + 1);
+  const waves = Array.from({ length: TOTAL_WAVES() }, (_, i) => i + 1);
+  const W = ACT_WAVE_SIZE;
   root.append(
-    h2('목장 웨이브 구성'),
-    note(`마리 수 = 6 + 웨이브 × 4, 무리 ${B.WAVE_PACKS_MIN}~${B.WAVE_PACKS_MAX}곳. ${ELITE_MIN_WAVE}웨이브부터 마리마다 엘리트 확률 min(${ELITE_CHANCE_BASE} + 웨이브 × ${ELITE_CHANCE_PER_WAVE}, ${ELITE_CHANCE_MAX}) - 엘리트 ${ELITE_KINDS.length}종 균등. ${B.BOSS_WAVE}웨이브 = 카우킹 + 일반 4. ${src('src/systems/waves.js')}`),
+    h2('목장 웨이브 구성 (3막)'),
+    note(`막마다 몬스터·보스·바닥이 다름(${src('src/data/acts.js')}). 마리 수 = ${W.base} + 막 안 웨이브 × ${W.perWave} + 막 번호 × ${W.perAct}, 무리 ${B.WAVE_PACKS_MIN}~${B.WAVE_PACKS_MAX}곳. ${ELITE_MIN_WAVE}웨이브부터 마리마다 엘리트 확률 min(${ELITE_CHANCE_BASE} + 웨이브 × ${ELITE_CHANCE_PER_WAVE}, ${ELITE_CHANCE_MAX}) - 막의 엘리트 목록에서 균등. 막의 마지막 웨이브 = 보스 + 호위 ${BOSS_ESCORTS}. 보스 처치 → 전리품(막마다 횟수) → ${ACT_CLEAR_DELAY}초 뒤 다음 막. ${src('src/systems/waves.js')}`),
     table([
       { label: '웨이브', key: 'w' },
-      { label: '마리 수', num: true, get: (r) => (r.w === B.BOSS_WAVE ? '카우킹 + 4' : 6 + r.w * 4) },
-      { label: '엘리트 확률(마리당)', num: true, get: (r) => (r.w === B.BOSS_WAVE ? '-' : r.w < ELITE_MIN_WAVE ? '0%' : pct(Math.min(ELITE_CHANCE_BASE + r.w * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX))) }
+      { label: '막', get: (r) => waveInfo(r.w).def.name },
+      { label: '막 안', num: true, get: (r) => waveInfo(r.w).actWave },
+      { label: '마리 수', num: true, get: (r) => { const i = waveInfo(r.w); return i.isBoss ? `${MONSTER_LABEL[i.def.boss]} + ${BOSS_ESCORTS}` : W.base + i.actWave * W.perWave + i.act * W.perAct; } },
+      { label: '일반 몬스터', get: (r) => Object.keys(waveInfo(r.w).def.normals).map((k) => MONSTER_LABEL[k]).join(', ') },
+      { label: '엘리트 확률(마리당)', num: true, get: (r) => (waveInfo(r.w).isBoss ? '-' : r.w < ELITE_MIN_WAVE ? '0%' : pct(Math.min(ELITE_CHANCE_BASE + r.w * ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX))) },
+      { label: '보스 전리품', num: true, get: (r) => (waveInfo(r.w).isBoss ? `${waveInfo(r.w).def.bossDrops}번` : '') }
     ], waves.map((w) => ({ w })))
   );
 

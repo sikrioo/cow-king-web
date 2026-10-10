@@ -159,7 +159,7 @@ export function drawMonster(c, ctx, t) {
   } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots }); // 해골 카우: 전용 그림
+  if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield }); // 해골 카우: 전용 그림
   else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null); // 악마: 날개·꼬리·문양
   ctx.restore();
   }

@@ -99,6 +99,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 히트 판정: 근접은 몬스터 중심(발) + `getCowHitRadius`. 투사체·폭발·클릭은 그림 기준 `combat.cowEdgeDist`(몸통 원 = 발에서 위로 40*scale, 반지름 30*scale + 발밑 원) - 소 그림의 몸통은 발보다 위에 그려진다. `hitPlayer` 무적시간이 지속 피해 틱을 제한한다.
 - 맵은 화면보다 크다(카메라): 월드 좌표 그림은 renderer의 applyCamera 블록 안, HUD·배너는 밖. 화면 밖 몬스터는 그리지 않으므로 그림 코드가 게임 상태/난수를 건드리면 화면 크기에 따라 결과가 달라진다.
 - 맵 구조: 타이틀(직업) → 맵 선택(`ui/mapSelect.js`) → 목장(mode 'wave', 난이도마다 1웨이브부터) / 파밍 맵(mode 'farm', 인스턴스 - 들어갈 때마다 `systems/mapRun.js`가 무리 배치). 둘 다 난이도 `data/difficulty.js` 선택, 면역 무리는 맵에 `immune`이 있을 때만(목장 없음 - 전사가 웨이브에서 막히지 않게) → 죽음/승리/나가기(T 두 번) → 맵 선택. 캐릭터(레벨·장비·가방·카드)는 유지(영구 저장은 서버 이후). 지금 맵의 배율은 `game.run`(목장은 전부 1). 맵 추가 = `data/maps.js` 항목 + `MAP_ORDER`.
+- 목장 = 3막(`data/acts.js`: 1막 목장 6웨이브·카우킹 / 2막 묘지 4웨이브·해골 카우 킹 / 3막 지옥문 4웨이브·악마 카우킹). 웨이브 번호는 이어서 셈, 막 정보 `util.waveInfo`. 보스 처치 → `systems/acts.js` bossDown(전리품 + 대기) → 막 전환 장면(`game.actScene`, 가운데에서 `game.act`가 바뀌고 바닥 분위기도) → 마지막 막 보스 = 승리. 막마다 바닥은 ACTS[].ground(render/ground.js가 막별로 캐시).
 - 웨이브 몬스터는 `hunt`(어그로 밖이어도 주인공 쪽으로 이동). 생성 위치 규칙은 `systems/waves.js`, 수치는 `data/balance.js`의 WAVE_*/HUNT_*.
 - 몬스터 40마리 이상도 나온다: 몬스터마다 `ctx.filter`나 매 프레임 그라데이션 생성 금지.
 - `localStorage`는 항상 try/catch, 저장 키 `cowking_release_meta_v1` 유지.

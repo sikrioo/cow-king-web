@@ -12,6 +12,9 @@ import { DIFFICULTY } from '../data/difficulty.js';
 import { attacksPerSecond } from '../util.js';
 import { drawMinimap, minimapSize } from './minimap.js';
 import { CURSE_COLOR } from '../data/balance.js';
+import { ACTS } from '../data/acts.js';
+import { MONSTER_LABEL } from '../data/monsters.js';
+import { waveInfo } from '../util.js';
 
 export function drawComboCounter(ctx) {
   if (game.hero.combo < 2 || !game.hero.alive) return;
@@ -182,7 +185,7 @@ export function drawHUD() {
   ctx.textAlign = 'center';
   const remaining = game.cows.filter((c) => c.state !== 'dead').length;
   if (game.run.mode === 'farm') ctx.fillText(`${MAPS[game.run.mapId].name} (${DIFFICULTY[game.run.difficulty].label})  ·  남은 카우 ${remaining}/${game.run.total}`, canvas.width / 2, expY + 30);
-  else ctx.fillText(`웨이브 ${game.wave}${game.run.difficulty !== 'normal' ? ` (${DIFFICULTY[game.run.difficulty].label})` : ''}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30);
+  else { const wi = waveInfo(game.wave); ctx.fillText(`${wi.def.name} · 웨이브 ${Math.max(0, wi.actWave)}/${wi.def.waves}${game.run.difficulty !== 'normal' ? ` (${DIFFICULTY[game.run.difficulty].label})` : ''}  ·  남은 카우 ${remaining}`, canvas.width / 2, expY + 30); }
   ctx.textAlign = 'left';
 
   const mm = minimapSize();
@@ -201,13 +204,13 @@ export function drawHUD() {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(game.run.mode === 'farm' ? '맵 클리어! T 두 번 / ⇦ 버튼으로 맵 선택으로' : `웨이브 ${game.wave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(game.run.mode === 'farm' ? '맵 클리어! T 두 번 / ⇦ 버튼으로 맵 선택으로' : game.actClear > 0 || game.actScene > 0 ? '' : `웨이브 ${waveInfo(game.wave).actWave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
     ctx.textAlign = 'left';
   }
 
   const back = '클릭 또는 Space/Enter로 맵 선택으로 (캐릭터는 그대로)';
   if (game.gameState === 'gameover') overlay('GAME OVER', game.run.mode === 'farm' ? `쓰러졌습니다 - ${back}` : `${game.wave}웨이브까지 생존 - ${back}`);
-  if (game.gameState === 'victory') overlay('VICTORY!', `카우킹 처치! ${back}`);
+  if (game.gameState === 'victory') overlay('VICTORY!', `${MONSTER_LABEL[ACTS[ACTS.length - 1].boss]} 처치 - 목장 3막 완료! ${back}`);
 }
 
 // 에너지 쉴드 남은 흡수량: 체력 구슬 바깥 파란 링(줄어듦) + 아래 "보호막 85"

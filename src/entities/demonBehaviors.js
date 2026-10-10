@@ -16,6 +16,7 @@ import { spawnProjectile } from '../systems/projectiles.js';
 import { applyCurse } from '../systems/curses.js';
 import { spawnHellfire } from '../systems/demonSpells.js';
 import { clampToPen } from '../world/arena.js';
+import { bossDown } from '../systems/acts.js';
 
 const heroDist = (m) => Math.hypot(game.hero.x - m.x, game.hero.y - m.y);
 const impsOf = (m) => game.cows.filter((c) => c.summoner === m && c.state !== 'dead').length + game.pendingSpawns.filter((p) => p.summoner === m).length;
@@ -223,7 +224,7 @@ export const demonBehaviors = {
     },
     onDeath(m) {
       game.cows.forEach((c) => { if (c.summoner === m && c.state !== 'dead') killCow(c); }); // 부른 임프도 사라짐
-      return false;
+      return bossDown(m); // 전리품 + 승리(마지막 막)
     },
     drawUnder(m, ctx, t) {
       if (m.state === 'casting') castRing(ctx, m, t, Math.min(1, m.stateElapsed / DKING_CAST), '#ff5ad8');

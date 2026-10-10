@@ -18,7 +18,7 @@ const r4 = (v) => (typeof v === 'number' ? +v.toFixed(4) : v);
 // view = { game, ui, player } → 비교용 지문
 function fingerprint({ game, ui, player }) {
   return {
-    gameState: game.gameState, paused: game.paused, wave: game.wave, waveTransition: r4(game.waveTransition), kills: game.kills,
+    gameState: game.gameState, paused: game.paused, wave: game.wave, act: game.act, actClear: r4(game.actClear || 0), waveTransition: r4(game.waveTransition), kills: game.kills,
     cows: game.cows.length, cowHp: r4(game.cows.reduce((s, c) => s + c.hp, 0)), cowXY: r4(game.cows.reduce((s, c) => s + c.x * 3 + c.y, 0)), cowStates: game.cows.map((c) => c.kind[0] + c.state[0]).join(''),
     items: game.items.length, particles: game.particles.length, floatTexts: game.floatTexts.length,
     hazards: game.hazards.length, bolts: game.lightningBolts.length, shockwaves: game.shockwaves.length, shake: r4(game.shake),
@@ -184,7 +184,8 @@ describe('smoke: 몬스터 13종 특수 행동/처치', () => {
   for (const seed of [5, 99]) {
     it(`zoo seed ${seed}`, async () => {
       const prints = await runModularZoo(seed);
-      expect(prints[prints.length - 1].gameState).toBe('victory'); // 보스 처치까지 실제로 경유했는지
+      const last = prints[prints.length - 1];
+      expect(last.act > 0 || last.actClear > 0, '카우킹 처치 → 다음 막(대기 중이거나 이미 2막)').toBe(true); // 2026-10-11: 승리 대신 다음 막 - data/acts.js
       expect(allHpInteger(prints), '체력은 정수').toBe(true);
       expect(prints).toMatchSnapshot();
     }, 120000);

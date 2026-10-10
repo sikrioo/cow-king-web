@@ -8,6 +8,7 @@ import { spawnHitParticles, floatText } from './fx.js';
 import { rollGearItem } from './gear.js';
 import { applyItem } from './potions.js';
 import { unidentifiedTitle } from '../ui/itemView.js';
+import { MONSTERS } from '../data/monsters.js';
 
 // 가방 장비 버리기: 주인공 발밑에 떨어뜨림 (다시 주울 수 있음, DISCARD_ITEM_LIFE초 뒤 사라짐)
 export function discardFromInventory(index) {
@@ -25,7 +26,7 @@ export function discardFromInventory(index) {
 // 죽은 몬스터의 드랍 출처 (data/drops.js DROP_RATES 키)
 export function dropSource(c) {
   if (c.mapBoss) return 'mapBoss';
-  if (c.kind === 'boss') return 'boss';
+  if (c.kind === 'boss' || (MONSTERS[c.kind] && MONSTERS[c.kind].boss)) return 'boss';
   return c.kind !== 'normal' ? 'elite' : 'normal';
 }
 

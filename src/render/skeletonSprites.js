@@ -8,7 +8,7 @@ const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#14
 
 // stunFn: 기절 별 그림(monsterSprites.drawStunDots - 순환 import를 피하려고 넘겨받음)
 export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, opts = {}) {
-  const { king = false, flash = false, weapon = 'club', stunFn = null } = opts;
+  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false } = opts;
   const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const poke = state === 'attack' ? Math.sin(Math.min(stateElapsed * 10, Math.PI)) : 0;
@@ -83,6 +83,15 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#7fffd4';
     ctx.beginPath(); ctx.arc(0, -71, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  if (shield) { // 해골 방패병: 몸 앞 아래쪽에 낡은 둥근 나무 방패 (쇠테 + 가운데 징)
+    ctx.fillStyle = '#5e4128'; ctx.strokeStyle = '#8b8f96'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(12, -24, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#3e2a18'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(2, -30); ctx.lineTo(22, -30); ctx.moveTo(1, -20); ctx.lineTo(23, -20); ctx.stroke();
+    ctx.fillStyle = '#b9bec6';
+    ctx.beginPath(); ctx.arc(12, -24, 3, 0, Math.PI * 2); ctx.fill();
   }
 
   if (state === 'stunned' && stunFn) stunFn(ctx, animT);

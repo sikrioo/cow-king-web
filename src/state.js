@@ -13,6 +13,7 @@ export const game = {
   hazards: [],
   meteors: [], // 떨어지는 중인 메테오 (systems/spells.js)
   groundSpells: [], // 눈보라·화염기둥 (systems/groundSpells.js)
+  act: 0, actClear: 0, actScene: 0, // 목장 막 (data/acts.js, systems/acts.js): 지금 막, 보스 처치 뒤 대기, 막 전환 장면
   corpses: [], // 쓰러진 자리 { x, y, life } - 해골 카우 킹이 여기서 해골을 일으킴 (systems/summons.js)
   hellfires: [], // 악마 지옥불 원 (systems/demonSpells.js)
   pendingSpawns: [], // 몬스터가 불러낸 몬스터 { kind, x, y, summoner } - systems/summons.js가 다음 틱에 만듦

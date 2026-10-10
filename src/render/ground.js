@@ -5,6 +5,8 @@ import { GROUND_CHUNK } from '../data/maps.js';
 import { currentMap, currentMapId } from '../world/arena.js';
 import { PEN } from '../world/arena.js';
 import { viewRect } from '../world/camera.js';
+import { ACTS } from '../data/acts.js';
+import { game } from '../state.js';
 
 const cache = new Map(); // 'cx,cy' → 캔버스
 
@@ -106,6 +108,27 @@ function drawDecor(c, d, x, y, pick) {
       c.arc(x + Math.cos(i * 2.1 + pick * 6) * 3, y + Math.sin(i * 2.1 + pick * 6) * 3, d.size, 0, Math.PI * 2);
       c.fill();
     }
+  } else if (d.type === 'tomb') {
+    // 묘비: 위가 둥근 네모 + 그림자 + 금
+    const w = d.size * 1.2, h = d.size * 1.7;
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.beginPath(); c.ellipse(x + 2, y + 1, w * 0.7, w * 0.25, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = color;
+    c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x - w / 2, y - h + w / 2); c.arc(x, y - h + w / 2, w / 2, Math.PI, 0); c.lineTo(x + w / 2, y); c.closePath(); c.fill();
+    c.strokeStyle = d.light; c.lineWidth = 1.2;
+    c.beginPath(); c.moveTo(x, y - h + 4); c.lineTo(x, y - h * 0.45); c.moveTo(x - w * 0.25, y - h * 0.75); c.lineTo(x + w * 0.25, y - h * 0.75); c.stroke();
+  } else if (d.type === 'bone') {
+    // 뼈: 짧은 막대 + 양끝 마디
+    const a = pick * Math.PI, l = d.size;
+    c.strokeStyle = color; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x - Math.cos(a) * l, y - Math.sin(a) * l * 0.6); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l * 0.6); c.stroke();
+    c.fillStyle = color;
+    c.beginPath(); c.arc(x - Math.cos(a) * l, y - Math.sin(a) * l * 0.6, 1.8, 0, Math.PI * 2); c.arc(x + Math.cos(a) * l, y + Math.sin(a) * l * 0.6, 1.8, 0, Math.PI * 2); c.fill();
+  } else if (d.type === 'crack') {
+    // 용암 틈: 들쭉날쭉한 선(어두운 바깥 + 밝은 속)
+    const n = 4, a = pick * Math.PI * 2;
+    const pts = Array.from({ length: n + 1 }, (_, i) => { const t = i / n - 0.5; return { x: x + Math.cos(a) * d.size * 2 * t + Math.sin(i * 7.3 + pick * 9) * 3, y: y + Math.sin(a) * d.size * 1.2 * t + Math.cos(i * 5.1 + pick * 7) * 2 }; });
+    [['#1a0606', 4], [color, 1.6]].forEach(([col, lw]) => { c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y))); c.stroke(); });
   } else if (d.type === 'speck') {
     // 흙 위 자갈/얼룩
     c.fillStyle = color;
@@ -115,8 +138,9 @@ function drawDecor(c, d, x, y, pick) {
 
 // 목장 안쪽 바닥 (월드 좌표, 카메라 적용된 상태에서 호출)
 export function drawGround(ctx) {
-  const g = currentMap().ground;
-  const id = currentMapId();
+  const actGround = game.run && game.run.mode === 'wave' && ACTS[game.act] && ACTS[game.act].ground; // 목장 막마다 분위기 (data/acts.js)
+  const g = actGround || currentMap().ground;
+  const id = currentMapId() + (actGround ? ':' + ACTS[game.act].id : '');
   const C = GROUND_CHUNK;
   const v = viewRect();
   const x0 = Math.max(PEN.x, v.x), y0 = Math.max(PEN.y, v.y);

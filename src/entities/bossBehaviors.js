@@ -10,10 +10,9 @@ import {
 import { getHitPoint } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
-import { recordRun } from '../save.js';
 import { hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnShockwave, floatText } from '../systems/fx.js';
-import { dropLoot } from '../systems/loot.js';
+import { bossDown } from '../systems/acts.js';
 import { applyKnockback } from './actor.js';
 import { clampToPen } from '../world/arena.js';
 
@@ -117,14 +116,7 @@ export const bossBehaviors = {
       }
       return false;
     },
-    onDeath(m) {
-      game.gameState = 'victory';
-      recordRun('victory');
-      game.shake = Math.min(game.shake + 12, 12);
-      spawnShockwave(m.x, m.y, 220, '#c98bef');
-      dropLoot(m.x, m.y, 'boss', 4, m.level);
-      return true;
-    },
+    onDeath(m) { return bossDown(m); }, // 전리품 + 다음 막 (systems/acts.js)
     // 예고: 강타 = 아직 안 터진 구역(보라 띠, 다음 차례가 더 진함) / 돌진 = 흰 예고선 / 함성 = 커지는 붉은 고리 (난수 없음)
     drawUnder(m, ctx, t) {
       ctx.save();

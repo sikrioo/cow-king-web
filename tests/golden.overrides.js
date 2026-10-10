@@ -31,6 +31,8 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-10: 해골 카우·해골 카우 킹 (관리자 페이지에만 - 사용자 요청)
   'exact.monsters.skeleton': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
   'exact.monsters.skeletonKing': { hp: 600, meleeDmg: 40, scaleRatio: 2.2 },
+  // 2026-10-11: 해골 방패병 (목장 2막 - 사용자 요청)
+  'exact.monsters.skeletonShield': { hp: 90, meleeDmg: 30, scaleRatio: 1.15 },
   // 2026-10-10: 궁수 카우·해골 궁수 카우 (관리자 페이지에만 - 사용자 요청)
   'exact.monsters.archer': { hp: 50, meleeDmg: 20, scaleRatio: 1 },
   'exact.monsters.skeletonArcher': { hp: 40, meleeDmg: 20, scaleRatio: 1 },

@@ -15,18 +15,19 @@ export const MONSTERS = {
   shocker:  { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 30,  element: 'lightning', resist: { lightning: 0.5 }, ring: '#fff066', colors: { hide: '#8a7a2e', horn: '#fffde0', snout: '#4a4015', eye: '#fff9b0' } },
   pyro:     { hp: 50, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 2.8, exp: 35,  element: 'fire', resist: { fire: 0.6 }, ring: '#ff4d1a', colors: { hide: '#5a1f1a', horn: '#ffb36b', snout: '#2e0f0c', eye: '#ffd34d' } },
   venom:    { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.95, aggroMul: 1,   exp: 28,  element: 'poison', resist: { poison: 0.5 }, ring: '#7fe05a', colors: { hide: '#3f6e2a', horn: '#d8f5b0', snout: '#1f3a14', eye: '#c6ff4d' } },
-  // 해골 카우 (2026-10-10, 관리자 페이지에만 - adminOnly: 웨이브·맵·개발자 소환 목록에 없음). skeleton: 해골 그림, boss: 보스 취급(CC 면역)
-  skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  adminOnly: true, skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
-  skeletonKing: { hp: 600, dmg: 40, scaleMul: 2.2, speedMul: 0.8,  aggroMul: 2.4, exp: 300, adminOnly: true, skeleton: true, boss: true, resist: { poison: 0.75, cold: 0.3 }, ring: '#7fffd4', colors: { hide: '#d6cfba', horn: '#b9ae92', snout: '#a99f86', eye: '#7fffd4' } },
-  // 궁수 (2026-10-10, 관리자 페이지에만): 거리를 두고 조준(조준선) → 화살 (entities/rangedBehaviors.js). 해골 궁수는 해골 그림
+  // 해골 카우 (2026-10-10) - 2026-10-11부터 목장 2·3막에 나옴(data/acts.js). skeleton: 해골 그림, boss: 보스 취급(CC 면역), shield: 방패를 든 그림
+  skeletonShield: { hp: 90, dmg: 30, scaleMul: 1.15, speedMul: 0.8, aggroMul: 1.2, exp: 30, skeleton: true, shield: true, resist: { phys: 0.5, poison: 0.75 }, ring: '#c9c1aa', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 방패병: 단단함(물리 절반), 느림
+  skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
+  skeletonKing: { hp: 600, dmg: 40, scaleMul: 2.2, speedMul: 0.8,  aggroMul: 2.4, exp: 300, skeleton: true, boss: true, resist: { poison: 0.75, cold: 0.3 }, ring: '#7fffd4', colors: { hide: '#d6cfba', horn: '#b9ae92', snout: '#a99f86', eye: '#7fffd4' } },
+  // 궁수 (2026-10-10, 궁수 카우는 관리자 페이지에만 / 해골 궁수는 목장 2·3막): 거리를 두고 조준(조준선) → 화살 (entities/rangedBehaviors.js). 해골 궁수는 해골 그림
   archer:         { hp: 50, dmg: 20, scaleMul: 1, speedMul: 1,    aggroMul: 1.6, exp: 25, adminOnly: true, ring: '#9be35a', colors: { hide: '#6b5a3a', horn: '#e8d8b0', snout: '#3e3322', eye: '#ffe066' } },
-  skeletonArcher: { hp: 40, dmg: 20, scaleMul: 1, speedMul: 1.05, aggroMul: 1.6, exp: 22, adminOnly: true, skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
-  // 악마 카우 종족 (2026-10-10, 관리자 페이지에만 - 맵은 보류): 화염 저항 50%·냉기에 약함(저항 -25% = 더 아픔), 검붉은 몸 + 보랏빛 (demon: 악마 꾸밈 그림)
+  skeletonArcher: { hp: 40, dmg: 20, scaleMul: 1, speedMul: 1.05, aggroMul: 1.6, exp: 22, skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
+  // 악마 카우 종족 (2026-10-10, 목장 3막 - data/acts.js): 화염 저항 50%·냉기에 약함(저항 -25% = 더 아픔), 검붉은 몸 + 보랏빛 (demon: 악마 꾸밈 그림)
   //   행동은 entities/demonBehaviors.js, 저주는 systems/curses.js, 지옥불 원은 systems/demonSpells.js
-  imp:           { hp: 35,  dmg: 20, scaleMul: 0.8,  speedMul: 1.6,  aggroMul: 1.5, exp: 15,  adminOnly: true, demon: 'imp', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#7a1a1a', horn: '#2a0a0a', snout: '#4a0d0d', eye: '#ffd34d' } },
-  demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  adminOnly: true, demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
-  demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  adminOnly: true, demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
-  demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, adminOnly: true, demon: 'king', boss: true, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
+  imp:           { hp: 35,  dmg: 20, scaleMul: 0.8,  speedMul: 1.6,  aggroMul: 1.5, exp: 15,  demon: 'imp', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#7a1a1a', horn: '#2a0a0a', snout: '#4a0d0d', eye: '#ffd34d' } },
+  demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
+  demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
+  demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } }
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -46,6 +47,7 @@ export const MONSTER_WEAPONS = {
   boss:     ['hammer'],
   skeleton: ['club', 'spear'],
   skeletonKing: ['staff'],
+  skeletonShield: ['cleaver'],
   archer: ['bow'],
   skeletonArcher: ['bow'],
   imp: ['pitchfork'],
@@ -63,7 +65,7 @@ export function weaponFor(kind, seed) {
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
-  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
+  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 

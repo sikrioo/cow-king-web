@@ -7,6 +7,7 @@ import { MAPS } from './data/maps.js';
 import { DIFFICULTY, WAVE_MLVL_STEP, MLVL_BONUS } from './data/difficulty.js';
 import { MAX_ITEM_LEVEL } from './data/affixes.js';
 import { MASTERIES } from './data/masteries.js';
+import { ACTS } from './data/acts.js';
 
 // 마스터리 보너스 합계 (key: data/masteries.js per의 키). 무기 마스터리는 주무기가 그 종류일 때만
 export function masteryBonus(hero, key) {
@@ -22,6 +23,17 @@ export function masteryBonus(hero, key) {
   }
   return sum;
 }
+
+// 목장 웨이브 → 막 정보 (data/acts.js): { act: 막 번호, actWave: 막 안 웨이브(1~), isBoss: 막의 마지막 웨이브, def: 막 데이터 }
+export function waveInfo(wave) {
+  let start = 0;
+  for (let i = 0; i < ACTS.length; i++) {
+    const n = ACTS[i].waves;
+    if (wave <= start + n || i === ACTS.length - 1) return { act: i, actWave: wave - start, isBoss: wave - start === n, def: ACTS[i] };
+    start += n;
+  }
+}
+export const TOTAL_WAVES = () => ACTS.reduce((s, a) => s + a.waves, 0);
 
 // 몬스터 레벨 (= 떨군 장비의 아이템 레벨): 난이도 기본 + 맵(목장은 웨이브마다, 파밍 맵은 맵 보탬) + 종류(엘리트/보스/우두머리)
 export function monsterLevel(run, wave, kind, mapBoss = false) {

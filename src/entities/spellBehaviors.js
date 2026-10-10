@@ -13,6 +13,7 @@ import { NECRO_CORPSE_RANGE, NECRO_BONE_FAN, NECRO_BONE_FAN_P2, NECRO_BONE_SPREA
 import { hitPlayer } from '../systems/combat.js';
 import { spawnShockwave, floatText } from '../systems/fx.js';
 import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
+import { bossDown } from '../systems/acts.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
 
@@ -140,7 +141,7 @@ export const spellBehaviors = {
     },
     onDeath(m) {
       game.cows.forEach((c) => { if (c.summoner === m && c.state !== 'dead') killCow(c); }); // 부하도 쓰러짐
-      return false;
+      return bossDown(m); // 전리품 + 다음 막
     },
     // 발밑 초록 소용돌이 + 주문 중엔 커지는 룬 원 (난수 없음)
     drawUnder(m, ctx, t) {

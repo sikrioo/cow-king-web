@@ -1,6 +1,6 @@
 // 드랍 테이블 (디아블로의 트레저 클래스를 단순화): 드랍 출처마다 '무엇이 떨어지나'와 '장비 등급 비중'
 // 몬스터 한 마리가 죽을 때 picks번 굴리고, 매번 위에서부터 순서대로: 장비 → 재료 → 소모품. 처음 당첨된 것 하나만 떨어짐
-//   출처: normal(일반 카우) / elite(엘리트) / boss(카우킹) / mapBoss(파밍 맵 우두머리) - systems/loot.js dropSource
+//   출처: normal(일반 카우) / elite(엘리트) / boss(목장 막 보스 - 카우킹·해골 카우 킹·악마 카우킹, 굴리는 횟수는 data/acts.js bossDrops) / mapBoss(파밍 맵 우두머리) - systems/loot.js dropSource
 //   consumable 1 = 앞 단계가 다 빗나가면 소모품은 반드시 (굴리지 않음)
 //   quality: 장비 등급 비중 (일반 외 등급은 난이도 rarity 배율을 더 곱함). 장비에 붙는 옵션은 data/affixes.js
 //   gear 확률엔 난이도 gearDrop 배율(최대 1), 장비의 아이템 레벨 = 죽은 몬스터 레벨
@@ -9,7 +9,7 @@ export const MATERIAL_DROP_CHANCE = 0.07; // 하향 조정
 export const DROP_RATES = {
   normal:  { gear: GEAR_DROP_CHANCE, material: MATERIAL_DROP_CHANCE, consumable: 0.20, quality: { normal: 55, magic: 28, rare: 13, legendary: 4 } },
   elite:   { gear: 0.5, material: 0.35, consumable: 1, quality: { normal: 40, magic: 35, rare: 19, legendary: 6 } },
-  boss:    { gear: 0.8, material: 0.5,  consumable: 1, quality: { normal: 10, magic: 40, rare: 35, legendary: 15 } },
+  boss:    { gear: 1,   material: 0.5,  consumable: 1, quality: { normal: 0, magic: 30, rare: 45, legendary: 25 } }, // 보스 3종: 굴릴 때마다 장비, 일반 등급 없음 (2026-10-11 사용자: 보스는 좋은 아이템 비중 높게)
   mapBoss: { gear: 0.7, material: 0.4,  consumable: 1, quality: { normal: 15, magic: 40, rare: 32, legendary: 13 } }
 };
 // 장비 분류 비중 (드랍 장비가 무엇인지)

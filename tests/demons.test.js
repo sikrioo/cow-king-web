@@ -31,13 +31,12 @@ async function boot() {
   return m;
 }
 
-it('관리자 전용 + 화염 저항·냉기 약점', async () => {
+it('3막에 나옴 + 화염 저항·냉기 약점', async () => {
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot();
     ['imp', 'demonCurser', 'demonBerserker', 'demonKing'].forEach((k) => {
-      expect(m.MONSTERS[k].adminOnly).toBe(true);
-      expect(m.ELITE_KINDS).not.toContain(k);
+      expect(m.MONSTERS[k].adminOnly).toBeFalsy();
       expect(m.resistOf({ kind: k }, 'fire')).toBe(0.5);
       expect(m.resistOf({ kind: k }, 'cold')).toBeLessThan(0);
     });

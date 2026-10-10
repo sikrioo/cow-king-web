@@ -27,15 +27,18 @@ async function boot() {
   return m;
 }
 
-it('관리자 전용: 엘리트·맵·카우킹 웨이브 목록에 없음', async () => {
+it('목장 막 구성: 2막 해골·3막 악마가 나오고, 막 보스가 맞음 / 궁수 카우만 관리자 전용 / 파밍 맵엔 없음', async () => {
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot();
-    ['skeleton', 'skeletonKing'].forEach((k) => {
-      expect(m.MONSTERS[k].adminOnly).toBe(true);
-      expect(m.ELITE_KINDS).not.toContain(k);
-      Object.values(m.MAPS).forEach((map) => expect(Object.keys(map.kinds || {})).not.toContain(k));
-    });
+    const { ACTS } = await import('../src/data/acts.js');
+    expect(ACTS.map((a) => a.boss)).toEqual(['boss', 'skeletonKing', 'demonKing']);
+    expect(ACTS[0].waves).toBe(6);
+    expect(Object.keys(ACTS[1].normals)).toContain('skeleton');
+    expect(ACTS[1].elites).toContain('skeletonShield');
+    expect(Object.keys(ACTS[2].normals)).toContain('imp');
+    expect(m.MONSTERS.archer.adminOnly).toBe(true);
+    ['skeleton', 'skeletonKing'].forEach((k) => Object.values(m.MAPS).forEach((map) => expect(Object.keys(map.kinds || {})).not.toContain(k)));
   } finally { env.restore(); }
 });
 
@@ -75,8 +78,6 @@ it('궁수 카우·해골 궁수 카우: 사거리 안이면 조준(방향 고�
     const m = await boot();
     const h = m.game.hero;
     for (const kind of ['archer', 'skeletonArcher']) {
-      expect(m.MONSTERS[kind].adminOnly).toBe(true);
-      expect(m.ELITE_KINDS).not.toContain(kind);
       m.game.cows.length = 0; m.game.projectiles.length = 0;
       const a = new m.Monster(0.4, kind, { pos: { x: h.x + 260, y: h.y } });
       m.game.cows.push(a);

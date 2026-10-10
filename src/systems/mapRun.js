@@ -25,6 +25,8 @@ export function clearWorld() {
   game.pendingSpawns = [];
   game.hellfires = [];
   game.corpses = [];
+  game.actClear = 0;
+  game.actScene = 0;
   if (game.hero) { game.hero.weaponOut = false; game.hero.shieldOut = false; }
   game.decoy = null;
   game.projectiles = [];
@@ -64,7 +66,8 @@ export function beginRun(mapId, opts = {}) {
     populateFarm(def, d, p);
     game.run.total = game.cows.length;
   } else {
-    game.wave = 0; // 난이도마다 1웨이브부터
+    game.wave = 0; // 난이도마다 1웨이브부터 (1막부터)
+    game.act = 0;
     game.waveTransition = FIRST_WAVE_DELAY; // 시작 직후 적이 튀어나오지 않도록 준비 시간
     game.waveBannerTimer = 0;
   }

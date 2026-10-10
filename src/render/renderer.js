@@ -18,7 +18,7 @@ import { drawMapSelect } from '../ui/mapSelect.js';
 import { drawInventoryPanel } from '../ui/menu/panel.js';
 import { drawCardOffer } from '../ui/cardPick.js';
 import {
-  drawTitleScene, drawTitleOverlay, drawStartCountdown, drawWavePresentation, drawDemoTip, drawPauseOverlay
+  drawTitleScene, drawTitleOverlay, drawStartCountdown, drawWavePresentation, drawActScene, drawDemoTip, drawPauseOverlay
 } from '../ui/overlays.js';
 
 export function render(t) {
@@ -86,6 +86,7 @@ export function render(t) {
   ctx.restore(); // 월드 좌표 끝 - 아래는 화면 좌표
   drawStartCountdown();
   drawWavePresentation(t);
+  drawActScene();
   drawDemoTip();
   ctx.restore();
 

@@ -10,6 +10,7 @@ import { floatText } from './fx.js';
 import { rollGearItem } from './gear.js';
 import { gainExp } from './progression.js';
 import { clampToPen } from '../world/arena.js';
+import { waveInfo } from '../util.js';
 
 const say = (text, color = '#7fe0ff') => floatText(game.hero.x, game.hero.y - 50, text, color);
 
@@ -65,6 +66,8 @@ export function devKillAll() {
 export function devJumpWave(n) {
   clearCows();
   game.wave = n - 1;
+  game.act = waveInfo(n).act; // 막도 맞춤 (바닥 분위기)
+  game.actClear = 0; game.actScene = 0;
   game.waveTransition = 0.3;
   say(`웨이브 ${n}로`);
 }

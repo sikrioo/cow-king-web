@@ -3,7 +3,7 @@
 import { ELITE_KINDS } from '../data/monsters.js';
 import { RARITY_DEF } from '../data/items.js';
 import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
-import { BOSS_WAVE } from '../data/balance.js';
+import { waveInfo, TOTAL_WAVES } from '../util.js';
 import { ui } from '../state.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import {
@@ -60,7 +60,7 @@ function build() {
   });
 
   const prog = row(body, '웨이브');
-  for (let w = 1; w <= BOSS_WAVE; w++) button(prog, w === BOSS_WAVE ? `${w} (보스)` : `${w}`, () => devJumpWave(w));
+  for (let w = 1; w <= TOTAL_WAVES(); w++) button(prog, waveInfo(w).isBoss ? `${w} (보스)` : `${w}`, () => devJumpWave(w)); // 막을 이어서 (data/acts.js)
   button(prog, '몬스터 전부 제거', devKillAll);
 
   const imm = row(body, '면역 (켜고 소환)');
