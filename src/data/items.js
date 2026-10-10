@@ -66,7 +66,15 @@ export const STAT_DEF = {
   fireDmg:      { label: '화염 피해', min: 15, max: 40, flat: true, element: 'fire', fmt: (v) => `+${Math.round(v)}` },
   coldDmg:      { label: '냉기 피해', min: 15, max: 40, flat: true, element: 'cold', fmt: (v) => `+${Math.round(v)}` },
   lightningDmg: { label: '번개 피해', min: 15, max: 40, flat: true, element: 'lightning', fmt: (v) => `+${Math.round(v)}` },
-  poisonDmg:    { label: '독 피해',   min: 15, max: 40, flat: true, element: 'poison', fmt: (v) => `+${Math.round(v)}` }
+  poisonDmg:    { label: '독 피해',   min: 15, max: 40, flat: true, element: 'poison', fmt: (v) => `+${Math.round(v)}` },
+  // 스킬 레벨 옵션 (2026-10-10): 배운 스킬에만 더해짐, 카드 최대 레벨(SKILL_MAX_LEVEL)과 상관없이 넘어감 - 계산 util.skillGearBonus. noUpgrade: 강화해도 안 오름
+  skillAll:       { label: '모든 스킬',     min: 1, max: 2, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillWarrior:   { label: '전사 스킬',     min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillSorc:      { label: '마법사 스킬',   min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillFire:      { label: '화염 스킬',     min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillCold:      { label: '냉기 스킬',     min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillLightning: { label: '번개 스킬',     min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` },
+  skillWeapon:    { label: '이 무기의 특수기', min: 1, max: 3, flat: true, noUpgrade: true, fmt: (v) => `+${Math.round(v)}` } // 그 장비 종류(검·방패…)의 무기 특수기
 };
 // 옵션 수치 굴림: 접사 티어의 min~max 범위에서 r^OPTION_ROLL_SKEW 위치 (낮은 값이 조금 더 흔함 - 꽝이 있어야 대박이 빛남)
 //   굴린 위치(0~1)를 아이템 접사 기록(affixes[].q)에 남겨서 표시 (ui/itemView.js rollTag)

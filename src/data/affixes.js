@@ -45,7 +45,23 @@ const FAMILIES = [
   { id: 'stamina', side: 'suffix', group: 'stamina', stat: 'health', types: DEF_ALL, // 접두사 life와 다른 그룹 → 함께 붙을 수 있음
     tiers: [[1, [5, 9], 8], [12, [10, 16], 4]] },
   { id: 'gale', side: 'suffix', group: 'gale', types: ACC, // 하이브리드: 공격속도 + 이동속도
-    tiers: [[14, { atkSpeed: [0.04, 0.07], moveSpeed: [0.03, 0.05] }, 3]] }
+    tiers: [[14, { atkSpeed: [0.04, 0.07], moveSpeed: [0.03, 0.05] }, 3]] },
+  // ── 스킬 레벨 (2026-10-10): 흔한 순서 무기 특수기 > 원소 > 직업 > 모든 스킬. 모든 스킬은 장신구에만, 높은 아이템 레벨에서 ──
+  //   직업 스킬은 접두사(그룹 skills - 모든 스킬과 같이 안 붙음), 원소·무기 특수기는 접미사
+  { id: 'skillAll', side: 'prefix', group: 'skills', stat: 'skillAll', types: ACC,
+    tiers: [[12, [1, 1], 1], [26, [2, 2], 0.3]] },
+  { id: 'skillWarrior', side: 'prefix', group: 'skills', stat: 'skillWarrior', types: [...W, ...ACC],
+    tiers: [[5, [1, 1], 2.5], [15, [2, 2], 1], [25, [3, 3], 0.3]] },
+  { id: 'skillSorc', side: 'prefix', group: 'skills', stat: 'skillSorc', types: [...W, ...ACC],
+    tiers: [[5, [1, 1], 2.5], [15, [2, 2], 1], [25, [3, 3], 0.3]] },
+  { id: 'skillFire', side: 'suffix', group: 'elemSkills', stat: 'skillFire', types: [...W, ...ACC],
+    tiers: [[3, [1, 1], 3], [12, [2, 2], 1.2], [22, [3, 3], 0.4]] },
+  { id: 'skillCold', side: 'suffix', group: 'elemSkills', stat: 'skillCold', types: [...W, ...ACC],
+    tiers: [[3, [1, 1], 3], [12, [2, 2], 1.2], [22, [3, 3], 0.4]] },
+  { id: 'skillLightning', side: 'suffix', group: 'elemSkills', stat: 'skillLightning', types: [...W, ...ACC],
+    tiers: [[3, [1, 1], 3], [12, [2, 2], 1.2], [22, [3, 3], 0.4]] },
+  { id: 'skillWeapon', side: 'suffix', group: 'weaponSkill', stat: 'skillWeapon', types: [...W, 'shield'],
+    tiers: [[2, [1, 1], 5], [10, [2, 2], 2], [20, [3, 3], 0.6]] }
 ];
 
 // 티어마다 접사 한 개 (id 예: 'power_3') - 순수 파생

@@ -5,7 +5,7 @@ import { game } from '../state.js';
 import { floatText } from './fx.js';
 import { recalcGearStats } from './gear.js';
 import { queueLevelCard } from './levelCards.js';
-import { skillLevel } from '../util.js';
+import { learnedLevel } from '../util.js';
 
 export function gainExp(amount) {
   if (game.sandbox) return; // 관리자 미리보기에선 레벨업(카드) 없음
@@ -33,5 +33,5 @@ export function trySpendStatPoint(statKey) {
 
 // 배운 스킬(스킬 레벨 1 이상)만 슬롯에 넣을 수 있음 - 배우는 건 레벨업 카드
 export function isSkillUnlocked(id) {
-  return skillLevel(game.hero, id) > 0;
+  return learnedLevel(game.hero, id) > 0;
 }

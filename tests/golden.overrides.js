@@ -58,7 +58,15 @@ export const GOLDEN_ADDITIONS = {
   'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.lightningDmg': { label: '번개 피해', min: 15, max: 40, fmtAtMax: '+40' },
-  'exact.statDef.poisonDmg': { label: '독 피해', min: 15, max: 40, fmtAtMax: '+40' }
+  'exact.statDef.poisonDmg': { label: '독 피해', min: 15, max: 40, fmtAtMax: '+40' },
+  // 2026-10-10: 스킬 레벨 옵션 (모든/직업/원소/무기 특수기, 장비 보너스는 최대 레벨 제한 없음 - 사용자 결정)
+  'exact.statDef.skillAll': { label: '모든 스킬', min: 1, max: 2, fmtAtMax: '+2' },
+  'exact.statDef.skillWarrior': { label: '전사 스킬', min: 1, max: 3, fmtAtMax: '+3' },
+  'exact.statDef.skillSorc': { label: '마법사 스킬', min: 1, max: 3, fmtAtMax: '+3' },
+  'exact.statDef.skillFire': { label: '화염 스킬', min: 1, max: 3, fmtAtMax: '+3' },
+  'exact.statDef.skillCold': { label: '냉기 스킬', min: 1, max: 3, fmtAtMax: '+3' },
+  'exact.statDef.skillLightning': { label: '번개 스킬', min: 1, max: 3, fmtAtMax: '+3' },
+  'exact.statDef.skillWeapon': { label: '이 무기의 특수기', min: 1, max: 3, fmtAtMax: '+3' }
 };
 
 // 2026-10-05: 체력/피해 ×10 정수화 - 레거시 기록의 체력·피해 계열 값을 새 단위로 환산해서 비교 (몇 대에 죽는지 등은 그대로)

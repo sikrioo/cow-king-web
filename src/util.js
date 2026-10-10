@@ -40,8 +40,26 @@ export function resistOf(c, key) {
 }
 
 // 스킬 레벨 (0 = 안 배움). 레벨업 카드로 오름 (systems/levelCards.js)
-export function skillLevel(hero, id) {
+// 카드로 배운 레벨 (최대 SKILL_MAX_LEVEL - 카드 뽑기는 이걸 봄)
+export function learnedLevel(hero, id) {
   return (hero.skillLevels && hero.skillLevels[id]) || 0;
+}
+// 장비 스킬 옵션 보너스 (hero.gearSkill - gear.recalcGearStats): 모든 스킬 + 직업(물리=전사/마법=마법사) + 원소(SKILL_META elem) + 무기 특수기(그 장비 종류)
+export function skillGearBonus(hero, id) {
+  const g = hero.gearSkill, meta = SKILL_META[id];
+  if (!g || !meta) return 0;
+  let b = g.all || 0;
+  if (meta.type === 'physical') b += g.warrior || 0;
+  if (meta.type === 'magic') b += g.sorc || 0;
+  if (meta.elem) b += g[meta.elem] || 0;
+  const kind = meta.weapon || meta.offhand;
+  if (kind && g.weapon) b += g.weapon[kind] || 0;
+  return b;
+}
+// 실제 스킬 레벨 = 배운 레벨 + 장비 보너스 (배운 스킬에만, 상한 없음 - 디아블로식). 안 배웠으면 0
+export function skillLevel(hero, id) {
+  const lv = learnedLevel(hero, id);
+  return lv > 0 ? lv + skillGearBonus(hero, id) : 0;
 }
 // 스킬 레벨 보너스: Lv1 대비 더해지는 양 (data/skills.js의 SKILL_LEVEL_UP × (레벨 - 1)). 안 배운 스킬을 직접 써도 Lv1처럼
 export function skillBonus(hero, id, key) {

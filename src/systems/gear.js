@@ -183,7 +183,7 @@ export function tryUpgradeSlot(slotIndex) {
   game.hero.materials -= 1;
   if (Math.random() < UPGRADE_SUCCESS_CHANCE) {
     // 옵션 하나가 커짐 (옵션이 없는 일반 장비는 베이스 성능만 - 강화 수치는 무기 피해·방어력에 곱해짐)
-    const statKeys = Object.keys(it.stats);
+    const statKeys = Object.keys(it.stats).filter((k) => !(STAT_DEF[k] && STAT_DEF[k].noUpgrade)); // 스킬 레벨 옵션은 강화해도 그대로
     if (statKeys.length) {
       const k = statKeys[Math.floor(Math.random() * statKeys.length)];
       it.stats[k] = STAT_DEF[k].flat ? Math.round(it.stats[k] * UPGRADE_STAT_MULT) : it.stats[k] * UPGRADE_STAT_MULT;
@@ -224,6 +224,7 @@ export function armorReduction(armor) {
 
 export function recalcGearStats() {
   const elemDmg = { fire: 0, cold: 0, lightning: 0, poison: 0 }; // 무기 원소 피해 (STAT_DEF의 element 옵션)
+  const gearSkill = { all: 0, warrior: 0, sorc: 0, fire: 0, cold: 0, lightning: 0, weapon: {} }; // 스킬 레벨 옵션 (util.skillGearBonus)
   let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
@@ -238,6 +239,14 @@ export function recalcGearStats() {
     if (it.stats.health) health += it.stats.health;
     if (it.stats.mana) mana += it.stats.mana;
     for (const k in it.stats) { const el = STAT_DEF[k] && STAT_DEF[k].element; if (el) elemDmg[el] += it.stats[k]; }
+    const sk = it.stats;
+    if (sk.skillAll) gearSkill.all += sk.skillAll;
+    if (sk.skillWarrior) gearSkill.warrior += sk.skillWarrior;
+    if (sk.skillSorc) gearSkill.sorc += sk.skillSorc;
+    if (sk.skillFire) gearSkill.fire += sk.skillFire;
+    if (sk.skillCold) gearSkill.cold += sk.skillCold;
+    if (sk.skillLightning) gearSkill.lightning += sk.skillLightning;
+    if (sk.skillWeapon) { const kind = it.category === 'shield' ? 'shield' : it.variant; gearSkill.weapon[kind] = (gearSkill.weapon[kind] || 0) + sk.skillWeapon; }
   });
 
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
@@ -259,6 +268,7 @@ export function recalcGearStats() {
   const oldEffectiveMax = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
   game.hero.gearAtkSpeed = atkSpeed;
   game.hero.gearElemDmg = elemDmg;
+  game.hero.gearSkill = gearSkill;
   game.hero.gearCastSpeed = castSpeed;
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;

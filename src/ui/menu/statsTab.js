@@ -2,7 +2,7 @@
 import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS } from '../../data/balance.js';
 import { STAT_DEF } from '../../data/items.js';
 import { SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../../data/skills.js';
-import { skillLevel } from '../../util.js';
+import { learnedLevel, skillGearBonus } from '../../util.js';
 import { game, ui } from '../../state.js';
 import { showInvToast } from '../../systems/fx.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../../systems/progression.js';
@@ -80,8 +80,8 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.fillText(SKILLS[id].label, cx, cy);
     ctx.textAlign = 'right';
     ctx.fillStyle = ok ? '#9be39b' : '#a8905a';
-    const lv = skillLevel(game.hero, id);
-    ctx.fillText(ok ? `Lv.${lv}/${SKILL_MAX_LEVEL}` : `미습득 (Lv.${SKILL_UNLOCK_LEVEL[id]}~)`, cx + skillColW - 12, cy);
+    const lv = learnedLevel(game.hero, id), plus = skillGearBonus(game.hero, id); // 장비 보너스는 따로 (+N)
+    ctx.fillText(ok ? `Lv.${lv}/${SKILL_MAX_LEVEL}${plus ? ` (+${plus})` : ''}` : `미습득 (Lv.${SKILL_UNLOCK_LEVEL[id]}~)`, cx + skillColW - 12, cy);
   });
   ctx.textAlign = 'left';
   drawCardUpgrades(ctx, x, ry + Math.ceil(learnableSkills().length / 2) * 17 + 8, w);

@@ -47,7 +47,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 속도 규칙: 기본 공격(전사 근접/마법사 마력탄)은 공격속도(`util.attackSpeedMul`), 그 밖의 스킬은 시전속도(`util.castSpeedMul`, 대기시간만 줄임 - 지속/동작 시간은 그대로). 둘 다 상한 2배.
 - 스킬 분류: `data/skills.js`의 `SKILL_META[id].type` = physical(전사) / magic(마법사) / common(모든 캐릭터, `COMMON_SKILLS`). 슬롯은 2개뿐 - 공통 스킬도 Q/R 전환 목록(`skills.learnableSkills`)으로 슬롯1/2에 넣음(사용자 결정: 우클릭 순간이동).
   마법 수치는 `SPELLS`, 그 밖의 새 스킬 수치는 `SKILL_STATS`(대기시간은 `hero.spellCd`). 물리 보조 `systems/physSkills.js`(투지), 공통 `systems/commonSkills.js`(순간이동). 등록은 `systems/skills.js`의 `SKILLS`.
-- 스킬 해금 규칙: `systems/progression.js`의 `isSkillUnlocked` 한 곳(= 스킬 레벨 1 이상).
+- 스킬 해금 규칙: `systems/progression.js`의 `isSkillUnlocked` 한 곳(= 배운 레벨 1 이상).
+- 스킬 레벨 = 배운 레벨(`util.learnedLevel`, 카드, 최대 `SKILL_MAX_LEVEL`) + 장비 옵션(`util.skillGearBonus`: 모든/직업/원소(`SKILL_META.elem`)/무기 특수기, `hero.gearSkill`) = `util.skillLevel`. 장비 몫은 상한 없음(디아식, 사용자 결정), 배운 스킬에만. 카드 뽑기는 배운 레벨만 봄. 스킬 옵션은 강화 안 됨(`STAT_DEF.noUpgrade`).
 - 레벨업 카드(뱀서식): 레벨업마다 카드 3장 중 하나 - 새 스킬 배우기/스킬 레벨 +1/강화 카드(능력치·원소, 등급 일반/희귀/전설)/채우기 카드.
   강화 카드 합계는 `hero.cardBonus` → 능력치는 `gear.recalcGearStats`가 읽음. (원소 강화 카드는 원소 마스터리로 통일 - 2026-10-09) 동작 `systems/levelCards.js`, 수치 `data/cards.js`, 화면 `ui/cardPick.js`.
   고르는 동안 `game.cardOffer`가 있고 게임이 멈춤. 스킬 레벨 보너스는 `data/skills.js`의 `SKILL_LEVEL_UP` → `util.skillMul/skillBonus`로 각 스킬에서 곱함. 스탯 포인트는 그대로 유지(사용자 결정). 슬롯은 2개 + Q/R 전환 유지.

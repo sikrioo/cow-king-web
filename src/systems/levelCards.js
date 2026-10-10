@@ -9,7 +9,7 @@ import { POTION_MAX } from '../data/balance.js';
 import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL } from '../data/masteries.js';
 import { CLASSES } from '../data/classes.js';
 import { game, input } from '../state.js';
-import { skillLevel, specialUsable } from '../util.js';
+import { learnedLevel, specialUsable } from '../util.js';
 import { floatText, spawnHitParticles } from './fx.js';
 import { recalcGearStats } from './gear.js';
 
@@ -55,7 +55,7 @@ function skillCardPool() {
   const h = game.hero;
   const pool = [];
   [...(CLASSES[h.classKey] || CLASSES.warrior).skills, ...COMMON_SKILLS].forEach((id) => {
-    const lv = skillLevel(h, id);
+    const lv = learnedLevel(h, id); // 카드는 배운 레벨만 (장비 보너스 제외 - 최대 5)
     const needMastery = SKILL_META[id].mastery; // 무기 특수기: 그 마스터리가 SPECIAL_MASTERY_LEVEL 이상이어야 새로 배울 수 있음
     if (lv === 0 && needMastery && (h.masteries[needMastery] || 0) < SPECIAL_MASTERY_LEVEL) return;
     if (!specialUsable(h, id)) return; // 무기 특수기: 그 무기를 들었을 때만 카드에

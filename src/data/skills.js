@@ -1,6 +1,6 @@
 // 스킬 메타(이름/분류/슬롯 색/설명/새 스킬 카드 레벨), 스킬 레벨 보너스, 마법·기타 스킬 수치.
 // aim: 'free' = 자동 조준이 적을 겨누지 않음(순간이동 - 도망칠 때 적 쪽으로 가면 안 됨)
-// 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터). 배운 스킬은 전부 슬롯1/2에 Q/R로 넣음 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
+// elem: 원소 스킬 분류(장비 '화염 스킬 +N' 같은 옵션) / 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터). 배운 스킬은 전부 슬롯1/2에 Q/R로 넣음 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
 export const SKILL_ORDER = ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash']; // 전사 레거시 스킬 순서 (classes.warrior.skills 앞부분)
 export const SKILL_TYPE_LABEL = { physical: '물리', magic: '마법', common: '공통' };
 export const COMMON_SKILLS = ['teleport']; // 모든 캐릭터가 카드로 배울 수 있음 (Q/R 전환 목록 뒤쪽에 붙음)
@@ -26,17 +26,17 @@ export const SKILL_META = {
   vitalthrow:   { label: '급소 투척',  type: 'physical', weapon: 'dagger',     mastery: 'dagger',     color: 'rgba(155,227,155,0.45)', desc: '적 하나의 급소에 단검을 꽂음 - 엘리트·보스에게 더 셈, 체력이 적으면 치명타' },
   // 마법사
   bolt:      { label: '마력탄', type: 'magic', color: 'rgba(180,150,255,0.40)', desc: '마나 없이 쏘는 마력 구슬' },
-  fireball:  { label: '화염구', type: 'magic', color: 'rgba(255,122,26,0.42)',  desc: '터지는 불덩이 - 범위 화염 + 화상' },
-  frostnova: { label: '서리노바', type: 'magic', color: 'rgba(127,212,255,0.42)', desc: '내 주변 전체에 냉기 - 둔화' },
-  chain:     { label: '연쇄번개', type: 'magic', color: 'rgba(255,233,77,0.40)', desc: '앞의 적에서 근처 적들로 튀는 번개' },
-  orb:       { label: '얼음보주', type: 'magic', color: 'rgba(191,234,255,0.45)', desc: '얼음 조각을 뿌리며 날아가다 터짐' },
+  fireball:  { label: '화염구', type: 'magic', elem: 'fire', color: 'rgba(255,122,26,0.42)',  desc: '터지는 불덩이 - 범위 화염 + 화상' },
+  frostnova: { label: '서리노바', type: 'magic', elem: 'cold', color: 'rgba(127,212,255,0.42)', desc: '내 주변 전체에 냉기 - 둔화' },
+  chain:     { label: '연쇄번개', type: 'magic', elem: 'lightning', color: 'rgba(255,233,77,0.40)', desc: '앞의 적에서 근처 적들로 튀는 번개' },
+  orb:       { label: '얼음보주', type: 'magic', elem: 'cold', color: 'rgba(191,234,255,0.45)', desc: '얼음 조각을 뿌리며 날아가다 터짐' },
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '일정 시간 동안 정해진 양까지 피해를 대신 막는 보호막 - 다 막으면 깨짐' },
-  blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
-  firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
-  flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
-  discharge: { label: '방전', type: 'magic', aim: 'free', color: 'rgba(143,232,255,0.45)', desc: '내 주위를 도는 전기 구체 - 가까이 온 적에게 번개, 처음 맞으면 짧은 경직(돌진·충전·시전을 끊음)' },
+  blizzard:  { label: '눈보라', type: 'magic', elem: 'cold', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
+  firewave:  { label: '화염 파도', type: 'magic', elem: 'fire', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
+  flamepillar: { label: '화염기둥', type: 'magic', elem: 'fire', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
+  discharge: { label: '방전', type: 'magic', elem: 'lightning', aim: 'free', color: 'rgba(143,232,255,0.45)', desc: '내 주위를 도는 전기 구체 - 가까이 온 적에게 번개, 처음 맞으면 짧은 경직(돌진·충전·시전을 끊음)' },
   polymorph: { label: '대규모 변이', type: 'magic', aim: 'free', color: 'rgba(240,240,240,0.5)', desc: '내 주변 적을 전부 양으로 바꿈 - 공격·특수 행동을 못 하고 느리게 돌아다님(맞아도 안 풀림). 엘리트는 짧게, 보스는 면역' },
-  balllightning: { label: '볼 라이트닝', type: 'magic', color: 'rgba(200,240,255,0.45)', desc: '지정한 곳에 전기 구체를 설치 - 주변 적에게 번개를 쏘다가 사라지며 폭발. 다시 누르면 바로 터짐' },
+  balllightning: { label: '볼 라이트닝', type: 'magic', elem: 'lightning', color: 'rgba(200,240,255,0.45)', desc: '지정한 곳에 전기 구체를 설치 - 주변 적에게 번개를 쏘다가 사라지며 폭발. 다시 누르면 바로 터짐' },
   // 공통
   teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' }
 };
