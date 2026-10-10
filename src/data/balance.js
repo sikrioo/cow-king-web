@@ -334,3 +334,14 @@ export const DKING_NOVA_RADIUS = 170;
 export const DKING_NOVA_DAMAGE = 80;
 export const DKING_NOVA_GAP = 0.7;
 export const DKING_FIRE_COUNT_P2 = 5;
+
+// 영혼 (버닝 소울·창백한 원혼): SOUL_RANGE 안에서 SOUL_SHOT_CD초마다 SOUL_CHARGE초 번쩍 → 탄 SOUL_BOLTS발 부채꼴(사이 SOUL_SPREAD 라디안, 원소는 몬스터 element)
+//   SOUL_KITE~SOUL_RANGE 사이를 SOUL_TURN초마다 방향을 바꾸며 불규칙하게 떠다님
+export const SOUL_RANGE = 280;
+export const SOUL_KITE = 120;
+export const SOUL_SHOT_CD = 1.8;
+export const SOUL_CHARGE = 0.3;
+export const SOUL_BOLTS = 3;
+export const SOUL_SPREAD = 0.3;
+export const SOUL_TURN = 0.45;
+export const SOUL_BOLT = { speed: 260, radius: 6, damage: 18 };

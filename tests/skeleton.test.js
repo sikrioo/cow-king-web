@@ -100,3 +100,34 @@ it('궁수 카우·해골 궁수 카우: 사거리 안이면 조준(방향 고�
     }
   } finally { env.restore(); }
 });
+
+it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼: 번쩍 → 원소 탄 3발 부채꼴, 늘 떠다님, 막에 나옴', async () => {
+  const env = installBrowserEnv({ seed: 4 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const sk = new m.Monster(0.4, 'skeleton', { pos: { x: h.x + 300, y: h.y } });
+    const sp = new m.Monster(0.4, 'skeletonSpear', { pos: { x: h.x - 300, y: h.y } });
+    expect(sp.meleeRange).toBe(sk.meleeRange + m.MONSTERS.skeletonSpear.reach);
+    const { ACTS } = await import('../src/data/acts.js');
+    expect(Object.keys(ACTS[1].normals)).toEqual(expect.arrayContaining(['skeletonSpear', 'paleSoul']));
+    expect(Object.keys(ACTS[2].normals)).toEqual(expect.arrayContaining(['burningSoul']));
+    for (const [kind, el] of [['burningSoul', 'fire'], ['paleSoul', 'cold']]) {
+      m.game.cows.length = 0; m.game.projectiles.length = 0;
+      const s = new m.Monster(0.4, kind, { pos: { x: h.x + 200, y: h.y } });
+      m.game.cows.push(s);
+      s.shootCd = 0;
+      s.update(1 / 60);
+      expect(s.state).toBe('charging');
+      for (let i = 0; i < m.SOUL_CHARGE * 60 + 2; i++) s.update(1 / 60);
+      const bolts = m.game.projectiles.filter((p) => p.kind === 'soulbolt');
+      expect(bolts.length).toBe(m.SOUL_BOLTS);
+      expect(bolts.every((b) => b.packet[el] > 0)).toBe(true);
+      // 사거리 안에서도 계속 움직임 (불규칙)
+      s.shootCd = 99; s.state = 'idle';
+      const x0 = s.x;
+      for (let i = 0; i < 30; i++) { s.update(1 / 60); m.Engine.update(m.engine, 1000 / 60); s.x = s.body.position.x; }
+      expect(Math.abs(s.x - x0) + Math.abs(s.body.position.y - h.y)).toBeGreaterThan(1);
+    }
+  } finally { env.restore(); }
+});

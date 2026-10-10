@@ -4,6 +4,7 @@ import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_LEVEL_UP, SKILL_MAX_LEVEL, SPELLS
 import { drawCow, drawStunDots } from '../render/monsterSprites.js';
 import { drawSkeletonCow } from '../render/skeletonSprites.js';
 import { demonDecor } from '../render/demonSprites.js';
+import { drawSoul } from '../render/soulSprites.js';
 import { findFunction, findEntry } from './source.js';
 import { el, select } from './ui.js';
 
@@ -120,7 +121,8 @@ function drawCard(cv, kind, t) {
     ctx.beginPath(); ctx.ellipse(x, y, 30 * scale + 8, (30 * scale + 8) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
-  if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots, shield: !!def.shield });
+  if (def.soul) drawSoul(ctx, x, y, scale, t, 1, def.soul);
+  else if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots, shield: !!def.shield });
   else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0), def.demon ? demonDecor(def.demon, { enraged: false }) : null);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '11px sans-serif';

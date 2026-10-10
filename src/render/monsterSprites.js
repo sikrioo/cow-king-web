@@ -4,6 +4,7 @@ import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
 import { demonDecor } from './demonSprites.js';
+import { drawSoul } from './soulSprites.js';
 
 // decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
 export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null) {
@@ -102,6 +103,7 @@ export function drawMonster(c, ctx, t) {
     ctx.save();
     ctx.globalAlpha = fade;
     if (c.sheepDead) drawSheep(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, false); // 양 모습 그대로 쓰러짐
+    else if (MONSTERS[c.kind] && MONSTERS[c.kind].soul) drawSoul(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, MONSTERS[c.kind].soul);
     else if (MONSTERS[c.kind] && MONSTERS[c.kind].skeleton) drawSkeletonCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0, { king: !!MONSTERS[c.kind].boss, weapon: c.weapon });
     else drawCow(ctx, p.x, p.y, c.scale * pop, 'idle', t + c.phase, c.facing, 0, null, c.weapon);
     ctx.restore();
@@ -159,7 +161,8 @@ export function drawMonster(c, ctx, t) {
   } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield }); // 해골 카우: 전용 그림
+  if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? 1 : 0.92); // 영혼: 전용 그림
+  else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield }); // 해골 카우: 전용 그림
   else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null); // 악마: 날개·꼬리·문양
   ctx.restore();
   }

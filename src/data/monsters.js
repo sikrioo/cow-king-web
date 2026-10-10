@@ -16,6 +16,10 @@ export const MONSTERS = {
   pyro:     { hp: 50, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 2.8, exp: 35,  element: 'fire', resist: { fire: 0.6 }, ring: '#ff4d1a', colors: { hide: '#5a1f1a', horn: '#ffb36b', snout: '#2e0f0c', eye: '#ffd34d' } },
   venom:    { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.95, aggroMul: 1,   exp: 28,  element: 'poison', resist: { poison: 0.5 }, ring: '#7fe05a', colors: { hide: '#3f6e2a', horn: '#d8f5b0', snout: '#1f3a14', eye: '#c6ff4d' } },
   // 해골 카우 (2026-10-10) - 2026-10-11부터 목장 2·3막에 나옴(data/acts.js). skeleton: 해골 그림, boss: 보스 취급(CC 면역), shield: 방패를 든 그림
+  skeletonSpear:  { hp: 55, dmg: 35, scaleMul: 1, speedMul: 1, aggroMul: 1.2, exp: 24, skeleton: true, reach: 30, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 창병: 창으로 멀리서 찌름(근접 사거리 + reach)
+  // 영혼 (2026-10-11, 사용자 참고 그림): 떠다니는 불꽃 영혼 - soul: 그림 색(render/soulSprites.js), 행동 entities/rangedBehaviors.js (빠르고 불규칙하게 떠다니며 탄 3발)
+  burningSoul: { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'fire',  element: 'fire', resist: { fire: 0.75 }, ring: null, colors: null },
+  paleSoul:    { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'ghost', element: 'cold', resist: { cold: 0.75, poison: 0.5 }, ring: null, colors: null },
   skeletonShield: { hp: 90, dmg: 30, scaleMul: 1.15, speedMul: 0.8, aggroMul: 1.2, exp: 30, skeleton: true, shield: true, resist: { phys: 0.5, poison: 0.75 }, ring: '#c9c1aa', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 방패병: 단단함(물리 절반), 느림
   skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
   skeletonKing: { hp: 600, dmg: 40, scaleMul: 2.2, speedMul: 0.8,  aggroMul: 2.4, exp: 300, skeleton: true, boss: true, resist: { poison: 0.75, cold: 0.3 }, ring: '#7fffd4', colors: { hide: '#d6cfba', horn: '#b9ae92', snout: '#a99f86', eye: '#7fffd4' } },
@@ -48,6 +52,9 @@ export const MONSTER_WEAPONS = {
   skeleton: ['club', 'spear'],
   skeletonKing: ['staff'],
   skeletonShield: ['cleaver'],
+  skeletonSpear: ['spear'],
+  burningSoul: ['rod'],   // 그림에 무기 없음 (목록만)
+  paleSoul: ['rod'],
   archer: ['bow'],
   skeletonArcher: ['bow'],
   imp: ['pitchfork'],
@@ -61,11 +68,17 @@ export function weaponFor(kind, seed) {
   return list[Math.floor(Math.abs(seed) * 7919) % list.length];
 }
 
+// 영혼 몬스터 색 (render/soulSprites.js 그림, 탄 색) - glow 빛, outer/inner 불꽃 줄기 바깥/안, tip 끝 불씨, core 몸, eye 눈빛
+export const SOUL_PALETTES = {
+  fire:  { glow: '#ff3a1a', outer: '#a01a0a', inner: '#ff5a2a', tip: '#ffb070', core: '#1a0604', eye: '#ffd34d' },
+  ghost: { glow: '#dfe8ff', outer: '#7f8aa8', inner: '#e8eeff', tip: '#ffffff', core: '#0c0e14', eye: '#bfeaff' }
+};
+
 // 몬스터 이름 (관리자 페이지·안내 문구용)
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
-  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
+  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 

@@ -1,4 +1,4 @@
-// 몬스터 투사체 그림: 뼈 창(해골 카우 킹), 화살(궁수), 지옥불 구슬(악마 저주 카우) - render/fx.js drawProjectiles가 부름 (fx.js가 400줄을 넘어 나눔)
+// 몬스터 투사체 그림: 뼈 창(해골 카우 킹), 화살(궁수), 지옥불 구슬(악마 저주 카우), 영혼 탄(버닝 소울·창백한 원혼) - render/fx.js drawProjectiles가 부름 (fx.js가 400줄을 넘어 나눔)
 
 // 뼈 창 (해골 카우 킹): 진행 방향으로 긴 하얀 뼈 + 끝 마디 + 옅은 초록 꼬리
 export function drawBoneSpear(ctx, p) {
@@ -57,5 +57,18 @@ export function drawHellOrb(ctx, p, t, i) {
   ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 0.65, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#ffe8ff';
   ctx.beginPath(); ctx.arc(p.x + p.dirX * 2, p.y + p.dirY * 2, p.radius * 0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// 영혼 탄: 작은 밝은 불씨 + 짧은 꼬리 (색 = 영혼 색)
+export function drawSoulBolt(ctx, p) {
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = p.color;
+  ctx.beginPath(); ctx.arc(p.x - p.dirX * 8, p.y - p.dirY * 8, p.radius * 0.8, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 0.45, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }

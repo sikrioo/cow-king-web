@@ -56,7 +56,7 @@ export class Monster {
     this.knockback = 0;
     this.stunTimer = 0;
     this.aggroRange = 150 * aggroMul;
-    this.meleeRange = 46 * this.scale + 16;
+    this.meleeRange = 46 * this.scale + 16 + (def.reach || 0); // reach: 창 같은 긴 무기 (해골 창병)
     // 종류별 특수 타이머 - 기본은 사용 안 함(Infinity), 해당 종류는 behaviors[kind].init에서 설정
     this.specialTimer = Infinity;
     this.chargeCooldownTimer = Infinity;
