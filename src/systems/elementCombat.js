@@ -1,7 +1,7 @@
 // 주인공 → 몬스터 원소 피해: 원소 마스터리(util.masteryBonus) → 몬스터 저항(data/monsters.js resist) → 피해 숫자(원소 색) → 상태 효과(화상/중독/둔화) → 처치
 // 몬스터 상태 갱신(지속 피해 틱, 둔화 시간). 주인공이 받는 쪽은 systems/elements.js
 import {
-  ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF
+  ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF, BLEED_COLOR
 } from '../data/elements.js';
 import { game } from '../state.js';
 import { masteryBonus } from '../util.js';
@@ -65,14 +65,24 @@ function setCowDot(c, kind, total, duration) {
   s.timer = duration;
 }
 
-const DOT_COLOR = { burn: ELEMENT_DEF.fire.color, poison: ELEMENT_DEF.poison.color };
+const DOT_COLOR = { burn: ELEMENT_DEF.fire.color, poison: ELEMENT_DEF.poison.color, bleed: BLEED_COLOR };
+
+// 출혈: 초당 dps를 duration초 - 겹치지 않고 새로 맞으면 갱신 (물리 저항 적용)
+export function bleedCow(c, dps, duration) {
+  if (!c || c.state === 'dead' || !c.bleed) return;
+  const d = dps * (1 - Math.min(1, cowResist(c, 'phys')));
+  if (d <= 0) return;
+  if (c.bleed.timer <= 0) c.bleed.tick = DOT_TICK;
+  c.bleed.dps = d;
+  c.bleed.timer = duration;
+}
 
 // 매 틱 (Monster.update 처음): 둔화 시간, 화상/중독 피해
 export function updateCowStatuses(c, dt) {
   if (c.chillTimer > 0) c.chillTimer = Math.max(0, c.chillTimer - dt);
-  ['burn', 'poison'].forEach((kind) => {
+  ['burn', 'poison', 'bleed'].forEach((kind) => {
     const s = c[kind];
-    if (s.timer <= 0 || c.state === 'dead') return;
+    if (!s || s.timer <= 0 || c.state === 'dead') return;
     s.timer -= dt;
     s.tick -= dt;
     if (s.tick <= 0) {

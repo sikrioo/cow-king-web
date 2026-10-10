@@ -65,7 +65,7 @@ export function registerComboHit() {
 
 // onHit(c): 맞은 몬스터마다 추가 효과 (무기 원소 피해 - 순환 import를 피하려고 skills.js가 넘김)
 export function tryPlayerAttack(onHit) {
-  if (!game.hero.alive || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
+  if (!game.hero.alive || game.hero.weaponOut || game.hero.attackCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
   const ws = nextSwingWeapon();
   const spdMul = attackSpeedMul(game.hero);
   game.hero.currentAttackDuration = ATTACK_DURATION * (ws.interval / ATTACK_COOLDOWN) * spdMul; // 느린 무기는 스윙도 느림
@@ -216,7 +216,7 @@ export function hitPlayer(fromX, fromY, dmg) {
     return;
   }
 
-  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense, 0.85);
+  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense + masteryBonus(game.hero, 'block'), 0.85); // 방패 마스터리
   const blocked = Math.random() < totalBlock;
   if (!blocked) {
     const r = resolveHeroDamage(toPacket(dmg)); // 물리 = 방어력, 원소 = 저항

@@ -13,7 +13,10 @@ export const SKILL_CODE = {
   decoy: ['tryDecoy', 'decoyFor', 'hitDecoy', 'updateSkillBuffs'], energyshield: ['tryEnergyShield', 'heroDamageTaken'], blizzard: ['tryBlizzard', 'updateGroundSpells'],
   flamepillar: ['tryFlamePillar', 'updateGroundSpells'], firewave: ['tryFireWave', 'updateFireWave'], bolt: ['tryBolt', 'spellDamage'], fireball: ['tryFireballSpell'], frostnova: ['tryFrostNova'],
   chain: ['tryChain'], orb: ['tryOrb'], teleport: ['tryTeleport'], discharge: ['tryDischarge', 'applyCC'],
-  balllightning: ['tryBallLightning', 'updateBall', 'burstBall']
+  balllightning: ['tryBallLightning', 'updateBall', 'burstBall'],
+  spinblade: ['trySpinBlade', 'updateSpinBlade', 'strike'], skyfall: ['trySkyfall', 'updateSkyfall'], whirlaxe: ['tryWhirlAxe', 'updateWhirlAxe'],
+  shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
+  vitalthrow: ['tryVitalThrow', 'updateVitalThrow']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)
 export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/spellBehaviors.js'];

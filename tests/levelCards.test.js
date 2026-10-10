@@ -24,6 +24,7 @@ async function boot(cls = 'warrior') {
   m.noUpgrades = () => {
     m.UPGRADE_ORDER.forEach((id) => { m.game.hero.cardPicks[id] = m.UPGRADE_MAX_PICKS; });
     m.MASTERY_ORDER.forEach((id) => { m.game.hero.masteries[id] = m.MASTERY_MAX_LEVEL; }); // 마스터리도 다 올린 것으로
+    Object.keys(m.SKILL_META).filter((id) => m.SKILL_META[id].mastery).forEach((id) => { m.game.hero.skillLevels[id] = m.SKILL_MAX_LEVEL; }); // 마스터리로 열리는 무기 특수기도 다 배운 것으로
   };
   return m;
 }

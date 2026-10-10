@@ -13,6 +13,10 @@ const look = () => heroClass().look;
 
 export function drawPlayer(ctx, t = 0, h = game.hero) {
   if (!h.alive) return;
+  if (h.weaponOut || h.shieldOut) { // 무기 특수기로 던진 무기는 손에서 빼고 그림 (게임 상태는 안 바꿈)
+    const eq = h.equipment;
+    h = { ...h, equipment: { ...eq, weaponMain: h.weaponOut ? null : eq.weaponMain, weaponOff: h.shieldOut || (h.weaponOut && eq.weaponOff === 'LOCKED') ? null : eq.weaponOff } };
+  }
   const flashBlink = h.invuln > 0 && Math.floor(h.invuln * 12) % 2 === 0;
 
   let jumpHeight = 0;

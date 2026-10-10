@@ -43,6 +43,13 @@ function skillInfo(id) {
   if (id === 'flurry') return { mana: s.mana, cd: s.cooldown, effect: `${s.hits}번 × 무기 피해 ${pct(s.ratio)} (${s.interval}초 간격), 제자리` };
   if (id === 'concuss') return { mana: s.mana, cd: s.cooldown, effect: `앞쪽 무기 피해 + ${s.bonus}, 기절 ${s.stun}초` };
   if (id === 'berserk') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초: 주는 피해 +${pct(s.power)}, 공격속도 +${pct(s.speed)}, 받는 피해 +${pct(s.taken)}` };
+  if (id === 'spinblade') return { mana: s.mana, cd: s.cooldown, effect: `검이 ${s.range}까지 왕복, 같은 적 ${s.tick}초마다 무기 × ${s.ratio} (갈 때·올 때 각 ${s.maxTicks}번)` };
+  if (id === 'skyfall') return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range}, ${s.charge}초 뒤 반경 ${s.radius} 무기 × ${s.ratio}, 앞쪽 충격파 ${s.waveRange} 무기 × ${s.waveRatio}` };
+  if (id === 'whirlaxe') return { mana: s.mana, cd: s.cooldown, effect: `반경 ${s.orbit} 한 바퀴(${s.time}초), 무기 × ${s.ratio} + 번개 × ${s.lightning}, 번개 연쇄 ${s.chain}명 × ${s.chainRatio}` };
+  if (id === 'shieldbounce') return { mana: s.mana, cd: s.cooldown, effect: `적 사이 최대 ${s.bounces}번 튕김 무기 × ${s.ratio}, 마지막 × ${s.lastRatio} + 기절 ${s.stun}초` };
+  if (id === 'rollmace') return { mana: s.mana, cd: s.cooldown, effect: `${s.throw} 던짐 착지 × ${s.landRatio} → ${s.roll} 굴러감 × ${s.rollRatio}, 큰 적에 멈추며 × ${s.stopRatio}, 기절 ${s.stun}초` };
+  if (id === 'piercespear') return { mana: s.mana, cd: s.cooldown, effect: `${s.range} 관통 무기 × ${s.ratio} + 출혈(초당 × ${s.bleed}, ${s.bleedTime}초)` };
+  if (id === 'vitalthrow') return { mana: s.mana, cd: s.cooldown, effect: `${s.range} 안 한 명 무기 × ${s.ratio} (엘리트·보스 +${pct(s.eliteBonus)}, 체력 ${pct(s.execute)} 이하 ×${s.crit})` };
   if (id === 'decoy') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 미끼 (체력 = 내 최대 체력 × ${pct(s.life)}), ${s.taunt}px 안 몬스터가 공격` };
   return { mana: s ? s.mana : '-', cd: s ? s.cooldown : '-', effect: '' };
 }

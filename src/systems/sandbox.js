@@ -3,7 +3,9 @@
 //   index.html?dev=1&sandbox=monster&id=pyro          → 그 몬스터가 주인공에게 모든 행동을 함 (죽으면 다시 나옴)
 // 주인공 무적·마나 무한, 웨이브·경험치(레벨업 카드) 없음. 개발자 모드에서만 (main.boot)
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
-import { SKILL_MAX_LEVEL } from '../data/skills.js';
+import { SKILL_MAX_LEVEL, SKILL_META } from '../data/skills.js';
+import { TWO_HAND_ONLY } from '../data/items.js';
+import { rollGearItem, equipItem } from './gear.js';
 import { MONSTERS } from '../data/monsters.js';
 import { Body } from '../core/physics.js';
 import { game, input, dev } from '../state.js';
@@ -59,6 +61,10 @@ export function startSandbox(sb) {
   if (sb.mode === 'skill') {
     h.skillLevels[sb.id] = sb.lv;
     h.slot1 = sb.id;
+    // 무기 특수기: 그 무기(또는 방패)를 쥐여 줌
+    const meta = SKILL_META[sb.id];
+    if (meta.weapon) equipItem(rollGearItem({ category: 'weapon', handedness: TWO_HAND_ONLY.includes(meta.weapon) ? 'two' : 'one', rarity: 'normal', variant: meta.weapon, identified: true, noElement: true }), { silent: true });
+    if (meta.offhand) equipItem(rollGearItem({ category: meta.offhand, rarity: 'normal', identified: true }), { silent: true });
     DUMMY_SPOTS.forEach(([dx, dy]) => dummy(cx + dx, cy + dy));
   } else {
     spawnTarget();

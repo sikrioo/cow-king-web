@@ -8,6 +8,7 @@ import { drawComboCounter, drawHUD } from './hud.js';
 import { drawItems } from './items.js';
 import { drawIceRings } from './iceFx.js';
 import { drawDecoy, drawHeroBerserk, drawHeroShield, drawGroundSpellsUnder, drawGroundSpellsOver } from './skillFx.js';
+import { drawThrowsUnder, drawThrowsOver } from './throwFx.js';
 import { applyCamera, updateCamera, inView } from '../world/camera.js';
 import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
@@ -56,6 +57,7 @@ export function render(t) {
   drawHeroFortify(ctx, t);
   drawHeroBerserk(ctx, t);
   drawGroundSpellsUnder(ctx, t);
+  drawThrowsUnder(ctx, t);
   drawHazards(ctx);
   drawMeteorMarkers(ctx);
   // 화면 밖 몬스터는 안 그림 - 그래서 몬스터 그림 코드는 게임 난수(Math.random)를 쓰면 안 됨 (화면 크기에 따라 결과가 달라짐)
@@ -67,6 +69,7 @@ export function render(t) {
   drawImmuneLabels(ctx, visibleCows);
   drawHeroShield(ctx, t);
   drawGroundSpellsOver(ctx, t);
+  drawThrowsOver(ctx, t);
   drawItems(ctx, t);
   drawProjectiles(ctx);
   drawMeteorBalls(ctx); // 불덩이는 몬스터/주인공 위로

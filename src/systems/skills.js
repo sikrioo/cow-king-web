@@ -21,6 +21,7 @@ import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physS
 import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
+import { trySpinBlade, trySkyfall, tryWhirlAxe, tryShieldBounce, tryRollMace, tryPierceSpear, tryVitalThrow, specialUsable } from './weaponThrows.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
@@ -275,6 +276,11 @@ export const SKILLS = {
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
   balllightning: { ...SKILL_META.balllightning, try: (o) => tryBallLightning(o), cd: () => game.hero.spellCd.balllightning, cdMax: () => SPELLS.balllightning.cooldown * castSpeedMul(game.hero) },
+  // 무기 특수기 (systems/weaponThrows.js) - usable: 맞는 무기를 들었는지 (아니면 슬롯이 흐려짐)
+  ...Object.fromEntries([['spinblade', trySpinBlade], ['skyfall', trySkyfall], ['whirlaxe', tryWhirlAxe], ['shieldbounce', tryShieldBounce],
+    ['rollmace', tryRollMace], ['piercespear', tryPierceSpear], ['vitalthrow', tryVitalThrow]].map(([id, fn]) => [id, {
+    ...SKILL_META[id], try: () => fn(), usable: () => specialUsable(id), cd: () => game.hero.spellCd[id], cdMax: () => SKILL_STATS[id].cooldown * castSpeedMul(game.hero)
+  }])),
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
 

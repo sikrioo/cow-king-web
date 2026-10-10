@@ -28,3 +28,6 @@ export const MONSTER_CHILL_MOVE_MULT = 0.5;
 // 번개: 피해가 기준값의 LIGHTNING_MIN~LIGHTNING_MAX배 사이에서 들쭉날쭉 (평균은 기준값)
 export const LIGHTNING_MIN = 0.3;
 export const LIGHTNING_MAX = 1.7;
+
+// 출혈(물리 지속 피해) 숫자 색 - 무기 특수기 관통창, 나중에 무기 옵션 '출혈'도 같이 씀
+export const BLEED_COLOR = '#e0475a';

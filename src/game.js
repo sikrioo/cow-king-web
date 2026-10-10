@@ -27,6 +27,7 @@ import { updateHeroStatuses } from './systems/elements.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
+import { updateThrows } from './systems/weaponThrows.js';
 import { updateSandbox } from './systems/sandbox.js';
 import { autoAimOn } from './systems/aim.js';
 import { saveReleaseMeta } from './save.js';
@@ -105,6 +106,7 @@ export function fixedUpdate(dt) {
   updateHazards(dt);
   updateMeteors(dt);
   updateGroundSpells(dt);
+  updateThrows(dt);
   updateProjectiles(dt);
   updateLightningBolts(dt);
   updateFloatTexts(dt);

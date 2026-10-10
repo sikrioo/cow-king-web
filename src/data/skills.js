@@ -16,6 +16,14 @@ export const SKILL_META = {
   concuss:   { label: '뇌진탕', type: 'physical', color: 'rgba(230,210,120,0.42)', desc: '앞의 적을 세게 내리쳐 오래 기절시킴' },
   berserk:   { label: '버서커', type: 'physical', color: 'rgba(220,40,40,0.45)',   desc: '잠깐 공격력·공격속도가 크게 오르지만 받는 피해도 늘어남' },
   decoy:     { label: '더미',   type: 'physical', color: 'rgba(200,200,210,0.40)', desc: '나와 같은 모습의 미끼 - 주변 몬스터가 미끼를 공격함' },
+  // 무기 특수기 (전사): 그 무기의 마스터리가 SPECIAL_MASTERY_LEVEL 이상이면 카드에 나옴, 그 무기를 들었을 때만 씀 (weapon = 주무기 종류, offhand = 보조 칸)
+  spinblade:    { label: '회전검',     type: 'physical', weapon: 'sword',      mastery: 'sword',      color: 'rgba(216,216,224,0.45)', desc: '검을 회전시켜 던짐 - 갔다가 돌아오며 지나가는 적을 여러 번 벰' },
+  skyfall:      { label: '내려찍기',   type: 'physical', weapon: 'greatsword', mastery: 'greatsword', color: 'rgba(138,143,153,0.5)',  desc: '지정한 곳 위에 대검이 떠올라 커지다가 내리꽂힘 - 착지 피해 + 앞쪽 충격파' },
+  whirlaxe:     { label: '회전도끼',   type: 'physical', weapon: 'axe',        mastery: 'axe',        color: 'rgba(224,91,77,0.45)',   desc: '도끼가 내 주위를 한 바퀴 돌고 돌아옴 - 맞은 적에서 번개가 튐' },
+  shieldbounce: { label: '튕기는 방패', type: 'physical', offhand: 'shield',   mastery: 'shield',     color: 'rgba(185,162,122,0.5)',  desc: '방패를 던져 적 사이를 튕김 - 마지막 적은 기절' },
+  rollmace:     { label: '굴러가는 메이스', type: 'physical', weapon: 'mace',  mastery: 'mace',       color: 'rgba(201,162,39,0.45)',  desc: '메이스를 던지면 떨어진 뒤 앞으로 굴러감 - 작은 카우는 밀어내고 큰 적에 부딪히면 멈추며 큰 피해' },
+  piercespear:  { label: '관통창',     type: 'physical', weapon: 'spear',      mastery: 'spear',      color: 'rgba(127,168,201,0.45)', desc: '창을 곧게 던져 적을 꿰뚫음 - 출혈. 끝에서 잠깐 멈췄다가 돌아옴' },
+  vitalthrow:   { label: '급소 투척',  type: 'physical', weapon: 'dagger',     mastery: 'dagger',     color: 'rgba(155,227,155,0.45)', desc: '적 하나의 급소에 단검을 꽂음 - 엘리트·보스에게 더 셈, 체력이 적으면 치명타' },
   // 마법사
   bolt:      { label: '마력탄', type: 'magic', color: 'rgba(180,150,255,0.40)', desc: '마나 없이 쏘는 마력 구슬' },
   fireball:  { label: '화염구', type: 'magic', color: 'rgba(255,122,26,0.42)',  desc: '터지는 불덩이 - 범위 화염 + 화상' },
@@ -63,6 +71,8 @@ export const SKILL_LEVEL_UP = {
   blizzard:  { damage: 0.12, radius: 0.06 },
   flamepillar: { damage: 0.15, radius: 0.08 },
   firewave:  { damage: 0.12, range: 0.08 },
+  spinblade: { damage: 0.12 }, skyfall: { damage: 0.12, radius: 0.05 }, whirlaxe: { damage: 0.12 }, shieldbounce: { damage: 0.12 },
+  rollmace: { damage: 0.12 }, piercespear: { damage: 0.12 }, vitalthrow: { damage: 0.12 },
   // 방전·볼 라이트닝: 기획서(v0.1) Lv1→10 수치를 Lv1→5에 맞춤 (2026-10-10 결정: 최대 레벨 5 유지)
   discharge: { damage: 0.28, radius: 0.08 },
   balllightning: { damage: 0.19, duration: 0.06, targets: 0.5, radius: 0.03 } // targets: 동시에 쏘는 대상 수에 더함(내림)
@@ -92,8 +102,26 @@ export const SKILL_STATS = {
   flurry:   { mana: 10, cooldown: 2.6, hits: 5, interval: 0.12, ratio: 0.7 },
   concuss:  { mana: 12, cooldown: 5,  bonus: 25, stun: 2.2, reach: 30, arc: 1.0 },
   berserk:  { mana: 15, cooldown: 16, duration: 6, power: 0.40, speed: 0.25, taken: 0.30 },
-  decoy:    { mana: 18, cooldown: 14, duration: 8, life: 1.0, taunt: 320, distance: 70 }
+  decoy:    { mana: 18, cooldown: 14, duration: 8, life: 1.0, taunt: 320, distance: 70 },
+  // 무기 특수기 (스킬 기획 정의서 v0.1): 피해 = 무기 한 타(heroHitDamage) × ratio. 무기가 손을 떠난 동안 기본 공격 못 함, 돌아오는 속도 returnSpeed
+  //   회전검: speed로 range까지 갔다 돌아옴, 같은 적은 tick초마다 한 번, 갈 때·올 때 각 maxTicks번까지
+  spinblade:    { mana: 10, cooldown: 5,  range: 280, speed: 640, ratio: 0.6, tick: 0.15, maxTicks: 3, radius: 30 },
+  //   내려찍기: range 안 지점 위에서 charge초 동안 커지다가 낙하 - 반경 radius ratio, 그 바깥 앞쪽(시전 방향) waveArc 부채꼴 waveRange까지 waveRatio
+  skyfall:      { mana: 22, cooldown: 10, range: 320, charge: 0.6, radius: 110, ratio: 2.5, waveRatio: 1.0, waveRange: 200, waveArc: 1.5708, stick: 0.35, height: 150 },
+  //   회전도끼: 내 주위 orbit 반경을 time초에 한 바퀴, 같은 적은 한 번 - 물리 ratio + 번개 lightning, 맞은 적에서 chainRange 안 chain명에게 번개 chainRatio
+  whirlaxe:     { mana: 18, cooldown: 8,  orbit: 150, time: 1.2, spread: 0.15, ratio: 1.0, lightning: 0.5, chain: 2, chainRatio: 0.3, chainRange: 160, radius: 34 },
+  //   튕기는 방패: first 안 가장 가까운 적 → seek 안 아직 안 맞은 적으로 bounces번까지, 한 번에 ratio / 마지막 lastRatio + 기절 stun
+  shieldbounce: { mana: 14, cooldown: 7,  first: 300, seek: 160, bounces: 6, speed: 620, ratio: 0.5, lastRatio: 1.5, stun: 0.8 },
+  //   굴러가는 메이스: flight초 동안 포물선으로 throw만큼 → 착지 반경 landRadius landRatio → rollSpeed로 roll만큼 굴러감
+  //   작은 카우(일반)는 rollRatio + 밀어냄, 그 밖(큰 카우·엘리트·보스)에 부딪히면 멈추며 stopRatio. 맞은 적 기절 stun(보스 제외)
+  rollmace:     { mana: 16, cooldown: 8,  throw: 200, flight: 0.45, arc: 60, landRadius: 55, landRatio: 0.5, roll: 240, rollSpeed: 190, rollRatio: 0.8, stopRatio: 1.5, knock: 9, stun: 0.5, radius: 26 },
+  //   관통창: speed로 range까지 곧게 - 지나가는 적마다 ratio + 출혈(초당 무기 한 타 × bleed, bleedTime초, 겹치지 않고 갱신). 끝에서 pause초 멈췄다 돌아옴(돌아올 땐 안 맞음)
+  piercespear:  { mana: 12, cooldown: 6,  range: 420, speed: 900, ratio: 1.0, bleed: 0.3, bleedTime: 3, pause: 0.3, radius: 24 },
+  //   급소 투척: 커서 위 적(없으면 range 안 가까운 적) 하나 - charge초 뒤 speed로 날아가 ratio(엘리트·보스 ×(1+eliteBonus)), 대상 체력 execute 이하면 ×crit. 꽂힌 채 stick초 뒤 돌아옴
+  vitalthrow:   { mana: 12, cooldown: 6,  range: 350, charge: 0.3, speed: 1300, ratio: 4.0, eliteBonus: 0.5, execute: 0.3, crit: 2, stick: 0.5 }
 };
+export const SPECIAL_MASTERY_LEVEL = 3; // 무기 특수기 카드가 나오는 마스터리 레벨 (2026-10-10 사용자 아이디어)
+export const THROW_RETURN_SPEED = 820;  // 던진 무기가 돌아오는 속도(px/초)
 
 // 마법 수치 (피해는 ×10 스케일 정수, 주인공 레벨마다 SPELL_LEVEL_SCALE만큼 오름 + 스킬 레벨 보너스)
 //   mana: 소모, cooldown: 초, speed/range/radius: 투사체(px), explode: 폭발 반경

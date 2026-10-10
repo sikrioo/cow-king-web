@@ -17,6 +17,7 @@ export function masteryBonus(hero, key) {
     const m = MASTERIES[id];
     if (!m || !m.per[key] || !ms[id]) continue;
     if (m.weapon) { const w = hero.equipment && hero.equipment.weaponMain; if (!w || w === 'LOCKED' || w.variant !== m.weapon) continue; }
+    if (m.offhand) { const o = hero.equipment && hero.equipment.weaponOff; if (!o || o === 'LOCKED' || o.category !== m.offhand) continue; }
     sum += m.per[key] * ms[id];
   }
   return sum;

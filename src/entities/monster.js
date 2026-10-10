@@ -81,6 +81,7 @@ export class Monster {
     this.hunt = !!opts.hunt;
     this.burn = emptyDot(); // 주인공 원소 공격으로 걸리는 상태 (systems/elementCombat.js)
     this.poison = emptyDot();
+    this.bleed = emptyDot(); // 출혈 (무기 특수기 관통창 - systems/weaponThrows.js)
     this.chillTimer = 0;
     this.element = def.element || null; // 근접 공격 원소 (없으면 물리)
     this.cloudCooldown = Infinity; // venom 전용

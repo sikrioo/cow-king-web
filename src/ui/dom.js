@@ -62,6 +62,8 @@ export function updateSkillButtonsUI() {
   const s1 = SKILLS[game.hero.slot1], s2 = SKILLS[game.hero.slot2];
   cdSlot1.style.height = `${Math.max(0, Math.min(1, s1.cd() / s1.cdMax())) * 100}%`;
   cdSlot2.style.height = `${Math.max(0, Math.min(1, s2.cd() / s2.cdMax())) * 100}%`;
+  // 무기 특수기: 맞는 무기를 안 들었으면 흐리게
+  [[cdSlot1, s1], [cdSlot2, s2]].forEach(([cd, s]) => { const el = cd && cd.parentElement; if (el) el.style.opacity = s.usable && !s.usable() ? '0.4' : ''; });
 }
 
 // HTML 버튼 연결. actions: { restart(= 화면 넘기기), pressAction, setPaused, toggleHelp, exitMap } - game.js / session.js
