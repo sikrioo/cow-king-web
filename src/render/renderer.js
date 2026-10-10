@@ -9,7 +9,7 @@ import { drawItems } from './items.js';
 import { drawIceRings } from './iceFx.js';
 import { drawDecoy, drawHeroBerserk, drawHeroShield, drawGroundSpellsUnder, drawGroundSpellsOver, drawAuraRings } from './skillFx.js';
 import { drawThrowsUnder, drawThrowsOver } from './throwFx.js';
-import { drawHellfires, drawHeroCurse } from './demonFx.js';
+import { drawHellfires, drawHeroCurse, drawHeroStun } from './demonFx.js';
 import { applyCamera, updateCamera, inView } from '../world/camera.js';
 import { PEN } from '../world/arena.js';
 import { drawMonster } from './monsterSprites.js';
@@ -74,6 +74,7 @@ export function render(t) {
   drawGroundSpellsOver(ctx, t);
   drawThrowsOver(ctx, t);
   drawHeroCurse(ctx, t);
+  drawHeroStun(ctx, t);
   drawItems(ctx, t);
   drawProjectiles(ctx);
   drawMeteorBalls(ctx); // 불덩이는 몬스터/주인공 위로

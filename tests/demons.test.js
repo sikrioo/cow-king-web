@@ -146,3 +146,28 @@ it('악마 카우킹: 보스(CC 면역), 임프 소환(최대치까지), 지옥�
     expect(imps().length).toBe(0);
   } finally { vi.restoreAllMocks(); env.restore(); }
 });
+
+it('도살자 카우·도살자 악마(시안, 관리자 전용): 멀리서 빠르게 달려듦, 세 번 맞힐 때마다 주인공 기절(움직이지도 스킬도 못 씀)', async () => {
+  const env = installBrowserEnv({ seed: 6 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const { trySlot } = await import('../src/systems/skills.js');
+    for (const kind of ['butcherCow', 'butcherDemon']) {
+      expect(m.MONSTERS[kind].adminOnly).toBe(true);
+      m.game.cows.length = 0;
+      const b = m.spawn(kind, 300);
+      b.update(1 / 60);
+      const v = Math.hypot(b.body.velocity.x, b.body.velocity.y);
+      expect(v).toBeCloseTo(b.speed * m.BUTCHER_SPRINT / 60, 3); // 달려듦
+      h.stunTimer = 0;
+      for (let i = 0; i < m.BUTCHER_STUN_EVERY; i++) b.behavior.onMeleeHit(b, 10);
+      expect(h.stunTimer).toBeCloseTo(m.BUTCHER_STUN);
+      const mana = h.mana; h.spellCd[h.slot1] = 0;
+      trySlot(1);
+      expect(h.mana).toBe(mana); // 기절 중 스킬 못 씀
+      b.behavior.onMeleeHit(b, 0); // 막힌 공격은 안 셈
+      expect(b.comboN).toBe(m.BUTCHER_STUN_EVERY);
+    }
+  } finally { env.restore(); }
+});

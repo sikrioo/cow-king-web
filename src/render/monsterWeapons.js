@@ -251,7 +251,29 @@ function drawDemonBlade(ctx, x, y, angle, r, animT = 0) {
   ctx.restore();
 }
 
+// 고기 식칼 (도살자 카우): 짧은 나무 손잡이 + 넓은 네모 칼날 + 피 묻은 날
+function drawMeatCleaver(ctx) {
+  shaft(ctx, -14, 10, 4.5, WOOD_DARK);
+  ctx.fillStyle = '#9aa0a8'; ctx.strokeStyle = '#4a4e55'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(8, -6); ctx.lineTo(44, -8); ctx.lineTo(46, 16); ctx.lineTo(8, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#8a1414';
+  ctx.beginPath(); ctx.moveTo(30, 15); ctx.lineTo(46, 16); ctx.lineTo(45, 8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#2a2e35'; ctx.beginPath(); ctx.arc(38, -1, 2.2, 0, Math.PI * 2); ctx.fill(); // 걸이 구멍
+}
+// 지옥 식칼 (도살자 악마): 검은 칼날 + 달아오른 붉은 날 + 불꽃 끝
+function drawHellCleaver(ctx, animT = 0) {
+  shaft(ctx, -14, 10, 4.5, '#1a0a0c');
+  ctx.fillStyle = '#2a0f14'; ctx.strokeStyle = '#ff5a3d'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(8, -6); ctx.lineTo(42, -10); ctx.lineTo(48, -2); ctx.lineTo(46, 17); ctx.lineTo(8, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const f = Math.sin(animT * 10) * 2;
+  ctx.fillStyle = '#ff7a1a';
+  ctx.beginPath(); ctx.moveTo(40, -9); ctx.lineTo(44, -18 - f); ctx.lineTo(47, -6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffb347';
+  ctx.beginPath(); ctx.moveTo(46, -2); ctx.lineTo(53, -6 + f); ctx.lineTo(48, 4); ctx.closePath(); ctx.fill();
+}
+
 export const WEAPON_DRAW = {
+  meatcleaver: drawMeatCleaver, hellcleaver: drawHellCleaver,
   bow: drawBow, greatsword: drawGreatsword, battleaxe: drawBattleAxe, demonblade: (ctx, animT) => drawDemonBlade(ctx, -8, 0, 0, BIG_WEAPON_SCALE, animT),
   halberd: drawHalberd, pitchfork: drawPitchfork, club: drawClub, axe: drawAxe, spear: drawSpear,
   hammer: drawHammer, cleaver: drawCleaver, staff: drawStaff, torch: drawTorch, rod: drawRod, firestaff: drawFirestaff

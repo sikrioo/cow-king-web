@@ -136,6 +136,7 @@ function resetHeroRuntime() {
   h.apprentice = null;
   h.sheepTimer = 0;
   h.curse = null;
+  h.stunTimer = 0;
   h.aimX = null;
   h.aimY = null;
   h.potionCd = { heal: 0, mana: 0 };

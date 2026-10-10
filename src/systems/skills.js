@@ -342,7 +342,7 @@ export function learnableSkills() {
 // 기본 공격 (적 클릭/Shift+클릭): 전사 = 근접 휘두르기, 마법사 = 마력탄
 const isCaster = () => (CLASSES[game.hero.classKey] || CLASSES.warrior).basic === 'bolt';
 export function tryBasicAttack() {
-  if (game.hero.sheepTimer > 0) return;
+  if (game.hero.sheepTimer > 0 || game.hero.stunTimer > 0) return;
   if (isCaster()) tryBolt(); else tryPlayerAttack(weaponElementHit);
 }
 export function basicAttackReady() {
@@ -377,7 +377,7 @@ export function aimAtCursor(id) {
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로. repeat = 길게 눌러 반복 시전 중(처음 누른 순간이 아님)
 export function trySlot(n, repeat = false) {
-  if (game.hero.sheepTimer > 0) return; // 양이 된 동안(수습생의 마법 반동)은 못 씀
+  if (game.hero.sheepTimer > 0 || game.hero.stunTimer > 0) return; // 양이 된 동안(수습생의 마법 반동)·기절 중엔 못 씀
   const id = n === 2 ? game.hero.slot2 : game.hero.slot1;
   aimAtCursor(id);
   SKILLS[id].try({ repeat });

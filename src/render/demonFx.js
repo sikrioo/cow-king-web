@@ -18,6 +18,22 @@ export function drawHellfires(ctx, t) {
   });
 }
 
+// 주인공 기절 (도살자): 머리 위에 노란 별 셋이 돎
+export function drawHeroStun(ctx, t) {
+  const h = game.hero;
+  if (!(h.stunTimer > 0) || !h.alive) return;
+  ctx.save();
+  ctx.fillStyle = '#ffe066';
+  for (let i = 0; i < 3; i++) {
+    const a = t * 7 + (i / 3) * Math.PI * 2;
+    const x = h.x + Math.cos(a) * 14, y = h.y - h.r * 2.6 + Math.sin(a) * 4;
+    ctx.beginPath();
+    for (let k = 0; k < 5; k++) { const r = k % 2 ? 1.6 : 4, b = -Math.PI / 2 + k * Math.PI / 2.5; ctx[k ? 'lineTo' : 'moveTo'](x + Math.cos(b) * r, y + Math.sin(b) * r); }
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
 // 주인공 저주: 머리 위에 도는 보라 문양 + 저주 이름 (남은 시간이 1초 아래면 깜빡임)
 export function drawHeroCurse(ctx, t) {
   const h = game.hero, c = h.curse;

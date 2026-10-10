@@ -24,3 +24,11 @@ export function updateCurses(dt) {
 export function curseMul(h, kind) {
   return h.curse && h.curse.kind === kind && h.curse.timer > 0 ? CURSES[kind].mul : 1;
 }
+
+// 주인공 기절 (도살자): sec초 동안 움직이지도 공격·스킬을 쓰지도 못함 - entities/hero.js·systems/skills.js가 읽음, 머리 위 별(render/demonFx.js)
+export function stunHero(sec) {
+  const h = game.hero;
+  if (!h.alive) return;
+  h.stunTimer = Math.max(h.stunTimer || 0, sec);
+  floatText(h.x, h.y - 70, '기절!', '#ffe066');
+}

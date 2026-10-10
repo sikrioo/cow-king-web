@@ -352,3 +352,9 @@ export const SOUL_BRANCHES = 3;
 export const SOUL_BEAM_GROW = 0.3;
 export const SOUL_BEAM_TIME = 0.7;
 export const SOUL_BEAM_FLICKER = 0.05;
+
+// 도살자 (시안): BUTCHER_SPRINT_DIST보다 멀면 이동 × BUTCHER_SPRINT로 달려듦, 근접으로 맞힐 때마다 세어 BUTCHER_STUN_EVERY번째마다 주인공 기절 BUTCHER_STUN초
+export const BUTCHER_SPRINT = 1.6;
+export const BUTCHER_SPRINT_DIST = 120;
+export const BUTCHER_STUN_EVERY = 3;
+export const BUTCHER_STUN = 0.7;

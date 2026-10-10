@@ -91,6 +91,7 @@ export function createHero() {
     fortifyTimer: 0, fortifyMax: 0, fortifyHp: 0, // 투지 (systems/physSkills.js)
     flurryTimer: 0, flurryHits: 0, flurryNext: 0, // 난타
     berserkTimer: 0, berserkMax: 0, berserkPower: 0, // 버서커
+    stunTimer: 0, // 기절 (도살자)
     curse: null, // 악마 저주 { kind, timer, max, source } (systems/curses.js)
     sheepTimer: 0, // 수습생의 마법이 자기에게 변이 (systems/apprentice.js)
     aura: null, auraPending: null, auraSwitch: 0, auraFireT: 0, tempAuras: {}, apprentice: null, // 오라·수습생의 마법 (systems/auras.js, apprentice.js)
@@ -215,6 +216,13 @@ export function updatePlayer(dt) {
     game.hero.knockback -= dt;
     updatePlayerMotionReaction(dt, 0, 0);
     return; // 넉백 중엔 조작이 물리 속도를 덮어쓰지 않음
+  }
+
+  if (game.hero.stunTimer > 0) { // 기절 (도살자 - systems/curses.stunHero): 제자리, 조작 불가
+    game.hero.stunTimer -= dt;
+    Body.setVelocity(game.hero.body, { x: 0, y: 0 });
+    updatePlayerMotionReaction(dt, 0, 0);
+    return;
   }
 
   let dx = 0, dy = 0, moving, wantsRun;

@@ -33,6 +33,9 @@ export const MONSTERS = {
   demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
   demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
   demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
+  // 도살자 (2026-10-11 시안, 관리자 전용 - 확인 뒤 보스 웨이브 엘리트로): 빠르게 달려들어 짧게 연타, 세 번째마다 주인공 기절 (entities/butcherBehaviors.js)
+  butcherCow:   { hp: 140, dmg: 35, scaleMul: 1.35, speedMul: 1.25, aggroMul: 3, exp: 45, adminOnly: true, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
+  butcherDemon: { hp: 170, dmg: 40, scaleMul: 1.4,  speedMul: 1.3,  aggroMul: 3, exp: 60, adminOnly: true, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -55,6 +58,8 @@ export const MONSTER_WEAPONS = {
   skeletonShield: ['cleaver'],
   skeletonSpear: ['spear'],
   skeletonBrute: ['greatsword', 'battleaxe'],
+  butcherCow: ['meatcleaver'],
+  butcherDemon: ['hellcleaver'],
   burningSoul: ['rod'],   // 그림에 무기 없음 (목록만)
   paleSoul: ['rod'],
   archer: ['bow'],
@@ -84,7 +89,7 @@ export const weaponScaleOf = (kind) => WEAPON_SCALE[kind] || 1;
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
-  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
+  venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', butcherCow: '도살자 카우', butcherDemon: '도살자 악마', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 

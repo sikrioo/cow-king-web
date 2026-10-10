@@ -202,7 +202,12 @@ export class Monster {
       if (!this.attackHit && this.stateElapsed > this.hitAt && this.stateElapsed < this.hitAt + 0.1) {
         if (distP <= this.meleeRange + 10) {
           const dmg = this.element ? { [this.element]: this.dmg } : this.dmg;
-          if (decoy) hitDecoy(dmg); else reflectThorns(this, hitPlayer(this.x, this.y, dmg)); // 가시 오라: 받은 만큼 되돌려 줌
+          if (decoy) hitDecoy(dmg);
+          else {
+            const taken = hitPlayer(this.x, this.y, dmg);
+            reflectThorns(this, taken); // 가시 오라: 받은 만큼 되돌려 줌
+            if (b && b.onMeleeHit) b.onMeleeHit(this, taken); // 종류별 (도살자 기절)
+          }
           this.attackHit = true;
         }
       }

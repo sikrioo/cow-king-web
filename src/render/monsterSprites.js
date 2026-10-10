@@ -6,6 +6,7 @@ import { BOSS_SLAM_TELEGRAPH } from '../data/balance.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
 import { demonDecor } from './demonSprites.js';
 import { drawSoul } from './soulSprites.js';
+import { butcherDecor } from './butcherSprites.js';
 
 // decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
 //   weaponSize: 무기 크기 배율 (data/monsters.js WEAPON_SCALE)
@@ -33,7 +34,8 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
 
   if (decor && decor.back) decor.back(ctx, animT);
   const big = BIG_WEAPONS.includes(weapon);
-  if (!big) drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT, weaponSize);
+  if (big) drawBigWeapon(ctx, weapon, 26, -32, bigSwingAngle(state === 'attack', stateElapsed, hitAt), weaponSize, animT); // 큰 무기도 몸 뒤 (2026-10-11 사용자)
+  else drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT, weaponSize);
 
   ctx.fillStyle = hideColor;
   ctx.beginPath();
@@ -60,7 +62,6 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.fill();
 
   if (decor && decor.front) decor.front(ctx, animT);
-  if (big) drawBigWeapon(ctx, weapon, 24, -32, bigSwingAngle(state === 'attack', stateElapsed, hitAt), weaponSize, animT); // 몸 앞 (2026-10-11 사용자: 보스는 크게 휘두르기)
   if (state === 'stunned') drawStunDots(ctx, animT);
 
   ctx.restore();
@@ -169,7 +170,7 @@ export function drawMonster(c, ctx, t) {
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐)
   else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, weaponSize: weaponScaleOf(c.kind) }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.butcher ? butcherDecor(style.butcher) : style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
   ctx.restore();
   }
 

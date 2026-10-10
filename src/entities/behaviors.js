@@ -7,6 +7,7 @@
 //   drawUnder(m, ctx, t, style)  몸 아래(링보다 먼저) 그리는 오라/경고
 //   drawOver(m, ctx, t, style)   몸 위에 그리는 것. 있으면 기본 체력바 대신 그림
 //   interrupt(m)                 기절·경직이 걸려 하던 특수 행동이 끊길 때 정리(대기시간 등) - systems/cc.js
+//   onMeleeHit(m, taken)         일반 근접 공격이 주인공에게 실제 피해를 준 뒤 (도살자: 세 번째마다 기절)
 // 상태를 점유하는 상태머신(fusing/zapping/telegraph…)은 매 틱 true를 반환해야 일반 AI가 상태를 덮어쓰지 않는다.
 import {
   CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
@@ -31,6 +32,7 @@ import { spellBehaviors } from './spellBehaviors.js';
 import { bossBehaviors } from './bossBehaviors.js';
 import { rangedBehaviors } from './rangedBehaviors.js';
 import { demonBehaviors } from './demonBehaviors.js';
+import { butcherBehaviors } from './butcherBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
@@ -353,3 +355,4 @@ Object.assign(behaviors, bossBehaviors); // 카우킹 (entities/bossBehaviors.js
 Object.assign(behaviors, spellBehaviors);
 Object.assign(behaviors, rangedBehaviors); // 활 쏘는 몬스터 (entities/rangedBehaviors.js)
 Object.assign(behaviors, demonBehaviors); // 악마 카우 종족 (entities/demonBehaviors.js)
+Object.assign(behaviors, butcherBehaviors); // 도살자 (entities/butcherBehaviors.js)
