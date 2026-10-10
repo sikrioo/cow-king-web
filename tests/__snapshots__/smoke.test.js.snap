@@ -4013,7 +4013,7 @@ exports[`smoke: 몬스터 13종 특수 행동/처치 > zoo seed 5 1`] = `
   },
   {
     "act": 0,
-    "actClear": 8,
+    "actClear": 1,
     "alive": true,
     "bolts": 0,
     "cowHp": 2090,
@@ -5394,7 +5394,7 @@ exports[`smoke: 몬스터 13종 특수 행동/처치 > zoo seed 99 1`] = `
   },
   {
     "act": 0,
-    "actClear": 8,
+    "actClear": 1,
     "alive": true,
     "bolts": 0,
     "cowHp": 2090,

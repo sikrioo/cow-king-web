@@ -9,7 +9,7 @@ import * as B from '../../data/balance.js';
 import { monsterLevel } from '../../util.js';
 import { el, table, h2, note, src, tag, pct } from '../ui.js';
 import { monsterCard, openMonsterDetail } from '../detail.js';
-import { ACT_WAVE_SIZE, BOSS_ESCORTS, ACT_CLEAR_DELAY } from '../../data/acts.js';
+import { ACT_WAVE_SIZE, BOSS_ESCORTS } from '../../data/acts.js';
 import { waveInfo, TOTAL_WAVES } from '../../util.js';
 
 const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<span class="dim">물리</span>');
@@ -56,7 +56,7 @@ export function renderMonsters(root) {
   const W = ACT_WAVE_SIZE;
   root.append(
     h2('목장 웨이브 구성 (3막)'),
-    note(`막마다 몬스터·보스·바닥이 다름(${src('src/data/acts.js')}). 마리 수 = ${W.base} + 막 안 웨이브 × ${W.perWave} + 막 번호 × ${W.perAct}, 무리 ${B.WAVE_PACKS_MIN}~${B.WAVE_PACKS_MAX}곳. ${ELITE_MIN_WAVE}웨이브부터 마리마다 엘리트 확률 min(${ELITE_CHANCE_BASE} + 웨이브 × ${ELITE_CHANCE_PER_WAVE}, ${ELITE_CHANCE_MAX}) - 막의 엘리트 목록에서 균등. 막의 마지막 웨이브 = 보스 + 호위 ${BOSS_ESCORTS}. 보스 처치 → 전리품(막마다 횟수) → ${ACT_CLEAR_DELAY}초 뒤 다음 막. ${src('src/systems/waves.js')}`),
+    note(`막마다 몬스터·보스·바닥이 다름(${src('src/data/acts.js')}). 마리 수 = ${W.base} + 막 안 웨이브 × ${W.perWave} + 막 번호 × ${W.perAct}, 무리 ${B.WAVE_PACKS_MIN}~${B.WAVE_PACKS_MAX}곳. ${ELITE_MIN_WAVE}웨이브부터 마리마다 엘리트 확률 min(${ELITE_CHANCE_BASE} + 웨이브 × ${ELITE_CHANCE_PER_WAVE}, ${ELITE_CHANCE_MAX}) - 막의 엘리트 목록에서 균등. 막의 마지막 웨이브 = 보스 + 호위 ${BOSS_ESCORTS}. 보스 처치 → 전리품(막마다 횟수) → 상단 '다음 막으로' 버튼(Enter). ${src('src/systems/waves.js')}`),
     table([
       { label: '웨이브', key: 'w' },
       { label: '막', get: (r) => waveInfo(r.w).def.name },

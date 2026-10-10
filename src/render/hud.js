@@ -204,7 +204,7 @@ export function drawHUD() {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(game.run.mode === 'farm' ? '맵 클리어! T 두 번 / ⇦ 버튼으로 맵 선택으로' : game.actClear > 0 || game.actScene > 0 ? '' : `웨이브 ${waveInfo(game.wave).actWave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(game.run.mode === 'farm' ? '맵 클리어! T 두 번 / ⇦ 버튼으로 맵 선택으로' : game.actClear > 0 ? '보스 처치! 전리품을 챙기고 위의 버튼으로 다음 막으로' : game.actScene > 0 ? '' : `웨이브 ${waveInfo(game.wave).actWave} 클리어! 다음 웨이브 준비 중...`, canvas.width / 2, canvas.height / 2);
     ctx.textAlign = 'left';
   }
 

@@ -29,7 +29,7 @@ import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateThrows } from './systems/weaponThrows.js';
 import { processSpawns, updateCorpses } from './systems/summons.js';
-import { updateActFlow } from './systems/acts.js';
+import { updateActFlow, requestNextAct } from './systems/acts.js';
 import { updateHellfires } from './systems/demonSpells.js';
 import { updateCurses } from './systems/curses.js';
 import { updateAuras } from './systems/auras.js';
@@ -170,6 +170,7 @@ export function handleKeyDown(intent, k, e) {
   }
   if (intent === 'pause' && game.gameState === 'playing') { e.preventDefault(); setPaused(!game.paused); return; }
   if (game.paused) return;
+  if (k === 'enter' && game.gameState === 'playing' && requestNextAct()) { e.preventDefault(); return; } // 보스 처치 뒤 '다음 막으로'
   if (intent === 'devPanel' && isDevMode()) { toggleDevPanel(); return; }
   if (intent === 'exitMap') { requestExitMap(); return; }
   if (intent === 'toggleAutoAim') {

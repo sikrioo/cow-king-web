@@ -169,12 +169,26 @@ export function drawWavePresentation(t) {
 // 막 전환 장면: 어두워졌다 밝아지며(가운데에서 바닥이 바뀜) 다음 막 이름 / 보스 처치 뒤엔 '다음 막까지 N초'
 export function drawActScene() {
   if (game.gameState !== 'playing' || game.run.mode !== 'wave') return;
-  if (game.actClear > 0 && game.act < ACTS.length - 1) {
+  ui.nextActRect = null;
+  if (game.actClear > 0 && !ui.showInventory) { // 보스 처치 뒤: 상단 가운데 버튼 (클릭 영역은 그릴 때마다 등록 - input.js)
+    const last = game.act >= ACTS.length - 1;
+    const w = 200, h = 38, x = canvas.width / 2 - w / 2, y = 96;
+    ui.nextActRect = { x, y, w, h };
+    const pulse = 0.5 + Math.sin(performance.now() / 260) * 0.5;
     ctx.save();
+    ctx.fillStyle = 'rgba(20,14,8,0.85)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = `rgba(255,214,102,${0.6 + pulse * 0.4})`;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
     ctx.textAlign = 'center';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillStyle = 'rgba(255,224,102,0.9)';
-    ctx.fillText(`다음 막까지 ${Math.ceil(game.actClear)}초 - 전리품을 챙기세요`, canvas.width / 2, canvas.height * 0.2);
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffe066';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(last ? '목장 완료 ▶' : '다음 막으로 ▶', canvas.width / 2, y + h / 2 - 1);
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillText('Enter', x + w - 22, y + h / 2);
     ctx.restore();
   }
   if (!(game.actScene > 0)) return;

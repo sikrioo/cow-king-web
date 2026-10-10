@@ -17,6 +17,7 @@ import { isDevMode } from './config.js';
 import { layoutArena } from './world/arena.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 import { sandboxParams, sandboxClass, startSandbox } from './systems/sandbox.js';
+import { requestNextAct } from './systems/acts.js';
 
 // 맵 선택 화면 클릭 (영역은 ui/mapSelect.js가 그릴 때 등록): 무엇을 눌렀는지 → session 함수
 function hubClick(r) {
@@ -32,7 +33,7 @@ function boot() {
   window.addEventListener('resize', resizeCanvas);
   layoutArena();
   game.hero = createHero();
-  bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards, hubClick });
+  bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards, hubClick, nextAct: requestNextAct });
   bindDomButtons({ restart: advanceScreen, pressAction, setPaused, toggleHelp, exitMap: requestExitMap });
   if (isDevMode()) {
     bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });

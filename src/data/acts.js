@@ -1,12 +1,11 @@
 // 목장(웨이브 모드) 3막 구성 (2026-10-11 사용자 결정): 막마다 웨이브 수·나오는 몬스터·보스·바닥 분위기
 //   웨이브 번호는 막을 이어서 셈(1막 1~6, 2막 7~10, 3막 11~14). 막의 마지막 웨이브 = 보스 + 호위 BOSS_ESCORTS마리
-//   보스를 잡으면 전리품(bossDrops번, data/drops.js boss 등급 비중)을 떨구고 ACT_CLEAR_DELAY초 뒤 다음 막(ACT_SCENE초 장면, 회복 없음)
+//   보스를 잡으면 전리품(bossDrops번, data/drops.js boss 등급 비중)을 떨구고 상단에 '다음 막으로' 버튼(Enter) → 누르면 다음 막(ACT_SCENE초 장면, 회복 없음)
 //   마지막 막의 보스 = 승리. 흐름은 systems/acts.js, 웨이브 생성은 systems/waves.js
 //   normals: 일반 몬스터 비중, elites: 엘리트로 나올 종류(없으면 data/monsters.js ELITE_KINDS), ground: 바닥 무늬(없으면 맵 기본 - render/ground.js)
 import { ELITE_KINDS } from './monsters.js';
 import { BOSS_WAVE } from './balance.js';
 
-export const ACT_CLEAR_DELAY = 8;  // 보스 처치 → 다음 막까지 (전리품 줍는 시간)
 export const ACT_SCENE = 3;        // 막 전환 장면 (어두워졌다 밝아지며 바닥이 바뀜)
 export const BOSS_ESCORTS = 4;
 export const ACT_WAVE_SIZE = { base: 6, perWave: 4, perAct: 3 }; // 마리 수 = base + 막 안 웨이브 × perWave + 막 번호 × perAct

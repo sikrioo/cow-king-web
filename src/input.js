@@ -91,7 +91,7 @@ export function keyOf(e) {
   return e.key.toLowerCase();
 }
 
-// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum), pickCard(i), rerollCards(), hubClick(rect) } - 처리는 game.js / systems/levelCards.js
+// 이벤트 리스너 연결. actions: { keyDown(intent, key, e), slotPress(slotNum), pickCard(i), rerollCards(), hubClick(rect), nextAct() } - 처리는 game.js / systems/levelCards.js
 export function bindInput(actions) {
   window.addEventListener('keydown', (e) => {
     const k = keyOf(e);
@@ -139,6 +139,11 @@ export function bindInput(actions) {
       if (card) ui.selectedClass = card.key;
       else if (inside(ui.titleStartRect)) actions.slotPress(1);
       return;
+    }
+    if (game.gameState === 'playing' && ui.nextActRect) { // 보스 처치 뒤 '다음 막으로' 버튼 (마우스·터치)
+      const rect = canvas.getBoundingClientRect(), r = ui.nextActRect;
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) { actions.nextAct(); return; }
     }
     const mouse = e.pointerType !== 'touch' && e.pointerType !== 'pen';
     if (mouse) rememberMouse(e);

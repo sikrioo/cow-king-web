@@ -42,7 +42,7 @@ it('웨이브 → 막: 1막 6웨이브(6 = 카우킹), 2·3막 4웨이브씩, �
   } finally { env.restore(); }
 });
 
-it('보스 처치 → 좋은 등급 전리품 + 대기 → 장면(가운데에서 막이 바뀜) → 다음 웨이브 / 마지막 막 보스 = 승리', async () => {
+it('보스 처치 → 좋은 등급 전리품 + 버튼 대기(웨이브 안 나옴) → 누르면 장면(가운데에서 막이 바뀜) → 다음 웨이브 / 마지막 막 보스 = 승리', async () => {
   const env = installBrowserEnv({ seed: 2 });
   try {
     const m = await boot();
@@ -56,8 +56,11 @@ it('보스 처치 → 좋은 등급 전리품 + 대기 → 장면(가운데에�
     expect(m.game.items.length - items0).toBe(m.ACTS[0].bossDrops);
     expect(m.game.items.slice(items0).every((it) => it.type === 'gear')).toBe(true);
     expect(m.game.gameState).toBe('playing'); // 바로 승리하지 않음
-    expect(m.game.actClear).toBe(m.ACT_CLEAR_DELAY);
-    m.updateActFlow(m.ACT_CLEAR_DELAY + 0.01);
+    expect(m.game.actClear).toBeGreaterThan(0);
+    expect(m.updateActFlow(60)).toBe(true); // 아무리 기다려도 버튼을 누를 때까지 그대로
+    expect(m.game.actScene).toBe(0);
+    expect(m.requestNextAct()).toBe(true);
+    expect(m.requestNextAct()).toBe(false); // 두 번은 안 됨
     expect(m.game.actScene).toBeGreaterThan(0);
     expect(m.game.act).toBe(0);
     m.updateActFlow(m.ACT_SCENE / 2 + 0.01);
@@ -69,7 +72,9 @@ it('보스 처치 → 좋은 등급 전리품 + 대기 → 장면(가운데에�
     m.game.act = 2;
     const dk = { x: 100, y: 100, level: 10 };
     m.bossDown(dk);
-    m.updateActFlow(m.ACT_CLEAR_DELAY + 0.01);
+    m.updateActFlow(1);
+    expect(m.game.gameState).toBe('playing');
+    m.requestNextAct();
     expect(m.game.gameState).toBe('victory');
   } finally { env.restore(); }
 });
