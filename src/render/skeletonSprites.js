@@ -22,14 +22,8 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   ctx.fillStyle = PALETTE.shadow;
   ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
 
-  if (BIG_WEAPONS.includes(weapon)) { // 해골 전사: 주인공처럼 큰 무기를 등 뒤에서 머리 위로 크게 내려침 (맞는 순간 = hitAt)
-    let ang = -2.25; // 평소: 어깨에 메고 칼끝이 등 뒤 위로
-    if (state === 'attack') {
-      const p = Math.min(1, stateElapsed / hitAt);
-      ang = p < 1 ? -2.25 - Math.sin(p * Math.PI / 2) * 0.55 + (p > 0.75 ? (p - 0.75) / 0.25 * 3.4 : 0) : 0.9; // 들어 올림 → 내리침 → 앞 아래
-    }
-    drawBigWeapon(ctx, 10, -36, ang);
-  } else drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
+  const big = BIG_WEAPONS.includes(weapon); // 해골 전사의 대검·도끼는 머리 앞에 그림 (아래 - 머리에 가려 손잡이만 보이던 것)
+  if (!big) drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
 
   // 뼈 뿔 (소 뿔 모양, 뼈 색 + 테두리)
   [-1, 1].forEach((sd) => {
@@ -90,6 +84,15 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#7fffd4';
     ctx.beginPath(); ctx.arc(0, -71, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  if (big) { // 해골 전사: 손은 몸 오른쪽 옆, 평소엔 칼날이 머리 옆으로 곧게 섬 → 공격: 뒤로 들어 올렸다 머리 위로 크게 내리침 (맞는 순간 = hitAt)
+    let ang = -1.75;
+    if (state === 'attack') {
+      const p = Math.min(1, stateElapsed / hitAt);
+      ang = p < 1 ? -1.75 - Math.sin(Math.min(1, p / 0.75) * Math.PI / 2) * 0.95 + (p > 0.75 ? (p - 0.75) / 0.25 * 3.6 : 0) : 0.9; // 들어 올림 → 내리침 → 앞 아래
+    }
+    drawBigWeapon(ctx, 22, -30, ang);
   }
 
   if (shield) { // 해골 방패병: 몸 앞 아래쪽에 낡은 둥근 나무 방패 (쇠테 + 가운데 징)

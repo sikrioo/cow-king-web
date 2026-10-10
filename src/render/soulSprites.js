@@ -4,6 +4,8 @@
 //   색은 data/monsters.js SOUL_PALETTES (몬스터의 soul 값으로 고름)
 import { SOUL_PALETTES } from '../data/monsters.js';
 
+const SOUL_WIDTH = 1.3; // 몸 두께 배율 (그림만 - 맞는 판정은 그대로)
+
 // 불꽃 혀 하나 (잎 모양): 아래 한 점(0,0)에서 시작해 가운데 높이(h × 0.45)에서 옆으로 가장 벌어지고(x ± w) 위 끝(h)으로 다시 모임
 //   가닥들의 x가 가운데에서 가장 벌어지므로 전체가 살짝 다이아몬드 모양 (2026-10-11 사용자)
 function tongue(ctx, x, w, h, sway) {
@@ -22,7 +24,7 @@ export function drawSoul(ctx, x, y, scale, animT, facing = 1, kind = 'fire', fla
   const P = SOUL_PALETTES[kind] || SOUL_PALETTES.fire;
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(scale * facing, scale);
+  ctx.scale(scale * facing * SOUL_WIDTH, scale); // 가로로 넓게 (2026-10-11 사용자: 너무 얇음 → 30% 넓게)
 
   // 바닥 소용돌이 빛 (도는 고리 + 옅은 원)
   ctx.globalAlpha = 0.25 + bright * 0.2;
