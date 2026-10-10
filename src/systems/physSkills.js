@@ -14,6 +14,7 @@ import {
 import { weaponElementHit } from './elementCombat.js';
 import { clampToPen } from '../world/arena.js';
 import { applyKnockback } from '../entities/actor.js';
+import { applyCC } from './cc.js';
 
 const effectiveMaxHp = (h) => h.maxHp + h.bonusMaxHp + h.gearMaxHp;
 // 휠윈드/리프/러시/강타/난타 같은 동작 중엔 다른 동작 스킬을 못 씀
@@ -115,7 +116,7 @@ export function tryConcuss() {
   game.hitstop = Math.max(game.hitstop, 3);
   cowsInFront(reach, s.arc).forEach((c) => {
     skillDamageCow(c, Math.round((rollWeaponDamage() + s.bonus) * skillMul(h, 'concuss', 'damage')), 6, '#ffe08a');
-    if (c.state !== 'dead') c.stunTimer = Math.max(c.stunTimer || 0, stun);
+    applyCC(c, 'stun', stun);
     weaponElementHit(c);
   });
 }

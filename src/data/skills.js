@@ -26,13 +26,15 @@ export const SKILL_META = {
   blizzard:  { label: '눈보라', type: 'magic', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
   firewave:  { label: '화염 파도', type: 'magic', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
   flamepillar: { label: '화염기둥', type: 'magic', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
+  discharge: { label: '방전', type: 'magic', aim: 'free', color: 'rgba(143,232,255,0.45)', desc: '내 주변에 전기를 터뜨림 - 번개 피해 + 짧은 경직(돌진·충전·시전을 끊음)' },
+  balllightning: { label: '볼 라이트닝', type: 'magic', color: 'rgba(200,240,255,0.45)', desc: '지정한 곳에 전기 구체를 설치 - 주변 적에게 번개를 쏘다가 사라지며 폭발. 다시 누르면 바로 터짐' },
   // 공통
   teleport:  { label: '순간이동', type: 'common', aim: 'free', color: 'rgba(160,140,255,0.45)', desc: '커서 쪽(모바일은 바라보는 쪽)으로 순간이동' }
 };
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
   attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
-  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8,
+  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6,
   teleport: 3
 };
 
@@ -60,7 +62,10 @@ export const SKILL_LEVEL_UP = {
   energyshield: { duration: 0.15, absorb: 0.05 }, // absorb: 흡수율에 더함
   blizzard:  { damage: 0.12, radius: 0.06 },
   flamepillar: { damage: 0.15, radius: 0.08 },
-  firewave:  { damage: 0.12, range: 0.08 }
+  firewave:  { damage: 0.12, range: 0.08 },
+  // 방전·볼 라이트닝: 기획서(v0.1) Lv1→10 수치를 Lv1→5에 맞춤 (2026-10-10 결정: 최대 레벨 5 유지)
+  discharge: { damage: 0.28, radius: 0.08 },
+  balllightning: { damage: 0.19, duration: 0.06, targets: 0.5, radius: 0.03 } // targets: 동시에 쏘는 대상 수에 더함(내림)
 };
 // 카드에 쓰는 이름 (pct: 배율이면 %, 아니면 개수)
 export const SKILL_LEVEL_STAT = {
@@ -73,7 +78,8 @@ export const SKILL_LEVEL_STAT = {
   absorb:   { label: '흡수율', pct: true, add: true },
   duration: { label: '지속 시간', pct: true },
   range:    { label: '거리', pct: true },
-  cdr:      { label: '대기시간', pct: true, neg: true }
+  cdr:      { label: '대기시간', pct: true, neg: true },
+  targets:  { label: '대상 수', pct: false }
 };
 
 // 마법이 아닌 스킬 수치 (전사 보조·공통). 대기시간은 시전속도 영향
@@ -109,5 +115,11 @@ export const SPELLS = {
   flamepillar: { mana: 16, cooldown: 2.5, damage: 32, delay: 0.4, count: 6, interval: 0.13, pillarRadius: 36, radius: 85, range: 380 },
   // 화염 파도: 주인공에서 바라보는 쪽으로 곧은 불의 벽(폭 width, 두께 thick)이 travel초 동안 range까지 - 처음에 확 터져 나갔다가 점점 느려지며 멈춤(무게감)
   //   지나가는 적은 한 번씩 맞고 벽이 나아가는 쪽으로 knock만큼 밀려남, 그을린 자국은 멈춘 뒤 linger초 동안 남음
-  firewave:  { mana: 20, cooldown: 3.5, damage: 45, travel: 0.6, range: 170, width: 180, thick: 64, knock: 9, linger: 0.8 }
+  firewave:  { mana: 20, cooldown: 3.5, damage: 45, travel: 0.6, range: 170, width: 180, thick: 64, knock: 9, linger: 0.8 },
+  // 방전: 내 주변 radius 안 모든 적에게 번개 피해 + stagger초 경직 (경직은 기절보다 약한 CC - systems/cc.js)
+  discharge: { mana: 8, cooldown: 1.5, damage: 40, radius: 120, stagger: 0.4 },
+  // 볼 라이트닝: range 안 지점에 구체 설치 → duration초 동안 arcEvery초마다 arcRadius 안 가까운 적 targets명에게 번개 arcDamage
+  //   사라질 때(또는 다시 누르면 바로) burstRadius 안 번개 burst. 스킬 레벨 twoAt부터 동시에 2개, 사라지기 blink초 전부터 깜빡임
+  balllightning: { mana: 18, cooldown: 6, range: 300, duration: 4, arcDamage: 20, arcEvery: 0.5, arcRadius: 140, targets: 3,
+                   burst: 60, burstRadius: 160, twoAt: 4, grow: 0.3, blink: 0.3 }
 };

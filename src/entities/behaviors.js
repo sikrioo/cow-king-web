@@ -6,6 +6,7 @@
 //   onDeath(m)                   처치 시 연출/효과. true를 반환하면 기본 드랍을 건너뜀(자체 드랍)
 //   drawUnder(m, ctx, t, style)  몸 아래(링보다 먼저) 그리는 오라/경고
 //   drawOver(m, ctx, t, style)   몸 위에 그리는 것. 있으면 기본 체력바 대신 그림
+//   interrupt(m)                 기절·경직이 걸려 하던 특수 행동이 끊길 때 정리(대기시간 등) - systems/cc.js
 // 상태를 점유하는 상태머신(fusing/zapping/telegraph…)은 매 틱 true를 반환해야 일반 AI가 상태를 덮어쓰지 않는다.
 import {
   BOSS_SLAM_COOLDOWN, CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
@@ -21,14 +22,16 @@ import { killCow, spawnColdNova, bossSlam, hitPlayer } from '../systems/combat.j
 import { spawnHitParticles, spawnFireHazard, spawnPoisonCloud, spawnLightningBolt, spawnShockwave } from '../systems/fx.js';
 import { rollLightning } from '../systems/elements.js';
 import { MONSTER_CHILL_MOVE_MULT } from '../data/elements.js';
+import { BOSS_SLOW_SCALE } from '../data/balance.js';
+import { isBossCow } from '../systems/cc.js';
 import { dropLoot } from '../systems/loot.js';
 import { clampToPen } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
-// (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함)
+// (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
 export function getAuraSpeedMult(cow) {
-  const chill = cow.chillTimer > 0 ? MONSTER_CHILL_MOVE_MULT : 1;
+  const chill = cow.chillTimer > 0 ? (isBossCow(cow) ? 1 - (1 - MONSTER_CHILL_MOVE_MULT) * BOSS_SLOW_SCALE : MONSTER_CHILL_MOVE_MULT) : 1;
   if (cow.kind === 'fanatic') return AURA_SPEED_MULT * chill;
   for (const other of game.cows) {
     if (other === cow || other.kind !== 'fanatic' || other.state === 'dead') continue;
@@ -153,6 +156,7 @@ export const behaviors = {
   shocker: {
     ranged: true,
     init(m) { m.zapCooldown = 0.8 + Math.random() * 1.2; },
+    interrupt(m) { if (m.state === 'zapping') m.zapCooldown = ZAP_COOLDOWN; }, // 충전 취소
     update(m, dt) {
       if (m.zapCooldown > 0) m.zapCooldown -= dt;
       if (m.state === 'zapping') {
@@ -267,6 +271,7 @@ export const behaviors = {
   // 돌진 카우 - 예고선(telegraph) → 직선 돌진(charging) → 경직(recover)
   charger: {
     init(m) { m.chargeCooldownTimer = 1 + Math.random() * 2; },
+    interrupt(m) { if (m.state === 'telegraph' || m.state === 'charging') m.chargeCooldownTimer = CHARGE_COOLDOWN; }, // 예고·돌진 취소
     update(m, dt) {
       if (m.chargeCooldownTimer > 0) m.chargeCooldownTimer -= dt;
 

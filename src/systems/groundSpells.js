@@ -1,13 +1,15 @@
 // 마법사의 지점·자기 강화 마법: 에너지 쉴드(피해 일부를 마나로 - 적용은 elements.heroDamageTaken), 눈보라, 화염기둥
 // 지점 = 자동 조준이 정한 hero.aimX/aimY (systems/aim.js), 사거리(range)보다 멀면 시전 안 함('사거리 밖'). 수치는 data/skills.js SPELLS
 // 화염 파도: 바라보는 쪽으로 퍼지는 부채꼴 불의 벽 (game.groundSpells kind 'firewave')
+// 볼 라이트닝: 지점에 전기 구체 설치 → 주변 적에게 번개, 사라지며 폭발 (kind 'balllightning', 다시 누르면 바로 폭발)
 // 진행 중인 지점 마법은 game.groundSpells, 그림은 render/skillFx.js
 import { SPELLS } from '../data/skills.js';
 import { game } from '../state.js';
-import { skillMul, easeOutCubic } from '../util.js';
-import { canHit, cowEdgeDist, getCowHitRadius } from './combat.js';
+import { skillMul, skillBonus, skillLevel, easeOutCubic, masteryBonus } from '../util.js';
+import { canHit, cowEdgeDist, getCowHitRadius, getCowBody } from './combat.js';
+import { rollLightning } from './elements.js';
 import { damageCowPacket } from './elementCombat.js';
-import { spawnHitParticles, spawnShockwave, floatText } from './fx.js';
+import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
 import { begin, spellDamage } from './sorcSkills.js';
 import { clampToPen } from '../world/arena.js';
 
@@ -107,6 +109,61 @@ function updateFireWave(g, dt) {
   }
 }
 
+// 볼 라이트닝: 구체가 이미 최대 개수(스킬 레벨 twoAt부터 2개)이거나 대기시간 중이면 → 가장 오래된 구체를 바로 터뜨림
+//   repeat(길게 눌러 반복 시전)일 땐 터뜨리지 않음 - 설치하자마자 터지지 않게
+export function tryBallLightning(opts = {}) {
+  const s = SPELLS.balllightning, h = game.hero;
+  const mine = game.groundSpells.filter((g) => g.kind === 'balllightning' && !g.done);
+  const max = skillLevel(h, 'balllightning') >= s.twoAt ? 2 : 1;
+  if (mine.length && (mine.length >= max || h.spellCd.balllightning > 0)) {
+    if (!opts.repeat) burstBall(mine[0]);
+    return;
+  }
+  const p = targetPoint(s.range);
+  if (!p || !begin('balllightning')) return;
+  game.groundSpells.push({
+    kind: 'balllightning', x: p.x, y: p.y, age: 0, duration: s.duration * skillMul(h, 'balllightning', 'duration'), arcT: s.arcEvery,
+    targets: s.targets + Math.floor(skillBonus(h, 'balllightning', 'targets')), lastHit: new Set(), done: false,
+    arcDmg: spellDamage(s.arcDamage, 'balllightning'), burstDmg: spellDamage(s.burst, 'balllightning'),
+    radius: s.burstRadius * skillMul(h, 'balllightning', 'radius')
+  });
+  spawnHitParticles(p.x, p.y - 20, '#dff9ff', 8);
+}
+
+// 구체 한 틱: arcEvery초마다 arcRadius 안 가까운 적부터 targets명에게 번개. 바로 전 틱에 맞은 적은 다른 적이 모자랄 때만(순번)
+function updateBall(g, dt) {
+  const s = SPELLS.balllightning, h = game.hero;
+  if (g.done) return;
+  if (g.age >= g.duration) { burstBall(g); return; }
+  g.arcT -= dt;
+  if (g.arcT > 0) return;
+  g.arcT += s.arcEvery;
+  const near = game.cows
+    .filter((c) => c.state !== 'dead' && canHit(h, c) && cowEdgeDist(c, g.x, g.y - 20) <= s.arcRadius)
+    .sort((a, b) => (g.lastHit.has(a) - g.lastHit.has(b)) || (Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y)))
+    .slice(0, g.targets);
+  g.lastHit = new Set(near);
+  near.forEach((c) => {
+    const at = getCowBody(c);
+    spawnLightningBolt(g.x, g.y - 20, at.x, at.y);
+    damageCowPacket(c, { lightning: rollLightning(g.arcDmg, masteryBonus(h, 'lightningMin')) }, { knock: 1, fromX: g.x, fromY: g.y });
+  });
+}
+
+// 구체 폭발: 반경 안 모든 적에게 번개 - 흰 고리. 터진 구체는 고리가 퍼지는 동안(짧게) 남았다가 사라짐
+function burstBall(g) {
+  const h = game.hero;
+  g.done = true;
+  g.duration = g.age + 0.25;
+  spawnShockwave(g.x, g.y, g.radius, '#ffffff');
+  spawnHitParticles(g.x, g.y - 20, '#dff9ff', 14);
+  game.shake = Math.min(game.shake + 5, 12);
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, g.x, g.y) > g.radius) return;
+    damageCowPacket(c, { lightning: rollLightning(g.burstDmg, masteryBonus(h, 'lightningMin')) }, { knock: 4, fromX: g.x, fromY: g.y });
+  });
+}
+
 function hitArea(g, packet, knock) {
   game.cows.forEach((c) => {
     if (c.state === 'dead' || !canHit(game.hero, c)) return;
@@ -120,6 +177,7 @@ export function updateGroundSpells(dt) {
     const g = game.groundSpells[i];
     g.age += dt;
     if (g.kind === 'firewave') updateFireWave(g, dt);
+    else if (g.kind === 'balllightning') updateBall(g, dt);
     else if (g.kind === 'blizzard') {
       if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터
         g.tickT -= dt;

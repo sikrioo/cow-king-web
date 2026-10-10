@@ -29,6 +29,8 @@ function skillInfo(id) {
   if (id === 'energyshield') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초 동안 받는 피해 ${pct(s.absorb)}를 마나로 (피해 1당 마나 ${s.manaPerDmg})` }; }
   if (id === 'blizzard') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 동안 지역이 생기고 ${s.duration}초 동안 ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage}, 사거리 ${s.range}` }; }
   if (id === 'firewave') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `폭 ${s.width} 곧은 불의 벽이 ${s.travel}초 동안 앞으로 ${s.range}까지(점점 느려짐), 지나가는 적 화염 ${s.damage} + 화상 + 밀어냄` }; }
+  if (id === 'discharge') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `내 주변 반경 ${s.radius} 번개 ${s.damage} + 경직 ${s.stagger}초 (보스는 피해만)` }; }
+  if (id === 'balllightning') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range} 구체 ${s.duration}초: ${s.arcEvery}초마다 반경 ${s.arcRadius} 안 ${s.targets}명에게 번개 ${s.arcDamage}, 사라질 때 반경 ${s.burstRadius} 폭발 ${s.burst} (다시 누르면 바로 폭발, Lv${s.twoAt}부터 2개)` }; }
   if (id === 'flamepillar') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 뒤 반경 ${s.radius} 곳곳에 불기둥 ${s.count}개(${s.interval}초 간격), 기둥마다 화염 ${s.damage}, 사거리 ${s.range}` }; }
   if (SPELLS[id]) {
     const s = SPELLS[id];

@@ -50,6 +50,9 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.blizzard': 8,
   // 2026-10-10: 마법사 화염 파도
   'exact.progression.skillUnlockLevel.firewave': 7,
+  // 2026-10-10: 마법사 방전·볼 라이트닝 (스킬 기획 정의서 v0.1)
+  'exact.progression.skillUnlockLevel.discharge': 3,
+  'exact.progression.skillUnlockLevel.balllightning': 6,
   // 2026-10-08: 무기 원소 피해 옵션 (지금은 드랍 안 됨 - 개발자 테스트 무기에만)
   'exact.statDef.fireDmg': { label: '화염 피해', min: 15, max: 40, fmtAtMax: '+40' },
   'exact.statDef.coldDmg': { label: '냉기 피해', min: 15, max: 40, fmtAtMax: '+40' },

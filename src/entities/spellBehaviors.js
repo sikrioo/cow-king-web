@@ -40,6 +40,7 @@ export const spellBehaviors = {
       m.meteorCooldown = 1 + Math.random() * 2;
       m.wallCooldown = 0;
     },
+    interrupt(m) { if (m.state === 'casting') m.castCooldown = PYRO_CAST_GAP; }, // 시전 취소
     update(m, dt) {
       if (m.castCooldown > 0) m.castCooldown -= dt;
       if (m.meteorCooldown > 0) m.meteorCooldown -= dt;

@@ -160,10 +160,11 @@ function drawFireWave(ctx, g, t, gi) {
   ctx.restore();
 }
 
-// 지점 마법 - 위(몬스터 위): 눈보라 얼음 덩어리 낙하, 화염기둥 불기둥, 화염 파도
+// 지점 마법 - 위(몬스터 위): 눈보라 얼음 덩어리 낙하, 화염기둥 불기둥, 화염 파도, 볼 라이트닝 구체
 export function drawGroundSpellsOver(ctx, t) {
   game.groundSpells.forEach((g, gi) => {
     if (g.kind === 'firewave') { drawFireWave(ctx, g, t, gi); return; }
+    if (g.kind === 'balllightning') { drawBall(ctx, g, t, gi); return; }
     ctx.save();
     if (g.kind === 'blizzard' && g.age >= g.delay && g.age < g.duration) {
       // 눈 결정(육각 별 - 선 3개)이 돌며 떨어지고, 닿은 자리에 작은 하얀 김 - 선만 써서 가벼움(성능)
@@ -214,4 +215,45 @@ export function drawGroundSpellsOver(ctx, t) {
     }
     ctx.restore();
   });
+}
+
+// 볼 라이트닝 구체: 처음 grow초 동안 커지고, 지지직 떨림(시간 해시) + 겉을 도는 짧은 전기 선, 사라지기 blink초 전부터 깜빡임
+//   바닥엔 아크 범위를 옅은 고리로. 터진 뒤(done)엔 안 그림(흰 고리는 충격파 이펙트)
+function drawBall(ctx, g, t, gi) {
+  if (g.done) return;
+  const s = SPELLS.balllightning;
+  const f = Math.floor(t * 30);
+  const grow = easeOutCubic(Math.min(1, g.age / s.grow));
+  const r = 13 * grow;
+  const jx = (hash01(f, gi, 51) - 0.5) * 3, jy = (hash01(f, gi, 52) - 0.5) * 3;
+  const cx = g.x + jx, cy = g.y - 20 + jy;
+  const blinking = g.duration - g.age < s.blink && f % 4 < 2;
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = '#8fe8ff';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 8]);
+  ctx.lineDashOffset = -t * 30;
+  ctx.beginPath(); ctx.ellipse(g.x, g.y, s.arcRadius, s.arcRadius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = blinking ? 0.35 : 0.3; // 바깥 빛 (겹친 원 - 그라데이션 안 씀)
+  ctx.fillStyle = '#8fe8ff';
+  ctx.beginPath(); ctx.arc(cx, cy, r * 2, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = blinking ? 1 : 0.9;
+  ctx.fillStyle = blinking ? '#ffffff' : '#bff4ff';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#ffffff'; // 겉을 도는 전기 선 3개 (꺾인 선)
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 3; i++) {
+    const a = hash01(f, gi, 60 + i) * Math.PI * 2, len = r * (1.2 + hash01(f, gi, 63 + i) * 0.9);
+    const mx = cx + Math.cos(a + 0.4) * len * 0.6, my = cy + Math.sin(a + 0.4) * len * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * r * 0.8, cy + Math.sin(a) * r * 0.8);
+    ctx.lineTo(mx, my);
+    ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+    ctx.stroke();
+  }
+  ctx.restore();
 }

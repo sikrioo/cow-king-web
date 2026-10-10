@@ -5,8 +5,9 @@ import {
   WHIRLWIND_RADIUS, WHIRLWIND_MANA_COST, WHIRLWIND_TICK, LEAP_DISTANCE, LEAP_DURATION, LEAP_COOLDOWN,
   LEAP_MANA_COST, LEAP_RADIUS, RUSH_DISTANCE, RUSH_DURATION, RUSH_COOLDOWN, RUSH_MANA_COST, RUSH_HIT_RADIUS,
   RUSH_DAMAGE_BONUS, SMASH_DURATION, SMASH_IMPACT_TIME, SMASH_COOLDOWN, SMASH_MANA_COST, SMASH_RADIUS,
-  SMASH_DAMAGE_BONUS
+  SMASH_DAMAGE_BONUS, WARCRY_STUN, SMASH_STUN
 } from '../data/balance.js';
+import { applyCC } from './cc.js';
 import { PALETTE } from '../data/palette.js';
 import { SKILL_META, SPELLS, SKILL_STATS, COMMON_SKILLS } from '../data/skills.js';
 import { CLASSES } from '../data/classes.js';
@@ -15,9 +16,9 @@ import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
-import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb } from './sorcSkills.js';
+import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryDischarge } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
-import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave } from './groundSpells.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
@@ -44,7 +45,7 @@ export function tryWarCry() {
 export function warCryHitCow(c) {
   applyKnockback(c.body, game.hero.x, game.hero.y, 8);
   c.knockback = 0.25;
-  c.stunTimer = 1.0 * skillMul(game.hero, 'warcry', 'stun');
+  applyCC(c, 'stun', WARCRY_STUN * skillMul(game.hero, 'warcry', 'stun'));
   c.flash = 0.15;
   spawnHitParticles(c.x, c.y, '#e8dcc8', 4);
 }
@@ -241,7 +242,7 @@ export function updateGroundSmash(dt) {
       if (Math.hypot(c.x - game.hero.x, c.y - game.hero.y) <= radius + getCowHitRadius(c)) {
         skillDamageCow(c, Math.round((rollWeaponDamage() + SMASH_DAMAGE_BONUS) * skillMul(game.hero, 'smash', 'damage')), 11, '#ffd36a');
         weaponElementHit(c);
-        c.stunTimer = Math.max(c.stunTimer || 0, 0.35);
+        applyCC(c, 'stun', SMASH_STUN);
       }
     });
   }
@@ -272,6 +273,8 @@ export const SKILLS = {
   firewave:  { ...SKILL_META.firewave,  try: () => tryFireWave(),      cd: () => game.hero.spellCd.firewave,  cdMax: () => SPELLS.firewave.cooldown * castSpeedMul(game.hero) },
   blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
+  discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
+  balllightning: { ...SKILL_META.balllightning, try: (o) => tryBallLightning(o), cd: () => game.hero.spellCd.balllightning, cdMax: () => SPELLS.balllightning.cooldown * castSpeedMul(game.hero) },
   teleport:  { ...SKILL_META.teleport,  try: () => tryTeleport(),      cd: () => game.hero.spellCd.teleport,  cdMax: () => SKILL_STATS.teleport.cooldown * (1 - skillBonus(game.hero, 'teleport', 'cdr')) * castSpeedMul(game.hero) }
 };
 
@@ -319,17 +322,17 @@ export function aimAtCursor(id) {
   aim(id && SKILL_META[id] && SKILL_META[id].aim === 'free' ? 'free' : 'target', range || undefined);
 }
 
-// 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로
-export function trySlot(n) {
+// 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로. repeat = 길게 눌러 반복 시전 중(처음 누른 순간이 아님)
+export function trySlot(n, repeat = false) {
   const id = n === 2 ? game.hero.slot2 : game.hero.slot1;
   aimAtCursor(id);
-  SKILLS[id].try();
+  SKILLS[id].try({ repeat });
 }
 
 export function updateSkillSlots() {
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
-  if (input.holdSlot1) trySlot(1);
-  if (input.holdSlot2) trySlot(2);
+  if (input.holdSlot1) trySlot(1, true);
+  if (input.holdSlot2) trySlot(2, true);
   // Shift+좌클릭 제자리 공격 (캐릭터의 기본 공격)
   if (input.standAttackHeld && basicAttackReady()) { aimAtCursor(); tryBasicAttack(); }
 }

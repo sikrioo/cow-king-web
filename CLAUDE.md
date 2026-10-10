@@ -64,6 +64,8 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 주인공이 받는 피해 마지막 단계: `elements.heroDamageTaken`(버서커 증가·에너지 쉴드 흡수) - hitPlayer와 지속 피해 둘 다 거침. 주는 피해 배율: `util.berserkMul`.
 - 미끼(전사 더미): 몬스터 일반 AI의 추적·근접 대상만 바뀜(`physSkills.decoyFor/hitDecoy`). 종류별 특수 행동은 주인공 그대로.
 - 피아 판정(PVP): `systems/combat.js`의 `canHit` + `team`.
+- 군중 제어(기절·경직·나중에 변이): `systems/cc.js`의 `applyCC(c, kind, time)` 한 곳 - 우선순위 `CC_RANK`(변이 > 기절 > 경직), 보스(카우킹·맵 보스) 면역(둔화만 절반), 걸리면 특수 행동이 끊김(behaviors `interrupt` 훅). `c.stunTimer`를 직접 쓰지 말 것.
+- 스킬 기획 정의서 v0.1(2026-10-10) 진행 상황·결정은 `docs/TODO.md` '스킬 기획 정의서' 항목.
 
 ## 규칙
 1. 숫자와 콘텐츠는 `src/data/`에만 둔다. 체력·피해·공격력은 **정수**(×10 스케일, 고정 수치 옵션은 STAT_DEF의 flat). 코드에 튜닝용 숫자를 박지 않는다(남아 있는 직접 숫자는 옮길 대상).

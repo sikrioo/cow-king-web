@@ -205,3 +205,9 @@ export const ZAP_BEAM_LENGTH = 420; // 조준 지점을 지나 더 멀리까지 
 export const ZAP_BEAM_WIDTH = 24;
 export const AURA_RADIUS = 170;
 export const AURA_SPEED_MULT = 1.4;
+
+// 군중 제어(CC, systems/cc.js): 높은 쪽이 걸려 있으면 낮은 쪽은 무시 (변이 > 기절 > 경직). 보스는 전부 면역, 둔화만 BOSS_SLOW_SCALE만큼(절반)
+export const CC_RANK = { stagger: 1, stun: 2, poly: 3 };
+export const BOSS_SLOW_SCALE = 0.5;
+export const WARCRY_STUN = 1.0;  // 함성 기절(초, 스킬 레벨로 늘어남)
+export const SMASH_STUN = 0.35;  // 강타 기절(초)

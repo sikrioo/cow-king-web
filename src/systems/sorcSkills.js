@@ -1,4 +1,4 @@
-// 마법사 스킬: 마력탄(기본 공격), 화염구, 서리 노바, 연쇄 번개, 얼음 보주. 수치는 data/skills.js의 SPELLS
+// 마법사 스킬: 마력탄(기본 공격), 화염구, 서리 노바, 방전, 연쇄 번개, 얼음 보주. 수치는 data/skills.js의 SPELLS
 // 방향은 주인공이 바라보는 방향(PC는 시전 직전에 커서 쪽으로 돌아봄 - skills.aimAtCursor)
 import { SPELLS, SPELL_LEVEL_SCALE, SKILL_STATS } from '../data/skills.js';
 import { game } from '../state.js';
@@ -6,8 +6,9 @@ import { attackSpeedMul, castSpeedMul, skillMul, skillBonus, masteryBonus } from
 import { canHit, cowEdgeDist, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { rollLightning } from './elements.js';
-import { spawnHitParticles, spawnIceRing, spawnLightningBolt, floatText } from './fx.js';
+import { spawnHitParticles, spawnIceRing, spawnLightningBolt, spawnShockwave, floatText } from './fx.js';
 import { spawnProjectile } from './projectiles.js';
+import { applyCC } from './cc.js';
 
 // 주인공 레벨 + 스킬 레벨에 따라 오르는 주문 피해 (정수)
 export function spellDamage(base, id) {
@@ -76,6 +77,25 @@ export function tryFrostNova() {
   game.cows.forEach((c) => {
     if (c.state === 'dead' || !canHit(h, c)) return;
     if (cowEdgeDist(c, h.x, h.y) <= radius) damageCowPacket(c, { cold: dmg }, { knock: 3, fromX: h.x, fromY: h.y });
+  });
+}
+
+// 방전: 내 주변 전체에 번개 + 짧은 경직(돌진 예고·충전·시전을 끊음, 보스는 피해만) - 둘러싸였을 때 숨통 트기
+//   연출: 하늘색 고리가 퍼지고 맞은 적마다 짧은 번개가 튐
+export function tryDischarge() {
+  const s = SPELLS.discharge, h = game.hero;
+  if (!begin('discharge')) return;
+  const radius = s.radius * skillMul(h, 'discharge', 'radius');
+  spawnShockwave(h.x, h.y, radius, '#8fe8ff');
+  spawnHitParticles(h.x, h.y, '#dff9ff', 10);
+  game.shake = Math.min(game.shake + 3, 12);
+  const dmg = spellDamage(s.damage, 'discharge');
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, h.x, h.y) > radius) return;
+    const at = getCowBody(c);
+    spawnLightningBolt(h.x, h.y - 10, at.x, at.y);
+    damageCowPacket(c, { lightning: rollLightning(dmg, masteryBonus(h, 'lightningMin')) }, { knock: 2, fromX: h.x, fromY: h.y });
+    applyCC(c, 'stagger', s.stagger);
   });
 }
 

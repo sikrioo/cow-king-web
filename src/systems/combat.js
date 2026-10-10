@@ -19,6 +19,7 @@ import {
   toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath, heroDamageTaken
 } from './elements.js';
 import { gainExp } from './progression.js';
+import { applyCC } from './cc.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
 export function canHit(attacker, target) {
@@ -99,7 +100,7 @@ function swingHit(ws, onHit, heavy) {
       damageCow(c, dmg, heavy);
       if (onHit) onHit(c);
       const stun = masteryBonus(game.hero, 'stun'); // 메이스 마스터리: 확률로 잠깐 기절
-      if (stun > 0 && c.state !== 'dead' && Math.random() < stun) c.stunTimer = Math.max(c.stunTimer || 0, MASTERY_STUN_TIME);
+      if (stun > 0 && c.state !== 'dead' && Math.random() < stun) applyCC(c, 'stun', MASTERY_STUN_TIME);
       landed = true;
     }
   });

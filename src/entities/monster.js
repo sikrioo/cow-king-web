@@ -116,18 +116,20 @@ export class Monster {
     updateCowStatuses(this, dt); // 화상/중독 피해, 둔화 시간
     if (this.state === 'dead') return;
 
-    // 종류별 특수 처리 (보스 슬램/불바닥/치유/번개/자폭/돌진). true면 상태 점유 중 → 아래 일반 AI는 이번 틱에 실행 안 함
-    const b = this.behavior;
-    if (b && b.update && b.update(this, dt)) return;
-
+    // 기절·경직(systems/cc.js) 중엔 종류별 특수 행동도 일반 AI도 멈춤. 풀리면 잠깐 서 있다가 다시 움직임
     if (this.stunTimer > 0) {
       this.stunTimer -= dt;
       this.state = 'stunned';
       this.stateElapsed += dt;
       if (this.knockback > 0) this.knockback -= dt;
       else Body.setVelocity(this.body, { x: 0, y: 0 });
-      return; // 기절 중엔 배회/추격/공격 불가
+      if (this.stunTimer <= 0) this.setState('idle', 0.2);
+      return;
     }
+
+    // 종류별 특수 처리 (보스 슬램/불바닥/치유/번개/자폭/돌진). true면 상태 점유 중 → 아래 일반 AI는 이번 틱에 실행 안 함
+    const b = this.behavior;
+    if (b && b.update && b.update(this, dt)) return;
 
     if (this.knockback > 0) {
       this.knockback -= dt;
