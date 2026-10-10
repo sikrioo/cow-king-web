@@ -79,7 +79,7 @@ export class Monster {
     this.dmg = opts.dmgMul && opts.dmgMul !== 1 ? Math.max(1, Math.round(def.dmg * opts.dmgMul)) : def.dmg; // 근접 공격력 (난이도 배율)
     if (opts.resist) this.resist = opts.resist; // 개체 저항 (util.resistOf가 종류 기본값보다 먼저 봄)
     this.home = opts.home || null;
-    this.dropCount = opts.dropCount || 1;
+    this.dropCount = opts.dropCount != null ? opts.dropCount : 1; // 0 = 드랍 없음 (소환된 해골)
     this.mapBoss = !!opts.mapBoss;
     this.level = monsterLevel(game.run, game.wave, kind, this.mapBoss); // 떨군 장비의 아이템 레벨
     this.hunt = !!opts.hunt;

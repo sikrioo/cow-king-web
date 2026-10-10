@@ -1,0 +1,70 @@
+// 해골 카우·해골 카우 킹(네크로맨서) - 관리자 페이지에만(게임 생성 목록에 없음), 킹은 해골 소환·뼈 창·죽으면 부하도 쓰러짐·보스 취급
+import { it, expect, vi } from 'vitest';
+import { installBrowserEnv } from './helpers/browserEnv.js';
+
+async function boot() {
+  vi.resetModules();
+  await import('../src/main.js');
+  const m = {
+    ...(await import('../src/state.js')),
+    ...(await import('../src/game.js')),
+    ...(await import('../src/systems/summons.js')),
+    ...(await import('../src/systems/cc.js')),
+    ...(await import('../src/systems/combat.js')),
+    ...(await import('../src/data/monsters.js')),
+    ...(await import('../src/data/maps.js')),
+    ...(await import('../src/data/balance.js')),
+    ...(await import('../src/entities/monster.js')),
+    ...(await import('../src/core/physics.js')),
+    ...(await import('../src/world/arena.js'))
+  };
+  m.resetGame();
+  m.game.gameState = 'playing';
+  m.game.waveTransition = 999;
+  m.game.cows.length = 0;
+  const h = m.game.hero;
+  m.Body.setPosition(h.body, { x: m.PEN.size / 2, y: m.PEN.size / 2 }); h.x = m.PEN.size / 2; h.y = m.PEN.size / 2;
+  return m;
+}
+
+it('관리자 전용: 엘리트·맵·카우킹 웨이브 목록에 없음', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    ['skeleton', 'skeletonKing'].forEach((k) => {
+      expect(m.MONSTERS[k].adminOnly).toBe(true);
+      expect(m.ELITE_KINDS).not.toContain(k);
+      Object.values(m.MAPS).forEach((map) => expect(Object.keys(map.kinds || {})).not.toContain(k));
+    });
+  } finally { env.restore(); }
+});
+
+it('해골 카우 킹: 주문 → 해골 소환(부하 최대치까지), 뼈 창, 보스 CC 면역, 죽으면 부하도 쓰러짐', async () => {
+  const env = installBrowserEnv({ seed: 2 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const king = new m.Monster(0.4, 'skeletonKing', { pos: { x: h.x + 300, y: h.y } });
+    m.game.cows.push(king);
+    expect(m.isBossCow(king)).toBe(true);
+    expect(m.applyCC(king, 'stun', 2)).toBe(false);
+    king.summonCd = 0; king.boneCd = 99;
+    king.update(1 / 60);
+    expect(king.state).toBe('casting');
+    for (let i = 0; i < m.NECRO_CAST_TIME * 60 + 2; i++) king.update(1 / 60);
+    m.processSpawns();
+    const minions = () => m.game.cows.filter((c) => c.summoner === king && c.state !== 'dead');
+    expect(minions().length).toBe(m.NECRO_SUMMON_COUNT);
+    expect(minions()[0].kind).toBe('skeleton');
+    expect(minions()[0].dropCount).toBe(0);
+    // 최대치면 더 안 부름
+    for (let i = 0; i < 5; i++) { king.summonCd = 0; king.state = 'idle'; for (let j = 0; j < 60; j++) king.update(1 / 60); m.processSpawns(); }
+    expect(minions().length).toBeLessThanOrEqual(m.NECRO_MAX_MINIONS);
+    // 뼈 창
+    king.summonCd = 99; king.boneCd = 0; king.state = 'idle';
+    king.update(1 / 60);
+    expect(m.game.projectiles.some((p) => p.kind === 'bonespear' && p.team === 'monster')).toBe(true);
+    m.killCow(king);
+    expect(minions().length).toBe(0);
+  } finally { env.restore(); }
+});

@@ -211,3 +211,17 @@ export const CC_RANK = { stagger: 1, stun: 2, poly: 3 };
 export const BOSS_SLOW_SCALE = 0.5;
 export const WARCRY_STUN = 1.0;  // 함성 기절(초, 스킬 레벨로 늘어남)
 export const SMASH_STUN = 0.35;  // 강타 기절(초)
+
+// 해골 카우 킹 (네크로맨서, 관리자 페이지에만): 거리를 두고(NECRO_KITE 안이면 물러남, NECRO_RANGE 밖이면 다가감)
+//   NECRO_SUMMON_CD초마다 NECRO_CAST_TIME초 주문 → 곁에 해골 카우 NECRO_SUMMON_COUNT마리(살아 있는 부하 NECRO_MAX_MINIONS마리까지)
+//   NECRO_BONE_CD초마다 뼈 창(물리 NECRO_BONE_DAMAGE, 곧게 날아감). 죽으면 부하도 같이 쓰러짐
+export const NECRO_RANGE = 380;
+export const NECRO_KITE = 200;
+export const NECRO_SUMMON_CD = 7;
+export const NECRO_CAST_TIME = 0.7;
+export const NECRO_SUMMON_COUNT = 2;
+export const NECRO_MAX_MINIONS = 5;
+export const NECRO_BONE_CD = 2.8;
+export const NECRO_BONE_DAMAGE = 35;
+export const NECRO_BONE_SPEED = 300;
+export const NECRO_BONE_RADIUS = 8;

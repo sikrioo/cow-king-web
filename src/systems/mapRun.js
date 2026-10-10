@@ -22,6 +22,7 @@ export function clearWorld() {
   game.meteors = [];
   game.groundSpells = [];
   game.throws = [];
+  game.pendingSpawns = [];
   if (game.hero) { game.hero.weaponOut = false; game.hero.shieldOut = false; }
   game.decoy = null;
   game.projectiles = [];

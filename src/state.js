@@ -13,6 +13,7 @@ export const game = {
   hazards: [],
   meteors: [], // 떨어지는 중인 메테오 (systems/spells.js)
   groundSpells: [], // 눈보라·화염기둥 (systems/groundSpells.js)
+  pendingSpawns: [], // 몬스터가 불러낸 몬스터 { kind, x, y, summoner } - systems/summons.js가 다음 틱에 만듦
   throws: [], // 던진 무기 - 무기 특수기 (systems/weaponThrows.js)
   decoy: null, // 전사 '더미' 미끼 { x, y, hp, timer, ... } (systems/physSkills.js)
   projectiles: [], // 날아가는 투사체 (systems/projectiles.js)

@@ -7,6 +7,9 @@ import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { spawnHitParticles } from '../systems/fx.js';
 import { spawnMeteor, castFireball, spawnFireWall } from '../systems/spells.js';
+import { killCow } from '../systems/combat.js';
+import { spawnProjectile } from '../systems/projectiles.js';
+import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
 
@@ -31,7 +34,92 @@ function release(m) {
   m.castCooldown = PYRO_CAST_GAP;
 }
 
+// 해골 카우 킹: 살아 있는 부하 수
+const minionsOf = (m) => game.cows.filter((c) => c.summoner === m && c.state !== 'dead').length + game.pendingSpawns.filter((p) => p.summoner === m).length;
+
 export const spellBehaviors = {
+  // 해골 카우 킹 (네크로맨서) - 거리를 두고 해골을 불러내고(주문 중엔 멈춤) 뼈 창을 던짐, 죽으면 부하도 쓰러짐
+  skeletonKing: {
+    ranged: true,
+    init(m) { m.summonCd = 1.2; m.boneCd = 2; },
+    interrupt(m) { if (m.state === 'casting') m.summonCd = NECRO_SUMMON_CD * 0.5; },
+    update(m, dt) {
+      m.summonCd -= dt;
+      m.boneCd -= dt;
+      if (m.state === 'casting') {
+        m.stateElapsed += dt;
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        if (m.stateElapsed >= NECRO_CAST_TIME) {
+          const n = Math.min(NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS - minionsOf(m)); // 남은 자리만큼만
+          for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2, r = m.r + 30 + Math.random() * 30;
+            game.pendingSpawns.push({ kind: 'skeleton', x: m.x + Math.cos(a) * r, y: m.y + Math.sin(a) * r, summoner: m });
+            spawnHitParticles(m.x + Math.cos(a) * r, m.y + Math.sin(a) * r, '#7fffd4', 8);
+          }
+          m.setState('idle', 0.3);
+        }
+        return true;
+      }
+      if (!game.hero.alive) return false;
+      const dx = game.hero.x - m.x, dy = game.hero.y - m.y, dist = Math.hypot(dx, dy);
+      if (m.summonCd <= 0 && dist < m.aggroRange && minionsOf(m) < NECRO_MAX_MINIONS) {
+        m.summonCd = NECRO_SUMMON_CD;
+        m.setState('casting', 0);
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        return true;
+      }
+      if (m.boneCd <= 0 && dist <= NECRO_RANGE) { // 뼈 창 (곧게 - 옆으로 움직이면 피함)
+        m.boneCd = NECRO_BONE_CD;
+        const oy = m.y - 40 * m.scale, d = Math.hypot(game.hero.x - m.x, game.hero.y - oy) || 1;
+        spawnProjectile({ kind: 'bonespear', x: m.x, y: oy, dirX: (game.hero.x - m.x) / d, dirY: (game.hero.y - oy) / d, speed: NECRO_BONE_SPEED, range: NECRO_RANGE + 80, radius: NECRO_BONE_RADIUS, packet: { phys: NECRO_BONE_DAMAGE }, color: '#e8e2d0' });
+        if (Math.abs(dx) > 1) m.facing = dx > 0 ? 1 : -1;
+      }
+      return false;
+    },
+    steer(m, dxP, dyP, distP, auraMult) {
+      if (game.hero.alive && distP > NECRO_RANGE && distP < m.aggroRange) {
+        m.state = 'walk';
+        Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
+        if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
+        return true;
+      }
+      if (game.hero.alive && distP < NECRO_KITE && distP > 0.001) {
+        m.state = 'walk';
+        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
+        m.facing = dxP > 0 ? -1 : 1;
+        return true;
+      }
+      return false;
+    },
+    onDeath(m) {
+      game.cows.forEach((c) => { if (c.summoner === m && c.state !== 'dead') killCow(c); }); // 부하도 쓰러짐
+      return false;
+    },
+    // 발밑 초록 소용돌이 + 주문 중엔 커지는 룬 원 (난수 없음)
+    drawUnder(m, ctx, t) {
+      ctx.save();
+      const R = 26 * m.scale;
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = '#7fffd4';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+      ctx.lineDashOffset = -t * 20;
+      ctx.beginPath(); ctx.ellipse(m.x, m.y + m.r * 0.4, R, R * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      if (m.state === 'casting') {
+        const p = Math.min(1, m.stateElapsed / NECRO_CAST_TIME), RR = R * (1 + p * 0.8);
+        ctx.globalAlpha = 0.3 + p * 0.5;
+        ctx.beginPath(); ctx.ellipse(m.x, m.y + m.r * 0.4, RR, RR * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#b8ffe8';
+        for (let i = 0; i < 6; i++) {
+          const a = -t * 3 + (i / 6) * Math.PI * 2;
+          ctx.beginPath(); ctx.arc(m.x + Math.cos(a) * RR, m.y + m.r * 0.4 + Math.sin(a) * RR * 0.5, 2.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+  },
+
   // 화염술사 카우 - 거리를 두고 마법: 멀면 메테오, 중간이면 파이어볼, 가까우면 화염 벽으로 길을 막고 물러남
   pyro: {
     ranged: true,

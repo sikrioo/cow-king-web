@@ -33,7 +33,7 @@ export function renderMonsters(root) {
       { label: '속도', num: true, get: (k) => MONSTERS[k].speedMul },
       { label: '인식 범위', num: true, get: (k) => MONSTERS[k].aggroMul },
       { label: '경험치', num: true, get: (k) => MONSTERS[k].exp },
-      { label: '구분', get: (k) => (k === 'boss' ? tag('보스', '#c98bef') : ELITE_KINDS.includes(k) ? tag('엘리트', '#ffcf4d') : tag('일반')) }
+      { label: '구분', get: (k) => el('span', {}, k === 'boss' || MONSTERS[k].boss ? tag('보스', '#c98bef') : ELITE_KINDS.includes(k) ? tag('엘리트', '#ffcf4d') : tag('일반'), MONSTERS[k].adminOnly ? tag('관리자 전용 - 게임에 안 나옴', '#7fffd4') : null) }
     ], kinds)
   );
 

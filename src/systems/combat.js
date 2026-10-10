@@ -131,7 +131,7 @@ export function killCow(c) {
   // 종류별 처치 효과 (냉기 노바/자폭/보스 승리) - behaviors[kind].onDeath. true면 자체 드랍을 했으므로 기본 드랍 생략
   const b = c.behavior;
   if (b && b.onDeath && !c.sheepDead && b.onDeath(c)) return;
-  dropLoot(c.x, c.y, dropSource(c), c.dropCount || 1, c.level); // 출처별 드랍 테이블(data/drops.js), 파밍 맵 우두머리는 여러 번
+  dropLoot(c.x, c.y, dropSource(c), c.dropCount != null ? c.dropCount : 1, c.level); // 출처별 드랍 테이블(data/drops.js), 파밍 맵 우두머리는 여러 번
 }
 
 export function spawnColdNova(x, y) {

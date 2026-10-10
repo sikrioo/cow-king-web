@@ -4,9 +4,10 @@
 //   걸리는 순간 하던 특수 행동(돌진 예고·돌진, 번개 충전, 마법 시전, 근접 공격)이 끊김 → 종류별 정리는 behaviors의 interrupt 훅
 import { CC_RANK } from '../data/balance.js';
 import { SPELLS } from '../data/skills.js';
+import { MONSTERS } from '../data/monsters.js';
 
 export function isBossCow(c) {
-  return c.kind === 'boss' || !!c.mapBoss;
+  return c.kind === 'boss' || !!c.mapBoss || !!(MONSTERS[c.kind] && MONSTERS[c.kind].boss);
 }
 
 export const isSheep = (c) => c.stunTimer > 0 && c.ccKind === 'poly';

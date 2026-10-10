@@ -3,7 +3,8 @@ import { MONSTERS, FLASH_COLORS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 
-export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd') {
+// decor(ctx, animT): 같은 좌표계 안에서 몸 위에 덧그림 (해골 무늬 등)
+export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null) {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
   const hornColor  = colors ? colors.horn  : PALETTE.horn;
   const snoutColor = colors ? colors.snout : PALETTE.snout;
@@ -50,6 +51,7 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.ellipse(12, -46, 3.6, 2.6, 0.15, 0, Math.PI * 2);
   ctx.fill();
 
+  if (decor) decor(ctx, animT);
   if (state === 'stunned') drawStunDots(ctx, animT);
 
   ctx.restore();
@@ -141,7 +143,7 @@ export function drawMonster(c, ctx, t) {
   } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon);
+  drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.skeleton ? (k, at) => drawSkeletonDecor(k, at, c.kind === 'skeletonKing' || !!style.boss) : null);
   ctx.restore();
   }
 
@@ -200,4 +202,38 @@ export function drawSheep(ctx, x, y, scale, animT, facing = 1, walking = true, f
   ctx.fillStyle = '#f4f2ec';
   ctx.beginPath(); ctx.arc(19, -40, 5, 0, Math.PI * 2); ctx.fill(); // 머리 털
   ctx.restore();
+}
+
+// 해골 카우 꾸밈 (소 그림 좌표계 - 몸통 원 중심 (0,-40) 반지름 30): 퀭한 눈구멍 + 초록 눈빛, 갈비뼈, 금 / 킹은 금관 + 어깨 망토
+function drawSkeletonDecor(ctx, animT, king) {
+  if (king) { // 망토(몸 뒤로 늘어진 보라 천 - 몸통 아래쪽에 겹쳐 보이게)
+    ctx.fillStyle = 'rgba(70,30,90,0.85)';
+    ctx.beginPath(); ctx.moveTo(-30, -36); ctx.quadraticCurveTo(-36, -4, -24, 2); ctx.lineTo(24, 2); ctx.quadraticCurveTo(36, -4, 30, -36); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = '#6b6455'; // 갈비뼈
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    const y = -34 + i * 7;
+    ctx.beginPath(); ctx.moveTo(-16 + i * 2, y); ctx.quadraticCurveTo(0, y + 5, 16 - i * 2, y); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(0, -16); ctx.stroke(); // 등뼈
+  ctx.lineWidth = 1.2; // 이마 금
+  ctx.beginPath(); ctx.moveTo(-4, -66); ctx.lineTo(-1, -58); ctx.lineTo(-5, -52); ctx.stroke();
+  ctx.fillStyle = '#1a1814'; // 눈구멍
+  ctx.beginPath(); ctx.ellipse(-12, -46, 6, 5, -0.15, 0, Math.PI * 2); ctx.ellipse(12, -46, 6, 5, 0.15, 0, Math.PI * 2); ctx.fill();
+  const glow = 0.6 + Math.sin(animT * 5) * 0.3;
+  ctx.globalAlpha = glow;
+  ctx.fillStyle = '#7fffd4';
+  ctx.beginPath(); ctx.arc(-12, -46, 2.2, 0, Math.PI * 2); ctx.arc(12, -46, 2.2, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+  if (king) { // 금관
+    ctx.fillStyle = '#e8c547';
+    ctx.strokeStyle = '#8a6a1a';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-16, -66); ctx.lineTo(-16, -78); ctx.lineTo(-9, -71); ctx.lineTo(-3, -82); ctx.lineTo(3, -71); ctx.lineTo(9, -82); ctx.lineTo(16, -74); ctx.lineTo(16, -66); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#7fffd4';
+    ctx.beginPath(); ctx.arc(0, -70, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
 }

@@ -72,6 +72,7 @@ export function drawProjectiles(ctx) {
     if (p.kind === 'bolt') { drawBolt(ctx, p); return; }
     if (p.kind === 'shard') { drawShard(ctx, p, i); return; }
     if (p.kind === 'orb') { drawOrb(ctx, p, t); return; }
+    if (p.kind === 'bonespear') { drawBoneSpear(ctx, p); return; }
     ctx.save();
     for (let k = 4; k >= 1; k--) {
       ctx.globalAlpha = 0.5 - k * 0.1;
@@ -344,4 +345,25 @@ export function drawFloatTexts(ctx) {
   });
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
+}
+
+// 뼈 창 (해골 카우 킹): 진행 방향으로 긴 하얀 뼈 + 끝 마디 + 옅은 초록 꼬리
+function drawBoneSpear(ctx, p) {
+  const a = Math.atan2(p.dirY, p.dirX);
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(a);
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = '#7fffd4';
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(-8, 0); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#e8e2d0';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(12, 0); ctx.stroke();
+  ctx.fillStyle = '#f4efe2';
+  ctx.beginPath(); ctx.moveTo(12, -4); ctx.lineTo(20, 0); ctx.lineTo(12, 4); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(-18, -2.5, 2.5, 0, Math.PI * 2); ctx.arc(-18, 2.5, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
