@@ -1,6 +1,6 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
-import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
+import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT, CURSES } from './data/balance.js';
 import { SKILL_LEVEL_UP, SKILL_STATS, SKILL_META } from './data/skills.js';
 import { MONSTERS } from './data/monsters.js';
 import { MAPS } from './data/maps.js';
@@ -95,7 +95,8 @@ export function berserkMul(hero) {
 
 // 스킬 대기시간 배율(작을수록 자주) = 1 / (1 + 시전속도), 상한 CAST_SPEED_MAX_MULT. 전사·마법사 스킬 공통 (기본 공격은 attackSpeedMul)
 export function castSpeedMul(hero) {
-  return 1 / Math.min(1 + (hero.gearCastSpeed || 0), CAST_SPEED_MAX_MULT);
+  const hex = hero.curse && hero.curse.kind === 'hex' && hero.curse.timer > 0 ? CURSES.hex.mul : 1; // 봉인 저주 (systems/curses.js)
+  return hex / Math.min(1 + (hero.gearCastSpeed || 0), CAST_SPEED_MAX_MULT);
 }
 
 // 초당 기본 공격 횟수 (공격 버튼을 누르고 있을 때). 쌍수면 두 무기 간격의 평균

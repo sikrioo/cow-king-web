@@ -3,6 +3,7 @@ import { MONSTERS, MONSTER_LABEL, MONSTER_WEAPONS, weaponFor, ELITE_KINDS } from
 import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_LEVEL_UP, SKILL_MAX_LEVEL, SPELLS, SKILL_STATS } from '../data/skills.js';
 import { drawCow, drawStunDots } from '../render/monsterSprites.js';
 import { drawSkeletonCow } from '../render/skeletonSprites.js';
+import { demonDecor } from '../render/demonSprites.js';
 import { findFunction, findEntry } from './source.js';
 import { el, select } from './ui.js';
 
@@ -23,7 +24,7 @@ export const SKILL_CODE = {
   apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)
-export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js'];
+export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js', 'src/entities/demonBehaviors.js'];
 
 const fnText = (v) => (typeof v === 'function' ? v.toString() : v);
 export function jsonBlock(obj) {
@@ -120,7 +121,7 @@ function drawCard(cv, kind, t) {
     ctx.restore();
   }
   if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots });
-  else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0));
+  else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0), def.demon ? demonDecor(def.demon, { enraged: false }) : null);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '11px sans-serif';
   ctx.fillText(state, 6, 14);

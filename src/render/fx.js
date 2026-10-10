@@ -74,6 +74,7 @@ export function drawProjectiles(ctx) {
     if (p.kind === 'orb') { drawOrb(ctx, p, t); return; }
     if (p.kind === 'bonespear') { drawBoneSpear(ctx, p); return; }
     if (p.kind === 'arrow') { drawArrow(ctx, p); return; }
+    if (p.kind === 'hellorb') { drawHellOrb(ctx, p, t, i); return; }
     ctx.save();
     for (let k = 4; k >= 1; k--) {
       ctx.globalAlpha = 0.5 - k * 0.1;
@@ -386,5 +387,24 @@ function drawArrow(ctx, p) {
   ctx.beginPath(); ctx.moveTo(10, -3); ctx.lineTo(16, 0); ctx.lineTo(10, 3); ctx.closePath(); ctx.fill();
   ctx.fillStyle = p.color || '#ffd36a';
   ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-18, -3.5); ctx.lineTo(-11, 0); ctx.lineTo(-18, 3.5); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// 지옥불 구슬 (악마 저주 카우): 보랏빛 불덩이 + 꼬리
+function drawHellOrb(ctx, p, t, i) {
+  ctx.save();
+  for (let k = 4; k >= 1; k--) {
+    ctx.globalAlpha = 0.45 - k * 0.09;
+    ctx.fillStyle = k > 2 ? '#5a1a8a' : '#9f3dff';
+    ctx.beginPath(); ctx.arc(p.x - p.dirX * k * 7, p.y - p.dirY * k * 7, p.radius * (1 - k * 0.15), 0, Math.PI * 2); ctx.fill();
+  }
+  const wob = 1 + Math.sin(t * 18 + i) * 0.1;
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#7a1aaa';
+  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 1.1 * wob, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d98bff';
+  ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 0.65, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffe8ff';
+  ctx.beginPath(); ctx.arc(p.x + p.dirX * 2, p.y + p.dirY * 2, p.radius * 0.3, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }

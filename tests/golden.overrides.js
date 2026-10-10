@@ -32,6 +32,11 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-10: 궁수 카우·해골 궁수 카우 (관리자 페이지에만 - 사용자 요청)
   'exact.monsters.archer': { hp: 50, meleeDmg: 20, scaleRatio: 1 },
   'exact.monsters.skeletonArcher': { hp: 40, meleeDmg: 20, scaleRatio: 1 },
+  // 2026-10-10: 악마 카우 종족 (관리자 페이지에만, 맵은 보류 - 사용자 요청)
+  'exact.monsters.imp': { hp: 35, meleeDmg: 20, scaleRatio: 0.8 },
+  'exact.monsters.demonCurser': { hp: 55, meleeDmg: 20, scaleRatio: 1 },
+  'exact.monsters.demonBerserker': { hp: 110, meleeDmg: 45, scaleRatio: 1.25 },
+  'exact.monsters.demonKing': { hp: 900, meleeDmg: 50, scaleRatio: 2.6 },
   // 2026-10-07: 마법사 캐릭터 스킬 해금 레벨
   'exact.progression.skillUnlockLevel.bolt': 1,
   'exact.progression.skillUnlockLevel.fireball': 1,

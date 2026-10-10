@@ -236,3 +236,53 @@ export const ARROW_DAMAGE = 30;
 export const ARCHER_SKELETON_DAMAGE = 25;
 export const ARROW_SPEED = 430;
 export const ARROW_RADIUS = 6;
+
+// ── 악마 카우 종족 (관리자 페이지에만) ──
+// 임프: IMP_BLINK_CD초마다 IMP_BLINK_RANGE 안이면 주인공 옆(IMP_BLINK_NEAR px)으로 순간이동
+export const IMP_BLINK_CD = 3;
+export const IMP_BLINK_RANGE = 300;
+export const IMP_BLINK_NEAR = 60;
+// 저주 카우: CURSER_RANGE 안에서 CURSER_CURSE_CD초마다 CURSER_CAST초 주문 → 저주(systems/curses.js), CURSER_ORB_CD초마다 지옥불 구슬. CURSER_KITE 안이면 물러남
+export const CURSER_RANGE = 360;
+export const CURSER_KITE = 190;
+export const CURSER_CAST = 0.6;
+export const CURSER_CURSE_CD = 6;
+export const CURSER_ORB_CD = 2.6;
+export const CURSER_ORB = { speed: 210, radius: 10, damage: 25 };
+// 버서커: BERSERKER_LEAP_MIN~MAX 거리면 예고(BERSERKER_TELEGRAPH초, 떨어질 자리 원) → BERSERKER_LEAP_TIME초 도약 → 반경 BERSERKER_SLAM_RADIUS 피해
+//   체력 BERSERKER_ENRAGE_HP 이하면 분노: 이동 ×ENRAGE_SPEED, 근접 피해 ×ENRAGE_DAMAGE, 도약 대기 ×ENRAGE_CD
+export const BERSERKER_LEAP_MIN = 110;
+export const BERSERKER_LEAP_MAX = 300;
+export const BERSERKER_LEAP_CD = 4.5;
+export const BERSERKER_TELEGRAPH = 0.5;
+export const BERSERKER_LEAP_TIME = 0.35;
+export const BERSERKER_SLAM_RADIUS = 60;
+export const BERSERKER_SLAM_DAMAGE = 50;
+export const BERSERKER_ENRAGE_HP = 0.5;
+export const DEMON_ENRAGE_SPEED = 1.5;
+export const DEMON_ENRAGE_DAMAGE = 1.3;
+export const DEMON_ENRAGE_CD = 0.6;
+// 악마 카우킹: DKING_SUMMON_CD초마다 지옥문을 열어 임프 DKING_SUMMON_COUNT마리(부하 DKING_MAX_IMPS까지), DKING_FIRE_CD초마다 DKING_CAST초 주문 → 지옥불 원 DKING_FIRE_COUNT개
+//   체력 DKING_ENRAGE_HP 이하면 분노(날개를 펴고 이동 ×DEMON_ENRAGE_SPEED, 대기시간 ×DEMON_ENRAGE_CD)
+export const DKING_SUMMON_CD = 9;
+export const DKING_SUMMON_COUNT = 3;
+export const DKING_MAX_IMPS = 6;
+export const DKING_FIRE_CD = 5;
+export const DKING_CAST = 0.6;
+export const DKING_FIRE_COUNT = 3;
+export const DKING_FIRE_SPREAD = 90;
+export const DKING_ENRAGE_HP = 0.5;
+// 지옥불 원 (systems/demonSpells.js): HELLFIRE_DELAY초 예고 뒤 반경 HELLFIRE_RADIUS 화염 HELLFIRE_DAMAGE
+export const HELLFIRE_DELAY = 0.9;
+export const HELLFIRE_RADIUS = 55;
+export const HELLFIRE_DAMAGE = 45;
+// 주인공 저주 (systems/curses.js): 하나만, CURSE_DURATION초. 저주를 건 몬스터가 죽으면 바로 풀림
+//   weak: 받는 피해 ×mul / slow: 이동속도 ×mul / hex: 스킬 대기시간 ×mul
+export const CURSE_DURATION = 6;
+export const CURSES = {
+  weak: { label: '약화 저주', desc: '받는 피해 +25%', mul: 1.25 },
+  slow: { label: '둔화 저주', desc: '이동 -30%', mul: 0.7 },
+  hex:  { label: '봉인 저주', desc: '스킬 대기시간 +30%', mul: 1.3 }
+};
+export const CURSE_ORDER = ['weak', 'slow', 'hex'];
+export const CURSE_COLOR = '#b04dff';

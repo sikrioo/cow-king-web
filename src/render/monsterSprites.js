@@ -3,8 +3,10 @@ import { MONSTERS, FLASH_COLORS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
+import { demonDecor } from './demonSprites.js';
 
-export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd') {
+// decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
+export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null) {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
   const hornColor  = colors ? colors.horn  : PALETTE.horn;
   const snoutColor = colors ? colors.snout : PALETTE.snout;
@@ -25,6 +27,7 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  if (decor && decor.back) decor.back(ctx, animT);
   drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
 
   ctx.fillStyle = hideColor;
@@ -51,6 +54,7 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   ctx.ellipse(12, -46, 3.6, 2.6, 0.15, 0, Math.PI * 2);
   ctx.fill();
 
+  if (decor && decor.front) decor.front(ctx, animT);
   if (state === 'stunned') drawStunDots(ctx, animT);
 
   ctx.restore();
@@ -133,10 +137,10 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
-  const visualState = c.state === 'charging' || c.state === 'aiming' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세
+  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' ? 'attack' // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;
-  const visualElapsed = c.state === 'charging' || c.state === 'aiming' ? 0.16 : c.stateElapsed;
+  const visualElapsed = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' ? 0.16 : c.stateElapsed;
 
   if (c.ccKind === 'poly' && c.stunTimer > 0) { // 변이: 소 대신 양 (체력바는 그대로)
     drawSheep(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, true, c.flash > 0);
@@ -144,7 +148,7 @@ export function drawMonster(c, ctx, t) {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon);
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null); // 악마: 날개·꼬리·문양
   ctx.restore();
   }
 

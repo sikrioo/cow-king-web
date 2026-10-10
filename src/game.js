@@ -29,6 +29,8 @@ import { updateSkillBuffs } from './systems/physSkills.js';
 import { updateGroundSpells } from './systems/groundSpells.js';
 import { updateThrows } from './systems/weaponThrows.js';
 import { processSpawns } from './systems/summons.js';
+import { updateHellfires } from './systems/demonSpells.js';
+import { updateCurses } from './systems/curses.js';
 import { updateAuras } from './systems/auras.js';
 import { updateApprentice } from './systems/apprentice.js';
 import { castFree } from './systems/skills.js';
@@ -112,6 +114,8 @@ export function fixedUpdate(dt) {
   updateGroundSpells(dt);
   updateThrows(dt);
   processSpawns();
+  updateHellfires(dt);
+  updateCurses(dt);
   updateAuras(dt);
   updateApprentice(dt, castFree);
   updateProjectiles(dt);

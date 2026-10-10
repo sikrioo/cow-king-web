@@ -11,6 +11,7 @@ import { MAPS } from '../data/maps.js';
 import { DIFFICULTY } from '../data/difficulty.js';
 import { attacksPerSecond } from '../util.js';
 import { drawMinimap, minimapSize } from './minimap.js';
+import { CURSE_COLOR } from '../data/balance.js';
 
 export function drawComboCounter(ctx) {
   if (game.hero.combo < 2 || !game.hero.alive) return;
@@ -50,6 +51,7 @@ export function drawBuffIcons(ctx) {
   // 원소 상태(디버프) - 빨간 테두리
   if (game.hero.burn.timer > 0) buffs.push({ color: ELEMENT_DEF.fire.color, frac: game.hero.burn.timer / BURN_DURATION, debuff: true });
   if (game.hero.poison.timer > 0) buffs.push({ color: ELEMENT_DEF.poison.color, frac: game.hero.poison.timer / POISON_DURATION, debuff: true });
+  if (game.hero.curse && game.hero.curse.timer > 0) buffs.push({ color: CURSE_COLOR, frac: game.hero.curse.timer / game.hero.curse.max, debuff: true }); // 악마 저주
   if (game.hero.slowTimer > 0) buffs.push({ color: ELEMENT_DEF.cold.color, frac: game.hero.slowTimer / COLD_NOVA_CHILL_DURATION, debuff: true });
   if (!buffs.length) return;
   const size = 16, gap = 4;

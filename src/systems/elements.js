@@ -9,6 +9,7 @@ import { Body } from '../core/physics.js';
 import { game, dev } from '../state.js';
 import { recordRun } from '../save.js';
 import { spawnDamageNumber, spawnHitParticles, spawnShockwave, floatText } from './fx.js';
+import { curseMul } from './curses.js';
 
 export function toPacket(dmg) {
   return typeof dmg === 'number' ? { phys: dmg } : dmg;
@@ -104,6 +105,8 @@ export function damageHeroDirect(amount, color) {
 export function heroDamageTaken(total) {
   const h = game.hero;
   if (h.berserkTimer > 0) total = Math.round(total * (1 + SKILL_STATS.berserk.taken));
+  const weak = curseMul(h, 'weak'); // 약화 저주
+  if (weak !== 1) total = Math.round(total * weak);
   // 에너지 쉴드: 남은 흡수량까지 전부 먼저 막음 → 다 막으면 깨짐
   if (h.shieldTimer > 0 && h.shieldHp > 0 && total > 0) {
     const absorbed = Math.min(total, h.shieldHp);
