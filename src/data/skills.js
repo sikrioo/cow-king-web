@@ -140,7 +140,7 @@ export const SKILL_STATS = {
   vitalthrow:   { mana: 12, cooldown: 6,  elem: 'poison', elemRatio: 0.4, range: 350, charge: 0.3, speed: 1300, ratio: 4.0, eliteBonus: 0.5, execute: 0.3, crit: 2, stick: 0.5 },
   // 오라: 가시 = 근접 공격으로 받은 피해 × reflect를 때린 적에게 물리로 / 불꽃 = tick초마다 radius 안 화염 damage / 빙결 = radius 안 적 이동·공격속도 -slow(보스 × BOSS_SLOW_SCALE, 광신 오라와는 더해서 계산)
   //   ring: 발밑 고리 색 (오라 반경 표시, 가시는 내 몸 둘레)
-  aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#ffd84d', glow: 56 }, // 가시: 내 둘레 반경 glow의 은은한 노란 빛(정원, 다른 오라보다 좁게 - 그림만, 반사는 근접 공격 전부) (2026-10-10 사용자)
+  aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#ffd84d', glow: 45 }, // 가시: 내 둘레 반경 glow의 은은한 노란 빛(정원, 다른 오라보다 좁게 - 그림만, 반사는 근접 공격 전부) (2026-10-10 사용자)
   aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 130, ring: '#ff8a3d' },
   aurafrost:  { mana: 0, cooldown: 0, slow: 0.25, radius: 150, ring: '#8fe8ff' },
   // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
