@@ -1,8 +1,11 @@
 // 활 쏘는 몬스터 행동 훅 (궁수 카우·해골 궁수 카우) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   사거리 안이면 조준(aiming, 조준 시작 때 방향 고정 - 조준선이 보임) → 화살 한 발(곧게, 옆으로 움직이면 피함) → 대기. 가까우면 물러남
 import { ARCHER_RANGE, ARCHER_KITE, ARCHER_AIM, ARCHER_COOLDOWN, ARROW_DAMAGE, ARCHER_SKELETON_DAMAGE, ARROW_SPEED, ARROW_RADIUS } from '../data/balance.js';
-import { SOUL_RANGE, SOUL_KITE, SOUL_SHOT_CD, SOUL_CHARGE, SOUL_BOLTS, SOUL_SPREAD, SOUL_TURN, SOUL_BOLT } from '../data/balance.js';
-import { MONSTERS, SOUL_PALETTES } from '../data/monsters.js';
+import { SOUL_RANGE, SOUL_KITE, SOUL_SHOT_CD, SOUL_CHARGE, SOUL_TURN, SOUL_BEAM_LENGTH, SOUL_BEAM_WIDTH, SOUL_ZAP_DAMAGE, SOUL_BRANCHES } from '../data/balance.js';
+import { hitPlayer } from '../systems/combat.js';
+import { rollLightning } from '../systems/elements.js';
+import { spawnLightningBolt, spawnHitParticles } from '../systems/fx.js';
+import { distToSegment } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { spawnProjectile } from '../systems/projectiles.js';
@@ -70,7 +73,7 @@ function archer(damage, arrowColor) {
   };
 }
 
-// 영혼 (버닝 소울·창백한 원혼): 불규칙하게 떠다니며(SOUL_KITE~SOUL_RANGE) 잠깐 번쩍(charging) → 원소 탄 SOUL_BOLTS발 부채꼴
+// 영혼 (버닝 소울·창백한 원혼): 불규칙하게 떠다니며(SOUL_KITE~SOUL_RANGE) 번개를 모음(charging, 그때 방향 고정) → 화면을 가로지르는 긴 하얀 번개
 function soul() {
   return {
     ranged: true,
@@ -82,11 +85,18 @@ function soul() {
         m.stateElapsed += dt;
         Body.setVelocity(m.body, { x: 0, y: 0 });
         if (m.stateElapsed >= SOUL_CHARGE) {
-          const el = MONSTERS[m.kind].element || 'fire', oy = m.y - 46 * m.scale;
-          const base = Math.atan2(game.hero.y - oy, game.hero.x - m.x);
-          for (let i = 0; i < SOUL_BOLTS; i++) {
-            const a = base + (i - (SOUL_BOLTS - 1) / 2) * SOUL_SPREAD;
-            spawnProjectile({ kind: 'soulbolt', x: m.x, y: oy, dirX: Math.cos(a), dirY: Math.sin(a), speed: SOUL_BOLT.speed, range: SOUL_RANGE + 60, radius: SOUL_BOLT.radius, packet: { [el]: SOUL_BOLT.damage }, color: (SOUL_PALETTES[MONSTERS[m.kind].soul] || SOUL_PALETTES.fire).inner });
+          const ox = m.x, oy = m.y - 50 * m.scale;
+          const ex = ox + m.zapDirX * SOUL_BEAM_LENGTH, ey = oy + m.zapDirY * SOUL_BEAM_LENGTH;
+          spawnLightningBolt(ox, oy, ex, ey); // 굵게 보이도록 두 번
+          spawnLightningBolt(ox, oy, ex, ey);
+          for (let i = 1; i <= SOUL_BRANCHES; i++) { // 곁가지 (그림만)
+            const k = i / (SOUL_BRANCHES + 1), bx = ox + (ex - ox) * k, by = oy + (ey - oy) * k;
+            const a = Math.atan2(m.zapDirY, m.zapDirX) + (i % 2 ? 0.7 : -0.7);
+            spawnLightningBolt(bx, by, bx + Math.cos(a) * 70, by + Math.sin(a) * 70);
+          }
+          spawnHitParticles(ox, oy, '#ffffff', 6);
+          if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, ox, oy, ex, ey) <= SOUL_BEAM_WIDTH + game.hero.r * 0.5) {
+            hitPlayer(ox, oy, { lightning: rollLightning(SOUL_ZAP_DAMAGE) });
           }
           m.shootCd = SOUL_SHOT_CD;
           m.setState('idle', 0.2);
@@ -94,6 +104,8 @@ function soul() {
         return true;
       }
       if (m.shootCd <= 0 && game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= SOUL_RANGE) {
+        const oy = m.y - 50 * m.scale, d = Math.hypot(game.hero.x - m.x, game.hero.y - oy) || 1;
+        m.zapDirX = (game.hero.x - m.x) / d; m.zapDirY = (game.hero.y - oy) / d; // 모으기 시작할 때 방향 고정
         m.setState('charging', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
         return true;
@@ -114,13 +126,24 @@ function soul() {
       Body.setVelocity(m.body, { x: (vx / l) * sp, y: (vy / l) * sp });
       if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
       return true;
+    },
+    drawUnder(m, ctx, t) {
+      if (m.state !== 'charging') return;
+      const k = Math.min(1, m.stateElapsed / SOUL_CHARGE), oy = m.y - 50 * m.scale;
+      ctx.save();
+      ctx.globalAlpha = 0.12 + k * 0.25;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 8]);
+      ctx.beginPath(); ctx.moveTo(m.x, oy); ctx.lineTo(m.x + m.zapDirX * SOUL_BEAM_LENGTH * 0.5, oy + m.zapDirY * SOUL_BEAM_LENGTH * 0.5); ctx.stroke();
+      ctx.restore();
     }
   };
 }
 
 export const rangedBehaviors = {
-  burningSoul: { ...soul() }, // 버닝 소울 (붉은 불꽃, 화염 탄)
-  paleSoul: { ...soul() },    // 창백한 원혼 (흰 불꽃, 냉기 탄)
+  burningSoul: { ...soul() }, // 버닝 소울 (진홍 불꽃 기둥, 하얀 번개)
+  paleSoul: { ...soul() },    // 창백한 원혼 (푸른 너울, 하얀 번개)
   archer: { ...archer(ARROW_DAMAGE, '#ffd36a') },                     // 궁수 카우 (노란 화살)
   skeletonArcher: { ...archer(ARCHER_SKELETON_DAMAGE, '#7fffd4') }    // 해골 궁수 카우 (초록빛 화살)
 };

@@ -3,7 +3,7 @@ import { hexToRgba, hash01, resistOf } from '../util.js';
 import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
 import { game, ui, input } from '../state.js';
 import { drawOrb, drawShard } from './iceFx.js';
-import { drawBoneSpear, drawArrow, drawHellOrb, drawSoulBolt } from './projectileFx.js';
+import { drawBoneSpear, drawArrow, drawHellOrb } from './projectileFx.js';
 
 // 불꽃 바닥: 그을린 바닥 + 일렁이는 불꽃 혀 (그라데이션/난수 없음 - 시간과 위치로만)
 function drawFireField(ctx, h) {
@@ -76,7 +76,6 @@ export function drawProjectiles(ctx) {
     if (p.kind === 'bonespear') { drawBoneSpear(ctx, p); return; }
     if (p.kind === 'arrow') { drawArrow(ctx, p); return; }
     if (p.kind === 'hellorb') { drawHellOrb(ctx, p, t, i); return; }
-    if (p.kind === 'soulbolt') { drawSoulBolt(ctx, p); return; }
     ctx.save();
     for (let k = 4; k >= 1; k--) {
       ctx.globalAlpha = 0.5 - k * 0.1;

@@ -101,7 +101,7 @@ it('궁수 카우·해골 궁수 카우: 사거리 안이면 조준(방향 고�
   } finally { env.restore(); }
 });
 
-it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼: 번쩍 → 원소 탄 3발 부채꼴, 늘 떠다님, 막에 나옴', async () => {
+it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼: 모으기(방향 고정) → 긴 번개(맞으면 번개 피해, 옆으로 피하면 무사), 늘 떠다님, 막에 나옴', async () => {
   const env = installBrowserEnv({ seed: 4 });
   try {
     const m = await boot();
@@ -112,17 +112,27 @@ it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼
     const { ACTS } = await import('../src/data/acts.js');
     expect(Object.keys(ACTS[1].normals)).toEqual(expect.arrayContaining(['skeletonSpear', 'paleSoul']));
     expect(Object.keys(ACTS[2].normals)).toEqual(expect.arrayContaining(['burningSoul']));
-    for (const [kind, el] of [['burningSoul', 'fire'], ['paleSoul', 'cold']]) {
-      m.game.cows.length = 0; m.game.projectiles.length = 0;
+    for (const kind of ['burningSoul', 'paleSoul']) {
+      m.game.cows.length = 0;
+      expect(m.MONSTERS[kind].element).toBe('lightning');
       const s = new m.Monster(0.4, kind, { pos: { x: h.x + 200, y: h.y } });
       m.game.cows.push(s);
+      h.hp = 9999; h.invuln = 0;
+      vi.spyOn(Math, 'random').mockReturnValue(0.99); // 회피·블락 없음
       s.shootCd = 0;
       s.update(1 / 60);
       expect(s.state).toBe('charging');
       for (let i = 0; i < m.SOUL_CHARGE * 60 + 2; i++) s.update(1 / 60);
-      const bolts = m.game.projectiles.filter((p) => p.kind === 'soulbolt');
-      expect(bolts.length).toBe(m.SOUL_BOLTS);
-      expect(bolts.every((b) => b.packet[el] > 0)).toBe(true);
+      expect(h.hp).toBeLessThan(9999); // 가만히 있으면 맞음
+      // 모으는 동안 옆으로 비키면 안 맞음
+      h.hp = 9999; h.invuln = 0;
+      s.shootCd = 0; s.state = 'idle';
+      s.update(1 / 60);
+      m.Body.setPosition(h.body, { x: h.x, y: h.y + 120 }); h.y += 120;
+      for (let i = 0; i < m.SOUL_CHARGE * 60 + 2; i++) s.update(1 / 60);
+      expect(h.hp).toBe(9999);
+      vi.restoreAllMocks();
+      m.Body.setPosition(h.body, { x: h.x, y: h.y - 120 }); h.y -= 120;
       // 사거리 안에서도 계속 움직임 (불규칙)
       s.shootCd = 99; s.state = 'idle';
       const x0 = s.x;

@@ -335,13 +335,15 @@ export const DKING_NOVA_DAMAGE = 80;
 export const DKING_NOVA_GAP = 0.7;
 export const DKING_FIRE_COUNT_P2 = 5;
 
-// 영혼 (버닝 소울·창백한 원혼): SOUL_RANGE 안에서 SOUL_SHOT_CD초마다 SOUL_CHARGE초 번쩍 → 탄 SOUL_BOLTS발 부채꼴(사이 SOUL_SPREAD 라디안, 원소는 몬스터 element)
-//   SOUL_KITE~SOUL_RANGE 사이를 SOUL_TURN초마다 방향을 바꾸며 불규칙하게 떠다님
-export const SOUL_RANGE = 280;
-export const SOUL_KITE = 120;
-export const SOUL_SHOT_CD = 1.8;
-export const SOUL_CHARGE = 0.3;
-export const SOUL_BOLTS = 3;
-export const SOUL_SPREAD = 0.3;
+// 영혼 (버닝 소울·창백한 원혼): SOUL_RANGE 안에서 SOUL_SHOT_CD초마다 SOUL_CHARGE초 번개를 모음(이때 방향이 정해짐 - 옆으로 피할 수 있음)
+//   → 긴 번개 SOUL_BEAM_LENGTH(폭 SOUL_BEAM_WIDTH 안이면 번개 SOUL_ZAP_DAMAGE, 들쭉날쭉), 곁가지 SOUL_BRANCHES개는 그림만
+//   SOUL_KITE~SOUL_RANGE 사이를 SOUL_TURN초마다 방향을 바꾸며 불규칙하게 떠다님 (2026-10-11 사용자 참고 그림: 화면을 가로지르는 하얀 번개)
+export const SOUL_RANGE = 360;
+export const SOUL_KITE = 140;
+export const SOUL_SHOT_CD = 2.4;
+export const SOUL_CHARGE = 0.5;
 export const SOUL_TURN = 0.45;
-export const SOUL_BOLT = { speed: 260, radius: 6, damage: 18 };
+export const SOUL_BEAM_LENGTH = 520;
+export const SOUL_BEAM_WIDTH = 20;
+export const SOUL_ZAP_DAMAGE = 35;
+export const SOUL_BRANCHES = 3;
