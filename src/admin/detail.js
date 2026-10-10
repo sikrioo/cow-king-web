@@ -1,5 +1,5 @@
 // 관리자 - 상세 보기(오른쪽 서랍): 실제 게임 미리보기 창(샌드박스 iframe) + 데이터(JSON) + 관련 코드, 몬스터 모습 카드(움직이는 그림)
-import { MONSTERS, MONSTER_LABEL, MONSTER_WEAPONS, weaponFor, ELITE_KINDS, BOSS_WEAPON_SCALE, isBossKind } from '../data/monsters.js';
+import { MONSTERS, MONSTER_LABEL, MONSTER_WEAPONS, weaponFor, ELITE_KINDS, weaponScaleOf } from '../data/monsters.js';
 import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_LEVEL_UP, SKILL_MAX_LEVEL, SPELLS, SKILL_STATS } from '../data/skills.js';
 import { drawCow, drawStunDots } from '../render/monsterSprites.js';
 import { drawSkeletonCow } from '../render/skeletonSprites.js';
@@ -122,8 +122,8 @@ function drawCard(cv, kind, t) {
     ctx.restore();
   }
   if (def.soul) drawSoul(ctx, x, y, scale, t, 1, def.soul);
-  else if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots, shield: !!def.shield, weaponSize: isBossKind(kind) ? BOSS_WEAPON_SCALE : 1 });
-  else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0), def.demon ? demonDecor(def.demon, { enraged: false }) : null, isBossKind(kind) ? BOSS_WEAPON_SCALE : 1);
+  else if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots, shield: !!def.shield, weaponSize: weaponScaleOf(kind) });
+  else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0), def.demon ? demonDecor(def.demon, { enraged: false }) : null, weaponScaleOf(kind));
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '11px sans-serif';
   ctx.fillText(state, 6, 14);

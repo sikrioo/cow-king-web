@@ -76,9 +76,9 @@ export const SOUL_PALETTES = {
   ghost: { glow: '#9fb4ff', outer: '#7a6ad8', inner: '#c8d4ff', tip: '#ffffff', base: '#b8a8ff' }
 }
 
-// 보스(카우킹·해골 카우 킹·악마 카우킹)가 든 무기 크기 배율 (2026-10-11 사용자: 지금의 2배)
-export const BOSS_WEAPON_SCALE = 2;
-export const isBossKind = (kind) => kind === 'boss' || !!(MONSTERS[kind] && MONSTERS[kind].boss);
+// 몬스터가 든 무기 크기 배율 (없으면 1) - 2026-10-11 사용자: 카우킹 2배, 악마 카우킹 1.6배, 해골 카우 킹 1배
+export const WEAPON_SCALE = { boss: 2, demonKing: 1.6, skeletonKing: 1 };
+export const weaponScaleOf = (kind) => WEAPON_SCALE[kind] || 1;
 
 // 몬스터 이름 (관리자 페이지·안내 문구용)
 export const MONSTER_LABEL = {

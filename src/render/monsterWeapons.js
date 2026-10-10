@@ -210,7 +210,7 @@ export const WEAPON_DRAW = {
 
 // 무기 하나 그리기: 손 위치(x, y)로 옮기고, 찌르기(poke 0→1)만큼 앞으로 회전
 //   창(spear)은 휘두르지 않고 앞을 겨눈 채 곧게 찌름 (2026-10-11 사용자: 창이니 찌르기)
-//   size: 무기 크기 배율 (보스는 BOSS_WEAPON_SCALE)
+//   size: 무기 크기 배율 (data/monsters.js WEAPON_SCALE)
 export function drawMonsterWeapon(ctx, weapon, x, y, poke, animT, size = 1) {
   ctx.save();
   if (weapon === 'spear') { ctx.translate(x + poke * 24, y + 6); ctx.rotate(-0.08); }

@@ -1,5 +1,5 @@
 // 몬스터(카우) 그리기 - 상태를 읽기만 함
-import { MONSTERS, FLASH_COLORS, BOSS_WEAPON_SCALE, isBossKind } from '../data/monsters.js';
+import { MONSTERS, FLASH_COLORS, weaponScaleOf } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { drawMonsterWeapon } from './monsterWeapons.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
@@ -7,7 +7,7 @@ import { demonDecor } from './demonSprites.js';
 import { drawSoul } from './soulSprites.js';
 
 // decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
-//   weaponSize: 무기 크기 배율 (보스 BOSS_WEAPON_SCALE)
+//   weaponSize: 무기 크기 배율 (data/monsters.js WEAPON_SCALE)
 export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, colors = null, weapon = 'halberd', decor = null, weaponSize = 1) {
   const hideColor  = colors ? colors.hide  : PALETTE.hide;
   const hornColor  = colors ? colors.horn  : PALETTE.horn;
@@ -163,8 +163,8 @@ export function drawMonster(c, ctx, t) {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐)
-  else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, weaponSize: isBossKind(c.kind) ? BOSS_WEAPON_SCALE : 1 }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null, isBossKind(c.kind) ? BOSS_WEAPON_SCALE : 1); // 악마: 날개·꼬리·문양, 보스는 큰 무기
+  else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, weaponSize: weaponScaleOf(c.kind) }); // 해골 카우: 전용 그림
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind)); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE)
   ctx.restore();
   }
 
