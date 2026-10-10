@@ -323,6 +323,10 @@ export function drawAuraRings(ctx, t) {
       ctx.globalAlpha = 1;
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(h.x, cy, R, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.6; // 테두리
+      ctx.strokeStyle = SKILL_STATS.aurathorns.ring;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
       return;
     }
     const r = auraRadius(id, lv);
