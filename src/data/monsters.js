@@ -76,6 +76,10 @@ export const SOUL_PALETTES = {
   ghost: { glow: '#9fb4ff', outer: '#7a6ad8', inner: '#c8d4ff', tip: '#ffffff', base: '#b8a8ff' }
 }
 
+// 보스(카우킹·해골 카우 킹·악마 카우킹)가 든 무기 크기 배율 (2026-10-11 사용자: 지금의 2배)
+export const BOSS_WEAPON_SCALE = 2;
+export const isBossKind = (kind) => kind === 'boss' || !!(MONSTERS[kind] && MONSTERS[kind].boss);
+
 // 몬스터 이름 (관리자 페이지·안내 문구용)
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',

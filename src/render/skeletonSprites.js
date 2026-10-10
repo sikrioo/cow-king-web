@@ -8,7 +8,7 @@ const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#14
 
 // stunFn: 기절 별 그림(monsterSprites.drawStunDots - 순환 import를 피하려고 넘겨받음)
 export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, opts = {}) {
-  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false, hitAt = 0.12 } = opts;
+  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false, hitAt = 0.12, weaponSize = 1 } = opts;
   const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const poke = state === 'attack' ? Math.sin(Math.min(stateElapsed * 10, Math.PI)) : 0;
@@ -23,7 +23,7 @@ export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stat
   ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
 
   const big = BIG_WEAPONS.includes(weapon); // 해골 전사의 대검·도끼는 머리 앞에 그림 (아래 - 머리에 가려 손잡이만 보이던 것)
-  if (!big) drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT);
+  if (!big) drawMonsterWeapon(ctx, weapon, 18 + poke * 16, -38, poke, animT, weaponSize);
 
   // 뼈 뿔 (소 뿔 모양, 뼈 색 + 테두리)
   [-1, 1].forEach((sd) => {
