@@ -30,6 +30,7 @@ function skillInfo(id) {
   if (id === 'blizzard') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 동안 지역이 생기고 ${s.duration}초 동안 ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage}, 사거리 ${s.range}` }; }
   if (id === 'firewave') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `폭 ${s.width} 곧은 불의 벽이 ${s.travel}초 동안 앞으로 ${s.range}까지(점점 느려짐), 지나가는 적 화염 ${s.damage} + 화상 + 밀어냄` }; }
   if (id === 'discharge') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `구체 ${s.orbs}개가 ${s.duration}초 동안 내 주위를 돎 - ${s.tick}초마다 반경 ${s.radius} 안 적(구체마다 하나)에게 번개 ${s.damage}, 처음 맞으면 경직 ${s.stagger}초` }; }
+  if (id === 'meteor') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range}, ${s.delay}초 뒤 반경 ${s.radius} 화염 ${s.damage} + 불타는 바닥 ${s.fieldTime}초(${s.fieldTick}초마다 ${s.fieldDamage})` }; }
   if (id === 'polymorph') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `반경 ${s.radius} 적을 ${s.duration}초 양으로 (엘리트 ×${s.eliteMul}, 보스 면역, ${s.drWindow}초 안 두 번째 ×${s.drMul}·세 번째 면역)` }; }
   if (id === 'balllightning') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range} 구체 ${s.duration}초: ${s.arcEvery}초마다 반경 ${s.arcRadius} 안 ${s.targets}명에게 번개 ${s.arcDamage}, 사라질 때 반경 ${s.burstRadius} 폭발 ${s.burst} (다시 누르면 바로 폭발, Lv${s.twoAt}부터 2개)` }; }
   if (id === 'flamepillar') { const s = SPELLS[id]; return { mana: s.mana, cd: s.cooldown, effect: `${s.delay}초 뒤 반경 ${s.radius} 곳곳에 불기둥 ${s.count}개(${s.interval}초 간격), 기둥마다 화염 ${s.damage}, 사거리 ${s.range}` }; }
@@ -47,7 +48,7 @@ function skillInfo(id) {
   if (id === 'aurathorns') return { mana: 0, cd: '-', effect: `켜 두는 오라: 근접 공격으로 받은 피해의 ${pct(s.reflect)}를 되돌려 줌` };
   if (id === 'aurafire') return { mana: 0, cd: '-', effect: `켜 두는 오라: ${s.tick}초마다 반경 ${s.radius} 화염 ${s.damage}` };
   if (id === 'aurafrost') return { mana: 0, cd: '-', effect: `켜 두는 오라: 반경 ${s.radius} 적 이동·공격속도 -${pct(s.slow)} (보스 절반)` };
-  if (id === 'apprentice') return { mana: s.mana, cd: s.cooldown, effect: `Lv만큼(최대 ${s.maxCasts}개) 무작위 스킬을 ${s.interval}초 간격으로, 나오는 스킬 레벨 = Lv. 후보: ${s.pool.length}종` };
+  if (id === 'apprentice') return { mana: s.mana, cd: s.cooldown, effect: `Lv만큼(최대 ${s.maxCasts}개) 무작위 스킬을 ${s.interval}초 간격으로, 나오는 스킬 레벨 = Lv. 후보: ${s.pool.length}종, 꽝 Lv1 ${pct(s.fizzle[0])}, 자기에게 Lv1 ${pct(s.self[0])}` };
   if (id === 'spinblade') return { mana: s.mana, cd: s.cooldown, effect: `검이 ${s.range}까지 왕복, 같은 적 ${s.tick}초마다 무기 × ${s.ratio} (갈 때·올 때 각 ${s.maxTicks}번)` };
   if (id === 'skyfall') return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range}, ${s.charge}초 충전 + ${s.hang}초 멈칫 뒤 반경 ${s.radius} 무기 × ${s.ratio}, 앞쪽 충격파 ${s.waveRange} 무기 × ${s.waveRatio}` };
   if (id === 'whirlaxe') return { mana: s.mana, cd: s.cooldown, effect: `반경 ${s.orbit} 한 바퀴(${s.time}초), 무기 × ${s.ratio} + 번개 × ${s.lightning}, 번개 연쇄 ${s.chain}명 × ${s.chainRatio}` };

@@ -76,6 +76,20 @@ export function drawHeroShield(ctx, t) {
 export function drawGroundSpellsUnder(ctx, t) {
   game.groundSpells.forEach((g) => {
     ctx.save();
+    if (g.kind === 'firefield') { // 메테오 자리: 그을린 바닥 + 일렁이는 불꽃 (끝나 갈수록 옅어짐)
+      const fade = Math.min(1, (g.duration - g.age) * 2);
+      ctx.globalAlpha = 0.35 * fade;
+      ctx.fillStyle = '#3e1d0c';
+      ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 9; i++) {
+        const a = hash01(i, Math.round(g.x), 81) * Math.PI * 2, r = Math.sqrt(hash01(i, Math.round(g.y), 82)) * g.radius * 0.85;
+        const x = g.x + Math.cos(a) * r, y = g.y + Math.sin(a) * r * 0.62;
+        const hgt = (10 + hash01(i, Math.floor(t * 12), 83) * 12) * fade;
+        ctx.globalAlpha = 0.8 * fade;
+        ctx.fillStyle = i % 2 ? '#ffb347' : '#ff5a1e';
+        ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.lineTo(x, y - hgt); ctx.lineTo(x + 5, y); ctx.closePath(); ctx.fill();
+      }
+    }
     if (g.kind === 'blizzard') {
       // 지역이 생김(delay): 하얀 원이 퍼지며 도는 점선 고리 → 그다음 하얀 서리 바닥
       const form = Math.min(1, g.age / g.delay);

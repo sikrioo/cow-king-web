@@ -1,6 +1,7 @@
 // 마법사의 지점·자기 강화 마법: 에너지 쉴드(피해 일부를 마나로 - 적용은 elements.heroDamageTaken), 눈보라, 화염기둥
 // 지점 = 자동 조준이 정한 hero.aimX/aimY (systems/aim.js), 사거리(range)보다 멀면 시전 안 함('사거리 밖'). 수치는 data/skills.js SPELLS
 // 화염 파도: 바라보는 쪽으로 퍼지는 부채꼴 불의 벽 (game.groundSpells kind 'firewave')
+// 메테오: 지점에 잠시 뒤 불덩이 (낙하·그림은 몬스터 메테오와 같은 game.meteors - 착탄 처리만 meteorImpact) → 불타는 바닥 kind 'firefield'
 // 볼 라이트닝: 지점에 전기 구체 설치 → 주변 적에게 번개, 사라지며 폭발 (kind 'balllightning', 다시 누르면 바로 폭발)
 // 진행 중인 지점 마법은 game.groundSpells, 그림은 render/skillFx.js
 import { SPELLS } from '../data/skills.js';
@@ -24,6 +25,22 @@ export function tryEnergyShield() {
   h.shieldHp = h.shieldHpMax;
   spawnShockwave(h.x, h.y, 46, '#7fa8ff');
   spawnHitParticles(h.x, h.y, '#9fc0ff', 12);
+}
+
+export function tryMeteor() {
+  const s = SPELLS.meteor, h = game.hero;
+  const p = targetPoint(s.range);
+  if (!p || !begin('meteor')) return;
+  game.meteors.push({ x: p.x, y: p.y, t: 0, delay: s.delay, fall: s.fall, r: s.radius * skillMul(h, 'meteor', 'radius'), dmg: spellDamage(s.damage, 'meteor'), onImpact: meteorImpact });
+}
+function meteorImpact(m) {
+  const s = SPELLS.meteor, h = game.hero;
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, m.x, m.y) > m.r) return;
+    damageCowPacket(c, { fire: m.dmg }, { knock: 7, fromX: m.x, fromY: m.y });
+  });
+  game.hitstop = Math.max(game.hitstop, 3);
+  game.groundSpells.push({ kind: 'firefield', x: m.x, y: m.y, age: 0, duration: s.fieldTime, tickT: s.fieldTick, radius: s.fieldRadius, dmg: Math.max(1, Math.round(s.fieldDamage * m.dmg / s.damage)) });
 }
 
 // 방전: 전기 구체가 내 주위를 돎 (game.groundSpells kind 'discharge', 주인공을 따라감). 다시 쓰면 새로 (하나만)
@@ -226,6 +243,7 @@ export function updateGroundSpells(dt) {
     if (g.kind === 'firewave') updateFireWave(g, dt);
     else if (g.kind === 'balllightning') updateBall(g, dt);
     else if (g.kind === 'discharge') updateDischarge(g, dt);
+    else if (g.kind === 'firefield') { g.tickT -= dt; if (g.tickT <= 0) { g.tickT += SPELLS.meteor.fieldTick; hitArea(g, { fire: g.dmg }, 0); } } // 메테오 불타는 바닥
     else if (g.kind === 'blizzard') {
       if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터
         g.tickT -= dt;

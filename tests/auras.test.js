@@ -124,7 +124,7 @@ it('수습생의 마법: Lv만큼(최대 5) 연달아 나감, 같은 스킬 2번
     expect(h.mana).toBe(100 - m.SKILL_STATS.apprentice.mana);
     expect(h.apprentice.total).toBe(3);
     const mana = h.mana, learned = { ...h.skillLevels };
-    for (let i = 0; i < 90; i++) m.updateApprentice(1 / 60, m.castFree);
+    for (let i = 0; i < 200; i++) m.updateApprentice(1 / 60, m.castFree); // 뜸 0.4초 + 0.6초 간격 × 3
     expect(h.apprentice).toBe(null);
     expect(h.mana).toBe(mana);                 // 나온 스킬은 마나를 안 씀
     expect(h.skillLevels).toEqual(learned);   // 배운 레벨 그대로
@@ -141,5 +141,70 @@ it('수습생의 마법: 오라가 나오면 잠깐 임시로 켜짐 (지금 오
     expect(m.activeAuras(h).some((a) => a.id === 'aurafire' && a.lv === 3)).toBe(true);
     m.auraTick(m.SKILL_STATS.apprentice.tempAura + 0.1);
     expect(m.activeAuras(h).length).toBe(0);
+  } finally { env.restore(); }
+});
+
+it('수습생의 마법: 저레벨 꽝(아무 일 없음) / 자기 자신에게 - 반동 피해(안 죽음), 변이면 주인공이 양(스킬 못 씀)', async () => {
+  const env = installBrowserEnv({ seed: 6 });
+  try {
+    const m = await boot('sorc');
+    const h = m.game.hero, s = m.SKILL_STATS.apprentice;
+    const c = m.cow('normal', 100);
+    const run = (queue, r) => {
+      vi.spyOn(Math, 'random').mockReturnValue(r);
+      h.apprentice = { queue: [...queue], level: 1, t: 0, n: 0, total: queue.length };
+      m.updateApprentice(1 / 60, m.castFree);
+      vi.restoreAllMocks();
+    };
+    run(['discharge'], s.fizzle[0] * 0.5); // 꽝
+    expect(m.game.groundSpells.some((g) => g.kind === 'discharge')).toBe(false);
+    h.hp = 2;
+    run(['discharge'], s.fizzle[0] + s.self[0] * 0.5); // 자기 자신에게
+    expect(m.game.groundSpells.some((g) => g.kind === 'discharge')).toBe(true);
+    expect(h.hp).toBe(1); // 반동 피해 - 죽지는 않음
+    run(['polymorph'], s.fizzle[0] + s.self[0] * 0.5);
+    expect(h.sheepTimer).toBeGreaterThan(0);
+    expect(c.ccKind).not.toBe('poly'); // 몬스터는 안 걸림
+    h.spellCd.fireball = 0; h.slot1 = 'fireball'; h.skillLevels.fireball = 1;
+    const mana = h.mana;
+    m.trySlot(1);
+    expect(h.mana).toBe(mana); // 양이면 스킬 못 씀
+    for (let i = 0; i < (s.selfSheep + 0.2) * 60; i++) m.updateApprentice(1 / 60, m.castFree);
+    expect(h.sheepTimer).toBe(0);
+    // 높은 레벨엔 꽝이 없음
+    expect(s.fizzle[Math.min(s.fizzle.length - 1, 4)]).toBe(0);
+  } finally { vi.restoreAllMocks(); env.restore(); }
+});
+
+it('메테오: 잠시 뒤 떨어져 반경 안 화염 + 화상, 그 자리 불타는 바닥이 계속 태움 / 보스에게 변이는 안 통함', async () => {
+  const env = installBrowserEnv({ seed: 7 });
+  try {
+    const m = await boot('sorc');
+    const { tryMeteor, updateGroundSpells } = await import('../src/systems/groundSpells.js');
+    const { updateMeteors } = await import('../src/systems/spells.js');
+    const h = m.game.hero, s = m.SPELLS.meteor;
+    h.mana = 999;
+    const c = m.cow('normal', 200), far = m.cow('normal', -300);
+    h.aimX = c.x; h.aimY = c.y;
+    const heroHp = h.hp;
+    tryMeteor();
+    updateMeteors(s.delay - 0.1);
+    expect(c.hp).toBe(c.maxHp);
+    updateMeteors(0.2);
+    expect(c.hp).toBeLessThan(c.maxHp);
+    expect(c.burn.timer).toBeGreaterThan(0);
+    expect(far.hp).toBe(far.maxHp);
+    expect(h.hp).toBe(heroHp); // 주인공은 안 맞음
+    const field = () => m.game.groundSpells.find((g) => g.kind === 'firefield');
+    expect(field()).toBeTruthy();
+    const hp1 = c.hp; c.burn.timer = 0;
+    m.Body.setPosition(c.body, { x: field().x, y: field().y }); c.x = field().x; c.y = field().y;
+    updateGroundSpells(s.fieldTick + 0.01);
+    expect(c.hp).toBeLessThan(hp1);
+
+    const boss = m.cow('boss', 60, 60);
+    const { tryPolymorph } = await import('../src/systems/sorcSkills.js');
+    tryPolymorph();
+    expect(boss.ccKind).not.toBe('poly');
   } finally { env.restore(); }
 });

@@ -37,6 +37,7 @@ export const SKILL_META = {
   energyshield: { label: '에너지 쉴드', type: 'magic', aim: 'free', color: 'rgba(110,160,255,0.45)', desc: '일정 시간 동안 정해진 양까지 피해를 대신 막는 보호막 - 다 막으면 깨짐' },
   blizzard:  { label: '눈보라', type: 'magic', elem: 'cold', color: 'rgba(235,245,255,0.5)', desc: '지정한 곳에 눈보라 지역이 생기고 잠시 뒤 눈 결정이 쏟아짐 - 냉기 지속 피해 + 둔화' },
   firewave:  { label: '화염 파도', type: 'magic', elem: 'fire', color: 'rgba(255,110,40,0.45)', desc: '바라보는 쪽으로 곧은 불의 벽을 밀어 보냄 - 지나가는 적 모두 화염 + 화상' },
+  meteor:    { label: '메테오', type: 'magic', elem: 'fire', color: 'rgba(255,77,26,0.5)', desc: '지정한 곳에 잠시 뒤 거대한 불덩이가 떨어짐 - 큰 화염 피해 + 불타는 바닥' },
   flamepillar: { label: '화염기둥', type: 'magic', elem: 'fire', color: 'rgba(255,90,30,0.45)', desc: '지정한 곳 곳곳에서 불기둥이 연달아 솟음 - 화염 피해 + 화상' },
   discharge: { label: '방전', type: 'magic', elem: 'lightning', aim: 'free', color: 'rgba(143,232,255,0.45)', desc: '내 주위를 도는 전기 구체 - 가까이 온 적에게 번개, 처음 맞으면 짧은 경직(돌진·충전·시전을 끊음)' },
   polymorph: { label: '대규모 변이', type: 'magic', aim: 'free', color: 'rgba(240,240,240,0.5)', desc: '내 주변 적을 전부 양으로 바꿈 - 공격·특수 행동을 못 하고 느리게 돌아다님(맞아도 안 풀림). 엘리트는 짧게, 보스는 면역' },
@@ -48,7 +49,7 @@ export const SKILL_META = {
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
   attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
-  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9,
+  bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9, meteor: 10,
   teleport: 3, aurathorns: 2, aurafire: 4, aurafrost: 6, apprentice: 5
 };
 
@@ -83,7 +84,8 @@ export const SKILL_LEVEL_UP = {
   aurathorns: { reflect: 0.45 }, aurafire: { damage: 0.5625, radius: 0.058 }, aurafrost: { slow: 0.045, radius: 0.05 },
   // 방전·볼 라이트닝: 기획서(v0.1) Lv1→10 수치를 Lv1→5에 맞춤 (2026-10-10 결정: 최대 레벨 5 유지)
   discharge: { damage: 0.2, radius: 0.08, duration: 0.1 },
-  polymorph: { radius: 0.055, duration: 0.125, cdr: 0.042 }, // Lv5: 반경 220, 3초, 대기시간 15초 근처
+  polymorph: { radius: 0.055, duration: 0.125, cdr: 0.042 },
+  meteor: { damage: 0.15, radius: 0.06 }, // Lv5: 반경 220, 3초, 대기시간 15초 근처
   balllightning: { damage: 0.19, duration: 0.06, targets: 0.5, radius: 0.03 } // targets: 동시에 쏘는 대상 수에 더함(내림)
 };
 // 카드에 쓰는 이름 (pct: 배율이면 %, 아니면 개수)
@@ -139,7 +141,10 @@ export const SKILL_STATS = {
   aurafrost:  { mana: 0, cooldown: 0, slow: 0.25, radius: 150, ring: '#8fe8ff' },
   // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
   //   pool: 나올 수 있는 스킬(안 배워도), 한 번에 같은 스킬 maxSame번까지, once는 한 번만. 오라가 나오면 tempAura초 동안 임시로 켜짐(지금 오라와 따로)
-  apprentice: { mana: 20, cooldown: 12, interval: 0.25, maxCasts: 5, maxSame: 2, tempAura: 8,
+  //   startDelay: 첫 시전 전 뜸 / fizzle[Lv-1]: 꽝 확률(저레벨만), self[Lv-1]: 자기 자신에게 쏠 확률(배열보다 높은 Lv은 마지막 값)
+  //   자기 자신에게: 그 자리에서 터지고 반동 피해(최대 체력 × backfire, 죽지는 않음) / 변이면 주인공이 selfSheep초 동안 양(공격·스킬 못 함, 느림) / 러시·리프는 엉뚱한 방향
+  apprentice: { mana: 20, cooldown: 12, interval: 0.6, startDelay: 0.4, maxCasts: 5, maxSame: 2, tempAura: 8,
+                fizzle: [0.35, 0.25, 0.15, 0.08, 0], self: [0.15, 0.12, 0.10, 0.08, 0.06], backfire: 0.08, selfSheep: 1.5,
                 pool: ['discharge', 'balllightning', 'polymorph', 'warcry', 'rush', 'leap', 'smash', 'whirlwind', 'aurathorns', 'aurafire', 'aurafrost'], once: ['polymorph'] }
 };
 export const AURA_SWITCH = 1;          // 오라 켜기·바꾸기 대기(초)
@@ -173,6 +178,9 @@ export const SPELLS = {
   //   사라질 때(또는 다시 누르면 바로) burstRadius 안 번개 burst. 스킬 레벨 twoAt부터 동시에 2개, 사라지기 blink초 전부터 깜빡임
   // 대규모 변이: 내 주변 radius 안 적을 duration초 동안 양으로 (엘리트 ×eliteMul, 보스 면역). 같은 적에게 drWindow초 안에 다시 걸면 ×drMul, 세 번째는 면역
   //   양: 공격·특수 행동·오라 멈춤, 이동속도 ×wanderMul로 무작위 배회(wanderTurn초마다 방향 바꿈), 맞아도 안 풀림, 피해 증가 없음
+  // 메테오: range 안 지점에 delay초 뒤 낙하(마지막 fall초 동안 떨어지는 불덩이 - 몬스터 메테오와 같은 그림) → 반경 radius 화염 damage(+화상)
+  //   착탄 자리에 fieldTime초 동안 불타는 바닥(반경 fieldRadius, fieldTick초마다 화염 fieldDamage)
+  meteor:    { mana: 26, cooldown: 7, damage: 90, delay: 1.0, fall: 0.45, radius: 90, range: 420, fieldTime: 3, fieldTick: 0.5, fieldDamage: 12, fieldRadius: 70 },
   polymorph: { mana: 25, cooldown: 18, radius: 180, duration: 2, eliteMul: 0.5, drWindow: 8, drMul: 0.5, wanderMul: 0.6, wanderTurn: 0.7 },
   balllightning: { mana: 18, cooldown: 6, range: 300, duration: 4, arcDamage: 20, arcEvery: 0.5, arcRadius: 140, targets: 3,
                    burst: 60, burstRadius: 160, twoAt: 4, grow: 0.3, blink: 0.3 }

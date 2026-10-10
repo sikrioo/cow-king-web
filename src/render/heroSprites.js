@@ -5,6 +5,7 @@ import { CLASSES } from '../data/classes.js';
 import { drawHeroStaff } from './heroStaff.js';
 import { drawAbstractSword, drawHeldShield, drawAbstractSlashTrail, drawThrustTrail } from './heroWeapons.js';
 import { getAbstractHeroPose, isTwoHanded, overheadSide, GREATSWORD_HANG, carryFlip } from './heroPose.js';
+import { drawSheep } from './monsterSprites.js';
 
 export { getAbstractHeroPose, isTwoHanded, overheadSide } from './heroPose.js';
 
@@ -13,6 +14,7 @@ const look = () => heroClass().look;
 
 export function drawPlayer(ctx, t = 0, h = game.hero) {
   if (!h.alive) return;
+  if (h.sheepTimer > 0) { drawSheep(ctx, h.x, h.y, 0.85, t, Math.cos(h.facing) >= 0 ? 1 : -1, h.moveSpeedN > 0.08); return; } // 수습생의 마법 반동으로 양
   if (h.weaponOut || h.shieldOut) { // 무기 특수기로 던진 무기는 손에서 빼고 그림 (게임 상태는 안 바꿈)
     const eq = h.equipment;
     h = { ...h, equipment: { ...eq, weaponMain: h.weaponOut ? null : eq.weaponMain, weaponOff: h.shieldOut || (h.weaponOut && eq.weaponOff === 'LOCKED') ? null : eq.weaponOff } };

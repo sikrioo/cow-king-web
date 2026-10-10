@@ -15,6 +15,7 @@ import { unarmedStats } from '../systems/gear.js';
 import { emptyResist, emptyDot } from '../systems/elements.js';
 import { tryBasicAttack, basicAttackReady, basicAttackReach } from '../systems/skills.js';
 import { updateFlurry } from '../systems/physSkills.js';
+import { SPELLS } from '../data/skills.js';
 
 // 주인공 생성 - 벽 다음에 만들어야 물리 바디 id/월드 순서가 레거시와 같음 (boot()에서 호출)
 export function createHero() {
@@ -89,6 +90,7 @@ export function createHero() {
     fortifyTimer: 0, fortifyMax: 0, fortifyHp: 0, // 투지 (systems/physSkills.js)
     flurryTimer: 0, flurryHits: 0, flurryNext: 0, // 난타
     berserkTimer: 0, berserkMax: 0, berserkPower: 0, // 버서커
+    sheepTimer: 0, // 수습생의 마법이 자기에게 변이 (systems/apprentice.js)
     aura: null, auraPending: null, auraSwitch: 0, auraFireT: 0, tempAuras: {}, apprentice: null, // 오라·수습생의 마법 (systems/auras.js, apprentice.js)
     shieldTimer: 0, shieldMax: 0, shieldHp: 0, shieldHpMax: 0, // 에너지 쉴드 - 남은 시간, 남은 흡수량 (systems/groundSpells.js)
     aimX: null, aimY: null, // 조준 지점 (systems/aim.js)
@@ -261,7 +263,7 @@ export function updatePlayer(dt) {
 
   const slowMul = game.hero.slowTimer > 0 ? HERO_SLOW_MULT : 1;
   const speedPxPerSec = (game.hero.running ? RUN_SPEED : WALK_SPEED) *
-    slowMul * game.hero.speedMult * game.hero.gearSpeedMult;
+    slowMul * game.hero.speedMult * game.hero.gearSpeedMult * (game.hero.sheepTimer > 0 ? SPELLS.polymorph.wanderMul : 1); // 양이면 느림
   const targetSpeed = moving ? speedPxPerSec / 60 : 0;
 
   const curVX = game.hero.body.velocity.x;

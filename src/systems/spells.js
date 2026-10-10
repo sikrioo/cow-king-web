@@ -27,6 +27,7 @@ export function updateMeteors(dt) {
     spawnHitParticles(m.x, m.y, '#ff4d1a', 10);
     game.shake = Math.min(game.shake + 6, 12);
     game.impactFlash = Math.max(game.impactFlash, 0.08);
+    if (m.onImpact) { m.onImpact(m); continue; } // 주인공 메테오 (systems/groundSpells.js) - 몬스터를 맞힘
     if (game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= m.r + game.hero.r * 0.5) {
       hitPlayer(m.x, m.y, { fire: METEOR_DAMAGE });
     }

@@ -18,7 +18,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
-import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge } from './groundSpells.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge, tryMeteor } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { pickAura, addTempAura, isAura } from './auras.js';
@@ -277,6 +277,7 @@ export const SKILLS = {
   blizzard:  { ...SKILL_META.blizzard,  try: () => tryBlizzard(),      cd: () => game.hero.spellCd.blizzard,  cdMax: () => SPELLS.blizzard.cooldown * castSpeedMul(game.hero) },
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
+  meteor: { ...SKILL_META.meteor, try: () => tryMeteor(), cd: () => game.hero.spellCd.meteor, cdMax: () => SPELLS.meteor.cooldown * castSpeedMul(game.hero) },
   polymorph: { ...SKILL_META.polymorph, try: () => tryPolymorph(),     cd: () => game.hero.spellCd.polymorph, cdMax: () => SPELLS.polymorph.cooldown * (1 - skillBonus(game.hero, 'polymorph', 'cdr')) * castSpeedMul(game.hero) },
   balllightning: { ...SKILL_META.balllightning, try: (o) => tryBallLightning(o), cd: () => game.hero.spellCd.balllightning, cdMax: () => SPELLS.balllightning.cooldown * castSpeedMul(game.hero) },
   // 무기 특수기 (systems/weaponThrows.js) - usable: 맞는 무기를 들었는지 (아니면 슬롯이 흐려짐)
@@ -295,12 +296,17 @@ export const SKILLS = {
 // 레벨을 정해서 마나·대기시간 없이 시전 (수습생의 마법 - 안 배운 스킬도). 그 순간 가장 가까운 적을 겨눔(지점 스킬은 사거리 안으로)
 //   주인공의 마나·대기시간·배운 레벨은 시전 뒤 그대로 되돌림 (내 스킬 대기시간에 영향 없음). 오라는 잠깐 임시로 켜짐
 const LEGACY_CD = ['warcryCooldown', 'whirlwindCooldown', 'leapCooldown', 'rushCooldown', 'smashCooldown'];
-export function castFree(id, level) {
+//   opts.self: 자기 자신에게 - 내 자리를 겨눔(러시·리프는 엉뚱한 방향), 변이는 몬스터에게 안 걸림(주인공이 양 - apprentice)
+export function castFree(id, level, opts = {}) {
   const h = game.hero;
   if (!h.alive) return;
   if (isAura(id)) { addTempAura(id, level, SKILL_STATS.apprentice.tempAura); return; }
+  if (opts.self && id === 'polymorph') return;
   const target = game.cows.filter((c) => c.state !== 'dead' && canHit(h, c)).sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y))[0];
-  if (target) {
+  if (opts.self) {
+    h.facing = Math.random() * Math.PI * 2;
+    h.aimX = h.x; h.aimY = h.y;
+  } else if (target) {
     const d = Math.hypot(target.x - h.x, target.y - h.y), range = (SPELLS[id] && SPELLS[id].range) || Infinity;
     h.facing = Math.atan2(target.y - h.y, target.x - h.x);
     const k = d > range * 0.9 ? (range * 0.9) / d : 1;
@@ -333,6 +339,7 @@ export function learnableSkills() {
 // 기본 공격 (적 클릭/Shift+클릭): 전사 = 근접 휘두르기, 마법사 = 마력탄
 const isCaster = () => (CLASSES[game.hero.classKey] || CLASSES.warrior).basic === 'bolt';
 export function tryBasicAttack() {
+  if (game.hero.sheepTimer > 0) return;
   if (isCaster()) tryBolt(); else tryPlayerAttack(weaponElementHit);
 }
 export function basicAttackReady() {
@@ -367,6 +374,7 @@ export function aimAtCursor(id) {
 
 // 슬롯 시전 (커서 조준 포함) - 키보드/마우스/버튼 모두 여기로. repeat = 길게 눌러 반복 시전 중(처음 누른 순간이 아님)
 export function trySlot(n, repeat = false) {
+  if (game.hero.sheepTimer > 0) return; // 양이 된 동안(수습생의 마법 반동)은 못 씀
   const id = n === 2 ? game.hero.slot2 : game.hero.slot1;
   aimAtCursor(id);
   SKILLS[id].try({ repeat });

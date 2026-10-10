@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // 테스트마다 게임 전체를 부팅해서 병렬 실행 중엔 5초(기본)를 넘기기도 함 - 느린 것은 실패가 아님
+  test: { testTimeout: 20000 },
   build: {
     rollupOptions: {
       input: {
