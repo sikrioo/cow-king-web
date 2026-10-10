@@ -41,7 +41,7 @@ export function drawComboCounter(ctx) {
 export function drawBuffIcons(ctx) {
   const buffs = [];
   if (game.hero.berserkTimer > 0) buffs.push({ color: '#ff3b3b', frac: game.hero.berserkTimer / (game.hero.berserkMax || 1) }); // 버서커
-  if (game.hero.shieldTimer > 0) buffs.push({ color: '#7fa8ff', frac: game.hero.shieldTimer / (game.hero.shieldMax || 1) }); // 에너지 쉴드
+  if (game.hero.shieldTimer > 0) buffs.push({ color: '#7fa8ff', frac: game.hero.shieldTimer / (game.hero.shieldMax || 1) }); // 에너지 쉴드 (남은 시간 - 남은 흡수량은 체력 구슬 링)
   if (game.hero.fortifyTimer > 0) buffs.push({ color: '#ff6b6b', frac: game.hero.fortifyTimer / game.hero.fortifyMax }); // 투지
   if (game.hero.vitalityTimer > 0) buffs.push({ color: ITEM_STYLE.vitality.color, frac: game.hero.vitalityTimer / VITALITY_DURATION });
   if (game.hero.speedBuffTimer > 0) buffs.push({ color: ITEM_STYLE.speed.color, frac: game.hero.speedBuffTimer / SPEED_BUFF_DURATION });
@@ -143,6 +143,7 @@ export function drawHUD() {
   drawResourceOrb(ctx, hpX, hpY, orbR, game.hero.hp / (game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp),
     fort ? '#ffc070' : '#ff8a75', fort ? '#a8380c' : '#7a1d12');
   if (fort) drawFortifyRing(hpX, hpY, orbR);
+  if (game.hero.shieldTimer > 0) drawShieldRing(hpX, hpY, orbR);
   drawResourceOrb(ctx, manaX, manaY, orbR, game.hero.mana / game.hero.maxMana, '#8fd0ff', '#173a63');
 
   // 레벨 뱃지 (체력 오브 우하단)
@@ -205,6 +206,25 @@ export function drawHUD() {
   const back = '클릭 또는 Space/Enter로 맵 선택으로 (캐릭터는 그대로)';
   if (game.gameState === 'gameover') overlay('GAME OVER', game.run.mode === 'farm' ? `쓰러졌습니다 - ${back}` : `${game.wave}웨이브까지 생존 - ${back}`);
   if (game.gameState === 'victory') overlay('VICTORY!', `카우킹 처치! ${back}`);
+}
+
+// 에너지 쉴드 남은 흡수량: 체력 구슬 바깥 파란 링(줄어듦) + 아래 "보호막 85"
+function drawShieldRing(cx, cy, r) {
+  const h = game.hero;
+  const frac = Math.max(0, Math.min(1, h.shieldHp / (h.shieldHpMax || 1)));
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = h.shieldTimer < 2 && Math.floor(h.shieldTimer * 6) % 2 ? '#dbe7ff' : '#7fa8ff';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.arc(cx, cy, r + 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac); ctx.stroke();
+  ctx.fillStyle = '#9fc0ff';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`보호막 ${Math.max(0, Math.round(h.shieldHp))}`, cx - 6, cy + r + (h.fortifyTimer > 0 ? 32 : 18));
+  ctx.restore();
 }
 
 // 투지 남은 시간: 체력 구슬 둘레를 도는 링(줄어듦) + 아래 "투지 7초"

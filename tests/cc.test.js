@@ -83,7 +83,7 @@ it('함성: 보스는 기절하지 않음 (일반 카우는 기절)', async () =
   } finally { env.restore(); }
 });
 
-it('방전: 반경 안 적만 번개 피해 + 경직, 마나·대기시간 사용', async () => {
+it('방전: 구체가 주인공을 따라 돌며 반경 안 적에게 번개, 처음 맞을 때만 경직, 시간이 다 되면 사라짐', async () => {
   const env = installBrowserEnv({ seed: 4 });
   try {
     const m = await boot();
@@ -93,11 +93,23 @@ it('방전: 반경 안 적만 번개 피해 + 경직, 마나·대기시간 사�
     const mana = h.mana;
     m.tryDischarge();
     expect(h.mana).toBe(mana - s.mana);
-    expect(h.spellCd.discharge).toBeGreaterThan(0);
+    const field = () => m.game.groundSpells.find((g) => g.kind === 'discharge');
+    expect(field()).toBeTruthy();
+    m.updateGroundSpells(0.01);
     expect(near.hp).toBeLessThan(near.maxHp);
     expect(near.ccKind).toBe('stagger');
-    expect(near.stunTimer).toBeCloseTo(s.stagger);
     expect(far.hp).toBe(far.maxHp);
+    near.stunTimer = 0;
+    const hp1 = near.hp;
+    m.updateGroundSpells(s.tick);
+    expect(near.hp).toBeLessThan(hp1); // 계속 맞음
+    expect(near.stunTimer).toBe(0);    // 경직은 처음 한 번만
+    // 주인공을 따라감
+    m.Body.setPosition(h.body, { x: h.x + 50, y: h.y }); h.x += 50;
+    m.updateGroundSpells(0.01);
+    expect(field().x).toBe(h.x);
+    for (let i = 0; i < (s.duration + 1) * 60; i++) m.updateGroundSpells(1 / 60);
+    expect(field()).toBeFalsy();
     expect(Number.isInteger(near.hp)).toBe(true);
   } finally { env.restore(); }
 });
@@ -153,7 +165,7 @@ it('대규모 변이: 주변 적이 양이 됨(맞아도 안 풀림, 기절 무�
     expect(m.isSheep(far)).toBe(false);
     expect(m.applyCC(c, 'stun', 5)).toBe(false); // 변이가 더 높음
     const hp = c.hp;
-    m.tryDischarge(); // 피해는 정상, 양은 그대로
+    m.tryDischarge(); m.updateGroundSpells(0.01); // 피해는 정상, 양은 그대로
     expect(c.hp).toBeLessThan(hp);
     expect(m.isSheep(c)).toBe(true);
     const x0 = c.x;

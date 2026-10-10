@@ -131,6 +131,7 @@ function resetHeroRuntime() {
   h.flurryHits = 0;
   h.berserkTimer = 0;
   h.shieldTimer = 0;
+  h.shieldHp = 0;
   h.aimX = null;
   h.aimY = null;
   h.potionCd = { heal: 0, mana: 0 };

@@ -89,7 +89,7 @@ export function createHero() {
     fortifyTimer: 0, fortifyMax: 0, fortifyHp: 0, // 투지 (systems/physSkills.js)
     flurryTimer: 0, flurryHits: 0, flurryNext: 0, // 난타
     berserkTimer: 0, berserkMax: 0, berserkPower: 0, // 버서커
-    shieldTimer: 0, shieldMax: 0, // 에너지 쉴드 (systems/groundSpells.js)
+    shieldTimer: 0, shieldMax: 0, shieldHp: 0, shieldHpMax: 0, // 에너지 쉴드 - 남은 시간, 남은 흡수량 (systems/groundSpells.js)
     aimX: null, aimY: null, // 조준 지점 (systems/aim.js)
     pendingSwing: null, // 대검 내리치기 대기 { t, ws, onHit, heavy } (systems/combat.updatePendingSwing)
     potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)

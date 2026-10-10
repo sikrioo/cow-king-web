@@ -38,18 +38,23 @@ async function boot(cls) {
   return m;
 }
 
-it('에너지 쉴드: 받는 피해의 절반을 마나로, 마나가 없으면 그대로 받음', async () => {
+it('에너지 쉴드: 흡수량까지 피해를 전부 막고, 다 막으면 깨짐 (마나는 시전할 때만)', async () => {
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot('sorc');
     const h = m.game.hero;
     m.tryEnergyShield();
     expect(h.shieldTimer).toBeGreaterThan(0);
-    h.hp = 100; const mana0 = h.mana;
-    expect(m.heroDamageTaken(40)).toBe(40 - Math.round(40 * m.SPELLS.energyshield.absorb));
-    expect(h.mana).toBeLessThan(mana0);
-    h.mana = 0;
-    expect(m.heroDamageTaken(40)).toBe(40);
+    expect(h.shieldHp).toBe(h.shieldHpMax);
+    expect(h.shieldHpMax).toBeGreaterThanOrEqual(m.SPELLS.energyshield.amount);
+    const mana0 = h.mana;
+    expect(m.heroDamageTaken(40)).toBe(0);
+    expect(h.shieldHp).toBe(h.shieldHpMax - 40);
+    expect(h.mana).toBe(mana0);
+    const left = h.shieldHp;
+    expect(m.heroDamageTaken(left + 25)).toBe(25); // 남은 만큼만 막고 깨짐
+    expect(h.shieldTimer).toBe(0);
+    expect(m.heroDamageTaken(30)).toBe(30);
   } finally { env.restore(); }
 });
 

@@ -64,9 +64,9 @@ it('맞는 무기가 아니면 안 써짐(마나 그대로) / 던진 동안 기�
     m.wield('mace');
     m.trySpinBlade();
     expect(m.game.throws.length).toBe(0);
-    expect(m.specialUsable('spinblade')).toBe(false);
+    expect(m.specialUsable(m.game.hero, 'spinblade')).toBe(false);
     m.wield('sword');
-    expect(m.specialUsable('spinblade')).toBe(true);
+    expect(m.specialUsable(m.game.hero, 'spinblade')).toBe(true);
     const c = m.cow('normal', 120);
     const mana = h.mana;
     m.trySpinBlade();
@@ -178,5 +178,50 @@ it('내려찍기·회전도끼·굴러가는 메이스: 피해가 들어가고 �
     m.run(4);
     expect(big.hp).toBeLessThan(big.maxHp);
     expect(h.weaponOut).toBe(false);
+  } finally { env.restore(); }
+});
+
+it('특수기 원소: 검=화염(화상), 창=번개, 단검=독(중독), 메이스=냉기(둔화)', async () => {
+  const env = installBrowserEnv({ seed: 7 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const fire = () => { m.wield('sword'); const c = m.cow('normal', 120); m.trySpinBlade(); m.run(2); return c; };
+    expect(fire().burn.timer).toBeGreaterThan(0);
+    m.game.cows.length = 0;
+    m.wield('dagger'); const p = m.cow('normal', 150); h.aimX = null; m.tryVitalThrow(); m.run(1.5);
+    expect(p.poison.timer).toBeGreaterThan(0);
+    m.game.cows.length = 0;
+    m.wield('mace'); h.facing = 0; const k = m.cow('normal', 200); m.tryRollMace(); m.run(1);
+    expect(k.chillTimer).toBeGreaterThan(0);
+    expect(m.SKILL_STATS.piercespear.elem).toBe('lightning');
+    expect(m.SKILL_STATS.whirlaxe.elem).toBe('lightning');
+    expect(m.SKILL_STATS.skyfall.elem).toBe('fire');
+    expect(m.SKILL_STATS.shieldbounce.elem).toBe('cold');
+  } finally { env.restore(); }
+});
+
+it('특수기는 그 무기를 들었을 때만 보임: 카드·Q/R 전환, 무기를 바꾸면 슬롯에서 빠짐', async () => {
+  const env = installBrowserEnv({ seed: 8 });
+  try {
+    const m = await boot();
+    const { cycleSkillSlot, validateSkillSlots } = await import('../src/systems/skills.js');
+    const h = m.game.hero;
+    h.masteries.spear = m.SPECIAL_MASTERY_LEVEL;
+    m.wield('sword');
+    const offered = () => { for (let i = 0; i < 40; i++) if (m.rollCards().some((c) => c.id === 'piercespear')) return true; return false; };
+    expect(offered()).toBe(false); // 창을 안 들었으면 카드에 없음
+    m.wield('spear');
+    expect(offered()).toBe(true);
+    h.skillLevels = { attack: 1, warcry: 1, piercespear: 1 };
+    h.slot2 = 'piercespear';
+    m.wield('sword');
+    validateSkillSlots();
+    expect(h.slot2).not.toBe('piercespear');
+    for (let i = 0; i < 5; i++) { cycleSkillSlot(2); expect(h.slot2).not.toBe('piercespear'); }
+    m.wield('spear');
+    let seen = false;
+    for (let i = 0; i < 5; i++) { cycleSkillSlot(2); if (h.slot2 === 'piercespear') seen = true; }
+    expect(seen).toBe(true);
   } finally { env.restore(); }
 });

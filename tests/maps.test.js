@@ -47,7 +47,7 @@ it('타이틀 → 맵 선택 → 파밍 맵 입장: 무리·우두머리 배치,
     expect(m.game.hero.mapRuns['barn:hard']).toBe(1);
     env.frame(120); // 파밍 맵 진행 + 그리기
   } finally { env.restore(); }
-});
+}, 30000); // 맵 전체를 그려 보는 테스트 - 느림(약 4초)
 
 it('극한 난이도: 면역 무리가 맵의 면역 종류로 나옴, 높은 등급 비중이 늘어남', async () => {
   const env = installBrowserEnv({ seed: 7 });

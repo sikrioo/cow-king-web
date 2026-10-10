@@ -16,16 +16,16 @@ import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
-import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryDischarge, tryPolymorph } from './sorcSkills.js';
+import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
-import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning } from './groundSpells.js';
+import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
 import { trySpinBlade, trySkyfall, tryWhirlAxe, tryShieldBounce, tryRollMace, tryPierceSpear, tryVitalThrow, specialUsable } from './weaponThrows.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen } from '../world/arena.js';
-import { castSpeedMul, attackSpeedMul, skillMul, skillBonus } from '../util.js';
+import { castSpeedMul, attackSpeedMul, skillMul, skillBonus, specialUsable as usableFor } from '../util.js';
 import { aim } from './aim.js';
 
 export function tryWarCry() {
@@ -315,7 +315,7 @@ export function cycleSkillSlot(slotNum) {
   const cur = order.indexOf(game.hero[key]);
   for (let i = 1; i <= order.length; i++) {
     const next = order[(cur + i) % order.length];
-    if (next !== game.hero[otherKey] && isSkillUnlocked(next)) { game.hero[key] = next; break; }
+    if (next !== game.hero[otherKey] && isSkillUnlocked(next) && usableFor(game.hero, next)) { game.hero[key] = next; break; } // 무기 특수기는 그 무기를 들었을 때만
   }
   const slotEl = document.getElementById(key === 'slot1' ? 'slot1' : 'slot2');
   const labelEl = document.getElementById(`${key}-label`);
@@ -336,7 +336,13 @@ export function trySlot(n, repeat = false) {
   SKILLS[id].try({ repeat });
 }
 
+// 무기를 바꿔서 슬롯의 무기 특수기를 못 쓰게 되면 → 다음 쓸 수 있는 스킬로 바꿔 끼움 (특수기는 그 무기를 들었을 때만 보임)
+export function validateSkillSlots() {
+  [1, 2].forEach((n) => { if (!usableFor(game.hero, game.hero[n === 1 ? 'slot1' : 'slot2'])) cycleSkillSlot(n); });
+}
+
 export function updateSkillSlots() {
+  validateSkillSlots();
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
   if (input.holdSlot1) trySlot(1, true);
   if (input.holdSlot2) trySlot(2, true);

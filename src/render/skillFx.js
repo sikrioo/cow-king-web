@@ -4,6 +4,7 @@ import { game } from '../state.js';
 import { hash01, easeOutCubic } from '../util.js';
 import { drawPlayer } from './heroSprites.js';
 import { SPELLS } from '../data/skills.js';
+import { dischargeOrbs } from '../systems/groundSpells.js';
 
 // 미끼: 주인공 그림 함수에 미끼 위치·방향을 넣은 '보기용 복사본'을 넘겨 그림 (게임 상태는 안 바꿈)
 export function drawDecoy(ctx, t) {
@@ -165,6 +166,7 @@ export function drawGroundSpellsOver(ctx, t) {
   game.groundSpells.forEach((g, gi) => {
     if (g.kind === 'firewave') { drawFireWave(ctx, g, t, gi); return; }
     if (g.kind === 'balllightning') { drawBall(ctx, g, t, gi); return; }
+    if (g.kind === 'discharge') { drawDischarge(ctx, g, t, gi); return; }
     ctx.save();
     if (g.kind === 'blizzard' && g.age >= g.delay && g.age < g.duration) {
       // 눈 결정(육각 별 - 선 3개)이 돌며 떨어지고, 닿은 자리에 작은 하얀 김 - 선만 써서 가벼움(성능)
@@ -255,5 +257,33 @@ function drawBall(ctx, g, t, gi) {
     ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+// 방전: 주인공 둘레를 도는 전기 구체 + 바닥에 옅은 범위 고리, 끝나기 1초 전부터 깜빡임
+function drawDischarge(ctx, g, t, gi) {
+  const f = Math.floor(t * 30);
+  const blinking = g.duration - g.age < 1 && f % 4 < 2;
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = '#8fe8ff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.ellipse(g.x, g.y, g.radius, g.radius * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+  dischargeOrbs(g).forEach((o, i) => {
+    ctx.globalAlpha = blinking ? 0.3 : 0.28;
+    ctx.fillStyle = '#8fe8ff';
+    ctx.beginPath(); ctx.arc(o.x, o.y, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = blinking ? 0.5 : 0.95;
+    ctx.fillStyle = '#e8fbff';
+    ctx.beginPath(); ctx.arc(o.x, o.y, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    const a = hash01(f, gi * 7 + i, 71) * Math.PI * 2, len = 8 + hash01(f, gi * 7 + i, 72) * 6;
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.x + Math.cos(a + 0.5) * len * 0.5, o.y + Math.sin(a + 0.5) * len * 0.5);
+    ctx.lineTo(o.x + Math.cos(a) * len, o.y + Math.sin(a) * len);
+    ctx.stroke();
+  });
   ctx.restore();
 }

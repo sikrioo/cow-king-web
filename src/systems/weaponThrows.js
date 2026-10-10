@@ -5,7 +5,10 @@
 import { SKILL_META, SKILL_STATS, THROW_RETURN_SPEED } from '../data/skills.js';
 import { GEAR_VARIANT_LABEL } from '../data/items.js';
 import { game } from '../state.js';
-import { castSpeedMul, skillMul } from '../util.js';
+import { castSpeedMul, skillMul, specialUsable as usableFor } from '../util.js';
+import { THROW_TRAIL } from '../data/skills.js';
+import { ELEMENT_DEF } from '../data/elements.js';
+import { rollLightning } from './elements.js';
 import { canHit, getCowHitRadius, getCowBody, heroHitDamage, cowEdgeDist } from './combat.js';
 import { damageCowPacket, weaponElementHit, bleedCow } from './elementCombat.js';
 import { applyCC, isBossCow } from './cc.js';
@@ -17,13 +20,8 @@ const alive = () => game.cows.filter((c) => c.state !== 'dead' && canHit(game.he
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const touching = (c, t, r) => dist(c, t) <= r + getCowHitRadius(c);
 
-// 이 특수기를 지금 쓸 수 있는 무기를 들었는지 (슬롯 회색 표시도 이걸 씀)
-export function specialUsable(id) {
-  const meta = SKILL_META[id], eq = game.hero.equipment;
-  if (meta.weapon) { const w = eq.weaponMain; return !!(w && w !== 'LOCKED' && w.variant === meta.weapon); }
-  if (meta.offhand) { const o = eq.weaponOff; return !!(o && o !== 'LOCKED' && o.category === meta.offhand); }
-  return true;
-}
+// 이 특수기를 지금 쓸 수 있는 무기를 들었는지 (규칙은 util.specialUsable)
+export const specialUsable = (id) => usableFor(game.hero, id);
 
 // 시전 조건(무기·이미 던짐·마나·대기시간) 확인 후 소모. 대상 확인이 먼저 필요한 스킬은 check()가 false면 아무것도 안 씀
 function begin(id, check) {
@@ -51,17 +49,22 @@ function launch(t) {
   syncHands();
 }
 
-// 던진 무기 한 번의 피해: 무기 한 타 × ratio × 스킬 레벨 (+ 번개), 무기 원소 옵션도 같이
+// 던진 무기 한 번의 피해: 무기 한 타 × ratio × 스킬 레벨 + 특수기 원소(× elemRatio - 화염/번개/독/냉기), 무기 원소 옵션도 같이
+//   opts.lightning = 번개만 따로(회전도끼 연쇄), 원소 효과(화상·둔화·중독)는 elementCombat이 붙임
 function strike(t, c, ratio, opts = {}) {
   if (!c || c.state === 'dead') return 0;
+  const s = SKILL_STATS[t.id];
   const base = heroHitDamage() * skillMul(h(), t.id, 'damage');
   const packet = {};
-  if (ratio > 0) packet.phys = Math.max(1, Math.round(base * ratio * (opts.mul || 1))); // ratio 0 = 번개만 (회전도끼 연쇄)
-  if (opts.lightning) packet.lightning = Math.max(1, Math.round(base * opts.lightning));
+  const mul = opts.mul || 1;
+  if (ratio > 0) packet.phys = Math.max(1, Math.round(base * ratio * mul)); // ratio 0 = 번개만 (회전도끼 연쇄)
+  if (ratio > 0 && s.elem) packet[s.elem] = Math.max(1, Math.round(base * ratio * mul * s.elemRatio));
+  if (opts.lightning) packet.lightning = (packet.lightning || 0) + Math.max(1, Math.round(base * opts.lightning));
+  if (packet.lightning) packet.lightning = rollLightning(packet.lightning);
   const boss = isBossCow(c);
   const dealt = damageCowPacket(c, packet, { knock: boss ? 0 : (opts.knock != null ? opts.knock : 3), fromX: opts.fromX != null ? opts.fromX : t.x, fromY: opts.fromY != null ? opts.fromY : t.y });
   weaponElementHit(c);
-  spawnHitParticles(c.x, c.y - 10, opts.color || '#e8e2d0', 5);
+  spawnHitParticles(c.x, c.y - 10, opts.color || (s.elem ? ELEMENT_DEF[s.elem].color : '#e8e2d0'), 6);
   if (opts.stun) applyCC(c, 'stun', opts.stun);
   return dealt;
 }
@@ -119,20 +122,20 @@ export function trySkyfall() {
 function updateSkyfall(t, dt) {
   const s = SKILL_STATS.skyfall;
   if (t.phase === 'charge') {
-    if (t.age < s.charge) return;
+    if (t.age < s.charge + s.hang + s.fall) return; // 충전 → 멈칫 → 낙하 (그림이 나이로 나눠 그림)
     t.phase = 'stuck'; t.z = 0; t.stuckAt = t.age;
     const fx = Math.cos(t.dir), fy = Math.sin(t.dir);
     alive().forEach((c) => {
       const dx = c.x - t.x, dy = c.y - t.y, d = Math.hypot(dx, dy);
-      if (d <= t.radius + getCowHitRadius(c)) { strike(t, c, s.ratio, { knock: 8, color: '#d8d8e0' }); return; }
+      if (d <= t.radius + getCowHitRadius(c)) { strike(t, c, s.ratio, { knock: 8 }); return; }
       if (d > s.waveRange + getCowHitRadius(c)) return;
       let diff = Math.abs(Math.atan2(dy, dx) - Math.atan2(fy, fx));
       if (diff > Math.PI) diff = Math.PI * 2 - diff;
       if (diff <= s.waveArc / 2) strike(t, c, s.waveRatio, { knock: 6 });
     });
-    spawnShockwave(t.x, t.y, t.radius, '#e8e2d0');
-    spawnShockwave(t.x + fx * s.waveRange * 0.5, t.y + fy * s.waveRange * 0.5, s.waveRange * 0.5, '#bfc4cc');
-    spawnHitParticles(t.x, t.y, '#c9b48a', 18);
+    spawnShockwave(t.x, t.y, t.radius, '#ff9a3d'); // 불의 대검 - 화염 충격파
+    spawnShockwave(t.x + fx * s.waveRange * 0.5, t.y + fy * s.waveRange * 0.5, s.waveRange * 0.5, '#ff7a1a');
+    spawnHitParticles(t.x, t.y, '#ffb347', 18);
     game.shake = Math.min(game.shake + 10, 12);
     game.hitstop = Math.max(game.hitstop, 4);
     game.impactFlash = Math.max(game.impactFlash, 0.15);
@@ -158,7 +161,7 @@ function updateWhirlAxe(t, dt) {
   alive().forEach((c) => {
     if (t.hits.has(c) || !touching(c, t, s.radius)) return;
     t.hits.set(c, true);
-    strike(t, c, s.ratio, { lightning: s.lightning, knock: 4, color: '#fff066' });
+    strike(t, c, s.ratio, { knock: 4 });
     const from = getCowBody(c), done = new Set([c]);
     for (let j = 0, cur = from; j < s.chain; j++) { // 번개 연쇄 (연쇄번개와 같은 그림)
       const next = alive().filter((o) => !done.has(o) && dist(getCowBody(o), cur) <= s.chainRange).sort((a2, b2) => dist(getCowBody(a2), cur) - dist(getCowBody(b2), cur))[0];
@@ -215,7 +218,7 @@ function updateRollMace(t, dt) {
     if (k < 1) return;
     t.phase = 'roll'; t.z = 0;
     alive().forEach((c) => { if (touching(c, t, s.landRadius)) { t.hits.set(c, true); strike(t, c, s.landRatio, { knock: 4 }); } });
-    spawnShockwave(t.x, t.y, s.landRadius, '#c9a227');
+    spawnShockwave(t.x, t.y, s.landRadius, '#bfeaff'); // 얼음 메이스
     game.shake = Math.min(game.shake + 4, 12);
     return;
   }
@@ -257,7 +260,7 @@ function updatePierceSpear(t, dt) {
     alive().forEach((c) => {
       if (t.hits.has(c) || !touching(c, t, s.radius)) return;
       t.hits.set(c, true);
-      strike(t, c, s.ratio, { knock: 2, color: '#e0475a' });
+      strike(t, c, s.ratio, { knock: 2 });
       bleedCow(c, heroHitDamage() * skillMul(h(), 'piercespear', 'damage') * s.bleed, s.bleedTime);
     });
     const c0 = clampToPen(t.x, t.y, 10);
@@ -298,7 +301,7 @@ function updateVitalThrow(t, dt) {
     if (!c || c.state === 'dead') return; // 날아가는 동안 죽음 - 빈 자리에 꽂힘
     const elite = c.kind !== 'normal';
     const crit = c.hp <= c.maxHp * s.execute;
-    strike(t, c, s.ratio, { mul: (elite ? 1 + s.eliteBonus : 1) * (crit ? s.crit : 1), knock: 2, color: '#9be39b' });
+    strike(t, c, s.ratio, { mul: (elite ? 1 + s.eliteBonus : 1) * (crit ? s.crit : 1), knock: 2 });
     if (crit) spawnDamageNumber(c.x, c.y - 60 * c.scale, '치명타!', '#ffe066');
     game.hitstop = Math.max(game.hitstop, 3);
     return;
@@ -330,6 +333,8 @@ export function updateThrows(dt) {
     t.age += dt;
     if (!game.hero.alive) t.done = true;
     else UPDATE[t.id](t, dt);
+    (t.trail || (t.trail = [])).push({ x: t.x, y: t.y - t.z }); // 원소 꼬리 (그림용 지난 위치)
+    if (t.trail.length > THROW_TRAIL) t.trail.shift();
     if (t.done) game.throws.splice(i, 1);
   }
   syncHands();

@@ -1,7 +1,7 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
 import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT } from './data/balance.js';
-import { SKILL_LEVEL_UP, SKILL_STATS } from './data/skills.js';
+import { SKILL_LEVEL_UP, SKILL_STATS, SKILL_META } from './data/skills.js';
 import { MONSTERS } from './data/monsters.js';
 import { MAPS } from './data/maps.js';
 import { DIFFICULTY, WAVE_MLVL_STEP, MLVL_BONUS } from './data/difficulty.js';
@@ -47,6 +47,14 @@ export function skillLevel(hero, id) {
 export function skillBonus(hero, id, key) {
   const per = (SKILL_LEVEL_UP[id] && SKILL_LEVEL_UP[id][key]) || 0;
   return per * Math.max(0, skillLevel(hero, id) - 1);
+}
+// 무기 특수기(SKILL_META weapon/offhand)를 지금 쓸 수 있는 무기를 들었는지 - 아니면 카드·슬롯 전환에 안 보임 (그 밖의 스킬은 언제나 true)
+export function specialUsable(hero, id) {
+  const meta = SKILL_META[id], eq = hero.equipment;
+  if (!meta || !eq) return true;
+  if (meta.weapon) { const w = eq.weaponMain; return !!(w && w !== 'LOCKED' && w.variant === meta.weapon); }
+  if (meta.offhand) { const o = eq.weaponOff; return !!(o && o !== 'LOCKED' && o.category === meta.offhand); }
+  return true;
 }
 export function skillMul(hero, id, key) {
   return 1 + skillBonus(hero, id, key);

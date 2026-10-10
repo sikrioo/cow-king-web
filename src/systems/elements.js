@@ -1,7 +1,6 @@
 // 원소 피해 규칙: 피해 묶음 → 방어력/저항 적용, 상태 효과(화상/중독/둔화), 지속 피해 틱, 주인공 사망 처리
 // 수치는 data/elements.js. 피해 묶음 = { phys, fire, cold, lightning, poison } (없는 항목은 0, 숫자 하나면 물리)
-import { SKILL_STATS, SPELLS, SHIELD_MAX_ABSORB } from '../data/skills.js';
-import { skillBonus } from '../util.js';
+import { SKILL_STATS } from '../data/skills.js';
 import {
   ELEMENTS, ELEMENT_DEF, PHYSICAL_COLOR, RESIST_CAP, DOT_TICK, BURN_RATIO, BURN_DURATION,
   POISON_RATIO, POISON_DURATION, CHILL_DURATION, LIGHTNING_MIN, LIGHTNING_MAX
@@ -9,7 +8,7 @@ import {
 import { Body } from '../core/physics.js';
 import { game, dev } from '../state.js';
 import { recordRun } from '../save.js';
-import { spawnDamageNumber, spawnHitParticles } from './fx.js';
+import { spawnDamageNumber, spawnHitParticles, spawnShockwave, floatText } from './fx.js';
 
 export function toPacket(dmg) {
   return typeof dmg === 'number' ? { phys: dmg } : dmg;
@@ -105,14 +104,17 @@ export function damageHeroDirect(amount, color) {
 export function heroDamageTaken(total) {
   const h = game.hero;
   if (h.berserkTimer > 0) total = Math.round(total * (1 + SKILL_STATS.berserk.taken));
-  if (h.shieldTimer > 0 && total > 0) {
-    const s = SPELLS.energyshield;
-    const ratio = Math.min(SHIELD_MAX_ABSORB, s.absorb + skillBonus(h, 'energyshield', 'absorb'));
-    const absorbed = Math.min(Math.round(total * ratio), Math.floor(h.mana / s.manaPerDmg));
-    if (absorbed > 0) {
-      h.mana -= absorbed * s.manaPerDmg;
-      total -= absorbed;
-      spawnDamageNumber(h.x + 16, h.y - 50, `막음 ${absorbed}`, '#7fa8ff');
+  // 에너지 쉴드: 남은 흡수량까지 전부 먼저 막음 → 다 막으면 깨짐
+  if (h.shieldTimer > 0 && h.shieldHp > 0 && total > 0) {
+    const absorbed = Math.min(total, h.shieldHp);
+    h.shieldHp -= absorbed;
+    total -= absorbed;
+    spawnDamageNumber(h.x + 16, h.y - 50, `막음 ${absorbed}`, '#7fa8ff');
+    if (h.shieldHp <= 0) {
+      h.shieldTimer = 0;
+      spawnShockwave(h.x, h.y - h.r * 0.4, h.r * 2.4, '#bcd2ff');
+      spawnHitParticles(h.x, h.y - h.r * 0.4, '#bcd2ff', 16);
+      floatText(h.x, h.y - 64, '보호막 깨짐', '#9fc0ff');
     }
   }
   return total;

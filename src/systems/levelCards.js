@@ -9,7 +9,7 @@ import { POTION_MAX } from '../data/balance.js';
 import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL } from '../data/masteries.js';
 import { CLASSES } from '../data/classes.js';
 import { game, input } from '../state.js';
-import { skillLevel } from '../util.js';
+import { skillLevel, specialUsable } from '../util.js';
 import { floatText, spawnHitParticles } from './fx.js';
 import { recalcGearStats } from './gear.js';
 
@@ -58,6 +58,7 @@ function skillCardPool() {
     const lv = skillLevel(h, id);
     const needMastery = SKILL_META[id].mastery; // 무기 특수기: 그 마스터리가 SPECIAL_MASTERY_LEVEL 이상이어야 새로 배울 수 있음
     if (lv === 0 && needMastery && (h.masteries[needMastery] || 0) < SPECIAL_MASTERY_LEVEL) return;
+    if (!specialUsable(h, id)) return; // 무기 특수기: 그 무기를 들었을 때만 카드에
     if (lv === 0 && h.level >= (SKILL_UNLOCK_LEVEL[id] || 1)) pool.push({ type: 'newSkill', id, from: 0, to: 1, weight: CARD_WEIGHT.newSkill });
     else if (lv > 0 && lv < SKILL_MAX_LEVEL) pool.push({ type: 'skillUp', id, from: lv, to: lv + 1, weight: CARD_WEIGHT.skillUp });
   });

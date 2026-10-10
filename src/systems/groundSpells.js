@@ -6,6 +6,8 @@
 import { SPELLS } from '../data/skills.js';
 import { game } from '../state.js';
 import { skillMul, skillBonus, skillLevel, easeOutCubic, masteryBonus } from '../util.js';
+import { SPELL_LEVEL_SCALE } from '../data/skills.js';
+import { applyCC } from './cc.js';
 import { canHit, cowEdgeDist, getCowHitRadius, getCowBody } from './combat.js';
 import { rollLightning } from './elements.js';
 import { damageCowPacket } from './elementCombat.js';
@@ -18,8 +20,53 @@ export function tryEnergyShield() {
   if (!begin('energyshield')) return;
   h.shieldTimer = s.duration * skillMul(h, 'energyshield', 'duration');
   h.shieldMax = h.shieldTimer;
+  h.shieldHpMax = Math.round(s.amount * (1 + SPELL_LEVEL_SCALE * (h.level - 1)) * skillMul(h, 'energyshield', 'amount')); // 흡수량 (elements.heroDamageTaken이 깎음)
+  h.shieldHp = h.shieldHpMax;
   spawnShockwave(h.x, h.y, 46, '#7fa8ff');
   spawnHitParticles(h.x, h.y, '#9fc0ff', 12);
+}
+
+// 방전: 전기 구체가 내 주위를 돎 (game.groundSpells kind 'discharge', 주인공을 따라감). 다시 쓰면 새로 (하나만)
+export function tryDischarge() {
+  const s = SPELLS.discharge, h = game.hero;
+  if (!begin('discharge')) return;
+  game.groundSpells = game.groundSpells.filter((g) => g.kind !== 'discharge');
+  game.groundSpells.push({
+    kind: 'discharge', x: h.x, y: h.y, age: 0, tickT: 0, hitOnce: new Set(),
+    duration: s.duration * skillMul(h, 'discharge', 'duration'), radius: s.radius * skillMul(h, 'discharge', 'radius'), dmg: spellDamage(s.damage, 'discharge')
+  });
+  spawnShockwave(h.x, h.y, 50, '#8fe8ff');
+}
+
+// 구체 자리 (그림도 같은 식): 주인공 둘레를 spin 속도로 돎, 몸통 높이
+export function dischargeOrbs(g) {
+  const s = SPELLS.discharge;
+  return Array.from({ length: s.orbs }, (_, i) => {
+    const a = g.age * s.spin + (i / s.orbs) * Math.PI * 2;
+    return { x: g.x + Math.cos(a) * s.orbit, y: g.y - 20 + Math.sin(a) * s.orbit * 0.62 };
+  });
+}
+
+// 방전 한 틱: tick초마다 구체마다 반경 안 가까운 적 하나(구체끼리 겹치지 않게)에게 번개, 이번 시전에서 처음 맞은 적은 경직
+function updateDischarge(g, dt) {
+  const s = SPELLS.discharge, h = game.hero;
+  if (!h.alive) { g.age = g.duration; return; }
+  g.x = h.x; g.y = h.y;
+  g.tickT -= dt;
+  if (g.tickT > 0) return;
+  g.tickT += s.tick;
+  const taken = new Set();
+  dischargeOrbs(g).forEach((o) => {
+    const c = game.cows
+      .filter((k) => k.state !== 'dead' && !taken.has(k) && canHit(h, k) && cowEdgeDist(k, h.x, h.y) <= g.radius)
+      .sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y))[0];
+    if (!c) return;
+    taken.add(c);
+    const at = getCowBody(c);
+    spawnLightningBolt(o.x, o.y, at.x, at.y);
+    damageCowPacket(c, { lightning: rollLightning(g.dmg, masteryBonus(h, 'lightningMin')) }, { knock: 1, fromX: h.x, fromY: h.y });
+    if (!g.hitOnce.has(c)) { g.hitOnce.add(c); applyCC(c, 'stagger', s.stagger); }
+  });
 }
 
 // 조준 지점 (목장 안). 사거리보다 멀면 null + '사거리 밖' (마나·대기시간 안 씀)
@@ -178,6 +225,7 @@ export function updateGroundSpells(dt) {
     g.age += dt;
     if (g.kind === 'firewave') updateFireWave(g, dt);
     else if (g.kind === 'balllightning') updateBall(g, dt);
+    else if (g.kind === 'discharge') updateDischarge(g, dt);
     else if (g.kind === 'blizzard') {
       if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터
         g.tickT -= dt;
