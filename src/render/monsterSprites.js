@@ -161,7 +161,7 @@ export function drawMonster(c, ctx, t) {
   } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : 0); // 영혼: 불꽃 기둥 (번개를 모으면 밝아짐)
+  if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐)
   else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt }); // 해골 카우: 전용 그림
   else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.demon ? demonDecor(style.demon, c) : null); // 악마: 날개·꼬리·문양
   ctx.restore();

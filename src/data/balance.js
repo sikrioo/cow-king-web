@@ -336,7 +336,7 @@ export const DKING_NOVA_GAP = 0.7;
 export const DKING_FIRE_COUNT_P2 = 5;
 
 // 영혼 (버닝 소울·창백한 원혼): SOUL_RANGE 안에서 SOUL_SHOT_CD초마다 SOUL_CHARGE초 번개를 모음(이때 방향이 정해짐 - 옆으로 피할 수 있음)
-//   → 긴 번개 SOUL_BEAM_LENGTH(폭 SOUL_BEAM_WIDTH 안이면 번개 SOUL_ZAP_DAMAGE, 들쭉날쭉), 곁가지 SOUL_BRANCHES개는 그림만
+//   → 긴 번개 SOUL_BEAM_LENGTH(폭 SOUL_BEAM_WIDTH 안이면 번개 SOUL_ZAP_DAMAGE, 들쭉날쭉 - 한 번만), 곁가지 SOUL_BRANCHES개는 그림만
 //   SOUL_KITE~SOUL_RANGE 사이를 SOUL_TURN초마다 방향을 바꾸며 불규칙하게 떠다님 (2026-10-11 사용자 참고 그림: 화면을 가로지르는 하얀 번개)
 export const SOUL_RANGE = 360;
 export const SOUL_KITE = 140;
@@ -347,3 +347,8 @@ export const SOUL_BEAM_LENGTH = 520;
 export const SOUL_BEAM_WIDTH = 20;
 export const SOUL_ZAP_DAMAGE = 35;
 export const SOUL_BRANCHES = 3;
+// 번개가 '칙'이 아니라 '찌이익' (2026-10-11 사용자): SOUL_BEAM_GROW초 동안 영혼에서 끝까지 뻗어 나가고, SOUL_BEAM_TIME초까지 지지직 이어짐
+//   이어지는 동안 SOUL_BEAM_FLICKER초마다 다시 그림(모양이 바뀌며 떨림), 닿으면 한 번만 맞음. 그동안 영혼은 멈춤
+export const SOUL_BEAM_GROW = 0.3;
+export const SOUL_BEAM_TIME = 0.7;
+export const SOUL_BEAM_FLICKER = 0.05;

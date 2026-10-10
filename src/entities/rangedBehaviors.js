@@ -1,7 +1,7 @@
 // 활 쏘는 몬스터 행동 훅 (궁수 카우·해골 궁수 카우) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   사거리 안이면 조준(aiming, 조준 시작 때 방향 고정 - 조준선이 보임) → 화살 한 발(곧게, 옆으로 움직이면 피함) → 대기. 가까우면 물러남
 import { ARCHER_RANGE, ARCHER_KITE, ARCHER_AIM, ARCHER_COOLDOWN, ARROW_DAMAGE, ARCHER_SKELETON_DAMAGE, ARROW_SPEED, ARROW_RADIUS } from '../data/balance.js';
-import { SOUL_RANGE, SOUL_KITE, SOUL_SHOT_CD, SOUL_CHARGE, SOUL_TURN, SOUL_BEAM_LENGTH, SOUL_BEAM_WIDTH, SOUL_ZAP_DAMAGE, SOUL_BRANCHES } from '../data/balance.js';
+import { SOUL_RANGE, SOUL_KITE, SOUL_SHOT_CD, SOUL_CHARGE, SOUL_TURN, SOUL_BEAM_LENGTH, SOUL_BEAM_WIDTH, SOUL_ZAP_DAMAGE, SOUL_BRANCHES, SOUL_BEAM_GROW, SOUL_BEAM_TIME, SOUL_BEAM_FLICKER } from '../data/balance.js';
 import { hitPlayer } from '../systems/combat.js';
 import { rollLightning } from '../systems/elements.js';
 import { spawnLightningBolt, spawnHitParticles } from '../systems/fx.js';
@@ -78,29 +78,38 @@ function soul() {
   return {
     ranged: true,
     init(m) { m.shootCd = 0.8 + Math.random() * 1.0; m.driftT = 0; m.driftA = Math.random() * Math.PI * 2; },
-    interrupt(m) { if (m.state === 'charging') m.shootCd = SOUL_SHOT_CD; },
+    interrupt(m) { if (m.state === 'charging' || m.state === 'beaming') m.shootCd = SOUL_SHOT_CD; }, // 모으기·번개 끊김
     update(m, dt) {
       if (m.shootCd > 0) m.shootCd -= dt;
       if (m.state === 'charging') {
         m.stateElapsed += dt;
         Body.setVelocity(m.body, { x: 0, y: 0 });
-        if (m.stateElapsed >= SOUL_CHARGE) {
-          const ox = m.x, oy = m.y - 50 * m.scale;
-          const ex = ox + m.zapDirX * SOUL_BEAM_LENGTH, ey = oy + m.zapDirY * SOUL_BEAM_LENGTH;
-          spawnLightningBolt(ox, oy, ex, ey, '#ffffff'); // 하얀 번개, 굵게 보이도록 두 번
+        if (m.stateElapsed >= SOUL_CHARGE) { m.setState('beaming', 0); m.beamHit = false; m.beamFlick = 0; }
+        return true;
+      }
+      if (m.state === 'beaming') { // 찌이익: 끝이 앞으로 뻗어 나가며 지지직 이어짐
+        m.stateElapsed += dt;
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        const ox = m.x, oy = m.y - 50 * m.scale;
+        const len = SOUL_BEAM_LENGTH * Math.min(1, m.stateElapsed / SOUL_BEAM_GROW);
+        const ex = ox + m.zapDirX * len, ey = oy + m.zapDirY * len;
+        m.beamFlick -= dt;
+        if (m.beamFlick <= 0) { // 다시 그림 (모양이 바뀌며 떨림)
+          m.beamFlick = SOUL_BEAM_FLICKER;
+          spawnLightningBolt(ox, oy, ex, ey, '#ffffff');
           spawnLightningBolt(ox, oy, ex, ey, '#ffffff');
           for (let i = 1; i <= SOUL_BRANCHES; i++) { // 곁가지 (그림만)
             const k = i / (SOUL_BRANCHES + 1), bx = ox + (ex - ox) * k, by = oy + (ey - oy) * k;
-            const a = Math.atan2(m.zapDirY, m.zapDirX) + (i % 2 ? 0.7 : -0.7);
-            spawnLightningBolt(bx, by, bx + Math.cos(a) * 70, by + Math.sin(a) * 70, '#ffffff');
+            const a = Math.atan2(m.zapDirY, m.zapDirX) + (i % 2 ? 0.7 : -0.7) + Math.sin(m.stateElapsed * 40 + i) * 0.3;
+            spawnLightningBolt(bx, by, bx + Math.cos(a) * 60, by + Math.sin(a) * 60, '#ffffff');
           }
-          spawnHitParticles(ox, oy, '#ffffff', 6);
-          if (game.hero.alive && distToSegment(game.hero.x, game.hero.y, ox, oy, ex, ey) <= SOUL_BEAM_WIDTH + game.hero.r * 0.5) {
-            hitPlayer(ox, oy, { lightning: rollLightning(SOUL_ZAP_DAMAGE) });
-          }
-          m.shootCd = SOUL_SHOT_CD;
-          m.setState('idle', 0.2);
+          spawnHitParticles(ex, ey, '#ffffff', 2); // 끝에서 튀는 불꽃
         }
+        if (!m.beamHit && game.hero.alive && distToSegment(game.hero.x, game.hero.y, ox, oy, ex, ey) <= SOUL_BEAM_WIDTH + game.hero.r * 0.5) {
+          m.beamHit = true; // 한 번만
+          hitPlayer(ox, oy, { lightning: rollLightning(SOUL_ZAP_DAMAGE) });
+        }
+        if (m.stateElapsed >= SOUL_BEAM_TIME) { m.shootCd = SOUL_SHOT_CD; m.setState('idle', 0.2); }
         return true;
       }
       if (m.shootCd <= 0 && game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) <= SOUL_RANGE) {

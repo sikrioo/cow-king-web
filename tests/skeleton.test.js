@@ -101,7 +101,7 @@ it('궁수 카우·해골 궁수 카우: 사거리 안이면 조준(방향 고�
   } finally { env.restore(); }
 });
 
-it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼: 모으기(방향 고정) → 긴 번개(맞으면 번개 피해, 옆으로 피하면 무사), 늘 떠다님, 막에 나옴', async () => {
+it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼: 모으기(방향 고정) → 뻗어 나가며 이어지는 긴 번개(한 번 맞음, 옆으로 피하면 무사), 늘 떠다님, 막에 나옴', async () => {
   const env = installBrowserEnv({ seed: 4 });
   try {
     const m = await boot();
@@ -122,14 +122,15 @@ it('해골 창병: 근접 사거리가 더 김 / 버닝 소울·창백한 원혼
       s.shootCd = 0;
       s.update(1 / 60);
       expect(s.state).toBe('charging');
-      for (let i = 0; i < m.SOUL_CHARGE * 60 + 2; i++) s.update(1 / 60);
+      for (let i = 0; i < (m.SOUL_CHARGE + m.SOUL_BEAM_TIME) * 60 + 2; i++) s.update(1 / 60);
       expect(h.hp).toBeLessThan(9999); // 가만히 있으면 맞음
+      expect(s.state).not.toBe('beaming'); // 번개가 끝남
       // 모으는 동안 옆으로 비키면 안 맞음
       h.hp = 9999; h.invuln = 0;
       s.shootCd = 0; s.state = 'idle';
       s.update(1 / 60);
       m.Body.setPosition(h.body, { x: h.x, y: h.y + 120 }); h.y += 120;
-      for (let i = 0; i < m.SOUL_CHARGE * 60 + 2; i++) s.update(1 / 60);
+      for (let i = 0; i < (m.SOUL_CHARGE + m.SOUL_BEAM_TIME) * 60 + 2; i++) s.update(1 / 60);
       expect(h.hp).toBe(9999);
       vi.restoreAllMocks();
       m.Body.setPosition(h.body, { x: h.x, y: h.y - 120 }); h.y -= 120;
