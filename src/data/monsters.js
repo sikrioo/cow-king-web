@@ -34,8 +34,8 @@ export const MONSTERS = {
   demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
   demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
   // 도살자 (2026-10-11): 웨이브 도중 예고 없이 난입(data/acts.js INVADE), 크기 = 주인공의 약 1.5배(몸 반지름 30 × 0.4 × 2.1 ≈ 25, 주인공 17), 돌진·광폭·짧은 연타, 세 번째 타격과 돌진에 기절 (entities/butcherBehaviors.js)
-  butcherCow:   { hp: 140, dmg: 35, scaleMul: 2.1, speedMul: 1.25, aggroMul: 3, exp: 45, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
-  butcherDemon: { hp: 170, dmg: 40, scaleMul: 2.1, speedMul: 1.3,  aggroMul: 3, exp: 60, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
+  butcherCow:   { hp: 140, dmg: 35, scaleMul: 2.1, speedMul: 1.5, aggroMul: 3, exp: 45, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
+  butcherDemon: { hp: 170, dmg: 40, scaleMul: 2.1, speedMul: 1.5,  aggroMul: 3, exp: 60, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -93,6 +93,15 @@ export const WEAPON_STYLE = {
   staff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast',
   bow: 'bow',
   greatsword: 'big', battleaxe: 'big', demonblade: 'big'
+};
+
+// 걸음걸이 (render/gait.js, 2026-10-11 사용자: 모두 콩콩 튀어서 단조로움): hop 콩콩 / trot 종종 / stomp 쿵쿵 / scuttle 잰걸음 / sway 흔들흔들
+//   목록이면 개체마다 하나 (일반 카우는 섞임). 없으면 hop. 영혼은 떠다녀서 안 씀
+export const MONSTER_GAIT = {
+  normal: ['hop', 'trot'], tough: 'stomp', fast: 'scuttle', cold: 'trot', charger: 'trot', fanatic: 'hop', burning: 'trot',
+  exploder: 'scuttle', shaman: 'sway', shocker: 'sway', pyro: 'sway', venom: 'trot', boss: 'stomp',
+  skeleton: ['trot', 'hop'], skeletonShield: 'stomp', skeletonSpear: 'trot', skeletonBrute: 'stomp', skeletonArcher: 'trot', archer: 'trot', skeletonKing: 'sway',
+  imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
 };
 
 // 몬스터가 쓰는 기술 (관리자 몬스터 표 - 설명만, 동작은 entities/*Behaviors.js). 없으면 일반 근접만

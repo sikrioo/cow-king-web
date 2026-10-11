@@ -4,23 +4,29 @@
 import { PALETTE } from '../data/palette.js';
 import { drawBigWeapon, bigSwingAngle, BIG_WEAPONS } from './monsterWeapons.js';
 import { poseOf, drawStyledWeapon } from './weaponMotion.js';
+import { gaitPose } from './gait.js';
 
 const BONE = '#e8e2d0', BONE_SHADE = '#c9c1aa', OUTLINE = '#5a5446', HOLE = '#141210';
 
 // stunFn: 기절 별 그림(monsterSprites.drawStunDots - 순환 import를 피하려고 넘겨받음)
 export function drawSkeletonCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed = 0, opts = {}) {
-  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false, hitAt = 0.12, weaponSize = 1, attackTime = 0.6, casting = false } = opts;
-  const bob = state === 'walk' ? Math.abs(Math.sin(animT * 8)) * 8 : state === 'idle' ? Math.abs(Math.sin(animT * 2.2)) * 2 : 0;
+  const { king = false, flash = false, weapon = 'club', stunFn = null, shield = false, hitAt = 0.12, weaponSize = 1, attackTime = 0.6, casting = false, gait = 'trot', seed = 0 } = opts;
+  const g = gaitPose(gait, state, animT, seed); // 걸음걸이 (render/gait.js)
+  const bob = g.bob;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
 
   ctx.save();
-  ctx.translate(x + shake, y - bob);
+  ctx.translate(x + shake, y);
   ctx.scale(scale * facing, scale);
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
+  ctx.save(); // 그림자는 땅에
   ctx.fillStyle = PALETTE.shadow;
   ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.translate(0, -bob / scale);
+  if (g.tilt) ctx.rotate(g.tilt);
+  if (g.sx !== 1 || g.sy !== 1) ctx.scale(g.sx, g.sy);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
 
   const big = BIG_WEAPONS.includes(weapon); // 해골 전사의 대검·도끼는 머리 앞에 그림 (아래 - 머리에 가려 손잡이만 보이던 것)
   if (!big) drawStyledWeapon(ctx, weapon, poseOf(weapon, state === 'attack', stateElapsed, { hitAt, attackTime, casting }), animT, weaponSize); // 무기 종류별 동작

@@ -37,3 +37,19 @@ it('몬스터 무기마다 휘두르는 동작(WEAPON_STYLE)이 정해져 있고
     expect(weaponPose('cast', false, 0, { casting: true }).glow).toBeGreaterThan(0);
   } finally { Math.random = rand; }
 });
+
+it('걸음걸이: 모든 걸음 종류가 자세를 내고(난수 없음), 같은 종류라도 개체마다 리듬이 다름', async () => {
+  const { MONSTERS, MONSTER_GAIT } = await import('../src/data/monsters.js');
+  const { gaitOf, gaitPose } = await import('../src/render/gait.js');
+  const rand = Math.random;
+  Math.random = () => { throw new Error('그림에서 게임 난수 사용'); };
+  try {
+    Object.keys(MONSTERS).forEach((k) => { const g = gaitOf(k, 1.234); expect(['hop', 'trot', 'stomp', 'scuttle', 'sway']).toContain(g); });
+    ['hop', 'trot', 'stomp', 'scuttle', 'sway'].forEach((g) => [0, 0.3, 1.1].forEach((t) => {
+      const p = gaitPose(g, 'walk', t, 2.5);
+      expect(Number.isFinite(p.bob) && Number.isFinite(p.tilt) && p.sx > 0 && p.sy > 0).toBe(true);
+    }));
+    expect(gaitPose('hop', 'walk', 0.37, 1.0).bob).not.toBe(gaitPose('hop', 'walk', 0.37, 7.7).bob);
+    expect(Array.isArray(MONSTER_GAIT.normal)).toBe(true);
+  } finally { Math.random = rand; }
+});

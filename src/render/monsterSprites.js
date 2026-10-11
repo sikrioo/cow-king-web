@@ -3,6 +3,7 @@ import { MONSTERS, FLASH_COLORS, weaponScaleOf } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
 import { drawBigWeapon, bigSwingAngle, BIG_WEAPONS } from './monsterWeapons.js';
 import { poseOf, drawStyledWeapon } from './weaponMotion.js';
+import { gaitOf, gaitPose } from './gait.js';
 import { BOSS_SLAM_TELEGRAPH } from '../data/balance.js';
 import { drawSkeletonCow } from './skeletonSprites.js';
 import { demonDecor } from './demonSprites.js';
@@ -19,21 +20,22 @@ export function drawCow(ctx, x, y, scale, state, animT, facing = 1, stateElapsed
   const snoutColor = colors ? colors.snout : PALETTE.snout;
   const eyeColor   = colors ? colors.eye   : PALETTE.eye;
 
-  const bob   = state === 'walk'    ? Math.abs(Math.sin(animT * 8)) * 8
-              : state === 'idle'   ? Math.abs(Math.sin(animT * 2.2)) * 2
-              : 0;
+  const g = gaitPose(motion.gait || 'hop', state, animT, motion.seed || 0); // 걸음걸이 (render/gait.js)
+  const bob = g.bob;
   const shake = state === 'stunned' ? Math.sin(animT * 45) * 3 : 0;
   const big = BIG_WEAPONS.includes(weapon);
   const pose = big ? null : poseOf(weapon, state === 'attack', stateElapsed, motion); // 무기 종류별 동작
 
   ctx.save();
-  ctx.translate(x + shake, y - bob);
+  ctx.translate(x + shake, y);
   ctx.scale(scale * facing, scale);
-
-  ctx.fillStyle = PALETTE.shadow;
+  ctx.fillStyle = PALETTE.shadow; // 그림자는 땅에 (몸만 뜸)
   ctx.beginPath();
   ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.translate(0, -bob / scale); // 걸음 자세: 뜸·기울기·눌림 (발이 원점 - render/gait.js)
+  if (g.tilt) ctx.rotate(g.tilt);
+  if (g.sx !== 1 || g.sy !== 1) ctx.scale(g.sx, g.sy);
   if (pose && pose.lunge) ctx.translate(pose.lunge, 0); // 공격 순간 몸이 앞으로 쏠림 (예비 동작엔 살짝 뒤로)
 
   if (decor && decor.back) decor.back(ctx, animT);
@@ -175,8 +177,8 @@ export function drawMonster(c, ctx, t) {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐)
-  else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), weaponSize: weaponScaleOf(c.kind) }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.butcher ? butcherDecor(style.butcher) : style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), { hitAt: c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state) }); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
+  else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), weaponSize: weaponScaleOf(c.kind), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 해골 카우: 전용 그림
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.butcher ? butcherDecor(style.butcher) : style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), { hitAt: c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
   ctx.restore();
   }
 
