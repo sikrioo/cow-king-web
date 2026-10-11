@@ -85,6 +85,16 @@ export const SOUL_PALETTES = {
 export const WEAPON_SCALE = { boss: 2, demonKing: 1.6, skeletonKing: 1 };
 export const weaponScaleOf = (kind) => WEAPON_SCALE[kind] || 1;
 
+// 무기 → 휘두르는 동작 (render/weaponMotion.js, 2026-10-11 사용자): thrust 찌르기 / chop 내려치기 / slash 베기 / cast 주문(지팡이) / bow 활 / big 큰 무기(머리 위로 크게)
+export const WEAPON_STYLE = {
+  spear: 'thrust', pitchfork: 'thrust', halberd: 'thrust',
+  club: 'chop', hammer: 'chop', axe: 'chop',
+  cleaver: 'slash', meatcleaver: 'slash', hellcleaver: 'slash',
+  staff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast',
+  bow: 'bow',
+  greatsword: 'big', battleaxe: 'big', demonblade: 'big'
+};
+
 // 몬스터가 쓰는 기술 (관리자 몬스터 표 - 설명만, 동작은 entities/*Behaviors.js). 없으면 일반 근접만
 export const MONSTER_SKILLS = {
   normal: [], tough: [], fast: [],

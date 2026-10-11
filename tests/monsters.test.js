@@ -18,3 +18,22 @@ it('관리자 몬스터 표: 모든 몬스터에 기술 설명(없으면 빈 목
   const { MONSTERS, MONSTER_SKILLS } = await import('../src/data/monsters.js');
   expect(Object.keys(MONSTER_SKILLS).sort()).toEqual(Object.keys(MONSTERS).sort());
 });
+
+it('몬스터 무기마다 휘두르는 동작(WEAPON_STYLE)이 정해져 있고, 동작마다 자세 계산이 됨(그림만 - 난수 없음)', async () => {
+  const { MONSTER_WEAPONS, WEAPON_STYLE } = await import('../src/data/monsters.js');
+  const { weaponPose } = await import('../src/render/weaponMotion.js');
+  const used = new Set(Object.values(MONSTER_WEAPONS).flat());
+  used.forEach((w) => expect(WEAPON_STYLE[w], w).toBeTruthy());
+  const rand = Math.random;
+  Math.random = () => { throw new Error('그림에서 게임 난수 사용'); };
+  try {
+    ['thrust', 'chop', 'slash', 'cast', 'bow'].forEach((st) => {
+      [0, 0.06, 0.12, 0.2, 0.4, 0.59].forEach((t) => {
+        const p = weaponPose(st, true, t, { hitAt: 0.12, attackTime: 0.6 });
+        expect(Number.isFinite(p.a) && Number.isFinite(p.x) && Number.isFinite(p.lunge)).toBe(true);
+      });
+    });
+    expect(weaponPose('chop', true, 0.13, { hitAt: 0.12, attackTime: 0.6 }).dust).toBeGreaterThanOrEqual(0);
+    expect(weaponPose('cast', false, 0, { casting: true }).glow).toBeGreaterThan(0);
+  } finally { Math.random = rand; }
+});

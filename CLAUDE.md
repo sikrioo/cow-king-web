@@ -46,7 +46,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 몬스터 소환: behaviors는 `game.pendingSpawns`에 넣기만, `systems/summons.js`의 `processSpawns`가 Monster를 만듦(순환 import 방지). `MONSTERS[k].adminOnly` = 관리자 페이지에만(게임 생성 목록에 넣지 말 것), `boss: true` = 보스 취급(CC 면역).
 - 주인공 저주(악마): `systems/curses.js`(하나만, 건 몬스터가 죽으면 풀림) - 효과는 weak=heroDamageTaken / slow=hero 이동 / hex=util.castSpeedMul. 악마 꾸밈 그림 `render/demonSprites.js`(drawCow의 decor back/front).
 - 투사체: `systems/projectiles.js`의 `spawnProjectile({kind, x, y, dirX, dirY, speed, range, radius, packet, explodeRadius, color})` - 지금은 몬스터→주인공만. 그림은 `render/fx.js` drawProjectiles.
-- 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS`. 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
+- 몬스터 무기: `render/monsterWeapons.js` 그림 함수 + `WEAPON_DRAW` 등록 + `data/monsters.js`의 `MONSTER_WEAPONS` + 휘두르는 동작 `WEAPON_STYLE`(찌르기/내려치기/베기/주문/활/큰 무기 - 자세 계산 `render/weaponMotion.js`, 그림만). 개체별 선택은 `weaponFor(kind, phase)` - 게임 난수 소비 금지(그림 때문에 게임 결과가 바뀌면 안 됨).
 - 캐릭터(직업): `data/classes.js`(체력·마나·스킬 목록·시작 슬롯·기본 공격·생김새). 시작 화면 카드로 고름(`ui.selectedClass`), `resetGame`의 `applyClass`가 적용. 기본 공격은 `skills.tryBasicAttack`(전사 근접 / 마법사 마력탄).
 - 마법사 스킬: 수치 `data/skills.js`의 `SPELLS`, 동작 `systems/sorcSkills.js`, 등록 `systems/skills.js`의 `SKILLS`. 주인공 → 몬스터 원소 피해는 `systems/elementCombat.js`(`damageCowPacket`: 몬스터 저항 `resist`, 화상/중독/둔화). 투사체 `team: 'hero'`면 몬스터를 맞힘.
 - 속도 규칙: 기본 공격(전사 근접/마법사 마력탄)은 공격속도(`util.attackSpeedMul`), 그 밖의 스킬은 시전속도(`util.castSpeedMul`, 대기시간만 줄임 - 지속/동작 시간은 그대로). 둘 다 상한 2배.
