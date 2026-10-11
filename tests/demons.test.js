@@ -147,27 +147,43 @@ it('악마 카우킹: 보스(CC 면역), 임프 소환(최대치까지), 지옥�
   } finally { vi.restoreAllMocks(); env.restore(); }
 });
 
-it('도살자 카우·도살자 악마(시안, 관리자 전용): 멀리서 빠르게 달려듦, 세 번 맞힐 때마다 주인공 기절(움직이지도 스킬도 못 씀)', async () => {
+it('도살자: 돌진(예고 → 맞으면 기절, 벽에 박히면 멍함, 악마는 불길) · 세 번째 타격 기절 · 체력 절반 아래 광폭(빨라지고 세지고 더 아픔) · 난입', async () => {
   const env = installBrowserEnv({ seed: 6 });
   try {
     const m = await boot();
     const h = m.game.hero;
     const { trySlot } = await import('../src/systems/skills.js');
+    const { ACTS, INVADE } = await import('../src/data/acts.js');
+    expect(ACTS.map((a) => a.invader)).toEqual(['butcherCow', 'butcherCow', 'butcherDemon']);
+    expect(INVADE.chance).toBeGreaterThan(0);
+    vi.spyOn(Math, 'random').mockReturnValue(0.99); // 회피·블락 없음
     for (const kind of ['butcherCow', 'butcherDemon']) {
-      expect(m.MONSTERS[kind].adminOnly).toBe(true);
-      m.game.cows.length = 0;
-      const b = m.spawn(kind, 300);
+      expect(m.MONSTERS[kind].adminOnly).toBeFalsy();
+      m.game.cows.length = 0; m.game.hazards.length = 0;
+      h.hp = 9999; h.invuln = 0; h.stunTimer = 0;
+      const b = m.spawn(kind, 250);
+      b.chargeCd = 0;
       b.update(1 / 60);
-      const v = Math.hypot(b.body.velocity.x, b.body.velocity.y);
-      expect(v).toBeCloseTo(b.speed * m.BUTCHER_SPRINT / 60, 3); // 달려듦
+      expect(b.state).toBe('chargePrep');
+      for (let i = 0; i < (m.BUTCHER_CHARGE_TELEGRAPH + 0.6) * 60 && b.state !== 'idle' && b.state !== 'dazed'; i++) b.update(1 / 60);
+      expect(h.hp).toBeLessThan(9999);
+      expect(h.stunTimer).toBeGreaterThan(0); // 돌진에 맞으면 기절
+      if (kind === 'butcherDemon') expect(m.game.hazards.length).toBeGreaterThan(0); // 불길
+      // 세 번째 타격 기절
       h.stunTimer = 0;
       for (let i = 0; i < m.BUTCHER_STUN_EVERY; i++) b.behavior.onMeleeHit(b, 10);
       expect(h.stunTimer).toBeCloseTo(m.BUTCHER_STUN);
       const mana = h.mana; h.spellCd[h.slot1] = 0;
       trySlot(1);
-      expect(h.mana).toBe(mana); // 기절 중 스킬 못 씀
-      b.behavior.onMeleeHit(b, 0); // 막힌 공격은 안 셈
-      expect(b.comboN).toBe(m.BUTCHER_STUN_EVERY);
+      expect(h.mana).toBe(mana);
+      // 광폭
+      const dmg0 = b.dmg, at0 = b.attackTime;
+      b.hp = Math.floor(b.maxHp * 0.4); b.state = 'idle'; b.chargeCd = 99;
+      b.update(1 / 60);
+      expect(b.berserk).toBe(true);
+      expect(b.dmg).toBe(Math.round(dmg0 * m.BUTCHER_BERSERK_DAMAGE));
+      expect(b.attackTime).toBeCloseTo(at0 / m.BUTCHER_BERSERK_SPEED);
+      expect(m.physDamageTo(b, 100)).toBe(Math.round(100 * (1 + m.BUTCHER_BERSERK_TAKEN))); // 받는 피해 증가
     }
-  } finally { env.restore(); }
+  } finally { vi.restoreAllMocks(); env.restore(); }
 });

@@ -13,6 +13,7 @@ export const game = {
   hazards: [],
   meteors: [], // 떨어지는 중인 메테오 (systems/spells.js)
   groundSpells: [], // 눈보라·화염기둥 (systems/groundSpells.js)
+  invade: null, // 난입 도살자 예정 { t: 남은 초, kind } (systems/waves.js)
   act: 0, actClear: 0, actScene: 0, // 목장 막 (data/acts.js, systems/acts.js): 지금 막, 보스 처치 뒤 대기, 막 전환 장면
   corpses: [], // 쓰러진 자리 { x, y, life } - 해골 카우 킹이 여기서 해골을 일으킴 (systems/summons.js)
   hellfires: [], // 악마 지옥불 원 (systems/demonSpells.js)
@@ -33,7 +34,7 @@ export const game = {
   runRecorded: false,
   releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 },
   // 지금 들어와 있는 맵 (systems/mapRun.js beginRun이 채움). 배율은 파밍 맵 난이도(data/difficulty.js), 목장은 전부 1
-  run: { mapId: 'ranch', mode: 'wave', difficulty: 'normal', hpMul: 1, dmgMul: 1, expMul: 1, gearDropMul: 1, rarityBoost: 1, cleared: false, total: 0 },
+  run: { mapId: 'ranch', mode: 'wave', difficulty: 'normal', hpMul: 1, dmgMul: 1, expMul: 1, gearDropMul: 1, rarityBoost: 1, resistPenalty: 0, armorPenalty: 0, cleared: false, total: 0 },
   sandbox: null, // 개발자 미리보기 샌드박스 (systems/sandbox.js) - 관리자 페이지의 미리보기 창
   cardOffer: null, // 레벨업 카드 고르는 중 { cards: [...] } - 있으면 게임이 멈춤 (systems/levelCards.js)
   hero: null, // 주인공 - boot()에서 createHero()로 생성 (entities/hero.js)

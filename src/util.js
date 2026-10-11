@@ -1,6 +1,6 @@
 // 수학/색 유틸 (상태 없음, 순수 함수)
 import { CHILL_ATTACK_SPEED_MULT } from './data/elements.js';
-import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT, CURSES } from './data/balance.js';
+import { CAST_SPEED_MAX_MULT, COMBO_SPEED_PER_HIT, COMBO_SPEED_CAP, ATTACK_SPEED_GEAR_CAP, ATTACK_SPEED_MAX_MULT, CURSES, ARMOR_K, ARMOR_MAX_REDUCTION } from './data/balance.js';
 import { SKILL_LEVEL_UP, SKILL_STATS, SKILL_META } from './data/skills.js';
 import { MONSTERS } from './data/monsters.js';
 import { MAPS } from './data/maps.js';
@@ -22,6 +22,11 @@ export function masteryBonus(hero, key) {
     sum += m.per[key] * ms[id];
   }
   return sum;
+}
+
+// 방어력 → 물리 피해 감소율 (data/balance.js ARMOR_K, 상한 ARMOR_MAX_REDUCTION) - systems/gear.armorReduction과 같은 식
+export function armorReductionOf(armor) {
+  return Math.min(armor / (armor + ARMOR_K), ARMOR_MAX_REDUCTION);
 }
 
 // 목장 웨이브 → 막 정보 (data/acts.js): { act: 막 번호, actWave: 막 안 웨이브(1~), isBoss: 막의 마지막 웨이브, def: 막 데이터 }

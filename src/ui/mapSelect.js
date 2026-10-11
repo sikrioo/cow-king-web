@@ -120,5 +120,6 @@ function drawOptions(def, x, y, w) {
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
   ctx.fillText(`권장 Lv.${d.level}`, x + 282, oy + 17);
   const immune = def.immune && d.immunePack > 0 ? ` · 면역 무리 ${Math.round(d.immunePack * 100)}% (${def.immune.map((k) => IMMUNE_NAME[k]).join('·')})` : '';
-  ctx.fillText(`체력 ×${d.hp} · 공격 ×${d.dmg} · 경험치 ×${d.exp} · 장비 ×${d.gearDrop} · 높은 등급 ×${d.rarity}${immune}`, x + 20, oy + 46, w - 34);
+  const pen = d.resistPenalty ? ` · 내 저항 -${Math.round(d.resistPenalty * 100)}% · 내 방어력 -${Math.round(d.armorPenalty * 100)}%` : '';
+  ctx.fillText(`체력 ×${d.hp} · 공격 ×${d.dmg} · 경험치 ×${d.exp} · 장비 ×${d.gearDrop} · 높은 등급 ×${d.rarity}${pen}${immune}`, x + 20, oy + 46, w - 34);
 }

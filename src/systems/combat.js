@@ -172,7 +172,8 @@ export function cowResist(c, key) {
 // 주인공의 물리 피해 → 물리 저항 적용 (면역이면 0, 저항이 없으면 그대로)
 export function physDamageTo(c, dmg) {
   const r = cowResist(c, 'phys');
-  if (r <= 0) return dmg;
+  if (r === 0) return dmg;
+  if (r < 0) return Math.round(dmg * (1 - r)); // 음수 저항 = 더 아픔 (도살자 광폭)
   if (r >= 1) return 0;
   return Math.max(1, Math.round(dmg * (1 - r)));
 }

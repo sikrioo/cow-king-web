@@ -15,7 +15,7 @@ import { updateItems } from './systems/loot.js';
 import { tryDrinkPotion } from './systems/potions.js';
 import { gainExp, trySpendStatPoint } from './systems/progression.js';
 import { cycleSkillSlot, updateSkillSlots, trySlot } from './systems/skills.js';
-import { startNextWave } from './systems/waves.js';
+import { startNextWave, updateInvade } from './systems/waves.js';
 import { updateFarmProgress } from './systems/mapRun.js';
 import { showHelpPanel } from './ui/dom.js';
 import { setInventoryOpen } from './ui/menu/panel.js';
@@ -98,6 +98,7 @@ export function fixedUpdate(dt) {
     }
     if (game.run.mode === 'farm') updateFarmProgress(); // 파밍 맵: 다 잡으면 클리어
     else if (updateActFlow(dt)) { /* 보스 처치 뒤 대기·막 전환 장면 - 웨이브 진행 안 함 */ }
+    else if (updateInvade(dt) || game.cows.length !== 0) { /* 웨이브 중 (난입 도살자 시계) */ }
     else if (game.cows.length === 0) {
       game.waveTransition -= dt;
       if (game.waveTransition <= 0) {

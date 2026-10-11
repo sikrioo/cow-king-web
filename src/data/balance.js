@@ -353,8 +353,25 @@ export const SOUL_BEAM_GROW = 0.3;
 export const SOUL_BEAM_TIME = 0.7;
 export const SOUL_BEAM_FLICKER = 0.05;
 
-// 도살자 (시안): BUTCHER_SPRINT_DIST보다 멀면 이동 × BUTCHER_SPRINT로 달려듦, 근접으로 맞힐 때마다 세어 BUTCHER_STUN_EVERY번째마다 주인공 기절 BUTCHER_STUN초
-export const BUTCHER_SPRINT = 1.6;
-export const BUTCHER_SPRINT_DIST = 120;
+// 도살자: 근접으로 맞힐 때마다 세어 BUTCHER_STUN_EVERY번째마다 주인공 기절 BUTCHER_STUN초
+//   돌진: BUTCHER_CHARGE_MIN~MAX 거리, BUTCHER_CHARGE_CD초마다 - 예고 BUTCHER_CHARGE_TELEGRAPH초 → 초당 BUTCHER_CHARGE_SPEED px로 BUTCHER_CHARGE_DIST까지
+//     맞으면 BUTCHER_CHARGE_DAMAGE + 밀림 + 기절 BUTCHER_CHARGE_STUN초, 벽에 박히면 BUTCHER_DAZE초 멍함, 도살자 악마는 BUTCHER_FIRE_STEP px마다 불길
+//   버서커: 체력 BUTCHER_BERSERK_HP 이하에서 한 번 - 공격속도 ×BUTCHER_BERSERK_SPEED, 피해 ×..DAMAGE, 모든 저항 -..TAKEN(받는 피해 증가)
 export const BUTCHER_STUN_EVERY = 3;
 export const BUTCHER_STUN = 0.7;
+export const BUTCHER_CHARGE_MIN = 150;
+export const BUTCHER_CHARGE_MAX = 350;
+export const BUTCHER_CHARGE_CD = 6;
+export const BUTCHER_CHARGE_TELEGRAPH = 0.6;
+export const BUTCHER_CHARGE_SPEED = 560;
+export const BUTCHER_CHARGE_DIST = 380;
+export const BUTCHER_CHARGE_WIDTH = 30;
+export const BUTCHER_CHARGE_DAMAGE = 50;
+export const BUTCHER_CHARGE_KNOCK = 12;
+export const BUTCHER_CHARGE_STUN = 0.5;
+export const BUTCHER_DAZE = 1.0;
+export const BUTCHER_FIRE_STEP = 34;
+export const BUTCHER_BERSERK_HP = 0.5;
+export const BUTCHER_BERSERK_SPEED = 1.5;
+export const BUTCHER_BERSERK_DAMAGE = 1.2;
+export const BUTCHER_BERSERK_TAKEN = 0.2;

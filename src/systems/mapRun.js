@@ -27,6 +27,7 @@ export function clearWorld() {
   game.corpses = [];
   game.actClear = 0;
   game.actScene = 0;
+  game.invade = null;
   if (game.hero) { game.hero.weaponOut = false; game.hero.shieldOut = false; }
   game.decoy = null;
   game.projectiles = [];
@@ -49,7 +50,8 @@ export function beginRun(mapId, opts = {}) {
   const d = DIFFICULTY[diffKey];
   game.run = {
     mapId, mode: def.mode, difficulty: diffKey, cleared: false, total: 0,
-    hpMul: d.hp, dmgMul: d.dmg, expMul: d.exp, gearDropMul: d.gearDrop, rarityBoost: d.rarity
+    hpMul: d.hp, dmgMul: d.dmg, expMul: d.exp, gearDropMul: d.gearDrop, rarityBoost: d.rarity,
+    resistPenalty: d.resistPenalty || 0, armorPenalty: d.armorPenalty || 0 // 주인공 저항·방어력 패널티 (systems/elements.js)
   };
   const key = runKey(mapId, diffKey);
   game.hero.mapRuns[key] = (game.hero.mapRuns[key] || 0) + 1; // 같은 맵 몇 번째인지 (파밍 회차)

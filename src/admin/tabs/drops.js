@@ -79,7 +79,9 @@ export function renderDrops(root) {
       { label: '경험치', num: true, get: (k) => `×${DIFFICULTY[k].exp}` },
       { label: '장비 드랍', num: true, get: (k) => `×${DIFFICULTY[k].gearDrop}` },
       { label: '높은 등급', num: true, get: (k) => `×${DIFFICULTY[k].rarity}` },
-      { label: '면역 무리', num: true, get: (k) => pct(DIFFICULTY[k].immunePack) }
+      { label: '면역 무리', num: true, get: (k) => pct(DIFFICULTY[k].immunePack) },
+      { label: '내 저항 패널티', num: true, get: (k) => (DIFFICULTY[k].resistPenalty ? '-' + pct(DIFFICULTY[k].resistPenalty) : '0') },
+      { label: '내 방어력 패널티', num: true, get: (k) => (DIFFICULTY[k].armorPenalty ? '-' + pct(DIFFICULTY[k].armorPenalty) : '0') }
     ], DIFFICULTY_ORDER)
   );
 

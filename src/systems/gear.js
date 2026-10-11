@@ -9,6 +9,7 @@ import {
   WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG
 } from '../data/items.js';
 import { rollGearItem, nextItemUid } from './itemGen.js';
+import { armorReductionOf } from '../util.js';
 
 export { rollGearItem, rollRarity, nextItemUid } from './itemGen.js';
 import { game, ui } from '../state.js';
@@ -219,7 +220,7 @@ export function unarmedStats() {
 
 // 방어력 → 피해 감소율 (많이 쌓을수록 효율이 떨어지고 상한 있음)
 export function armorReduction(armor) {
-  return Math.min(armor / (armor + ARMOR_K), ARMOR_MAX_REDUCTION);
+  return armorReductionOf(armor); // 식은 util 한 곳 (난이도 방어력 패널티도 같은 식 - systems/elements.js)
 }
 
 export function recalcGearStats() {

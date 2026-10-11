@@ -78,3 +78,32 @@ it('보스 처치 → 좋은 등급 전리품 + 버튼 대기(웨이브 안 나�
     expect(m.game.gameState).toBe('victory');
   } finally { env.restore(); }
 });
+
+it('난입 도살자: 웨이브 도중 정해진 시간이 되면 경고 없이 한 마리 / 난이도 저항·방어력 패널티', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    const m = await boot();
+    const el = await import('../src/systems/elements.js');
+    const { DIFFICULTY } = await import('../src/data/difficulty.js');
+    m.game.cows.length = 0;
+    m.game.wave = 7; // 2막 2웨이브
+    vi.spyOn(Math, 'random').mockReturnValue(0.01); // 난입 당첨
+    m.startNextWave();
+    vi.restoreAllMocks();
+    expect(m.game.invade && m.game.invade.kind).toBe('butcherCow');
+    const n = m.game.cows.length;
+    m.updateInvade(m.game.invade.t + 0.01);
+    expect(m.game.cows.length).toBe(n + 1);
+    expect(m.game.cows[m.game.cows.length - 1].kind).toBe('butcherCow');
+    expect(m.game.invade).toBe(null);
+    // 난이도 패널티: 극한이면 저항 -60%(음수 = 더 아픔), 방어력 -40%
+    const h = m.game.hero;
+    h.resist.fire = 0.5; h.gearArmor = 400; h.armorReduction = m.armorReductionOf(400);
+    m.game.run.resistPenalty = DIFFICULTY.extreme.resistPenalty; m.game.run.armorPenalty = DIFFICULTY.extreme.armorPenalty;
+    expect(el.heroResist('fire')).toBeCloseTo(0.5 - 0.6);
+    expect(el.heroArmorReduction()).toBeCloseTo(m.armorReductionOf(400 * 0.6));
+    expect(el.resolveHeroDamage({ fire: 100 }).total).toBe(110);
+    m.game.run.resistPenalty = 0; m.game.run.armorPenalty = 0;
+    expect(el.heroResist('fire')).toBe(0.5);
+  } finally { vi.restoreAllMocks(); env.restore(); }
+});

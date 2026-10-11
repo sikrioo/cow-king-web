@@ -156,12 +156,12 @@ export function drawMonster(c, ctx, t) {
     ctx.restore();
   }
 
-  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 'attack'
-                     : c.state === 'slamPrep' ? 'attack' // 카우킹 대지 강타: 무기를 치켜들었다 내리침 // 조준(궁수) = 활을 앞으로 든 자세, 도약(버서커)
+  const visualState = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' || c.state === 'butcherCharge' ? 'attack' // 돌진(카우킹·도살자)·조준·도약
+                     : c.state === 'slamPrep' ? 'attack' // 카우킹 대지 강타: 무기를 치켜들었다 내리침
                      : c.state === 'dazed' ? 'stunned' // 카우킹 벽에 부딪혀 멍함
                      : (c.state === 'telegraph' || c.state === 'recover' || c.state === 'fusing' || c.state === 'zapping') ? 'idle'
                      : c.state;
-  const visualElapsed = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' ? 0.16 : c.stateElapsed;
+  const visualElapsed = c.state === 'charging' || c.state === 'aiming' || c.state === 'leaping' || c.state === 'bossCharging' || c.state === 'butcherCharge' ? 0.16 : c.stateElapsed;
 
   if (c.ccKind === 'poly' && c.stunTimer > 0) { // 변이: 소 대신 양 (체력바는 그대로)
     drawSheep(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, true, c.flash > 0);

@@ -8,17 +8,20 @@ import { BOSS_WAVE } from './balance.js';
 
 export const ACT_SCENE = 3;        // 막 전환 장면 (어두워졌다 밝아지며 바닥이 바뀜)
 export const BOSS_ESCORTS = 4;
-export const ACT_WAVE_SIZE = { base: 6, perWave: 4, perAct: 3 }; // 마리 수 = base + 막 안 웨이브 × perWave + 막 번호 × perAct
+export const ACT_WAVE_SIZE = { base: 6, perWave: 4, perAct: 3 };
+// 난입 도살자 (2026-10-11 사용자: 경고 없이 그냥 등장 - 나중에 소리만): 막 안 INVADE.minActWave번째 웨이브부터(보스 웨이브 제외) 웨이브마다 chance 확률로
+//   웨이브가 시작되고 delay[0]~delay[1]초 사이 어느 순간 주인공 주변에 한 마리 (종류 = 막의 invader)
+export const INVADE = { chance: 0.15, minActWave: 2, delay: [5, 15] }; // 마리 수 = base + 막 안 웨이브 × perWave + 막 번호 × perAct
 
 export const ACTS = [
   {
     id: 'ranch', name: '1막 · 왕의 목장', sub: 'SURVIVE THE PASTURE', waves: BOSS_WAVE,
-    boss: 'boss', bossName: 'THE COW KING', bossSub: '왕의 목장에 입장했습니다', bossDrops: 4,
+    boss: 'boss', bossName: 'THE COW KING', bossSub: '왕의 목장에 입장했습니다', bossDrops: 4, invader: 'butcherCow',
     normals: { normal: 1 }, elites: ELITE_KINDS, ground: null
   },
   {
     id: 'graveyard', name: '2막 · 저주받은 묘지', sub: '죽은 자들이 깨어난다', waves: 4,
-    boss: 'skeletonKing', bossName: 'THE SKELETON KING', bossSub: '묘지의 주인이 일어섰습니다', bossDrops: 5,
+    boss: 'skeletonKing', bossName: 'THE SKELETON KING', bossSub: '묘지의 주인이 일어섰습니다', bossDrops: 5, invader: 'butcherCow',
     normals: { skeleton: 4, skeletonSpear: 2, skeletonArcher: 2, paleSoul: 1, normal: 2 }, elites: ['skeletonShield', 'skeletonBrute', 'tough', 'cold', 'fanatic', 'shaman', 'venom'],
     ground: {
       base: '#2c3330', shades: ['#29302d', '#2c3330', '#313a35', '#36403a'], dirt: '#3e3a33', dirtEdge: '#343530',
@@ -34,7 +37,7 @@ export const ACTS = [
   },
   {
     id: 'hell', name: '3막 · 지옥문', sub: '불타는 땅이 열린다', waves: 4,
-    boss: 'demonKing', bossName: 'THE DEMON COW KING', bossSub: '지옥의 군주가 내려왔습니다', bossDrops: 6,
+    boss: 'demonKing', bossName: 'THE DEMON COW KING', bossSub: '지옥의 군주가 내려왔습니다', bossDrops: 6, invader: 'butcherDemon',
     normals: { imp: 5, burningSoul: 2, skeletonSpear: 1, skeletonArcher: 1 }, elites: ['demonCurser', 'demonBerserker', 'skeletonShield', 'skeletonBrute', 'pyro', 'burning'],
     ground: {
       base: '#3a1414', shades: ['#341212', '#3a1414', '#421616', '#4a1a16'], dirt: '#241010', dirtEdge: '#5a1a10',

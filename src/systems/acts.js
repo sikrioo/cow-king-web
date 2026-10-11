@@ -29,7 +29,7 @@ export function updateActFlow(dt) {
       game.act = Math.min(ACTS.length - 1, game.act + 1);
       game.cows.forEach((c) => { if (c.body) World.remove(world, c.body); }); // 남은 호위는 사라짐
       game.cows = [];
-      game.hazards = []; game.hellfires = []; game.corpses = []; game.projectiles = [];
+      game.hazards = []; game.hellfires = []; game.corpses = []; game.projectiles = []; game.invade = null;
     }
     if (game.actScene <= 0) { game.actScene = 0; game.waveTransition = FIRST_WAVE_DELAY; }
     return true;

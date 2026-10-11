@@ -33,9 +33,9 @@ export const MONSTERS = {
   demonCurser:   { hp: 55,  dmg: 20, scaleMul: 1,    speedMul: 0.9,  aggroMul: 2.2, exp: 30,  demon: 'curser', resist: { fire: 0.5, cold: -0.25 }, ring: '#b04dff', colors: { hide: '#4a1030', horn: '#1a0a14', snout: '#2e0a1e', eye: '#d98bff' } },
   demonBerserker: { hp: 110, dmg: 45, scaleMul: 1.25, speedMul: 1.0,  aggroMul: 1.4, exp: 35,  demon: 'berserker', resist: { fire: 0.5, cold: -0.25 }, ring: '#ff2d2d', colors: { hide: '#8a1414', horn: '#1a0606', snout: '#520a0a', eye: '#ffef5a' } },
   demonKing:     { hp: 900, dmg: 50, scaleMul: 2.6,  speedMul: 0.85, aggroMul: 2.4, exp: 500, demon: 'king', boss: true, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.5, cold: -0.15, lightning: 0.2, poison: 0.2 }, ring: '#b04dff', colors: { hide: '#5a0f14', horn: '#14060a', snout: '#3a0a0e', eye: '#ff5ad8' } },
-  // 도살자 (2026-10-11 시안, 관리자 전용 - 확인 뒤 보스 웨이브 엘리트로): 크기 = 주인공의 약 1.5배(몸 반지름 30 × 0.4 × 2.1 ≈ 25, 주인공 17), 빠르게 달려들어 짧게 연타, 세 번째마다 주인공 기절 (entities/butcherBehaviors.js)
-  butcherCow:   { hp: 140, dmg: 35, scaleMul: 2.1, speedMul: 1.25, aggroMul: 3, exp: 45, adminOnly: true, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
-  butcherDemon: { hp: 170, dmg: 40, scaleMul: 2.1, speedMul: 1.3,  aggroMul: 3, exp: 60, adminOnly: true, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
+  // 도살자 (2026-10-11): 웨이브 도중 예고 없이 난입(data/acts.js INVADE), 크기 = 주인공의 약 1.5배(몸 반지름 30 × 0.4 × 2.1 ≈ 25, 주인공 17), 돌진·광폭·짧은 연타, 세 번째 타격과 돌진에 기절 (entities/butcherBehaviors.js)
+  butcherCow:   { hp: 140, dmg: 35, scaleMul: 2.1, speedMul: 1.25, aggroMul: 3, exp: 45, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
+  butcherDemon: { hp: 170, dmg: 40, scaleMul: 2.1, speedMul: 1.3,  aggroMul: 3, exp: 60, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -84,6 +84,36 @@ export const SOUL_PALETTES = {
 // 몬스터가 든 무기 크기 배율 (없으면 1) - 2026-10-11 사용자: 카우킹 2배, 악마 카우킹 1.6배, 해골 카우 킹 1배
 export const WEAPON_SCALE = { boss: 2, demonKing: 1.6, skeletonKing: 1 };
 export const weaponScaleOf = (kind) => WEAPON_SCALE[kind] || 1;
+
+// 몬스터가 쓰는 기술 (관리자 몬스터 표 - 설명만, 동작은 entities/*Behaviors.js). 없으면 일반 근접만
+export const MONSTER_SKILLS = {
+  normal: [], tough: [], fast: [],
+  cold: ['냉기 근접', '죽을 때 냉기 노바(둔화)'],
+  charger: ['돌진(예고선 → 직선 돌진, 끝나면 경직)'],
+  fanatic: ['광신 오라(주변 아군 이동속도 +40%)'],
+  burning: ['화염 근접', '지나간 자리 불바닥'],
+  exploder: ['점화 → 자폭(주변 큰 피해)'],
+  shaman: ['다친 아군 치유', '거리 유지'],
+  shocker: ['번개 충전 → 긴 번개 빔', '거리 유지'],
+  pyro: ['메테오(멀리)', '파이어볼(중간)', '화염 벽(가까이)', '거리 유지'],
+  venom: ['독 근접', '독 구름(가까우면·죽을 때)'],
+  boss: ['대지 강타(안쪽부터 고리가 차례로 터짐)', '황소 돌진(벽에 박히면 멍함)', '무리의 함성(소환 + 흥분)', '2단계: 강타 3겹·돌진 2연속', '큰 도끼를 머리 위로 휘두름'],
+  skeleton: ['시체 폭발 대상(킹이 부풀려 터뜨림)'],
+  skeletonShield: ['물리 저항 50%(방패)'],
+  skeletonSpear: ['찌르기(근접 사거리 +30)'],
+  skeletonBrute: ['대검·도끼를 머리 위로 크게 내리침(0.45초에 맞음)'],
+  skeletonArcher: ['조준(조준선) → 화살', '거리 유지'],
+  archer: ['조준(조준선) → 화살', '거리 유지'],
+  skeletonKing: ['해골 일으키기(시체 자리 먼저)', '뼈 창 부채꼴(3 → 2단계 5)', '시체 폭발(부하가 부풀다 터짐)', '죽으면 부하도 쓰러짐'],
+  burningSoul: ['불규칙하게 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
+  paleSoul: ['불규칙하게 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
+  imp: ['주인공 옆으로 순간이동'],
+  demonCurser: ['저주(약화·둔화·봉인 중 하나, 죽이면 풀림)', '지옥불 구슬', '거리 유지'],
+  demonBerserker: ['예고 → 도약 내려찍기', '체력 절반 아래 분노'],
+  demonKing: ['지옥문(임프 소환)', '지옥불 원(분노 시 5개)', '지옥 폭발(분노 시 2연속)', '체력 절반 아래 분노', '악마 대검을 머리 위로 휘두름'],
+  butcherCow: ['돌진(맞으면 기절, 벽에 박히면 멍함)', '짧은 연타(세 번째마다 기절)', '체력 절반 아래 광폭(빨라짐·세짐·더 아픔)', '웨이브 도중 난입'],
+  butcherDemon: ['돌진(지나간 자리 불길, 맞으면 기절)', '화염 연타(세 번째마다 기절)', '체력 절반 아래 광폭', '웨이브 도중 난입(3막)']
+};
 
 // 몬스터 이름 (관리자 페이지·안내 문구용)
 export const MONSTER_LABEL = {

@@ -10,7 +10,7 @@ import {
 import { game } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { clampToPen } from '../world/arena.js';
-import { ACT_WAVE_SIZE, BOSS_ESCORTS } from '../data/acts.js';
+import { ACT_WAVE_SIZE, BOSS_ESCORTS, INVADE } from '../data/acts.js';
 import { waveInfo } from '../util.js';
 
 // 이번 막에서 나올 종류: 엘리트 확률(웨이브가 갈수록) → 막의 엘리트 목록, 아니면 막의 일반 비중대로 (data/acts.js)
@@ -66,10 +66,24 @@ export function startNextWave() {
     for (let i = 0; i < BOSS_ESCORTS; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind({ normals: info.def.normals }), { pos: packPoint(c), hunt: true, ...diffOpts() }));
     return;
   }
+  // 난입 도살자: 이번 웨이브 도중 어느 순간 (경고 없음)
+  game.invade = info.actWave >= INVADE.minActWave && info.def.invader && Math.random() < INVADE.chance
+    ? { t: INVADE.delay[0] + Math.random() * (INVADE.delay[1] - INVADE.delay[0]), kind: info.def.invader } : null;
   const size = ACT_WAVE_SIZE.base + info.actWave * ACT_WAVE_SIZE.perWave + info.act * ACT_WAVE_SIZE.perAct; // 막 안에서 웨이브마다 늘어남
   const packs = WAVE_PACKS_MIN + Math.floor(Math.random() * (WAVE_PACKS_MAX - WAVE_PACKS_MIN + 1));
   const centers = Array.from({ length: packs }, () => pickPackCenter());
   for (let i = 0; i < size; i++) {
     game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind(info.def), { pos: packPoint(centers[i % packs]), hunt: true, ...diffOpts() }));
   }
+}
+
+// 난입 도살자 (game.invade): 시간이 되면 주인공 주변 링에 불쑥 - 경고 없이 (웨이브가 이미 끝났으면 취소)
+export function updateInvade(dt) {
+  const v = game.invade;
+  if (!v) return;
+  if (!game.cows.some((c) => c.state !== 'dead')) { game.invade = null; return; }
+  v.t -= dt;
+  if (v.t > 0) return;
+  game.invade = null;
+  game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, v.kind, { pos: pickPackCenter(), hunt: true, ...diffOpts() }));
 }

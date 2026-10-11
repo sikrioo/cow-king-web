@@ -10,6 +10,7 @@ import { game, dev } from '../state.js';
 import { recordRun } from '../save.js';
 import { spawnDamageNumber, spawnHitParticles, spawnShockwave, floatText } from './fx.js';
 import { curseMul } from './curses.js';
+import { armorReductionOf } from '../util.js';
 
 export function toPacket(dmg) {
   return typeof dmg === 'number' ? { phys: dmg } : dmg;
@@ -22,8 +23,16 @@ export function rollLightning(base, minBonus = 0) {
   return Math.max(1, Math.round(base * (lo + Math.random() * (LIGHTNING_MAX - lo))));
 }
 
+// 난이도 저항 패널티(game.run.resistPenalty)를 빼고 상한 - 음수면 더 아픔
 export function heroResist(el) {
-  return Math.min(game.hero.resist[el] || 0, RESIST_CAP);
+  return Math.min((game.hero.resist[el] || 0) - ((game.run && game.run.resistPenalty) || 0), RESIST_CAP);
+}
+
+// 물리 피해 감소율: 방어력에서 난이도 방어력 패널티(game.run.armorPenalty)만큼 깎고 계산
+export function heroArmorReduction() {
+  const pen = (game.run && game.run.armorPenalty) || 0;
+  if (!pen) return game.hero.armorReduction;
+  return armorReductionOf((game.hero.gearArmor || 0) * (1 - pen));
 }
 
 // 주인공이 받는 피해: 물리 = 방어력, 원소 = 저항 → { total(최소 1), parts: { phys|원소: 정수 }, dominant(가장 큰 항목) }
@@ -35,7 +44,7 @@ export function resolveHeroDamage(packet) {
     total += v;
     if (v > best) { best = v; dominant = key; }
   };
-  if (packet.phys) add('phys', Math.round(packet.phys * (1 - game.hero.armorReduction)));
+  if (packet.phys) add('phys', Math.round(packet.phys * (1 - heroArmorReduction())));
   ELEMENTS.forEach((el) => { if (packet[el]) add(el, Math.round(packet[el] * (1 - heroResist(el)))); });
   return { total: Math.max(1, total), parts, dominant };
 }

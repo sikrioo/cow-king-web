@@ -13,3 +13,8 @@ it('일반 카우 20마리면 무기가 여러 종류로 섞인다 (위상값 0~
   for (let i = 0; i < 20; i++) seen.add(weaponFor('normal', (i * 0.4937) % 10));
   expect(seen.size).toBeGreaterThanOrEqual(4);
 });
+
+it('관리자 몬스터 표: 모든 몬스터에 기술 설명(없으면 빈 목록)이 있음', async () => {
+  const { MONSTERS, MONSTER_SKILLS } = await import('../src/data/monsters.js');
+  expect(Object.keys(MONSTER_SKILLS).sort()).toEqual(Object.keys(MONSTERS).sort());
+});
