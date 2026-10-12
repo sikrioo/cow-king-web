@@ -1,7 +1,7 @@
 // 장비: 장착 규칙, 강화, 감정, 시작 장비/테스트 가방, 장비 스탯 합산 (생성은 systems/itemGen.js - 여기서 다시 내보냄)
 // 감정 대상은 인덱스가 아니라 객체 참조(ui.identifyingItem)
 import {
-  MAX_MANA, LEVEL_STAT_PER_POINT, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, UPGRADE_STAT_MULT,
+  MAX_MANA, LEVEL_STAT_PER_POINT, MOVE_SPEED_MAX_BONUS, INVENTORY_SIZE, IDENTIFY_DURATION, UPGRADE_SUCCESS_CHANCE, UPGRADE_STAT_MULT,
   ARMOR_K, ARMOR_MAX_REDUCTION, BASE_DAMAGE, ATTACK_COOLDOWN
 } from '../data/balance.js';
 import {
@@ -253,7 +253,7 @@ export function recalcGearStats() {
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
   atkSpeed += (game.hero.levelStats.atkSpeed || 0) * LEVEL_STAT_PER_POINT.atkSpeed;
   castSpeed += (game.hero.levelStats.castSpeed || 0) * LEVEL_STAT_PER_POINT.castSpeed;
-  atkPower += (game.hero.levelStats.atkPower || 0) * LEVEL_STAT_PER_POINT.atkPower;
+  game.hero.weaponDmgPct = (game.hero.levelStats.atkPower || 0) * LEVEL_STAT_PER_POINT.atkPower; // 공격력 포인트 = 무기 피해 % (combat.rollWeaponDamage)
   defense += (game.hero.levelStats.defense || 0) * LEVEL_STAT_PER_POINT.defense;
   evasion += (game.hero.levelStats.evasion || 0) * LEVEL_STAT_PER_POINT.evasion;
   moveSpeed += (game.hero.levelStats.moveSpeed || 0) * LEVEL_STAT_PER_POINT.moveSpeed;
@@ -281,7 +281,7 @@ export function recalcGearStats() {
     main: weaponStats(game.hero.equipment.weaponMain) || unarmedStats(),
     off: weaponStats(game.hero.equipment.weaponOff)
   };
-  game.hero.gearSpeedMult = 1 + moveSpeed;
+  game.hero.gearSpeedMult = 1 + Math.min(moveSpeed, MOVE_SPEED_MAX_BONUS); // 이동속도 증가 상한
   game.hero.gearMaxHp = Math.round(health);
   game.hero.gearMaxMana = Math.round(mana);
 

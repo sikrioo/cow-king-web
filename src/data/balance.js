@@ -107,7 +107,15 @@ export function expForLevel(level) {
 }
 // 스탯 1포인트당 실제 증가량 (장비 옵션과 동일한 계열로 합산됨)
 // 포인트당 효과 - 기본 체력 5 / 몬스터 체력 2~3 기준이라 공격력·체력은 아주 작게 (이전엔 공격력 +1, 체력 +2씩이라 한 레벨에 몬스터가 다 한 방이었음)
-export const LEVEL_STAT_PER_POINT = { atkPower: 2, defense: 0.01, evasion: 0.01, atkSpeed: 0.01, castSpeed: 0.03, moveSpeed: 0.01, health: 10, mana: 3 };
+// 스탯 포인트 1점당 (2026-10-12 사용자: 최대 레벨 100(포인트 약 495점)과 장비 수치까지 고려해 낮춤 - 한 스탯에 몰아도 장비 없이 상한에 못 닿게)
+//   atkPower = 무기 피해 +% (고정 공격력이 아니라 - 좋은 무기일수록 같이 강해짐, 디아의 힘처럼), 퍼센트 스탯은 100~200점이 들어가야 의미 있게
+export const LEVEL_STAT_PER_POINT = { atkPower: 0.005, defense: 0.0015, evasion: 0.0015, atkSpeed: 0.0025, castSpeed: 0.0025, moveSpeed: 0.001, health: 5, mana: 3 };
+// 스탯 화면에서 장비 옵션과 다르게 보여야 하는 것 (공격력 포인트 = 무기 피해 %)
+export const LEVEL_STAT_LABEL = { atkPower: '무기 피해' };
+// 전체 상한 (장비·카드·스탯 포인트 합): 블락·회피, 이동속도 증가
+export const BLOCK_CAP = 0.6;
+export const EVASION_CAP = 0.5;
+export const MOVE_SPEED_MAX_BONUS = 0.5;
 export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana', ',': 'castSpeed' };
 
 // --- 아이템 (가방/감정/강화/드랍)

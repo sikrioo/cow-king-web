@@ -19,7 +19,14 @@ export const GOLDEN_OVERRIDES = {
   'exact.rarity.rare.statMin': undefined,
   'exact.rarity.rare.statMax': undefined,
   'exact.rarity.legendary.statMin': undefined,
-  'exact.rarity.legendary.statMax': undefined
+  'exact.rarity.legendary.statMax': undefined,
+  // 2026-10-12: 스탯 포인트 1점당 수치를 최대 레벨 100·장비 수치 기준으로 낮춤, 공격력 포인트는 무기 피해 % (사용자 결정)
+  'exact.progression.perPoint.defense': 0.0015,
+  'exact.progression.perPoint.evasion': 0.0015,
+  'exact.progression.perPoint.atkSpeed': 0.0025,
+  'exact.progression.perPoint.moveSpeed': 0.001,
+  'exact.progression.perPoint.health': 5,
+  'exact.progression.perPoint.atkPower': 0.005
 };
 
 // 골든에 없던 항목을 **새로 추가**한 경우 (부모 경로는 있어야 함). 값은 현재 단위(×10)
@@ -58,9 +65,9 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.skillUnlockLevel.frostnova': 2,
   'exact.progression.skillUnlockLevel.chain': 4,
   'exact.progression.skillUnlockLevel.orb': 6,
-  // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 10~25% + 스탯 포인트 3%)
+  // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 10~25% + 스탯 포인트 - 2026-10-12 3% → 0.25%)
   'exact.statDef.castSpeed': { label: '시전속도', min: 0.10, max: 0.25, fmtAtMax: '+25%' },
-  'exact.progression.perPoint.castSpeed': 0.03,
+  'exact.progression.perPoint.castSpeed': 0.0025,
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,
   'exact.progression.skillUnlockLevel.teleport': 3,

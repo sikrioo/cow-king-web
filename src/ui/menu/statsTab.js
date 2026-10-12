@@ -1,5 +1,5 @@
 // 메뉴 - 스탯 탭 (스탯 포인트 투자, 스킬 레벨, 카드 강화 합계)
-import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS } from '../../data/balance.js';
+import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, LEVEL_STAT_KEYS, LEVEL_STAT_LABEL } from '../../data/balance.js';
 import { STAT_DEF } from '../../data/items.js';
 import { SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL } from '../../data/skills.js';
 import { learnedLevel, skillGearBonus } from '../../util.js';
@@ -32,13 +32,13 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.textAlign = 'left';
     ctx.font = '12px sans-serif';
     ctx.fillStyle = '#dfe9d8';
-    ctx.fillText(`[${keyByStat[sk].toUpperCase()}] ${STAT_DEF[sk].label}`, x + 16, row);
+    ctx.fillText(`[${keyByStat[sk].toUpperCase()}] ${LEVEL_STAT_LABEL[sk] || STAT_DEF[sk].label}`, x + 16, row);
 
     const btn = { x: x + w - 16 - 36, y: row - 17, w: 36, h: 24 };
     ui.invButtons.push({ ...btn, fn: () => {
       if (game.hero.statPoints <= 0) { showInvToast('여유 포인트가 없어', '#ff8a80'); return; }
       trySpendStatPoint(sk);
-      showInvToast(`${STAT_DEF[sk].label} +1`, '#ffe066');
+      showInvToast(`${LEVEL_STAT_LABEL[sk] || STAT_DEF[sk].label} +1`, '#ffe066');
     } });
     ctx.fillStyle = canSpend ? 'rgba(255,224,102,0.25)' : 'rgba(255,255,255,0.06)';
     ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
@@ -55,7 +55,8 @@ export function drawStatsTab(ctx, x, startRow, w) {
     ctx.textAlign = 'right';
     ctx.font = '11px sans-serif';
     ctx.fillStyle = pts > 0 ? '#ffe066' : '#777';
-    const bonusTxt = STAT_DEF[sk].fmt(pts * LEVEL_STAT_PER_POINT[sk]);
+    const v = pts * LEVEL_STAT_PER_POINT[sk];
+    const bonusTxt = STAT_DEF[sk].flat && !LEVEL_STAT_LABEL[sk] ? STAT_DEF[sk].fmt(v) : `+${(v * 100).toFixed(1)}%`; // 퍼센트는 소수 한 자리 (1점이 작아서)
     ctx.fillText(`${pts}포인트 (${bonusTxt})`, btn.x - 10, row);
     row += 32;
   });

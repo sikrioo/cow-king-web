@@ -1,6 +1,6 @@
 // 캔버스 HUD (체력·마나 구슬, 스태미나, 스탯, 버프, 콤보)
 import {
-  COMBO_WINDOW, RUN_SPEED, WALK_SPEED, HERO_SLOW_MULT, BASE_BLOCK, BASE_EVASION, VITALITY_DURATION, SPEED_BUFF_DURATION,
+  COMBO_WINDOW, RUN_SPEED, WALK_SPEED, HERO_SLOW_MULT, BASE_BLOCK, BASE_EVASION, EVASION_CAP, BLOCK_CAP, VITALITY_DURATION, SPEED_BUFF_DURATION,
   ATTACK_BUFF_DURATION, DEFENSE_BUFF_DURATION, MAX_LEVEL
 } from '../data/balance.js';
 import { ITEM_STYLE } from '../data/items.js';
@@ -78,10 +78,11 @@ export function drawStatReadout(ctx) {
   // 공격력 = 무기 피해 범위(쌍수면 두 무기를 합친 범위) + 공격력 보너스
   const ws = h.weaponStats;
   const atkBonus = h.attackBonus + h.gearAtkPower;
-  const atkMin = Math.min(ws.main.min, ws.off ? ws.off.min : Infinity) + atkBonus;
-  const atkMax = Math.max(ws.main.max, ws.off ? ws.off.max : -Infinity) + atkBonus;
-  const totalBlock = Math.min(BASE_BLOCK + h.defenseChance + h.gearDefense, 0.85);
-  const totalEvasion = Math.min(BASE_EVASION + h.gearEvasion, 0.75);
+  const pct = 1 + (h.weaponDmgPct || 0); // 공격력 포인트 = 무기 피해 % (combat.rollWeaponDamage와 같은 반올림)
+  const atkMin = Math.round(Math.min(ws.main.min, ws.off ? ws.off.min : Infinity) * pct) + atkBonus;
+  const atkMax = Math.round(Math.max(ws.main.max, ws.off ? ws.off.max : -Infinity) * pct) + atkBonus;
+  const totalBlock = Math.min(BASE_BLOCK + h.defenseChance + h.gearDefense, BLOCK_CAP);
+  const totalEvasion = Math.min(BASE_EVASION + h.gearEvasion, EVASION_CAP);
   // 지금 이동 속도 배율 (장비·물약 × 달리기 × 둔화) - 주인공 이동 계산과 같은 항목
   const runMul = h.running ? RUN_SPEED / WALK_SPEED : 1;
   const slowMul = h.slowTimer > 0 ? HERO_SLOW_MULT : 1;

@@ -1,7 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, WEAPON_ARC, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  BASE_BLOCK, BASE_EVASION, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
+  BASE_BLOCK, BASE_EVASION, BLOCK_CAP, EVASION_CAP, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
@@ -153,8 +153,11 @@ function nextSwingWeapon() {
 }
 
 // 무기 피해 굴림 (min~max 정수)
+// 공격력 스탯 포인트 = 무기 피해 % (hero.weaponDmgPct - gear.recalcGearStats)
 export function rollWeaponDamage(ws = game.hero.weaponStats.main) {
-  return ws.min + Math.floor(Math.random() * (ws.max - ws.min + 1));
+  const roll = ws.min + Math.floor(Math.random() * (ws.max - ws.min + 1));
+  const pct = game.hero.weaponDmgPct || 0;
+  return pct ? Math.round(roll * (1 + pct)) : roll;
 }
 
 // 주인공 한 타 피해 = 무기 굴림 + 공격력(장비/레벨) + 공격물약
@@ -205,14 +208,14 @@ export function damageCow(c, dmg, heavy = null) {
 export function hitPlayer(fromX, fromY, dmg) {
   if (!game.hero.alive || game.hero.invuln > 0 || dev.god) return 0;
 
-  const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, 0.75);
+  const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, EVASION_CAP);
   if (Math.random() < totalEvasion) {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'MISS', '#8fe8ff');
     game.hero.invuln = 0.25;
     return 0;
   }
 
-  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense + masteryBonus(game.hero, 'block'), 0.85); // 방패 마스터리
+  const totalBlock = Math.min(BASE_BLOCK + game.hero.defenseChance + game.hero.gearDefense + masteryBonus(game.hero, 'block'), BLOCK_CAP); // 방패 마스터리
   const blocked = Math.random() < totalBlock;
   let tookDamage = 0;
   if (!blocked) {

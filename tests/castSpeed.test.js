@@ -26,13 +26,13 @@ it('전사: 시전속도 +50%면 스킬 대기시간 2/3, 휠윈드 지속 시�
   try {
     const m = await boot('warrior');
     const h = m.game.hero;
-    h.levelStats.castSpeed = 50 / 3; m.recalcGearStats(); // 포인트당 3%
+    h.levelStats.castSpeed = 0.5 / m.LEVEL_STAT_PER_POINT.castSpeed; m.recalcGearStats(); // +50%
     expect(h.gearCastSpeed).toBeCloseTo(0.5);
     m.tryWarCry();
     expect(h.warcryCooldown).toBeCloseTo(m.WARCRY_COOLDOWN / 1.5);
     m.tryWhirlwind();
     expect(h.whirlwindCooldown).toBeCloseTo(m.WHIRLWIND_COOLDOWN / 1.5 + m.WHIRLWIND_DURATION);
-    h.levelStats.castSpeed = 500; m.recalcGearStats();
+    h.levelStats.castSpeed = 5 / m.LEVEL_STAT_PER_POINT.castSpeed; m.recalcGearStats();
     expect(m.castSpeedMul(h)).toBeCloseTo(1 / m.CAST_SPEED_MAX_MULT);
   } finally { env.restore(); }
 });
@@ -42,7 +42,7 @@ it('마법사: 화염구는 시전속도, 마력탄은 공격속도', async () =
   try {
     const m = await boot('sorc');
     const h = m.game.hero;
-    h.levelStats.castSpeed = 100 / 3; m.recalcGearStats();
+    h.levelStats.castSpeed = 1 / m.LEVEL_STAT_PER_POINT.castSpeed; m.recalcGearStats(); // +100%
     m.tryFireballSpell();
     expect(h.spellCd.fireball).toBeCloseTo(m.SPELLS.fireball.cooldown / 2);
     m.tryBolt();
