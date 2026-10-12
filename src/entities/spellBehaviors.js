@@ -14,6 +14,8 @@ import { hitPlayer } from '../systems/combat.js';
 import { spawnShockwave, floatText } from '../systems/fx.js';
 import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
 import { bossDown } from '../systems/acts.js';
+import { PRIEST_HEAL_CD, PRIEST_CAST, PRIEST_HEAL_RADIUS, PRIEST_HEAL_AMOUNT, PRIEST_WAVE_TIME, PRIEST_RECHECK } from '../data/balance.js';
+import { spawnDamageNumber } from '../systems/fx.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
 
@@ -42,7 +44,53 @@ function release(m) {
 const maxMinions = (m) => (m.phase2 ? NECRO_MAX_MINIONS_P2 : NECRO_MAX_MINIONS);
 const minionsOf = (m) => game.cows.filter((c) => c.summoner === m && c.state !== 'dead').length + game.pendingSpawns.filter((p) => p.summoner === m).length;
 
+// 치유 카우: 반경 안 다친 아군 (자기 포함)
+const hurtNear = (m) => game.cows.filter((c) => c.state !== 'dead' && c.hp < c.maxHp && Math.hypot(c.x - m.x, c.y - m.y) <= PRIEST_HEAL_RADIUS);
+
 export const spellBehaviors = {
+  // 치유 카우 - 주기마다 메이스를 머리 위로 치켜들고(주문, 메이스 끝이 금빛) → 노란 빛이 은은하게 퍼지며 주변 아군 치유
+  priest: {
+    init(m) { m.healCooldown = 1.5 + Math.random() * 1.5; },
+    interrupt(m) { if (m.state === 'casting') m.healCooldown = PRIEST_RECHECK; },
+    update(m, dt) {
+      m.healCooldown -= dt;
+      if (m.state === 'casting') {
+        m.stateElapsed += dt;
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        if (m.stateElapsed >= PRIEST_CAST) {
+          spawnShockwave(m.x, m.y, PRIEST_HEAL_RADIUS, '#ffe066', PRIEST_WAVE_TIME);
+          hurtNear(m).forEach((c) => {
+            const amt = Math.min(PRIEST_HEAL_AMOUNT, c.maxHp - c.hp);
+            c.hp += amt;
+            spawnDamageNumber(c.x, c.y - 50 * c.scale, `+${amt}`, '#ffe066');
+            spawnHitParticles(c.x, c.y - 20 * c.scale, '#fff3a8', 4);
+          });
+          m.healCooldown = PRIEST_HEAL_CD;
+          m.setState('idle', 0.3);
+        }
+        return true;
+      }
+      if (m.healCooldown <= 0) {
+        if (hurtNear(m).length) { m.setState('casting', 0); Body.setVelocity(m.body, { x: 0, y: 0 }); return true; }
+        m.healCooldown = PRIEST_RECHECK;
+      }
+      return false;
+    },
+    // 치켜드는 동안 발밑에 노란 빛이 은은하게 차오름 (난수 없음)
+    drawUnder(m, ctx, t) {
+      if (m.state !== 'casting') return;
+      const k = Math.min(1, m.stateElapsed / PRIEST_CAST);
+      ctx.save();
+      [[1, 0.10], [0.66, 0.14], [0.36, 0.2]].forEach(([rr, a]) => {
+        const R = 40 * m.scale * 2.2 * rr * (0.4 + k * 0.6);
+        ctx.globalAlpha = a * (0.5 + k * 0.5) * (0.85 + Math.sin(t * 8) * 0.15);
+        ctx.fillStyle = '#ffe066';
+        ctx.beginPath(); ctx.ellipse(m.x, m.y, R, R * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.restore();
+    }
+  },
+
   // 해골 카우 (부하): 해골 카우 킹의 '시체 폭발'에 걸리면 bloatTimer초 동안 초록빛으로 부풀다 터짐
   skeleton: {
     update(c, dt) {

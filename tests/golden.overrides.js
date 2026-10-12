@@ -26,6 +26,8 @@ export const GOLDEN_OVERRIDES = {
 export const GOLDEN_ADDITIONS = {
   // 2026-10-06: 원소 1단계 - 독 카우 추가 (사용자 결정: 기존 원소 몬스터 3종 + 독 카우 1종)
   'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
+  // 2026-10-12: 치유 카우 (사용자 요청 - 메이스를 치켜들고 범위 치유)
+  'exact.monsters.priest': { hp: 70, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-06: 화염술사 카우(메테오) 추가
   'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-10: 해골 카우·해골 카우 킹 (관리자 페이지에만 - 사용자 요청)

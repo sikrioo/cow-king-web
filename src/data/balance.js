@@ -381,3 +381,12 @@ export const BUTCHER_BERSERK_HP = 0.5;
 export const BUTCHER_BERSERK_SPEED = 1.5;
 export const BUTCHER_BERSERK_DAMAGE = 1.2;
 export const BUTCHER_BERSERK_TAKEN = 0.2;
+
+// 치유 카우 (2026-10-12): PRIEST_HEAL_CD초마다 반경 PRIEST_HEAL_RADIUS 안에 다친 아군이 있으면 PRIEST_CAST초 메이스를 치켜듦 → 반경 안 아군(자기 포함) PRIEST_HEAL_AMOUNT 치유
+//   노란 빛이 PRIEST_WAVE_TIME초에 걸쳐 은은하게 퍼짐. 치유할 대상이 없으면 PRIEST_RECHECK초 뒤 다시 살핌
+export const PRIEST_HEAL_CD = 5;
+export const PRIEST_CAST = 0.8;
+export const PRIEST_HEAL_RADIUS = 180;
+export const PRIEST_HEAL_AMOUNT = 30;
+export const PRIEST_WAVE_TIME = 0.9;
+export const PRIEST_RECHECK = 1;

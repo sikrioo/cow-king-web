@@ -272,7 +272,20 @@ function drawHellCleaver(ctx, animT = 0) {
   ctx.beginPath(); ctx.moveTo(46, -2); ctx.lineTo(53, -6 + f); ctx.lineTo(48, 4); ctx.closePath(); ctx.fill();
 }
 
+// 황금 메이스 (치유 카우): 나무 자루 + 금빛 날개 달린 머리(flanged mace)
+function drawHolyMace(ctx) {
+  shaft(ctx, -30, 36, 4, WOOD);
+  ctx.fillStyle = '#e8c547'; ctx.strokeStyle = '#8a6a1a'; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 6; i++) { // 날개 6개
+    const a = (i / 6) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(44, 0); ctx.lineTo(44 + Math.cos(a) * 11, Math.sin(a) * 11); ctx.lineTo(44 + Math.cos(a + 0.5) * 7, Math.sin(a + 0.5) * 7); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(44, 0, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fff3a8'; ctx.beginPath(); ctx.arc(42, -2, 2, 0, Math.PI * 2); ctx.fill();
+}
+
 export const WEAPON_DRAW = {
+  holymace: drawHolyMace,
   meatcleaver: drawMeatCleaver, hellcleaver: drawHellCleaver,
   bow: drawBow, greatsword: drawGreatsword, battleaxe: drawBattleAxe, demonblade: (ctx, animT) => drawDemonBlade(ctx, -8, 0, 0, BIG_WEAPON_SCALE, animT),
   halberd: drawHalberd, pitchfork: drawPitchfork, club: drawClub, axe: drawAxe, spear: drawSpear,

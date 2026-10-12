@@ -11,6 +11,7 @@ export const MONSTERS = {
   fanatic:  { hp: 60, dmg: 60, scaleMul: 1,   speedMul: 1,    aggroMul: 1,   exp: 30,  ring: '#ff2d55', colors: { hide: '#7a1030', horn: '#ffb8c9', snout: '#4a0a1c', eye: '#ffe066' } },
   burning:  { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 1,   exp: 28,  element: 'fire', resist: { fire: 0.5 }, ring: '#ff7a1a', colors: { hide: '#8a2f12', horn: '#ffcf8a', snout: '#4a1608', eye: '#ffb02e' } },
   exploder: { hp: 30, dmg: 30, scaleMul: 1,   speedMul: 1.7,  aggroMul: 1.6, exp: 22,  ring: '#ff2d2d', colors: { hide: '#5c1414', horn: '#ff9b9b', snout: '#2e0a0a', eye: '#fff066' } },
+  priest:   { hp: 70, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1.3, exp: 32,  halo: true, ring: '#ffe066', colors: { hide: '#e8dcc0', horn: '#ffe9a8', snout: '#a8906a', eye: '#7fd4ff' } }, // 치유 카우 (2026-10-12): 메이스를 치켜들고 주변 아군 범위 치유
   shaman:   { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 32,  ring: '#9f6bff', colors: { hide: '#3a2a5c', horn: '#d9c6ff', snout: '#241a3d', eye: '#7fffd4' } },
   shocker:  { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 1,   exp: 30,  element: 'lightning', resist: { lightning: 0.5 }, ring: '#fff066', colors: { hide: '#8a7a2e', horn: '#fffde0', snout: '#4a4015', eye: '#fff9b0' } },
   pyro:     { hp: 50, dmg: 30, scaleMul: 1,   speedMul: 0.85, aggroMul: 2.8, exp: 35,  element: 'fire', resist: { fire: 0.6 }, ring: '#ff4d1a', colors: { hide: '#5a1f1a', horn: '#ffb36b', snout: '#2e0f0c', eye: '#ffd34d' } },
@@ -49,6 +50,7 @@ export const MONSTER_WEAPONS = {
   burning:  ['torch'],
   exploder: ['club'],
   shaman:   ['staff'],
+  priest:   ['holymace'],
   shocker:  ['rod'],
   venom:    ['pitchfork', 'cleaver'],
   pyro:     ['firestaff'],
@@ -90,7 +92,7 @@ export const WEAPON_STYLE = {
   spear: 'thrust', pitchfork: 'thrust', halberd: 'thrust',
   club: 'chop', hammer: 'chop', axe: 'chop',
   cleaver: 'slash', meatcleaver: 'slash', hellcleaver: 'slash',
-  staff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast',
+  staff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast', holymace: 'cast',
   bow: 'bow',
   greatsword: 'big', battleaxe: 'big', demonblade: 'big'
 };
@@ -99,7 +101,7 @@ export const WEAPON_STYLE = {
 //   목록이면 개체마다 하나 (일반 카우는 섞임). 없으면 hop. 영혼은 떠다녀서 안 씀
 export const MONSTER_GAIT = {
   normal: ['hop', 'trot'], tough: 'stomp', fast: 'scuttle', cold: 'trot', charger: 'trot', fanatic: 'hop', burning: 'trot',
-  exploder: 'scuttle', shaman: 'sway', shocker: 'sway', pyro: 'sway', venom: 'trot', boss: 'stomp',
+  exploder: 'scuttle', shaman: 'sway', priest: 'trot', shocker: 'sway', pyro: 'sway', venom: 'trot', boss: 'stomp',
   skeleton: ['trot', 'hop'], skeletonShield: 'stomp', skeletonSpear: 'trot', skeletonBrute: 'stomp', skeletonArcher: 'trot', archer: 'trot', skeletonKing: 'sway',
   imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
 };
@@ -113,6 +115,7 @@ export const MONSTER_SKILLS = {
   burning: ['화염 근접', '지나간 자리 불바닥'],
   exploder: ['점화 → 자폭(주변 큰 피해)'],
   shaman: ['다친 아군 치유', '거리 유지'],
+  priest: ['메이스를 치켜들고 주변 아군 범위 치유(노란 빛)'],
   shocker: ['번개 충전 → 긴 번개 빔', '거리 유지'],
   pyro: ['메테오(멀리)', '파이어볼(중간)', '화염 벽(가까이)', '거리 유지'],
   venom: ['독 근접', '독 구름(가까우면·죽을 때)'],
@@ -137,7 +140,7 @@ export const MONSTER_SKILLS = {
 // 몬스터 이름 (관리자 페이지·안내 문구용)
 export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
-  burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', shocker: '전기 카우', pyro: '화염술사 카우',
+  burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', priest: '치유 카우', shocker: '전기 카우', pyro: '화염술사 카우',
   venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', butcherCow: '도살자 카우', butcherDemon: '도살자 악마', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
@@ -145,7 +148,7 @@ export const MONSTER_LABEL = {
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
 
 // 엘리트 풀 - 웨이브 ELITE_MIN_WAVE부터 eliteChance = min(BASE + wave * PER_WAVE, MAX) 확률로 이 중 하나가 균등하게 뽑힘
-export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'shocker', 'venom', 'pyro'];
+export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'priest', 'shocker', 'venom', 'pyro'];
 export const ELITE_MIN_WAVE = 2;
 export const ELITE_CHANCE_BASE = 0.16;
 export const ELITE_CHANCE_PER_WAVE = 0.05;

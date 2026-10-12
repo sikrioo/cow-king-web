@@ -103,6 +103,18 @@ export function drawHorn(ctx, side, color) {
   ctx.restore();
 }
 
+// 후광 (치유 카우): 머리 위 은은한 금빛 고리
+const HALO_DECOR = {
+  front: (ctx, animT) => {
+    ctx.save();
+    ctx.globalAlpha = 0.55 + Math.sin(animT * 3) * 0.2;
+    ctx.strokeStyle = '#ffe066';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, -84 + Math.sin(animT * 2) * 1.5, 14, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+};
+
 // 마법을 쓰는 중인 상태 (지팡이를 치켜들고 끝이 빛남 - render/weaponMotion.js cast)
 const CAST_STATES = ['casting', 'zapping', 'nova', 'charging'];
 
@@ -178,7 +190,7 @@ export function drawMonster(c, ctx, t) {
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
   if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0, c.fade == null ? 1 : c.fade); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐, 순간이동 땐 스르륵)
   else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), weaponSize: weaponScaleOf(c.kind), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 해골 카우: 전용 그림
-  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.butcher ? butcherDecor(style.butcher) : style.demon ? demonDecor(style.demon, c) : null, weaponScaleOf(c.kind), { hitAt: c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
+  else drawCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, colors, c.weapon, style.butcher ? butcherDecor(style.butcher) : style.demon ? demonDecor(style.demon, c) : style.halo ? HALO_DECOR : null, weaponScaleOf(c.kind), { hitAt: c.state === 'slamPrep' ? BOSS_SLAM_TELEGRAPH : c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 악마: 날개·꼬리·문양, 보스는 큰 무기 (data/monsters.js WEAPON_SCALE), 대지 강타 예고 = 치켜들었다 첫 고리에 내리침
   ctx.restore();
   }
 

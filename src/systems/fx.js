@@ -54,8 +54,9 @@ export function updateLightningBolts(dt) {
   }
 }
 
-export function spawnShockwave(x, y, maxRadius, color) {
-  game.shockwaves.push({ x, y, maxRadius, age: 0, duration: 0.45, color });
+// duration: 퍼지는 시간 (기본 0.45초, 치유 빛처럼 은은하게 퍼질 땐 길게)
+export function spawnShockwave(x, y, maxRadius, color, duration = 0.45) {
+  game.shockwaves.push({ x, y, maxRadius, age: 0, duration, color });
 }
 
 // 서리 노바 고리 (그림은 render/iceFx.js) - seed는 가시 모양을 고리마다 다르게

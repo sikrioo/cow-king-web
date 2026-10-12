@@ -53,3 +53,35 @@ it('걸음걸이: 모든 걸음 종류가 자세를 내고(난수 없음), 같�
     expect(Array.isArray(MONSTER_GAIT.normal)).toBe(true);
   } finally { Math.random = rand; }
 });
+
+it('치유 카우: 다친 아군이 있으면 메이스를 치켜들고(주문) → 반경 안 아군 치유, 없으면 안 함', async () => {
+  const { installBrowserEnv } = await import('./helpers/browserEnv.js');
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    const { vi } = await import('vitest');
+    vi.resetModules();
+    await import('../src/main.js');
+    const { game } = await import('../src/state.js');
+    const { resetGame } = await import('../src/game.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const B = await import('../src/data/balance.js');
+    resetGame();
+    game.gameState = 'playing'; game.cows.length = 0;
+    const h = game.hero;
+    const p = new Monster(0.4, 'priest', { pos: { x: h.x + 400, y: h.y } });
+    const near = new Monster(0.4, 'normal', { pos: { x: h.x + 450, y: h.y } });
+    const far = new Monster(0.4, 'normal', { pos: { x: h.x - 400, y: h.y } });
+    game.cows.push(p, near, far);
+    p.healCooldown = 0;
+    p.update(1 / 60);
+    expect(p.state).not.toBe('casting'); // 다친 아군 없음
+    near.hp -= 40; far.hp -= 40;
+    p.healCooldown = 0;
+    p.update(1 / 60);
+    expect(p.state).toBe('casting');
+    for (let i = 0; i < B.PRIEST_CAST * 60 + 2; i++) p.update(1 / 60);
+    expect(near.hp).toBe(near.maxHp - 40 + B.PRIEST_HEAL_AMOUNT);
+    expect(far.hp).toBe(far.maxHp - 40); // 반경 밖
+    expect(game.shockwaves.some((s) => s.color === '#ffe066' && s.duration === B.PRIEST_WAVE_TIME)).toBe(true);
+  } finally { env.restore(); }
+});

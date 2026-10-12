@@ -7,7 +7,7 @@ import { drawMonsterWeapon } from './monsterWeapons.js';
 
 const BASE = { x: 18, y: -38, a: -Math.PI / 4 };
 const easeOut = (t) => 1 - (1 - t) * (1 - t);
-const CAST_GLOW = { staff: '#c9a8ff', rod: '#fff066', firestaff: '#ffb02e', torch: '#ffb02e' };
+const CAST_GLOW = { staff: '#c9a8ff', rod: '#fff066', firestaff: '#ffb02e', torch: '#ffb02e', holymace: '#ffe066' };
 
 // 지금 자세: { x, y, a(무기 각도), lunge(몸이 앞으로 쏠림 px), trail: [from, to, alpha] | null, dust(0~1), glow(0~1) }
 export function weaponPose(style, attacking, elapsed, motion = {}) {
@@ -70,7 +70,8 @@ export function drawStyledWeapon(ctx, weapon, p, animT, size = 1) {
   if (p.trail) drawTrail(ctx, p.x, p.y, p.trail, 58 * size);
   drawMonsterWeapon(ctx, weapon, p.x, p.y, 0, animT, size, p.a);
   if (p.glow > 0) { // 지팡이 끝 빛 (지팡이 그림 끝 ≈ 손에서 앞으로 50)
-    const tx = p.x + Math.cos(p.a) * 50 * size, ty = p.y + Math.sin(p.a) * 50 * size;
+    const tip = weapon === 'holymace' ? 44 : 50;
+    const tx = p.x + Math.cos(p.a) * tip * size, ty = p.y + Math.sin(p.a) * tip * size;
     ctx.save();
     ctx.fillStyle = CAST_GLOW[weapon] || '#ffffff';
     [[12, 0.25], [7, 0.5], [3.5, 0.9]].forEach(([rr, al]) => { ctx.globalAlpha = al * p.glow; ctx.beginPath(); ctx.arc(tx, ty, rr * size, 0, Math.PI * 2); ctx.fill(); });
