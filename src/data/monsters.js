@@ -119,7 +119,7 @@ export const MONSTER_ROLE = {
   archer: R('원거리', '거리를 두고 화살로 견제', '상황'), skeletonArcher: R('원거리', '거리를 두고 화살로 견제', '상황'),
   burningSoul: R('원거리', '떠다니며 긴 번개로 견제, 순간이동으로 피함', '상황'), paleSoul: R('원거리', '떠다니며 긴 번개로 견제', '상황'),
   demonCurser: R('원거리', '저주로 주인공을 약하게 만듦', '상황'),
-  skeleton: R('돌격', '수로 밀어붙임', '공격'), skeletonSpear: R('돌격', '긴 창으로 먼저 찌름', '공격'), skeletonShield: R('돌격', '앞을 막아서는 벽', '수비'),
+  skeleton: R('돌격', '수로 밀어붙임', '공격'), skeletonSpear: R('돌격', '긴 창으로 먼저 찌름', '공격'), skeletonShield: R('돌격', '단단하게 버티며 밀고 들어옴', '공격'),
   skeletonBrute: R('돌격', '느리지만 한 방이 큼', '공격'), imp: R('돌격', '옆으로 순간이동해 괴롭힘', '공격'),
   demonBerserker: R('돌진', '도약해 덮치고 분노하면 몰아침', '상황'), butcherCow: R('돌진', '갑자기 난입해 몰아치고 기절시킴', '공격'), butcherDemon: R('돌진', '갑자기 난입해 불로 몰아치고 기절시킴', '공격'),
   skeletonKing: R('소환', '뒤에서 해골을 부르고 터뜨림', '상황'),
