@@ -5,6 +5,7 @@
 import { SOUL_PALETTES } from '../data/monsters.js';
 
 const SOUL_WIDTH = 1.3; // 몸 두께 배율 (그림만 - 맞는 판정은 그대로)
+const SOUL_ALPHA = 0.7; // 전체 불투명도 배율 (낮을수록 투명)
 
 // 불꽃 혀 하나 (잎 모양): 아래 한 점(0,0)에서 시작해 가운데 높이(h × 0.45)에서 옆으로 가장 벌어지고(x ± w) 위 끝(h)으로 다시 모임
 //   가닥들의 x가 가운데에서 가장 벌어지므로 전체가 살짝 다이아몬드 모양 (2026-10-11 사용자)
@@ -20,23 +21,26 @@ function tongue(ctx, x, w, h, sway) {
 const STRANDS = [[-26, 8, 70], [26, 8, 74], [-15, 9, 88], [15, 9, 84], [-6, 9, 98], [6, 9, 94], [0, 7, 104]];
 
 // bright: 번개를 모으는 중이면 1 (더 밝고 크게 일렁임)
-export function drawSoul(ctx, x, y, scale, animT, facing = 1, kind = 'fire', flash = false, bright = 0) {
+// fade: 0~1 (순간이동할 때 스르륵 사라졌다 나타남). 전체가 반투명 (2026-10-12 사용자: 더 투명하게)
+export function drawSoul(ctx, x, y, scale, animT, facing = 1, kind = 'fire', flash = false, bright = 0, fade = 1) {
   const P = SOUL_PALETTES[kind] || SOUL_PALETTES.fire;
+  if (fade <= 0) return;
   ctx.save();
+  const A = SOUL_ALPHA * fade; // 모든 겹에 곱함
   ctx.translate(x, y);
   ctx.scale(scale * facing * SOUL_WIDTH, scale); // 가로로 넓게 (2026-10-11 사용자: 너무 얇음 → 30% 넓게)
 
   // 바닥 소용돌이 빛 (도는 고리 + 옅은 원)
-  ctx.globalAlpha = 0.25 + bright * 0.2;
+  ctx.globalAlpha = (0.25 + bright * 0.2) * A;
   ctx.fillStyle = P.base;
   ctx.beginPath(); ctx.ellipse(0, 0, 22, 7, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = 0.55 * A;
   ctx.strokeStyle = P.base;
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.ellipse(0, 0, 18, 5.5, 0, animT * 3, animT * 3 + Math.PI * 1.3); ctx.stroke();
 
   // 은은한 빛 기둥 (겹친 반투명 타원)
-  ctx.globalAlpha = 0.10 + bright * 0.12;
+  ctx.globalAlpha = (0.10 + bright * 0.12) * A;
   ctx.fillStyle = P.glow;
   ctx.beginPath(); ctx.moveTo(0, 4); ctx.lineTo(-34, -46); ctx.lineTo(0, -112); ctx.lineTo(34, -46); ctx.closePath(); ctx.fill(); // 다이아몬드 빛
 
@@ -46,15 +50,15 @@ export function drawSoul(ctx, x, y, scale, animT, facing = 1, kind = 'fire', fla
     const ph = animT * (4.2 + (i % 3) * 0.9) + i * 2.1;
     const hh = h * (0.9 + Math.sin(ph) * 0.08 * wob + bright * 0.08);
     const sway = Math.sin(ph * 0.7 + i) * 7 * wob;
-    ctx.globalAlpha = 0.42;
+    ctx.globalAlpha = 0.42 * A;
     ctx.fillStyle = flash ? '#ffffff' : P.outer;
     tongue(ctx, sx, w, hh, sway); ctx.fill();
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.6 * A;
     ctx.fillStyle = flash ? '#ffffff' : P.inner;
     tongue(ctx, sx * 0.6, w * 0.5, hh * 0.85, sway * 0.85); ctx.fill();
   });
   // 가운데 밝은 심지
-  ctx.globalAlpha = 0.5 + bright * 0.4;
+  ctx.globalAlpha = (0.5 + bright * 0.4) * A;
   ctx.fillStyle = P.tip;
   tongue(ctx, 0, 4, 70 + Math.sin(animT * 6) * 4, Math.sin(animT * 3) * 3); ctx.fill();
   ctx.restore();

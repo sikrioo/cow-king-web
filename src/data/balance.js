@@ -342,7 +342,13 @@ export const SOUL_RANGE = 360;
 export const SOUL_KITE = 140;
 export const SOUL_SHOT_CD = 2.4;
 export const SOUL_CHARGE = 0.5;
-export const SOUL_TURN = 0.45;
+export const SOUL_TURN = 0.8;      // 도는 방향(왼쪽/오른쪽·빠르기)을 바꾸는 간격(초)
+export const SOUL_TURN_RATE = 2.2; // 초당 최대 몇 라디안 도는지 - 곡선을 그리며 스르륵 (2026-10-12 사용자: 툭툭 꺾이지 않게)
+export const SOUL_GLIDE = 2.5;     // 속도가 목표 쪽으로 따라가는 빠르기(초당) - 작을수록 미끄러지듯
+// 버닝 소울 순간이동: SOUL_BLINK_CD초마다(주인공이 aggro 안이면) SOUL_FADE초 스르륵 사라졌다 → 주인공에게서 SOUL_BLINK_DIST 거리 다른 곳에 SOUL_FADE초 스르륵 나타남
+export const SOUL_BLINK_CD = 6;
+export const SOUL_FADE = 0.35;
+export const SOUL_BLINK_DIST = [170, 270];
 export const SOUL_BEAM_LENGTH = 520;
 export const SOUL_BEAM_WIDTH = 20;
 export const SOUL_ZAP_DAMAGE = 35;

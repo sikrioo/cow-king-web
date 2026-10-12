@@ -164,3 +164,35 @@ it('해골 전사: 대검·도끼, 내려치는 순간(hitAt)에야 맞음 / 카
     expect(h.hp).toBeLessThan(9999);
   } finally { vi.restoreAllMocks(); env.restore(); }
 });
+
+it('버닝 소울: 스르륵(속도가 서서히 따라감) / 순간이동 - 사라졌다 주인공 주변 다른 곳에 나타남, 창백한 원혼은 안 함', async () => {
+  const env = installBrowserEnv({ seed: 7 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    const s = new m.Monster(0.4, 'burningSoul', { pos: { x: h.x + 220, y: h.y } });
+    m.game.cows.push(s);
+    s.shootCd = 99; s.blinkCd = 99;
+    s.update(1 / 60);
+    const v1 = Math.hypot(s.body.velocity.x, s.body.velocity.y);
+    expect(v1).toBeLessThan(s.speed * 1.5 / 60 * 0.2); // 첫 틱엔 아직 느림 (관성)
+    for (let i = 0; i < 90; i++) s.update(1 / 60);
+    expect(Math.hypot(s.body.velocity.x, s.body.velocity.y)).toBeGreaterThan(v1);
+    // 순간이동
+    const p0 = { x: s.x, y: s.y };
+    s.blinkCd = 0; s.state = 'idle';
+    s.update(1 / 60);
+    expect(s.state).toBe('soulFade');
+    for (let i = 0; i < m.SOUL_FADE * 60 + 2; i++) s.update(1 / 60);
+    expect(s.state).toBe('soulAppear');
+    expect(Math.hypot(s.x - p0.x, s.y - p0.y)).toBeGreaterThan(1);
+    const d = Math.hypot(s.x - h.x, s.y - h.y);
+    expect(d).toBeLessThanOrEqual(m.SOUL_BLINK_DIST[1] + 1);
+    for (let i = 0; i < m.SOUL_FADE * 60 + 2; i++) s.update(1 / 60);
+    expect(s.fade).toBe(1);
+    const pale = new m.Monster(0.4, 'paleSoul', { pos: { x: h.x - 220, y: h.y } });
+    pale.blinkCd = 0; pale.shootCd = 99;
+    pale.update(1 / 60);
+    expect(pale.state).not.toBe('soulFade');
+  } finally { env.restore(); }
+});

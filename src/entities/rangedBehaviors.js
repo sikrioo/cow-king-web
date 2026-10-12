@@ -1,6 +1,9 @@
 // 활 쏘는 몬스터 행동 훅 (궁수 카우·해골 궁수 카우) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   사거리 안이면 조준(aiming, 조준 시작 때 방향 고정 - 조준선이 보임) → 화살 한 발(곧게, 옆으로 움직이면 피함) → 대기. 가까우면 물러남
 import { ARCHER_RANGE, ARCHER_KITE, ARCHER_AIM, ARCHER_COOLDOWN, ARROW_DAMAGE, ARCHER_SKELETON_DAMAGE, ARROW_SPEED, ARROW_RADIUS } from '../data/balance.js';
+import { SOUL_TURN_RATE, SOUL_GLIDE, SOUL_BLINK_CD, SOUL_FADE, SOUL_BLINK_DIST } from '../data/balance.js';
+import { MONSTERS } from '../data/monsters.js';
+import { clampToPen } from '../world/arena.js';
 import { SOUL_RANGE, SOUL_KITE, SOUL_SHOT_CD, SOUL_CHARGE, SOUL_TURN, SOUL_BEAM_LENGTH, SOUL_BEAM_WIDTH, SOUL_ZAP_DAMAGE, SOUL_BRANCHES, SOUL_BEAM_GROW, SOUL_BEAM_TIME, SOUL_BEAM_FLICKER } from '../data/balance.js';
 import { hitPlayer } from '../systems/combat.js';
 import { rollLightning } from '../systems/elements.js';
@@ -77,10 +80,32 @@ function archer(damage, arrowColor) {
 function soul() {
   return {
     ranged: true,
-    init(m) { m.shootCd = 0.8 + Math.random() * 1.0; m.driftT = 0; m.driftA = Math.random() * Math.PI * 2; },
-    interrupt(m) { if (m.state === 'charging' || m.state === 'beaming') m.shootCd = SOUL_SHOT_CD; }, // 모으기·번개 끊김
+    init(m) { m.shootCd = 0.8 + Math.random() * 1.0; m.driftT = 0; m.driftA = Math.random() * Math.PI * 2; m.driftTurn = 0; m.glideX = 0; m.glideY = 0; m.blinkCd = SOUL_BLINK_CD * (0.5 + Math.random() * 0.5); },
+    interrupt(m) { if (m.state === 'charging' || m.state === 'beaming') m.shootCd = SOUL_SHOT_CD; m.fade = 1; }, // 모으기·번개·순간이동 끊김
     update(m, dt) {
       if (m.shootCd > 0) m.shootCd -= dt;
+      if (m.state === 'soulFade' || m.state === 'soulAppear') { // 순간이동 (버닝 소울): 스르륵 사라짐 → 다른 곳 → 스르륵 나타남
+        m.stateElapsed += dt;
+        Body.setVelocity(m.body, { x: 0, y: 0 });
+        const k = Math.min(1, m.stateElapsed / SOUL_FADE);
+        m.fade = m.state === 'soulFade' ? 1 - k : k;
+        if (k >= 1 && m.state === 'soulFade') {
+          const a = Math.random() * Math.PI * 2, d = SOUL_BLINK_DIST[0] + Math.random() * (SOUL_BLINK_DIST[1] - SOUL_BLINK_DIST[0]);
+          const p = clampToPen(game.hero.x + Math.cos(a) * d, game.hero.y + Math.sin(a) * d, m.r + 10);
+          Body.setPosition(m.body, p); m.x = p.x; m.y = p.y;
+          m.glideX = 0; m.glideY = 0;
+          m.setState('soulAppear', 0);
+        } else if (k >= 1) { m.fade = 1; m.setState('idle', 0.2); }
+        return true;
+      }
+      if (MONSTERS[m.kind].blink && m.state !== 'charging' && m.state !== 'beaming') {
+        m.blinkCd -= dt;
+        if (m.blinkCd <= 0 && game.hero.alive && Math.hypot(game.hero.x - m.x, game.hero.y - m.y) < m.aggroRange) {
+          m.blinkCd = SOUL_BLINK_CD * (0.8 + Math.random() * 0.4);
+          m.setState('soulFade', 0);
+          return true;
+        }
+      }
       if (m.state === 'charging') {
         m.stateElapsed += dt;
         Body.setVelocity(m.body, { x: 0, y: 0 });
@@ -124,15 +149,21 @@ function soul() {
     // 늘 직접 움직임: 너무 가까우면 물러나고, 멀면 다가가고, 그 사이에선 이리저리 (SOUL_TURN초마다 방향 바꿈 - 게임 난수)
     steer(m, dxP, dyP, distP, auraMult) {
       if (!game.hero.alive || distP > m.aggroRange) return false;
-      m.driftT -= 1 / 60;
-      if (m.driftT <= 0) { m.driftT = SOUL_TURN * (0.6 + Math.random() * 0.8); m.driftA = Math.random() * Math.PI * 2; }
+      // 스르륵: 방향은 한 번에 꺾지 않고 도는 빠르기(driftTurn)를 가끔 바꿔 곡선을 그림, 속도는 목표 쪽으로 서서히 따라감(관성)
+      const dt = 1 / 60;
+      m.driftT -= dt;
+      if (m.driftT <= 0) { m.driftT = SOUL_TURN * (0.6 + Math.random() * 0.8); m.driftTurn = (Math.random() * 2 - 1) * SOUL_TURN_RATE; }
+      m.driftA += m.driftTurn * dt;
       const sp = m.speed * auraMult / 60;
       let vx = Math.cos(m.driftA), vy = Math.sin(m.driftA);
       if (distP < SOUL_KITE) { vx = -dxP / distP + vx * 0.4; vy = -dyP / distP + vy * 0.4; }
       else if (distP > SOUL_RANGE) { vx = dxP / distP + vx * 0.4; vy = dyP / distP + vy * 0.4; }
       const l = Math.hypot(vx, vy) || 1;
+      const k = Math.min(1, dt * SOUL_GLIDE);
+      m.glideX += ((vx / l) * sp - m.glideX) * k;
+      m.glideY += ((vy / l) * sp - m.glideY) * k;
       m.state = 'walk';
-      Body.setVelocity(m.body, { x: (vx / l) * sp, y: (vy / l) * sp });
+      Body.setVelocity(m.body, { x: m.glideX, y: m.glideY });
       if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
       return true;
     },

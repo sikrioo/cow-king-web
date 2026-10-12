@@ -19,7 +19,7 @@ export const MONSTERS = {
   skeletonBrute:  { hp: 110, dmg: 60, scaleMul: 1.2, speedMul: 0.85, aggroMul: 1.2, exp: 34, skeleton: true, reach: 18, hitAt: 0.45, attackTime: 1.0, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 전사: 대검·도끼 - 등 뒤에서 머리 위로 내리침, hitAt초에 맞음(묵직)
   skeletonSpear:  { hp: 55, dmg: 35, scaleMul: 1, speedMul: 1, aggroMul: 1.2, exp: 24, skeleton: true, reach: 30, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 창병: 창으로 멀리서 찌름(근접 사거리 + reach)
   // 영혼 (2026-10-11, 사용자 참고 그림): 불꽃 기둥 같은 영혼 - soul: 그림 색(render/soulSprites.js), 행동 entities/rangedBehaviors.js (불규칙하게 떠다니다 긴 번개)
-  burningSoul: { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'fire',  element: 'lightning', resist: { lightning: 0.75, fire: 0.5 }, ring: null, colors: null },
+  burningSoul: { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'fire', blink: true,  element: 'lightning', resist: { lightning: 0.75, fire: 0.5 }, ring: null, colors: null },
   paleSoul:    { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'ghost', element: 'lightning', resist: { lightning: 0.75, cold: 0.5, poison: 0.5 }, ring: null, colors: null },
   skeletonShield: { hp: 90, dmg: 30, scaleMul: 1.15, speedMul: 0.8, aggroMul: 1.2, exp: 30, skeleton: true, shield: true, resist: { phys: 0.5, poison: 0.75 }, ring: '#c9c1aa', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 방패병: 단단함(물리 절반), 느림
   skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
@@ -124,8 +124,8 @@ export const MONSTER_SKILLS = {
   skeletonArcher: ['조준(조준선) → 화살', '거리 유지'],
   archer: ['조준(조준선) → 화살', '거리 유지'],
   skeletonKing: ['해골 일으키기(시체 자리 먼저)', '뼈 창 부채꼴(3 → 2단계 5)', '시체 폭발(부하가 부풀다 터짐)', '죽으면 부하도 쓰러짐'],
-  burningSoul: ['불규칙하게 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
-  paleSoul: ['불규칙하게 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
+  burningSoul: ['스르륵 미끄러지듯 떠다님', '순간이동(스르륵 사라졌다 다른 곳에)', '모으기 → 뻗어 나가는 하얀 번개'],
+  paleSoul: ['스르륵 미끄러지듯 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
   imp: ['주인공 옆으로 순간이동'],
   demonCurser: ['저주(약화·둔화·봉인 중 하나, 죽이면 풀림)', '지옥불 구슬', '거리 유지'],
   demonBerserker: ['예고 → 도약 내려찍기', '체력 절반 아래 분노'],
