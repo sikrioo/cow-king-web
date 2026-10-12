@@ -9,7 +9,7 @@ import { castSpeedMul, skillBonus, skillMul } from '../util.js';
 import { floatText, spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import {
   canHit, getCowHitRadius, getWeaponRange, getAttackArc, heroHitDamage, rollWeaponDamage, skillDamageCow, physDamageTo, showCowDamage,
-  killCow, registerComboHit
+  killCow, registerComboHit, rollHeroHit
 } from './combat.js';
 import { weaponElementHit } from './elementCombat.js';
 import { clampToPen } from '../world/arena.js';
@@ -86,6 +86,7 @@ export function updateFlurry(dt) {
     h.attackTimer = h.currentAttackDuration; // 휘두르는 동작 (기본 공격 그림 재사용)
     const ratio = s.ratio * skillMul(h, 'flurry', 'damage');
     cowsInFront(getWeaponRange(), getAttackArc()).forEach((c) => {
+      if (!rollHeroHit(c)) return;
       const dmg = physDamageTo(c, Math.max(1, Math.round(heroHitDamage() * ratio)));
       c.flash = 0.08;
       applyKnockback(c.body, h.x, h.y, 2);

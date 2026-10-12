@@ -116,7 +116,7 @@ export function createHero() {
     exp: 0,
     expToNext: expForLevel(1),
     statPoints: 0,
-    levelStats: { atkPower: 0, defense: 0, evasion: 0, atkSpeed: 0, castSpeed: 0, moveSpeed: 0, health: 0, mana: 0 },
+    levelStats: { atkPower: 0, defense: 0, evasion: 0, accuracy: 0, atkSpeed: 0, castSpeed: 0, moveSpeed: 0, health: 0, mana: 0 },
     team: TEAM_HERO
   };
   Body.setInertia(hero.body, Infinity);

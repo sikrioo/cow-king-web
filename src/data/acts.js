@@ -7,8 +7,8 @@ import { ELITE_KINDS } from './monsters.js';
 import { BOSS_WAVE } from './balance.js';
 
 export const ACT_SCENE = 3;        // 막 전환 장면 (어두워졌다 밝아지며 바닥이 바뀜)
-export const BOSS_ESCORTS = 4;
-export const ACT_WAVE_SIZE = { base: 6, perWave: 4, perAct: 3 };
+export const BOSS_ESCORTS = 7; // 2026-10-12 4 → 7 (적 수 늘림)
+export const ACT_WAVE_SIZE = { base: 10, perWave: 6, perAct: 4 }; // 2026-10-12 사용자: 적이 적음 → 약 1.6배 (6/4/3 → 10/6/4)
 // 난입 도살자 (2026-10-11 사용자: 경고 없이 그냥 등장 - 나중에 소리만): 막 안 INVADE.minActWave번째 웨이브부터(보스 웨이브 제외) 웨이브마다 chance 확률로
 //   웨이브가 시작되고 delay[0]~delay[1]초 사이 어느 순간 주인공 주변에 한 마리 (종류 = 막의 invader)
 export const INVADE = { chance: 0.15, minActWave: 2, delay: [5, 15] }; // 마리 수 = base + 막 안 웨이브 × perWave + 막 번호 × perAct

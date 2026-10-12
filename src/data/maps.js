@@ -39,8 +39,8 @@ export const MAPS = {
     spawnMarginRatio: 0.1,
     start: { x: 0.5, y: 0.92 },   // 아래쪽 가운데에서 시작
     mlvl: 4,                      // 몬스터 레벨 보탬 (data/difficulty.js mlvl에 더함)
-    packs: 9,                     // 무리 수 (마지막 하나가 우두머리 무리)
-    packSize: [4, 7],             // 무리당 마리 수 (최소, 최대)
+    packs: 11,                    // 무리 수 (마지막 하나가 우두머리 무리) - 2026-10-12 9 → 11
+    packSize: [6, 10],            // 무리당 마리 수 (최소, 최대) - 2026-10-12 [4,7] → [6,10] (적이 적음, 약 1.6배)
     packRadius: 70,
     packMinDistFromStart: 380,    // 시작 지점에서 이만큼은 떨어져서 배치
     kinds: { normal: 6, tough: 2, fast: 2, charger: 1, burning: 1, exploder: 1, fanatic: 1 }, // 무리 몬스터 비중

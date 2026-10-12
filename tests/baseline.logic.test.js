@@ -16,7 +16,7 @@ beforeAll(async () => {
   try {
     vi.resetModules();
     await import('../src/main.js'); // boot(): 레거시와 같은 초기화 → 타이틀
-    const { game, ui } = await import('../src/state.js');
+    const { game, ui, dev } = await import('../src/state.js');
     const { World, Body, Engine, engine, world } = await import('../src/core/physics.js');
     const { PEN } = await import('../src/world/arena.js');
     const { resetGame } = await import('../src/game.js');
@@ -93,6 +93,7 @@ beforeAll(async () => {
     fresh(); hero().level = 5; hero().attackBonus = 0; hero().gearAtkPower = 0;
     // 무기 피해는 범위 굴림(2026-10-05 무기 기본 속성)이라 틱 판정만 보도록 레거시 기본 피해 30으로 고정
     hero().weaponStats = { main: { min: 30, max: 30, interval: 0.4 }, off: null };
+    dev.sureHit = true; // 물리 명중 판정(2026-10-12)도 빼고 틱 판정만
     const cx = PEN.x + PEN.size / 2, cy = PEN.y + PEN.size / 2;
     Body.setPosition(hero().body, { x: cx, y: cy }); hero().x = cx; hero().y = cy;
     const offs = [[30, 0], [-30, 0], [0, 30], [0, -30]];
@@ -106,6 +107,7 @@ beforeAll(async () => {
       if (tBig === null && game.cows[3].state === 'dead') tBig = +el.toFixed(2);
     }
     out.exact.whirlwind = { tick: WHIRLWIND_TICK, allSmallDeadAt: tSmall, bigDeadAt: tBig };
+    dev.sureHit = false;
 
     // 7) 웨이브 구성
     fresh(); game.wave = 0;

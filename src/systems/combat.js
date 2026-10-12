@@ -1,7 +1,7 @@
 // 전투 규칙: 기본 공격 판정(사거리/각도/히트 반경), 데미지/처치, 피격, 콤보, 보스 슬램, 냉기 노바, 불바닥 피해
 import {
   ATTACK_DURATION, ATTACK_COOLDOWN, ATTACK_RANGE, WEAPON_RANGE, WEAPON_ARC, ATTACK_ARC, ATTACK_ARC_SINGLE, COMBO_WINDOW,
-  BASE_BLOCK, BASE_EVASION, BLOCK_CAP, EVASION_CAP, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
+  BASE_BLOCK, BASE_EVASION, BLOCK_CAP, EVASION_CAP, HIT_BASE, HIT_MIN, HIT_CAP, MONSTER_EVADE_PER_LEVEL, FIRE_HAZARD_DAMAGE, POISON_CLOUD_DAMAGE, POISON_CLOUD_TICK
 } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { PALETTE } from '../data/palette.js';
@@ -97,6 +97,7 @@ function swingHit(ws, onHit, heavy) {
     let diff = Math.abs(Math.atan2(dy, dx) - game.hero.facing);
     if (diff > Math.PI) diff = Math.PI * 2 - diff;
     if (diff < getAttackArc() / 2) {
+      if (!rollHeroHit(c)) return; // 몬스터마다 따로 굴림
       damageCow(c, dmg, heavy);
       if (onHit) onHit(c);
       const stun = masteryBonus(game.hero, 'stun'); // 메이스 마스터리: 확률로 잠깐 기절
@@ -150,6 +151,17 @@ function nextSwingWeapon() {
   const w = game.hero.offHandNext ? ws.off : ws.main;
   game.hero.offHandNext = !game.hero.offHandNext;
   return w;
+}
+
+// 물리 명중 (2026-10-12 사용자: 물리만 빗나감, 마법·원소 스킬은 항상 맞음) - 기본 공격과 근접 물리 스킬(휠윈드·도약·돌진·내려찍기·연타·뇌진탕)
+export function heroHitChance(c) {
+  return Math.max(HIT_MIN, Math.min(HIT_CAP, HIT_BASE + (game.hero.gearAccuracy || 0) - (c.level || 1) * MONSTER_EVADE_PER_LEVEL));
+}
+// 빗나가면 'MISS'를 띄우고 false (그 타격은 피해·추가 효과 모두 없음)
+export function rollHeroHit(c) {
+  if (dev.sureHit || Math.random() < heroHitChance(c)) return true;
+  spawnDamageNumber(c.x, c.y - 40 * c.scale, 'MISS', '#b8b8b8');
+  return false;
 }
 
 // 무기 피해 굴림 (min~max 정수)
@@ -262,6 +274,7 @@ export function updateHazards(dt) {
 
 export function skillDamageCow(c, bonusDamage, knockForce, color) {
   if (!c || c.state === 'dead') return;
+  if (!rollHeroHit(c)) return; // 물리 스킬도 명중 판정
   c.flash = 0.13;
   applyKnockback(c.body, game.hero.x, game.hero.y, knockForce);
   c.knockback = Math.max(c.knockback || 0, 0.22);

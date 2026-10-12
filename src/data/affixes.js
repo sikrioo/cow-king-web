@@ -25,6 +25,9 @@ const FAMILIES = [
     tiers: [[1, [6, 18], 10], [8, [12, 32], 7], [16, [20, 48], 4], [24, [30, 70], 2]] },
   { id: 'poison', side: 'prefix', group: 'poisonDmg', stat: 'poisonDmg', types: W,
     tiers: [[1, [8, 15], 10], [8, [16, 26], 7], [16, [27, 40], 4], [24, [41, 58], 2]] },
+  // 명중률 (2026-10-12): 물리 공격이 빗나갈 확률을 줄임 (combat.heroHitChance)
+  { id: 'precise', side: 'prefix', group: 'accuracy', stat: 'accuracy', types: [...W, ...ACC],
+    tiers: [[1, [0.03, 0.05], 8], [10, [0.06, 0.09], 5], [20, [0.10, 0.13], 2]] },
   { id: 'life', side: 'prefix', group: 'life', stat: 'health', types: DEF_ALL,
     tiers: [[1, [8, 15], 12], [8, [16, 25], 8], [16, [26, 38], 4], [24, [39, 55], 2], [18, [56, 70], 1, 'magicOnly']] },
   { id: 'spirit', side: 'prefix', group: 'mana', stat: 'mana', types: [...W, ...ACC, 'armor'],

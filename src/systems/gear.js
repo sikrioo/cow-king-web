@@ -226,7 +226,7 @@ export function armorReduction(armor) {
 export function recalcGearStats() {
   const elemDmg = { fire: 0, cold: 0, lightning: 0, poison: 0 }; // 무기 원소 피해 (STAT_DEF의 element 옵션)
   const gearSkill = { all: 0, warrior: 0, sorc: 0, fire: 0, cold: 0, lightning: 0, weapon: {} }; // 스킬 레벨 옵션 (util.skillGearBonus)
-  let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
+  let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, accuracy = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
     if (!it || it === 'LOCKED') return;
@@ -236,6 +236,7 @@ export function recalcGearStats() {
     if (it.stats.atkPower) atkPower += it.stats.atkPower;
     if (it.stats.defense) defense += it.stats.defense;
     if (it.stats.evasion) evasion += it.stats.evasion;
+    if (it.stats.accuracy) accuracy += it.stats.accuracy;
     if (it.stats.moveSpeed) moveSpeed += it.stats.moveSpeed;
     if (it.stats.health) health += it.stats.health;
     if (it.stats.mana) mana += it.stats.mana;
@@ -256,6 +257,7 @@ export function recalcGearStats() {
   game.hero.weaponDmgPct = (game.hero.levelStats.atkPower || 0) * LEVEL_STAT_PER_POINT.atkPower; // 공격력 포인트 = 무기 피해 % (combat.rollWeaponDamage)
   defense += (game.hero.levelStats.defense || 0) * LEVEL_STAT_PER_POINT.defense;
   evasion += (game.hero.levelStats.evasion || 0) * LEVEL_STAT_PER_POINT.evasion;
+  accuracy += (game.hero.levelStats.accuracy || 0) * LEVEL_STAT_PER_POINT.accuracy;
   moveSpeed += (game.hero.levelStats.moveSpeed || 0) * LEVEL_STAT_PER_POINT.moveSpeed;
   health += (game.hero.levelStats.health || 0) * LEVEL_STAT_PER_POINT.health;
   mana += (game.hero.levelStats.mana || 0) * LEVEL_STAT_PER_POINT.mana;
@@ -274,6 +276,7 @@ export function recalcGearStats() {
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
+  game.hero.gearAccuracy = accuracy; // 물리 명중률 (combat.heroHitChance)
   game.hero.gearArmor = armor;
   game.hero.armorReduction = armorReduction(armor);
   // 주무기(없으면 맨손) + 쌍수일 때 보조무기 - 기본 공격은 둘을 번갈아 씀

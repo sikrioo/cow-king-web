@@ -20,6 +20,8 @@ export const GOLDEN_OVERRIDES = {
   'exact.rarity.rare.statMax': undefined,
   'exact.rarity.legendary.statMin': undefined,
   'exact.rarity.legendary.statMax': undefined,
+  // 2026-10-12: 적이 너무 적음 (사용자) - 웨이브 마리 수 약 1.6배(ACT_WAVE_SIZE 10/6/4), 보스 호위 4 → 7
+  'exact.waveSizes': [16, 22, 28, 34, 40, 8],
   // 2026-10-12: 스탯 포인트 1점당 수치를 최대 레벨 100·장비 수치 기준으로 낮춤, 공격력 포인트는 무기 피해 % (사용자 결정)
   'exact.progression.perPoint.defense': 0.0015,
   'exact.progression.perPoint.evasion': 0.0015,
@@ -68,6 +70,9 @@ export const GOLDEN_ADDITIONS = {
   // 2026-10-07: 시전속도 (스킬 대기시간, 장비 옵션 10~25% + 스탯 포인트 - 2026-10-12 3% → 0.25%)
   'exact.statDef.castSpeed': { label: '시전속도', min: 0.10, max: 0.25, fmtAtMax: '+25%' },
   'exact.progression.perPoint.castSpeed': 0.0025,
+  // 2026-10-12: 물리 명중률 (스탯 포인트 + 장비 옵션, 사용자 결정)
+  'exact.progression.perPoint.accuracy': 0.0015,
+  'exact.statDef.accuracy': { label: '명중률', min: 0.03, max: 0.13, fmtAtMax: '+13%' },
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,
   'exact.progression.skillUnlockLevel.teleport': 3,

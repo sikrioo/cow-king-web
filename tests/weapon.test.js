@@ -145,6 +145,7 @@ it('대검 기본 공격: 누르는 순간이 아니라 내리치는 순간(동�
     resetGame(); game.waveTransition = 999;
     const h = game.hero;
     equipFromInventory(h.inventory.findIndex((it) => it.variant === 'greatsword'));
+    (await import('../src/state.js')).dev.sureHit = true; // 명중 판정은 이 테스트 대상이 아님
     const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000; c.speed = 0;
     const p = { x: h.x + 50, y: h.y }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
     game.cows = [c];

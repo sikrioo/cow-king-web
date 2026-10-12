@@ -55,6 +55,7 @@ export function startSandbox(sb) {
   game.sandbox = { ...sb, timer: 0.8, anchor: { x: cx, y: cy }, respawn: 0 };
   dev.god = true;
   dev.infiniteMana = true;
+  dev.sureHit = true; // 미리보기는 빗나가지 않게
   game.waveTransition = Infinity; // 웨이브 없음
   game.demoTipTimer = 0;
   h.facing = 0;

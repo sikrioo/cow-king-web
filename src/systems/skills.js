@@ -15,7 +15,7 @@ import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
-import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage } from './combat.js';
+import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage, rollHeroHit } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
 import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge, tryMeteor, tryFireTotem, tryFrostField, tryThunderStrike } from './groundSpells.js';
@@ -78,6 +78,7 @@ export function updateWhirlwind(dt) {
 }
 
 export function whirlwindHit(c) {
+  if (!rollHeroHit(c)) return;
   c.flash = 0.1;
   applyKnockback(c.body, game.hero.x, game.hero.y, 5);
   c.knockback = 0.15;
@@ -141,6 +142,7 @@ export function leapLand() {
 }
 
 export function leapHitCow(c) {
+  if (!rollHeroHit(c)) return;
   c.flash = 0.12;
   applyKnockback(c.body, game.hero.x, game.hero.y, 7);
   c.knockback = 0.2;

@@ -23,7 +23,7 @@ export function drawStatsTab(ctx, x, startRow, w) {
   ctx.fillText(`여유 포인트: ${game.hero.statPoints}`, x + 16, row);
   row += 24;
 
-  const statOrder = ['atkPower', 'defense', 'evasion', 'atkSpeed', 'castSpeed', 'moveSpeed', 'health', 'mana'];
+  const statOrder = ['atkPower', 'accuracy', 'defense', 'evasion', 'atkSpeed', 'castSpeed', 'moveSpeed', 'health', 'mana'];
   const keyByStat = {};
   Object.entries(LEVEL_STAT_KEYS).forEach(([k, v]) => { keyByStat[v] = k; });
   statOrder.forEach((sk) => {

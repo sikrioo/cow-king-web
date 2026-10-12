@@ -18,7 +18,8 @@ let panelActions = { newGameAs: () => {} };
 const TOGGLES = [
   ['god', '무적'],
   ['infiniteMana', '마나 무한'],
-  ['noCooldown', '스킬 대기시간 0']
+  ['noCooldown', '스킬 대기시간 0'],
+  ['sureHit', '항상 명중']
 ];
 
 function button(parent, label, fn) {

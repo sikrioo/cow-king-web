@@ -74,6 +74,7 @@ export function drawEquipTab(ctx, x, startRow, w) {
     ['공격력', `+${game.hero.gearAtkPower}`],
     ['블락률', `+${Math.round(game.hero.gearDefense * 100)}%`],
     ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
+    ['명중률', `+${Math.round((game.hero.gearAccuracy || 0) * 100)}%`],
     ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],
     ['체력/마나', `+${game.hero.gearMaxHp}/+${game.hero.gearMaxMana}`],
     ['방어력', `${game.hero.gearArmor} (물리 -${Math.round(game.hero.armorReduction * 100)}%)`],
