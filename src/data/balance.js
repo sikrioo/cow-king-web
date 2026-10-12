@@ -390,3 +390,8 @@ export const PRIEST_HEAL_RADIUS = 180;
 export const PRIEST_HEAL_AMOUNT = 30;
 export const PRIEST_WAVE_TIME = 0.9;
 export const PRIEST_RECHECK = 1;
+// 치유 카우 행동 원칙 (2026-10-12 사용자): 주인공을 공격하지 않고 최대한 오래 살아남음
+//   주인공이 PRIEST_FLEE 안이면 물러남, 평소엔 PRIEST_ALLY_SEEK 안 아군 무리의 가운데에서 주인공 반대쪽으로 PRIEST_BEHIND만큼 뒤에 숨음
+export const PRIEST_FLEE = 220;
+export const PRIEST_ALLY_SEEK = 420;
+export const PRIEST_BEHIND = 60;

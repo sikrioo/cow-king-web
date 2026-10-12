@@ -14,7 +14,7 @@ import { hitPlayer } from '../systems/combat.js';
 import { spawnShockwave, floatText } from '../systems/fx.js';
 import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
 import { bossDown } from '../systems/acts.js';
-import { PRIEST_HEAL_CD, PRIEST_CAST, PRIEST_HEAL_RADIUS, PRIEST_HEAL_AMOUNT, PRIEST_WAVE_TIME, PRIEST_RECHECK } from '../data/balance.js';
+import { PRIEST_HEAL_CD, PRIEST_CAST, PRIEST_HEAL_RADIUS, PRIEST_HEAL_AMOUNT, PRIEST_WAVE_TIME, PRIEST_RECHECK, PRIEST_FLEE, PRIEST_ALLY_SEEK, PRIEST_BEHIND } from '../data/balance.js';
 import { spawnDamageNumber } from '../systems/fx.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
@@ -50,6 +50,27 @@ const hurtNear = (m) => game.cows.filter((c) => c.state !== 'dead' && c.hp < c.m
 export const spellBehaviors = {
   // 치유 카우 - 주기마다 메이스를 머리 위로 치켜들고(주문, 메이스 끝이 금빛) → 노란 빛이 은은하게 퍼지며 주변 아군 치유
   priest: {
+    ranged: true, // 근접 공격 안 함 (지원형 - 살아남는 게 우선)
+    // 도망 + 아군 뒤에 숨기: 가까우면 반대쪽으로, 아군이 있으면 무리 가운데에서 주인공 반대쪽 뒤로
+    steer(m, dxP, dyP, distP, auraMult) {
+      if (!game.hero.alive) return false;
+      let vx = 0, vy = 0;
+      if (distP < PRIEST_FLEE && distP > 0.001) { vx -= dxP / distP; vy -= dyP / distP; }
+      const allies = game.cows.filter((c) => c !== m && c.state !== 'dead' && Math.hypot(c.x - m.x, c.y - m.y) <= PRIEST_ALLY_SEEK);
+      if (allies.length) {
+        const cx = allies.reduce((s, c) => s + c.x, 0) / allies.length, cy = allies.reduce((s, c) => s + c.y, 0) / allies.length;
+        const hx = cx - game.hero.x, hy = cy - game.hero.y, hd = Math.hypot(hx, hy) || 1;
+        const tx = cx + (hx / hd) * PRIEST_BEHIND - m.x, ty = cy + (hy / hd) * PRIEST_BEHIND - m.y, td = Math.hypot(tx, ty);
+        if (td > 24) { vx += (tx / td) * 0.8; vy += (ty / td) * 0.8; }
+      }
+      const l = Math.hypot(vx, vy);
+      if (l < 0.01) { Body.setVelocity(m.body, { x: 0, y: 0 }); m.state = 'idle'; return true; }
+      const sp = m.speed * auraMult / 60;
+      m.state = 'walk';
+      Body.setVelocity(m.body, { x: (vx / l) * sp, y: (vy / l) * sp });
+      if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1; // 주인공을 보며 물러남
+      return true;
+    },
     init(m) { m.healCooldown = 1.5 + Math.random() * 1.5; },
     interrupt(m) { if (m.state === 'casting') m.healCooldown = PRIEST_RECHECK; },
     update(m, dt) {

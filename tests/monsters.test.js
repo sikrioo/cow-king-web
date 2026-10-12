@@ -83,5 +83,14 @@ it('치유 카우: 다친 아군이 있으면 메이스를 치켜들고(주문) 
     expect(near.hp).toBe(near.maxHp - 40 + B.PRIEST_HEAL_AMOUNT);
     expect(far.hp).toBe(far.maxHp - 40); // 반경 밖
     expect(game.shockwaves.some((s) => s.color === '#ffe066' && s.duration === B.PRIEST_WAVE_TIME)).toBe(true);
+    // 행동 원칙: 근접 공격 안 함, 가까우면 도망
+    const { behaviors } = await import('../src/entities/behaviors.js');
+    expect(behaviors.priest.ranged).toBe(true);
+    game.cows.length = 0;
+    const q = new Monster(0.4, 'priest', { pos: { x: h.x + 100, y: h.y } });
+    game.cows.push(q);
+    q.healCooldown = 99;
+    q.update(1 / 60);
+    expect(q.body.velocity.x).toBeGreaterThan(0); // 주인공(왼쪽)에게서 멀어짐
   } finally { env.restore(); }
 });
