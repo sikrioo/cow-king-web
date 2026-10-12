@@ -45,6 +45,15 @@ const FAMILIES = [
     tiers: [[1, [0.04, 0.07], 10], [10, [0.08, 0.12], 6], [20, [0.13, 0.18], 2]] },
   { id: 'evade', side: 'suffix', group: 'evasion', stat: 'evasion', types: ['boots', 'armor', 'greaves', 'accessory'],
     tiers: [[1, [0.03, 0.05], 10], [10, [0.06, 0.09], 6], [20, [0.10, 0.13], 2]] },
+  // 타격 옵션 (2026-10-12): 강타·밀쳐내기는 무기만, 흡수는 무기·장신구 (생명력 흡수와 마나 흡수는 같이 붙을 수 있음)
+  { id: 'crush', side: 'suffix', group: 'crushBlow', stat: 'crushBlow', types: W,
+    tiers: [[8, [0.05, 0.08], 4], [18, [0.09, 0.15], 1.5]] },
+  { id: 'knock', side: 'suffix', group: 'knockback', stat: 'knockback', types: W,
+    tiers: [[1, [1, 1], 5]] },
+  { id: 'leechLife', side: 'suffix', group: 'lifeLeech', stat: 'lifeLeech', types: [...W, ...ACC],
+    tiers: [[4, [0.02, 0.03], 6], [14, [0.04, 0.06], 2]] },
+  { id: 'leechMana', side: 'suffix', group: 'manaLeech', stat: 'manaLeech', types: [...W, ...ACC],
+    tiers: [[4, [0.02, 0.03], 5], [14, [0.04, 0.05], 2]] },
   { id: 'stamina', side: 'suffix', group: 'stamina', stat: 'health', types: DEF_ALL, // 접두사 life와 다른 그룹 → 함께 붙을 수 있음
     tiers: [[1, [5, 9], 8], [12, [10, 16], 4]] },
   { id: 'gale', side: 'suffix', group: 'gale', types: ACC, // 하이브리드: 공격속도 + 이동속도

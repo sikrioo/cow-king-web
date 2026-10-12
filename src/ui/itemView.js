@@ -53,7 +53,8 @@ export function optionText(gear, key, value, { detail = false } = {}) {
     if (detail) parts.push(r.pct);
     extra = ` (${parts.join('·')})`;
   }
-  return `${STAT_DEF[key].label} ${STAT_DEF[key].fmt(value)}${extra}`;
+  const v = STAT_DEF[key].fmt(value);
+  return `${STAT_DEF[key].label}${v ? ' ' + v : ''}${extra}`; // 밀쳐내기처럼 수치 없는 옵션은 이름만
 }
 
 // 옵션 표시 순서 = STAT_DEF 순서

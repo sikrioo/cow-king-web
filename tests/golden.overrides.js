@@ -72,6 +72,11 @@ export const GOLDEN_ADDITIONS = {
   'exact.progression.perPoint.castSpeed': 0.0025,
   // 2026-10-12: 물리 명중률 (스탯 포인트 + 장비 옵션, 사용자 결정)
   'exact.progression.perPoint.accuracy': 0.0015,
+  // 2026-10-12: 타격 옵션 4개 (사용자: 강타·밀쳐내기·생명력 흡수·마나 흡수)
+  'exact.statDef.crushBlow': { label: '강타 확률', min: 0.05, max: 0.15, fmtAtMax: '+15%' },
+  'exact.statDef.knockback': { label: '밀쳐내기', min: 1, max: 1, fmtAtMax: '' },
+  'exact.statDef.lifeLeech': { label: '생명력 흡수', min: 0.02, max: 0.06, fmtAtMax: '6%' },
+  'exact.statDef.manaLeech': { label: '마나 흡수', min: 0.02, max: 0.05, fmtAtMax: '5%' },
   'exact.statDef.accuracy': { label: '명중률', min: 0.03, max: 0.13, fmtAtMax: '+13%' },
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,

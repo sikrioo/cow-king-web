@@ -59,6 +59,11 @@ export const STAT_DEF = {
   atkPower:  { label: '공격력',   min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },
   defense:   { label: '블락률', min: 0.05, max: 0.20, fmt: (v) => `+${Math.round(v * 100)}%` },
   evasion:   { label: '회피율',   min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
+  // 타격 옵션 (2026-10-12, 물리 타격에만 - combat.applyOnHit)
+  crushBlow: { label: '강타 확률', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
+  knockback: { label: '밀쳐내기',  min: 1,    max: 1,    flat: true, noUpgrade: true, fmt: () => '' },
+  lifeLeech: { label: '생명력 흡수', min: 0.02, max: 0.06, fmt: (v) => `${Math.round(v * 100)}%` },
+  manaLeech: { label: '마나 흡수',   min: 0.02, max: 0.05, fmt: (v) => `${Math.round(v * 100)}%` },
   accuracy:  { label: '명중률',   min: 0.03, max: 0.13, fmt: (v) => `+${Math.round(v * 100)}%` }, // 물리 공격만 (2026-10-12)
   moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   health:    { label: '체력',     min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },

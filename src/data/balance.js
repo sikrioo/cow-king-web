@@ -123,6 +123,10 @@ export const HIT_BASE = 0.9;
 export const MONSTER_EVADE_PER_LEVEL = 0.005;
 export const HIT_MIN = 0.5;
 export const HIT_CAP = 0.95;
+// 타격 옵션 (2026-10-12 사용자: 디아식 무기 옵션 4개 - 강타·밀쳐내기·생명력 흡수·마나 흡수, combat.applyOnHit)
+//   명중한 물리 타격(기본 공격·근접 물리 스킬)마다, 맞은 몬스터마다 따로 (흡수도 디아식 - 대신 흡수율을 낮게)
+//   강타: 확률로 몬스터 현재 체력의 crushFrac(보스 crushBossFrac) / 밀쳐내기: knockForce만큼 더 밀고 knockStagger초 경직(보스 면역)
+export const ON_HIT = { crushFrac: 0.25, crushBossFrac: 0.125, knockForce: 9, knockStagger: 0.35 };
 export const LEVEL_STAT_KEYS = { z: 'atkPower', x: 'defense', c: 'evasion', v: 'atkSpeed', b: 'moveSpeed', n: 'health', m: 'mana', ',': 'castSpeed', '.': 'accuracy' };
 
 // --- 아이템 (가방/감정/강화/드랍)

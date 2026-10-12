@@ -226,6 +226,7 @@ export function armorReduction(armor) {
 export function recalcGearStats() {
   const elemDmg = { fire: 0, cold: 0, lightning: 0, poison: 0 }; // 무기 원소 피해 (STAT_DEF의 element 옵션)
   const gearSkill = { all: 0, warrior: 0, sorc: 0, fire: 0, cold: 0, lightning: 0, weapon: {} }; // 스킬 레벨 옵션 (util.skillGearBonus)
+  const onHit = { crushBlow: 0, knockback: 0, lifeLeech: 0, manaLeech: 0 }; // 타격 옵션 (combat.applyOnHit)
   let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, accuracy = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   GEAR_SLOTS.forEach((slot) => {
     const it = game.hero.equipment[slot];
@@ -237,6 +238,7 @@ export function recalcGearStats() {
     if (it.stats.defense) defense += it.stats.defense;
     if (it.stats.evasion) evasion += it.stats.evasion;
     if (it.stats.accuracy) accuracy += it.stats.accuracy;
+    for (const k in onHit) if (it.stats[k]) onHit[k] += it.stats[k];
     if (it.stats.moveSpeed) moveSpeed += it.stats.moveSpeed;
     if (it.stats.health) health += it.stats.health;
     if (it.stats.mana) mana += it.stats.mana;
@@ -276,6 +278,7 @@ export function recalcGearStats() {
   game.hero.gearAtkPower = Math.round(atkPower);
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
+  game.hero.gearOnHit = onHit;
   game.hero.gearAccuracy = accuracy; // 물리 명중률 (combat.heroHitChance)
   game.hero.gearArmor = armor;
   game.hero.armorReduction = armorReduction(armor);

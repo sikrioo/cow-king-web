@@ -18,8 +18,8 @@ import {
   toPacket, resolveHeroDamage, damageColor, applyHeroStatuses, applyChill, applyPoisonDirect, checkHeroDeath, heroDamageTaken
 } from './elements.js';
 import { gainExp } from './progression.js';
-import { applyCC } from './cc.js';
-import { CORPSE_LIFE, CORPSE_MAX } from '../data/balance.js';
+import { applyCC, isBossCow } from './cc.js';
+import { CORPSE_LIFE, CORPSE_MAX, ON_HIT } from '../data/balance.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
 export function canHit(attacker, target) {
@@ -164,6 +164,27 @@ export function rollHeroHit(c) {
   return false;
 }
 
+// 타격 옵션 (장비 - hero.gearOnHit): 명중한 물리 타격이 dealt만큼 피해를 준 뒤, 맞은 몬스터마다 (흡수도 디아식으로 몬스터마다)
+export function applyOnHit(c, dealt) {
+  const o = game.hero.gearOnHit;
+  if (!o || !(dealt > 0)) return; // 물리 면역이면 아무것도 없음
+  const h = game.hero;
+  if (o.lifeLeech) h.hp = Math.min(h.hp + Math.round(dealt * o.lifeLeech), h.maxHp + h.bonusMaxHp + h.gearMaxHp);
+  if (o.manaLeech) h.mana = Math.min(h.mana + Math.round(dealt * o.manaLeech), h.maxMana);
+  if (c.state === 'dead') return;
+  if (o.crushBlow && Math.random() < o.crushBlow) {
+    const cut = Math.floor(c.hp * (isBossCow(c) ? ON_HIT.crushBossFrac : ON_HIT.crushFrac));
+    if (cut > 0) {
+      c.hp -= cut;
+      spawnDamageNumber(c.x, c.y - 58 * c.scale, `강타 -${cut}`, '#ff5a3c');
+    }
+  }
+  if (o.knockback && !isBossCow(c)) {
+    applyKnockback(c.body, h.x, h.y, ON_HIT.knockForce);
+    applyCC(c, 'stagger', ON_HIT.knockStagger);
+  }
+}
+
 // 무기 피해 굴림 (min~max 정수)
 // 공격력 스탯 포인트 = 무기 피해 % (hero.weaponDmgPct - gear.recalcGearStats)
 export function rollWeaponDamage(ws = game.hero.weaponStats.main) {
@@ -210,6 +231,7 @@ export function damageCow(c, dmg, heavy = null) {
 
   showCowDamage(c, dmg);
   c.hp -= dmg;
+  applyOnHit(c, dmg);
   if (c.hp <= 0 && c.state !== 'dead') {
     killCow(c);
     game.shake = Math.min(game.shake + 6, 12);
@@ -285,6 +307,7 @@ export function skillDamageCow(c, bonusDamage, knockForce, color) {
   spawnHitParticles(c.x, c.y, color || PALETTE.hide, 8);
   if (dmg <= 0) return; // 물리 면역
   c.hp -= dmg;
+  applyOnHit(c, dmg);
   registerComboHit();
   if (c.hp <= 0 && c.state !== 'dead') killCow(c);
 }

@@ -9,7 +9,7 @@ import { castSpeedMul, skillBonus, skillMul } from '../util.js';
 import { floatText, spawnHitParticles, spawnShockwave, spawnDamageNumber } from './fx.js';
 import {
   canHit, getCowHitRadius, getWeaponRange, getAttackArc, heroHitDamage, rollWeaponDamage, skillDamageCow, physDamageTo, showCowDamage,
-  killCow, registerComboHit, rollHeroHit
+  killCow, registerComboHit, rollHeroHit, applyOnHit
 } from './combat.js';
 import { weaponElementHit } from './elementCombat.js';
 import { clampToPen } from '../world/arena.js';
@@ -93,6 +93,7 @@ export function updateFlurry(dt) {
       showCowDamage(c, dmg);
       if (dmg > 0) {
         c.hp -= dmg;
+        applyOnHit(c, dmg);
         registerComboHit();
         if (c.hp <= 0 && c.state !== 'dead') killCow(c);
       }
