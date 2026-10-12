@@ -1,6 +1,6 @@
 // 관리자 - 몬스터: 종류별 수치, 난이도별 체력, 몬스터 레벨(=아이템 레벨), 웨이브 구성, 특수 공격
 import {
-  MONSTERS, MONSTER_LABEL, MONSTER_SKILLS, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
+  MONSTERS, MONSTER_LABEL, MONSTER_SKILLS, MONSTER_ROLE, ELITE_KINDS, ELITE_MIN_WAVE, ELITE_CHANCE_BASE, ELITE_CHANCE_PER_WAVE, ELITE_CHANCE_MAX
 } from '../../data/monsters.js';
 import { DIFFICULTY, DIFFICULTY_ORDER, MLVL_BONUS, WAVE_MLVL_STEP } from '../../data/difficulty.js';
 import { ELEMENT_DEF } from '../../data/elements.js';
@@ -11,6 +11,9 @@ import { el, table, h2, note, src, tag, pct } from '../ui.js';
 import { monsterCard, openMonsterDetail } from '../detail.js';
 import { ACT_WAVE_SIZE, BOSS_ESCORTS } from '../../data/acts.js';
 import { waveInfo, TOTAL_WAVES } from '../../util.js';
+
+// 역할 표시 색 (관리자 화면만)
+const ROLE_COLOR = { 돌격: '#e05b4d', 돌진: '#ff8a3d', 자폭: '#ff2d2d', 원거리: '#7fa8ff', 지원: '#ffe066', 소환: '#7fffd4', 보스: '#c98bef' };
 
 const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<span class="dim">물리</span>');
 const resistText = (r) => (r ? Object.entries(r).map(([k, v]) => tag(`${k === 'phys' ? '물리' : ELEMENT_DEF[k].label} ${v >= 1 ? '면역' : pct(v)}`, k === 'phys' ? '#ddd' : ELEMENT_DEF[k].color)).join('') : null);
@@ -35,6 +38,7 @@ export function renderMonsters(root) {
       { label: '속도', num: true, get: (k) => MONSTERS[k].speedMul },
       { label: '인식 범위', num: true, get: (k) => MONSTERS[k].aggroMul },
       { label: '경험치', num: true, get: (k) => MONSTERS[k].exp },
+      { label: '역할', get: (k) => (MONSTER_ROLE[k] ? el('span', {}, tag(MONSTER_ROLE[k].role, ROLE_COLOR[MONSTER_ROLE[k].role]), ' ', MONSTER_ROLE[k].goal) : '') },
       { label: '기술', get: (k) => (MONSTER_SKILLS[k] && MONSTER_SKILLS[k].length ? MONSTER_SKILLS[k].join(' · ') : '일반 근접') },
       { label: '구분', get: (k) => el('span', {}, k === 'boss' || MONSTERS[k].boss ? tag('보스', '#c98bef') : ELITE_KINDS.includes(k) ? tag('엘리트', '#ffcf4d') : tag('일반'), MONSTERS[k].adminOnly ? tag('관리자 전용 - 게임에 안 나옴', '#7fffd4') : null) }
     ], kinds)

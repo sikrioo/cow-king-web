@@ -106,6 +106,25 @@ export const MONSTER_GAIT = {
   imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
 };
 
+// 몬스터 역할과 목적 한 줄 (관리자 몬스터 표 - 2026-10-12 사용자: 목적을 알 수 있을 정도로만). 새 몬스터를 넣으면 같이
+//   역할: 돌격 / 돌진 / 자폭 / 원거리 / 지원 / 소환 / 보스
+const R = (role, goal) => ({ role, goal });
+export const MONSTER_ROLE = {
+  normal: R('돌격', '무리로 몰려와 때림'), tough: R('돌격', '단단하게 버티며 세게 때림'), fast: R('돌격', '빠르게 파고듦'),
+  cold: R('돌격', '때리고 죽으며 느리게 만듦'), venom: R('돌격', '독으로 서서히 깎음'), burning: R('돌격', '불바닥으로 길을 막음'),
+  charger: R('돌진', '멀리서 한 번에 들이받음'), exploder: R('자폭', '붙어서 터져 큰 피해'),
+  fanatic: R('지원', '주변 아군을 빠르게 함'), shaman: R('지원', '다친 아군 하나를 고침'), priest: R('지원', '공격하지 않고 오래 살아남으며 아군을 고침'),
+  shocker: R('원거리', '거리를 두고 번개로 견제'), pyro: R('원거리', '거리를 두고 화염 마법으로 몰아붙임'),
+  archer: R('원거리', '거리를 두고 화살로 견제'), skeletonArcher: R('원거리', '거리를 두고 화살로 견제'),
+  burningSoul: R('원거리', '떠다니며 긴 번개로 견제, 순간이동으로 피함'), paleSoul: R('원거리', '떠다니며 긴 번개로 견제'),
+  demonCurser: R('원거리', '저주로 주인공을 약하게 만듦'),
+  skeleton: R('돌격', '수로 밀어붙임'), skeletonSpear: R('돌격', '긴 창으로 먼저 찌름'), skeletonShield: R('돌격', '앞을 막아서는 벽'),
+  skeletonBrute: R('돌격', '느리지만 한 방이 큼'), imp: R('돌격', '옆으로 순간이동해 괴롭힘'),
+  demonBerserker: R('돌진', '도약해 덮치고 분노하면 몰아침'), butcherCow: R('돌진', '갑자기 난입해 몰아치고 기절시킴'), butcherDemon: R('돌진', '갑자기 난입해 불로 몰아치고 기절시킴'),
+  skeletonKing: R('소환', '뒤에서 해골을 부르고 터뜨림'),
+  boss: R('보스', '1막의 왕 - 강타·돌진·함성'), demonKing: R('보스', '3막의 군주 - 소환·지옥불·폭발')
+};
+
 // 몬스터가 쓰는 기술 (관리자 몬스터 표 - 설명만, 동작은 entities/*Behaviors.js). 없으면 일반 근접만
 export const MONSTER_SKILLS = {
   normal: [], tough: [], fast: [],
