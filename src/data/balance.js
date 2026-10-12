@@ -395,3 +395,19 @@ export const PRIEST_RECHECK = 1;
 export const PRIEST_FLEE = 220;
 export const PRIEST_ALLY_SEEK = 420;
 export const PRIEST_BEHIND = 60;
+
+// 몬스터 이동 규칙 (entities/movement.js, 2026-10-12 사용자 결정 - 거리 유지 코드를 한 곳으로)
+//   keep = 거리 유지(near보다 가까우면 물러나고 far보다 멀면 다가감, 태도 '상황') / hide = 수비형(flee 안이면 도망, 평소 seek 안 아군 무리 뒤 behind, 태도 '수비')
+//   없으면 공통 AI(쫓아가 근접). own: 이 규칙의 숫자를 쓰지만 움직임은 종류별 steer가 직접(영혼 곡선 이동)
+export const MONSTER_MOVE = {
+  shocker:        { type: 'keep', near: 170, far: ZAP_RANGE },
+  pyro:           { type: 'keep', near: PYRO_KITE_DISTANCE, far: METEOR_RANGE },
+  archer:         { type: 'keep', near: ARCHER_KITE, far: ARCHER_RANGE },
+  skeletonArcher: { type: 'keep', near: ARCHER_KITE, far: ARCHER_RANGE },
+  demonCurser:    { type: 'keep', near: CURSER_KITE, far: CURSER_RANGE },
+  skeletonKing:   { type: 'keep', near: NECRO_KITE, far: NECRO_RANGE },
+  burningSoul:    { type: 'keep', near: SOUL_KITE, far: SOUL_RANGE, own: true },
+  paleSoul:       { type: 'keep', near: SOUL_KITE, far: SOUL_RANGE, own: true },
+  shaman:         { type: 'hide', flee: 130, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND },
+  priest:         { type: 'hide', flee: PRIEST_FLEE, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND }
+};

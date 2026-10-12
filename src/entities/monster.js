@@ -6,7 +6,8 @@ import { game } from '../state.js';
 import { TEAM_MONSTER } from './actor.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
-import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS } from '../data/balance.js';
+import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS, MONSTER_MOVE } from '../data/balance.js';
+import { moveByRule } from './movement.js';
 import { randomPointInPen, clampToPen } from '../world/arena.js';
 import { monsterLevel } from '../util.js';
 import { decoyFor, hitDecoy } from '../systems/physSkills.js';
@@ -172,10 +173,12 @@ export class Monster {
     const distP = Math.hypot(dxP, dyP);
     const playerNear = decoy ? true : game.hero.alive && distP < this.aggroRange;
 
-    // 종류별 이동 규칙 (번개: 사거리 밖이면 접근 + 가까우면 후퇴, 주술사: 가까우면 후퇴)
+    // 종류별 특별한 움직임(영혼 곡선·도살자 돌진 등) → 공통 이동 규칙(거리 유지·수비 - data/balance.js MONSTER_MOVE, entities/movement.js)
     if (b && b.steer && b.steer(this, dxP, dyP, distP, auraMult)) return;
+    const rule = MONSTER_MOVE[this.kind];
+    if (rule && !rule.own && moveByRule(this, rule, dxP, dyP, distP, auraMult)) return;
 
-    const isRangedKiter = !!(b && b.ranged);
+    const isRangedKiter = !!(b && b.ranged) || !!rule; // 이동 규칙이 있으면 근접 공격 안 함
 
     // 웨이브 몬스터는 넓은 맵에서 주인공 쪽으로 빠르게 몰려옴 (어그로 범위에 들어오면 아래 일반 추격)
     if (this.hunt && game.hero.alive && !playerNear) {

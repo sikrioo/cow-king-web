@@ -1,8 +1,5 @@
 // 마법 쓰는 몬스터의 행동 훅 - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위 설명)
-import {
-  METEOR_RANGE, METEOR_CAST_TIME, METEOR_COOLDOWN, PYRO_KITE_DISTANCE, PYRO_CAST_GAP, PYRO_METEOR_MIN_DIST,
-  PYRO_WALL_MAX_DIST, FIREBALL_CAST_TIME, FIRE_WALL_CAST_TIME, FIRE_WALL_COOLDOWN
-} from '../data/balance.js';
+import { METEOR_RANGE, METEOR_CAST_TIME, METEOR_COOLDOWN, PYRO_CAST_GAP, PYRO_METEOR_MIN_DIST, PYRO_WALL_MAX_DIST, FIREBALL_CAST_TIME, FIRE_WALL_CAST_TIME, FIRE_WALL_COOLDOWN } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { spawnHitParticles } from '../systems/fx.js';
@@ -12,9 +9,9 @@ import { spawnProjectile } from '../systems/projectiles.js';
 import { NECRO_CORPSE_RANGE, NECRO_BONE_FAN, NECRO_BONE_FAN_P2, NECRO_BONE_SPREAD, NECRO_BLAST_CD, NECRO_BLAST_PICK, NECRO_BLAST_MAX, NECRO_BLOAT, NECRO_BLAST_RADIUS, NECRO_BLAST_DAMAGE, NECRO_PHASE2_HP, NECRO_MAX_MINIONS_P2 } from '../data/balance.js';
 import { hitPlayer } from '../systems/combat.js';
 import { spawnShockwave, floatText } from '../systems/fx.js';
-import { NECRO_RANGE, NECRO_KITE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
+import { NECRO_RANGE, NECRO_SUMMON_CD, NECRO_CAST_TIME, NECRO_SUMMON_COUNT, NECRO_MAX_MINIONS, NECRO_BONE_CD, NECRO_BONE_DAMAGE, NECRO_BONE_SPEED, NECRO_BONE_RADIUS } from '../data/balance.js';
 import { bossDown } from '../systems/acts.js';
-import { PRIEST_HEAL_CD, PRIEST_CAST, PRIEST_HEAL_RADIUS, PRIEST_HEAL_AMOUNT, PRIEST_WAVE_TIME, PRIEST_RECHECK, PRIEST_FLEE, PRIEST_ALLY_SEEK, PRIEST_BEHIND } from '../data/balance.js';
+import { PRIEST_HEAL_CD, PRIEST_CAST, PRIEST_HEAL_RADIUS, PRIEST_HEAL_AMOUNT, PRIEST_WAVE_TIME, PRIEST_RECHECK } from '../data/balance.js';
 import { spawnDamageNumber } from '../systems/fx.js';
 
 const CAST_TIME = { meteor: METEOR_CAST_TIME, fireball: FIREBALL_CAST_TIME, wall: FIRE_WALL_CAST_TIME };
@@ -51,26 +48,6 @@ export const spellBehaviors = {
   // 치유 카우 - 주기마다 메이스를 머리 위로 치켜들고(주문, 메이스 끝이 금빛) → 노란 빛이 은은하게 퍼지며 주변 아군 치유
   priest: {
     ranged: true, // 근접 공격 안 함 (지원형 - 살아남는 게 우선)
-    // 도망 + 아군 뒤에 숨기: 가까우면 반대쪽으로, 아군이 있으면 무리 가운데에서 주인공 반대쪽 뒤로
-    steer(m, dxP, dyP, distP, auraMult) {
-      if (!game.hero.alive) return false;
-      let vx = 0, vy = 0;
-      if (distP < PRIEST_FLEE && distP > 0.001) { vx -= dxP / distP; vy -= dyP / distP; }
-      const allies = game.cows.filter((c) => c !== m && c.state !== 'dead' && Math.hypot(c.x - m.x, c.y - m.y) <= PRIEST_ALLY_SEEK);
-      if (allies.length) {
-        const cx = allies.reduce((s, c) => s + c.x, 0) / allies.length, cy = allies.reduce((s, c) => s + c.y, 0) / allies.length;
-        const hx = cx - game.hero.x, hy = cy - game.hero.y, hd = Math.hypot(hx, hy) || 1;
-        const tx = cx + (hx / hd) * PRIEST_BEHIND - m.x, ty = cy + (hy / hd) * PRIEST_BEHIND - m.y, td = Math.hypot(tx, ty);
-        if (td > 24) { vx += (tx / td) * 0.8; vy += (ty / td) * 0.8; }
-      }
-      const l = Math.hypot(vx, vy);
-      if (l < 0.01) { Body.setVelocity(m.body, { x: 0, y: 0 }); m.state = 'idle'; return true; }
-      const sp = m.speed * auraMult / 60;
-      m.state = 'walk';
-      Body.setVelocity(m.body, { x: (vx / l) * sp, y: (vy / l) * sp });
-      if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1; // 주인공을 보며 물러남
-      return true;
-    },
     init(m) { m.healCooldown = 1.5 + Math.random() * 1.5; },
     interrupt(m) { if (m.state === 'casting') m.healCooldown = PRIEST_RECHECK; },
     update(m, dt) {
@@ -193,21 +170,6 @@ export const spellBehaviors = {
       }
       return false;
     },
-    steer(m, dxP, dyP, distP, auraMult) {
-      if (game.hero.alive && distP > NECRO_RANGE && distP < m.aggroRange) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
-        if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
-        return true;
-      }
-      if (game.hero.alive && distP < NECRO_KITE && distP > 0.001) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
-        m.facing = dxP > 0 ? -1 : 1;
-        return true;
-      }
-      return false;
-    },
     onDeath(m) {
       game.cows.forEach((c) => { if (c.summoner === m && c.state !== 'dead') killCow(c); }); // 부하도 쓰러짐
       return bossDown(m); // 전리품 + 다음 막
@@ -269,22 +231,6 @@ export const spellBehaviors = {
         m.setState('casting', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
         spawnHitParticles(m.x, m.y - 30 * m.scale, '#ffb02e', 4);
-        return true;
-      }
-      return false;
-    },
-    steer(m, dxP, dyP, distP, auraMult) {
-      // 사정거리 밖이면 다가가고, 너무 가까우면 물러남 (원거리 마법형)
-      if (game.hero.alive && distP > METEOR_RANGE && distP < m.aggroRange) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
-        if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
-        return true;
-      }
-      if (game.hero.alive && distP < PYRO_KITE_DISTANCE && distP > 0.001) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
-        m.facing = dxP > 0 ? -1 : 1;
         return true;
       }
       return false;

@@ -96,3 +96,16 @@ it('치유 카우: 다친 아군이 있으면 메이스를 치켜들고(주문) 
     expect(q.body.velocity.x).toBeGreaterThan(0); // 주인공(왼쪽)에게서 멀어짐
   } finally { env.restore(); }
 });
+
+it('표의 태도와 실제 이동 규칙이 맞음: 수비 = hide, 거리 유지(keep) = 상황, 상황인데 규칙이 없으면 특별한 움직임이 있는 몬스터만', async () => {
+  const { MONSTER_ROLE } = await import('../src/data/monsters.js');
+  const { MONSTER_MOVE } = await import('../src/data/balance.js');
+  const SPECIAL = ['demonBerserker', 'demonKing']; // 상황형이지만 자기 기술로 움직임(도약·분노)
+  Object.entries(MONSTER_ROLE).forEach(([k, r]) => {
+    const mv = MONSTER_MOVE[k];
+    if (r.stance === '수비') expect(mv && mv.type, k).toBe('hide');
+    if (mv && mv.type === 'hide') expect(r.stance, k).toBe('수비');
+    if (mv && mv.type === 'keep') expect(r.stance, k).toBe('상황');
+    if (r.stance === '상황' && !mv) expect(SPECIAL, k).toContain(k);
+  });
+});

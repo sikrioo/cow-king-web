@@ -9,12 +9,7 @@
 //   interrupt(m)                 기절·경직이 걸려 하던 특수 행동이 끊길 때 정리(대기시간 등) - systems/cc.js
 //   onMeleeHit(m, taken)         일반 근접 공격이 주인공에게 실제 피해를 준 뒤 (도살자: 세 번째마다 기절)
 // 상태를 점유하는 상태머신(fusing/zapping/telegraph…)은 매 틱 true를 반환해야 일반 AI가 상태를 덮어쓰지 않는다.
-import {
-  CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE,
-  CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH,
-  EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN,
-  ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT, VENOM_CLOUD_TRIGGER_RANGE, VENOM_CLOUD_COOLDOWN
-} from '../data/balance.js';
+import { CHARGE_DAMAGE, EXPLODER_BLAST_DAMAGE, ZAP_DAMAGE, SHAMAN_HEAL, CHARGE_RANGE, CHARGE_TELEGRAPH, CHARGE_DISTANCE, CHARGE_DURATION, CHARGE_RECOVER, CHARGE_COOLDOWN, CHARGE_WIDTH, EXPLODER_FUSE_TIME, EXPLODER_FUSE_RANGE, EXPLODER_BLAST_RADIUS, ZAP_RANGE, ZAP_TELEGRAPH, ZAP_COOLDOWN, ZAP_BEAM_LENGTH, ZAP_BEAM_WIDTH, AURA_RADIUS, AURA_SPEED_MULT, VENOM_CLOUD_TRIGGER_RANGE, VENOM_CLOUD_COOLDOWN } from '../data/balance.js';
 import { distToSegment, getHitPoint, hash01 } from '../util.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
@@ -90,17 +85,6 @@ export const behaviors = {
       }
       return false;
     },
-    // 근접하지 않고 플레이어가 가까이 오면 뒷걸음질쳐서 거리를 유지 (후방 지원형)
-    steer(m, dxP, dyP, distP, auraMult) {
-      const kiteDistance = 130;
-      if (game.hero.alive && distP < kiteDistance && distP > 0.001) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
-        m.facing = dxP > 0 ? -1 : 1; // 물러나면서도 플레이어 쪽을 바라봄
-        return true;
-      }
-      return false;
-    },
     drawUnder(m, ctx, t, style) {
       ctx.save();
       ctx.globalAlpha = 0.10 + Math.sin(t * 2.2) * 0.04;
@@ -143,24 +127,6 @@ export const behaviors = {
         m.zapTargetY = game.hero.y;
         m.setState('zapping', 0);
         Body.setVelocity(m.body, { x: 0, y: 0 });
-        return true;
-      }
-      return false;
-    },
-    steer(m, dxP, dyP, distP, auraMult) {
-      // 사정거리 밖이면 들어올 때까지 접근함 (너무 멀면 영영 못 쏘니까)
-      if (game.hero.alive && distP > ZAP_RANGE && distP < m.aggroRange) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
-        if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
-        return true;
-      }
-      // 근접하지 않고 플레이어가 가까이 오면 뒷걸음질쳐서 거리를 유지 (원거리형)
-      const kiteDistance = 170;
-      if (game.hero.alive && distP < kiteDistance && distP > 0.001) {
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
-        m.facing = dxP > 0 ? -1 : 1; // 물러나면서도 플레이어 쪽을 바라봄
         return true;
       }
       return false;

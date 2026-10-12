@@ -1,13 +1,7 @@
 // 악마 카우 종족 행동 훅 (관리자 페이지에만 - 2026-10-10) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   임프: 주인공 옆으로 순간이동해서 침 / 저주 카우: 거리를 두고 저주 + 지옥불 구슬 / 버서커: 예고 → 도약 내려찍기, 체력 절반 아래면 분노
 //   악마 카우킹: 지옥문으로 임프 소환 + 지옥불 원 + 분노. 수치는 data/balance.js (IMP_/CURSER_/BERSERKER_/DKING_/HELLFIRE_)
-import {
-  IMP_BLINK_CD, IMP_BLINK_RANGE, IMP_BLINK_NEAR, CURSER_RANGE, CURSER_KITE, CURSER_CAST, CURSER_CURSE_CD, CURSER_ORB_CD, CURSER_ORB,
-  BERSERKER_LEAP_MIN, BERSERKER_LEAP_MAX, BERSERKER_LEAP_CD, BERSERKER_TELEGRAPH, BERSERKER_LEAP_TIME, BERSERKER_SLAM_RADIUS, BERSERKER_SLAM_DAMAGE,
-  BERSERKER_ENRAGE_HP, DEMON_ENRAGE_SPEED, DEMON_ENRAGE_DAMAGE, DEMON_ENRAGE_CD, DKING_SUMMON_CD, DKING_SUMMON_COUNT, DKING_MAX_IMPS,
-  DKING_FIRE_CD, DKING_CAST, DKING_FIRE_COUNT, DKING_FIRE_SPREAD, DKING_ENRAGE_HP, CURSE_ORDER, CURSE_COLOR,
-  DKING_NOVA_CD, DKING_NOVA_CAST, DKING_NOVA_RADIUS, DKING_NOVA_DAMAGE, DKING_NOVA_GAP, DKING_FIRE_COUNT_P2
-} from '../data/balance.js';
+import { IMP_BLINK_CD, IMP_BLINK_RANGE, IMP_BLINK_NEAR, CURSER_RANGE, CURSER_CAST, CURSER_CURSE_CD, CURSER_ORB_CD, CURSER_ORB, BERSERKER_LEAP_MIN, BERSERKER_LEAP_MAX, BERSERKER_LEAP_CD, BERSERKER_TELEGRAPH, BERSERKER_LEAP_TIME, BERSERKER_SLAM_RADIUS, BERSERKER_SLAM_DAMAGE, BERSERKER_ENRAGE_HP, DEMON_ENRAGE_SPEED, DEMON_ENRAGE_DAMAGE, DEMON_ENRAGE_CD, DKING_SUMMON_CD, DKING_SUMMON_COUNT, DKING_MAX_IMPS, DKING_FIRE_CD, DKING_CAST, DKING_FIRE_COUNT, DKING_FIRE_SPREAD, DKING_ENRAGE_HP, CURSE_ORDER, CURSE_COLOR, DKING_NOVA_CD, DKING_NOVA_CAST, DKING_NOVA_RADIUS, DKING_NOVA_DAMAGE, DKING_NOVA_GAP, DKING_FIRE_COUNT_P2 } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { killCow, hitPlayer } from '../systems/combat.js';
@@ -29,15 +23,6 @@ function checkEnrage(m, ratio) {
   m.dmg = Math.round(m.dmg * DEMON_ENRAGE_DAMAGE);
   floatText(m.x, m.y - 80 * m.scale, '분노!', '#ff3b30');
   spawnShockwave(m.x, m.y, 50 * m.scale, '#ff2d2d');
-}
-
-// 거리 유지 이동 (저주 카우): range 밖이면 다가가고 kite 안이면 물러남
-function kite(m, dxP, dyP, distP, auraMult, range, near) {
-  if (!game.hero.alive) return false;
-  const sp = m.speed * auraMult / 60;
-  if (distP > range && distP < m.aggroRange) { m.state = 'walk'; Body.setVelocity(m.body, { x: (dxP / distP) * sp, y: (dyP / distP) * sp }); if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1; return true; }
-  if (distP < near && distP > 0.001) { m.state = 'walk'; Body.setVelocity(m.body, { x: (-dxP / distP) * sp, y: (-dyP / distP) * sp }); m.facing = dxP > 0 ? -1 : 1; return true; }
-  return false;
 }
 
 function castRing(ctx, m, t, p, color) { // 주문 중 발밑 원 (커지며 진해짐) + 도는 점
@@ -98,7 +83,6 @@ export const demonBehaviors = {
       }
       return false;
     },
-    steer(m, dxP, dyP, distP, auraMult) { return kite(m, dxP, dyP, distP, auraMult, CURSER_RANGE, CURSER_KITE); },
     drawUnder(m, ctx, t) { if (m.state === 'casting') castRing(ctx, m, t, Math.min(1, m.stateElapsed / CURSER_CAST), CURSE_COLOR); }
   },
 

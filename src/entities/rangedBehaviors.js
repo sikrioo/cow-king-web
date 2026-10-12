@@ -1,6 +1,6 @@
 // 활 쏘는 몬스터 행동 훅 (궁수 카우·해골 궁수 카우) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   사거리 안이면 조준(aiming, 조준 시작 때 방향 고정 - 조준선이 보임) → 화살 한 발(곧게, 옆으로 움직이면 피함) → 대기. 가까우면 물러남
-import { ARCHER_RANGE, ARCHER_KITE, ARCHER_AIM, ARCHER_COOLDOWN, ARROW_DAMAGE, ARCHER_SKELETON_DAMAGE, ARROW_SPEED, ARROW_RADIUS } from '../data/balance.js';
+import { ARCHER_RANGE, ARCHER_AIM, ARCHER_COOLDOWN, ARROW_DAMAGE, ARCHER_SKELETON_DAMAGE, ARROW_SPEED, ARROW_RADIUS } from '../data/balance.js';
 import { SOUL_TURN_RATE, SOUL_GLIDE, SOUL_BLINK_CD, SOUL_FADE, SOUL_BLINK_DIST } from '../data/balance.js';
 import { MONSTERS } from '../data/monsters.js';
 import { clampToPen } from '../world/arena.js';
@@ -43,21 +43,6 @@ function archer(damage, arrowColor) {
           Body.setVelocity(m.body, { x: 0, y: 0 });
           return true;
         }
-      }
-      return false;
-    },
-    steer(m, dxP, dyP, distP, auraMult) {
-      if (game.hero.alive && distP > ARCHER_RANGE && distP < m.aggroRange) { // 사거리 밖이면 다가감
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (dxP / distP) * m.speed * auraMult / 60, y: (dyP / distP) * m.speed * auraMult / 60 });
-        if (Math.abs(dxP) > 1) m.facing = dxP > 0 ? 1 : -1;
-        return true;
-      }
-      if (game.hero.alive && distP < ARCHER_KITE && distP > 0.001) { // 가까우면 물러나며 주인공을 봄
-        m.state = 'walk';
-        Body.setVelocity(m.body, { x: (-dxP / distP) * m.speed * auraMult / 60, y: (-dyP / distP) * m.speed * auraMult / 60 });
-        m.facing = dxP > 0 ? -1 : 1;
-        return true;
       }
       return false;
     },
