@@ -18,6 +18,7 @@ it('관리자 몬스터 표: 모든 몬스터에 역할·목적과 기술 설명
   const { MONSTERS, MONSTER_SKILLS, MONSTER_ROLE } = await import('../src/data/monsters.js');
   expect(Object.keys(MONSTER_SKILLS).sort()).toEqual(Object.keys(MONSTERS).sort());
   expect(Object.keys(MONSTER_ROLE).sort()).toEqual(Object.keys(MONSTERS).sort()); // 역할·목적도
+  Object.values(MONSTER_ROLE).forEach((r) => expect(['공격', '수비', '상황']).toContain(r.stance)); // 태도
 });
 
 it('몬스터 무기마다 휘두르는 동작(WEAPON_STYLE)이 정해져 있고, 동작마다 자세 계산이 됨(그림만 - 난수 없음)', async () => {

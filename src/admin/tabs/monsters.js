@@ -13,6 +13,7 @@ import { ACT_WAVE_SIZE, BOSS_ESCORTS } from '../../data/acts.js';
 import { waveInfo, TOTAL_WAVES } from '../../util.js';
 
 // 역할 표시 색 (관리자 화면만)
+const STANCE_COLOR = { 공격: '#ff6b6b', 수비: '#6bb8ff', 상황: '#c9d2c4' };
 const ROLE_COLOR = { 돌격: '#e05b4d', 돌진: '#ff8a3d', 자폭: '#ff2d2d', 원거리: '#7fa8ff', 지원: '#ffe066', 소환: '#7fffd4', 보스: '#c98bef' };
 
 const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<span class="dim">물리</span>');
@@ -38,7 +39,7 @@ export function renderMonsters(root) {
       { label: '속도', num: true, get: (k) => MONSTERS[k].speedMul },
       { label: '인식 범위', num: true, get: (k) => MONSTERS[k].aggroMul },
       { label: '경험치', num: true, get: (k) => MONSTERS[k].exp },
-      { label: '역할', get: (k) => (MONSTER_ROLE[k] ? el('span', {}, tag(MONSTER_ROLE[k].role, ROLE_COLOR[MONSTER_ROLE[k].role]), ' ', MONSTER_ROLE[k].goal) : '') },
+      { label: '역할', get: (k) => (MONSTER_ROLE[k] ? el('span', {}, tag(MONSTER_ROLE[k].role, ROLE_COLOR[MONSTER_ROLE[k].role]), tag(MONSTER_ROLE[k].stance, STANCE_COLOR[MONSTER_ROLE[k].stance]), ' ', MONSTER_ROLE[k].goal) : '') },
       { label: '기술', get: (k) => (MONSTER_SKILLS[k] && MONSTER_SKILLS[k].length ? MONSTER_SKILLS[k].join(' · ') : '일반 근접') },
       { label: '구분', get: (k) => el('span', {}, k === 'boss' || MONSTERS[k].boss ? tag('보스', '#c98bef') : ELITE_KINDS.includes(k) ? tag('엘리트', '#ffcf4d') : tag('일반'), MONSTERS[k].adminOnly ? tag('관리자 전용 - 게임에 안 나옴', '#7fffd4') : null) }
     ], kinds)
