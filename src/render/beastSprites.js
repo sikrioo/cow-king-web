@@ -71,7 +71,19 @@ export function drawSnake(ctx, m, animT, flash = false) {
     const sx = i ? (a.x + p.x * 2 + b.x) / 4 : p.x, sy = i ? (a.y + p.y * 2 + b.y) / 4 : p.y;
     return { x: sx, y: m.y + (sy - m.y) * SNAKE_SQUASH };
   });
-  const coil = m.state === 'coil' ? Math.min(1, m.stateElapsed / SNAKE.coilTime) : 0;
+  // 머리 자세 (2026-10-14 사용자): rear = 뒤로 젖힘, lift = 치켜듦, thrust = 앞으로 쭉
+  //   똬리: 서서히 크게 들고 젖힘 → 돌진: 쭉 뻗음 / 근접 공격: 같은 동작을 작게 (맞는 순간 hitAt까지 젖혔다가 뻗음)
+  let rear = 0, lift = 0, thrust = 0;
+  if (m.state === 'coil') {
+    const e = 1 - (1 - Math.min(1, m.stateElapsed / SNAKE.coilTime)) ** 2;
+    rear = e * 12 * k; lift = e * 18 * k;
+  } else if (m.state === 'strike') {
+    thrust = 9 * k; lift = 2 * k;
+  } else if (m.state === 'attack') {
+    const p = m.stateElapsed || 0, hit = m.hitAt || 0.12;
+    if (p < hit) { const e = p / hit; rear = e * 6 * k; lift = e * 8 * k; }
+    else { const f = Math.max(0, 1 - (p - hit) / 0.18); thrust = f * 7 * k; lift = f * 2 * k; }
+  }
   const at = (i) => ({ x: pts[i].x, y: pts[i].y - 5 * k });
   const widthAt = (i) => (4 + (n - i) * 0.9) * k;
   ctx.save();
@@ -84,11 +96,16 @@ export function drawSnake(ctx, m, animT, flash = false) {
       ctx.beginPath(); ctx.moveTo(a.x, a.y + dy); ctx.lineTo(b.x, b.y + dy); ctx.stroke();
     }
   }
-  const pull = coil * -6 * k + (m.state === 'strike' ? 4 * k : 0);
-  const hx = m.x + Math.cos(head) * pull, hy = m.y + Math.sin(head) * pull - 6 * k - coil * 9 * k;
+  const pull = thrust - rear;
+  const hx = m.x + Math.cos(head) * pull, hy = m.y + Math.sin(head) * pull * SNAKE_SQUASH - 6 * k - lift;
+  // 목: 몸 첫 마디에서 머리까지 (들거나 뻗으면 늘어남)
+  const n1 = at(1);
+  ctx.strokeStyle = c.body; ctx.lineWidth = widthAt(1);
+  ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.quadraticCurveTo(m.x, m.y - 5 * k - lift * 0.7, hx, hy); ctx.stroke();
   ctx.translate(hx, hy);
   ctx.rotate(head);
-  if (m.state === 'coil' || m.state === 'strike') { // 혀
+  ctx.scale(1 - (lift / (18 * k)) * 0.25, 1); // 젖히면 머리가 짧아 보임 (위를 향함)
+  if (m.state === 'coil' || m.state === 'strike' || (m.state === 'attack' && thrust > 0)) { // 혀
     ctx.strokeStyle = c.eye; ctx.lineWidth = 1.1 * k;
     ctx.beginPath(); ctx.moveTo(9 * k, 0); ctx.lineTo(15 * k, 0); ctx.lineTo(17 * k, -1.8 * k); ctx.moveTo(15 * k, 0); ctx.lineTo(17 * k, 1.8 * k); ctx.stroke();
   }

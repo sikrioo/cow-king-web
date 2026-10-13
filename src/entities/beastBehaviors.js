@@ -98,6 +98,12 @@ export const beastBehaviors = {
       if (!last || Math.hypot(last.x - m.x, last.y - m.y) >= SNAKE.trailStep) { m.trail.unshift({ x: m.x, y: m.y }); if (m.trail.length > SNAKE.trailLen) m.trail.pop(); }
       if (m.dashCd > 0) m.dashCd -= dt;
       const h = game.hero;
+      if (m.state === 'attack') { // 근접 공격 중엔 주인공 쪽으로 머리를 돌림
+        let d = Math.atan2(h.y - m.y, h.x - m.x) - m.heading;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        m.heading += d * SNAKE.headTurn * 2;
+      }
 
       if (m.state === 'coil') { // 똬리 - 멈춰서 주인공을 겨눔
         m.stateElapsed += dt;
