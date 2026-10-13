@@ -22,6 +22,7 @@ export const SKILL_CODE = {
   spinblade: ['trySpinBlade', 'updateSpinBlade', 'strike'], skyfall: ['trySkyfall', 'updateSkyfall'], whirlaxe: ['tryWhirlAxe', 'updateWhirlAxe'],
   shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
   vitalthrow: ['tryVitalThrow', 'updateVitalThrow'],
+  holyhammer: ['tryHolyHammer', 'updateHammer', 'holyMul'], heavenbolt: ['tryHeavenBolt', 'updateHeavenBolt', 'holyMul'],
   aurathorns: ['pickAura', 'reflectThorns', 'updateAuras'], aurafire: ['pickAura', 'updateAuras'], aurafrost: ['pickAura', 'frostAuraSlow', 'getAuraSpeedMult'],
   apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };

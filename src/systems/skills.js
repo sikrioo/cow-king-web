@@ -18,6 +18,7 @@ import { applyKnockback } from '../entities/actor.js';
 import { canHit, getCowHitRadius, registerComboHit, tryPlayerAttack, killCow, skillDamageCow, heroHitDamage, rollWeaponDamage, getWeaponRange, physDamageTo, showCowDamage, rollHeroHit, applyOnHit } from './combat.js';
 import { tryBolt, tryFireballSpell, tryFrostNova, tryChain, tryOrb, tryPolymorph } from './sorcSkills.js';
 import { tryFortify, tryFlurry, tryConcuss, tryBerserk, tryDecoy } from './physSkills.js';
+import { tryHolyHammer, tryHeavenBolt } from './holySkills.js';
 import { tryEnergyShield, tryBlizzard, tryFlamePillar, tryFireWave, tryBallLightning, tryDischarge, tryMeteor, tryFireTotem, tryFrostField, tryThunderStrike } from './groundSpells.js';
 import { weaponElementHit } from './elementCombat.js';
 import { tryTeleport } from './commonSkills.js';
@@ -282,6 +283,10 @@ export const SKILLS = {
   flamepillar: { ...SKILL_META.flamepillar, try: () => tryFlamePillar(), cd: () => game.hero.spellCd.flamepillar, cdMax: () => SPELLS.flamepillar.cooldown * castSpeedMul(game.hero) },
   discharge: { ...SKILL_META.discharge, try: () => tryDischarge(),     cd: () => game.hero.spellCd.discharge, cdMax: () => SPELLS.discharge.cooldown * castSpeedMul(game.hero) },
   ...Object.fromEntries([['firetotem', tryFireTotem], ['frostfield', tryFrostField], ['thunderstrike', tryThunderStrike]].map(([id, fn]) => [id, {
+    ...SKILL_META[id], try: () => fn(), cd: () => game.hero.spellCd[id], cdMax: () => SPELLS[id].cooldown * castSpeedMul(game.hero)
+  }])),
+  // 전사 신성 스킬 (systems/holySkills.js) - 수치는 SPELLS
+  ...Object.fromEntries([['holyhammer', tryHolyHammer], ['heavenbolt', tryHeavenBolt]].map(([id, fn]) => [id, {
     ...SKILL_META[id], try: () => fn(), cd: () => game.hero.spellCd[id], cdMax: () => SPELLS[id].cooldown * castSpeedMul(game.hero)
   }])),
   meteor: { ...SKILL_META.meteor, try: () => tryMeteor(), cd: () => game.hero.spellCd.meteor, cdMax: () => SPELLS.meteor.cooldown * castSpeedMul(game.hero) },

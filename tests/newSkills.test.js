@@ -29,7 +29,7 @@ it('모든 스킬에 분류가 있고, 공통 스킬은 두 캐릭터 모두 카
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot();
-    Object.values(m.SKILL_META).forEach((s) => expect(['physical', 'magic', 'common']).toContain(s.type));
+    Object.values(m.SKILL_META).forEach((s) => expect(['physical', 'magic', 'common', 'holy']).toContain(s.type));
     expect(m.learnableSkills()).toContain('teleport');
     expect(m.learnableSkills()).toContain('fortify');
     m.ui.selectedClass = 'sorc'; m.resetGame();

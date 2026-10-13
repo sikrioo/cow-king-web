@@ -52,3 +52,16 @@ it('강타: 현재 체력의 1/4 (보스 1/8), 밀쳐내기: 경직 - 보스는 
     expect(b.stunTimer || 0).toBe(0);
   } finally { env.restore(); }
 });
+
+it('신성 피해: 해골·영혼·악마에게 +50%, 일반 카우는 그대로 (전사 신성 스킬)', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    const { damageCowPacket } = await import('../src/systems/elementCombat.js');
+    const { HOLY } = await import('../src/data/elements.js');
+    const cow = new m.Monster(0.4, 'normal'); cow.hp = cow.maxHp = 100000;
+    const skel = new m.Monster(0.4, 'skeleton'); skel.hp = skel.maxHp = 100000;
+    expect(damageCowPacket(cow, { holy: 100 })).toBe(100);
+    expect(damageCowPacket(skel, { holy: 100 })).toBe(Math.round(100 * (1 + HOLY.undeadBonus)));
+  } finally { env.restore(); }
+});

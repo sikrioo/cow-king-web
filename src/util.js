@@ -66,7 +66,7 @@ export function skillGearBonus(hero, id) {
   const g = hero.gearSkill, meta = SKILL_META[id];
   if (!g || !meta) return 0;
   let b = g.all || 0;
-  if (meta.type === 'physical') b += g.warrior || 0;
+  if (meta.type === 'physical' || meta.type === 'holy') b += g.warrior || 0; // 신성 = 전사 스킬
   if (meta.type === 'magic') b += g.sorc || 0;
   if (meta.elem) b += g[meta.elem] || 0;
   const kind = meta.weapon || meta.offhand;

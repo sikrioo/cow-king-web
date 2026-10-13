@@ -7,6 +7,9 @@ export const ELEMENT_DEF = {
   lightning: { label: '번개', short: '번', color: '#ffe94d' },
   poison:    { label: '독',   short: '독', color: '#7fe05a' }
 };
+// 신성 (2026-10-13 사용자: 전사 신성 스킬 - 원소가 아닌 따로인 피해 종류. 저항 키 'holy'(기본 0), 해골·영혼·악마에게 +undeadBonus)
+//   주인공 저항·장비 옵션은 없음 (주인공 → 몬스터만). 계산 systems/elementCombat.js damageCowPacket
+export const HOLY = { label: '신성', color: '#ffe38a', core: '#fffbe6', bolt: '#fff3b0', undeadBonus: 0.5 };
 export const PHYSICAL_COLOR = '#ff5b52'; // 물리 피해 숫자 색
 export const RESIST_CAP = 0.75;          // 주인공 저항 상한
 

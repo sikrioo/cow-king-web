@@ -16,6 +16,7 @@ import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from
 import { spawnProjectile } from './projectiles.js';
 import { begin, spellDamage } from './sorcSkills.js';
 import { clampToPen } from '../world/arena.js';
+import { HOLY_UPDATE } from './holySkills.js';
 
 export function tryEnergyShield() {
   const h = game.hero, s = SPELLS.energyshield;
@@ -318,6 +319,7 @@ export function updateGroundSpells(dt) {
     else if (g.kind === 'firetotem') updateFireTotem(g, dt);
     else if (g.kind === 'frostfield') updateFrostField(g, dt);
     else if (g.kind === 'thunder') updateThunder(g);
+    else if (HOLY_UPDATE[g.kind]) HOLY_UPDATE[g.kind](g, dt); // 전사 신성 스킬 (systems/holySkills.js)
     else if (g.kind === 'firefield') { g.tickT -= dt; if (g.tickT <= 0) { g.tickT += SPELLS.meteor.fieldTick; hitArea(g, { fire: g.dmg }, 0); } } // 메테오 불타는 바닥
     else if (g.kind === 'blizzard') {
       if (g.age >= g.delay) { // 지역이 다 생긴 뒤부터

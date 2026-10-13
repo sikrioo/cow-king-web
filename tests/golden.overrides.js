@@ -80,6 +80,9 @@ export const GOLDEN_ADDITIONS = {
   'exact.statDef.accuracy': { label: '명중률', min: 0.03, max: 0.13, fmtAtMax: '+13%' },
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,
+  // 2026-10-13: 전사 신성 스킬 (사용자)
+  'exact.progression.skillUnlockLevel.holyhammer': 4,
+  'exact.progression.skillUnlockLevel.heavenbolt': 7,
   'exact.progression.skillUnlockLevel.teleport': 3,
   // 2026-10-09: 새 스킬 - 전사 난타·뇌진탕·버서커·더미, 마법사 에너지 쉴드·화염기둥·눈보라
   // 2026-10-09: 대검(양손 전용, 사거리 가장 김) 추가 (사용자 요청)

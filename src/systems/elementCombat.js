@@ -1,9 +1,10 @@
 // 주인공 → 몬스터 원소 피해: 원소 마스터리(util.masteryBonus) → 몬스터 저항(data/monsters.js resist) → 피해 숫자(원소 색) → 상태 효과(화상/중독/둔화) → 처치
 // 몬스터 상태 갱신(지속 피해 틱, 둔화 시간). 주인공이 받는 쪽은 systems/elements.js
 import {
-  ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF, BLEED_COLOR
+  HOLY, ELEMENTS, BURN_RATIO, BURN_DURATION, POISON_RATIO, POISON_DURATION, DOT_TICK, MONSTER_CHILL_DURATION, ELEMENT_DEF, BLEED_COLOR
 } from '../data/elements.js';
 import { game } from '../state.js';
+import { MONSTERS } from '../data/monsters.js';
 import { masteryBonus } from '../util.js';
 import { applyKnockback } from '../entities/actor.js';
 import { killCow, registerComboHit, cowResist } from './combat.js';
@@ -11,6 +12,11 @@ import { damageColor } from './elements.js';
 import { spawnDamageNumber, spawnHitParticles } from './fx.js';
 
 // 원소 마스터리 (없으면 0)
+// 신성 피해 배율: 해골·영혼·악마 종족이면 더 셈 (data/elements.js HOLY)
+function holyMul(c) {
+  const d = MONSTERS[c.kind];
+  return d && (d.skeleton || d.soul || d.demon) ? 1 + HOLY.undeadBonus : 1;
+}
 const cardBonus = (key) => masteryBonus(game.hero, key);
 
 // packet = { phys, fire, cold, lightning, poison }, opts = { knock(밀어내는 힘), fromX, fromY } → 준 피해
@@ -25,8 +31,9 @@ export function damageCowPacket(c, packet, opts = {}) {
   };
   if (packet.phys) add('phys', Math.round(packet.phys * (1 - Math.min(1, cowResist(c, 'phys')))));
   ELEMENTS.forEach((el) => { if (packet[el]) add(el, Math.round(packet[el] * (1 + cardBonus(el)) * (1 - Math.min(1, cowResist(c, el))))); });
+  if (packet.holy) add('holy', Math.round(packet.holy * holyMul(c) * (1 - Math.min(1, cowResist(c, 'holy')))));
   // 맞힌 속성이 전부 면역이면 피해 0 + '면역' (그 밖엔 최소 1)
-  const immune = ['phys', ...ELEMENTS].every((k) => !packet[k] || cowResist(c, k) >= 1);
+  const immune = ['phys', ...ELEMENTS, 'holy'].every((k) => !packet[k] || cowResist(c, k) >= 1);
   if (immune) {
     spawnDamageNumber(c.x, c.y - 40 * c.scale, '면역', '#9a9a9a');
     return 0;
@@ -34,7 +41,7 @@ export function damageCowPacket(c, packet, opts = {}) {
   total = Math.max(1, total);
   c.hp -= total;
   c.flash = 0.12;
-  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${total}`, dominant === 'phys' ? '#fff' : damageColor(dominant));
+  spawnDamageNumber(c.x, c.y - 40 * c.scale, `-${total}`, dominant === 'phys' ? '#fff' : dominant === 'holy' ? HOLY.color : damageColor(dominant));
   if (opts.knock) {
     applyKnockback(c.body, opts.fromX, opts.fromY, opts.knock);
     c.knockback = Math.max(c.knockback || 0, 0.15);

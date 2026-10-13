@@ -8,7 +8,7 @@ export const CLASSES = {
   warrior: {
     label: '전사', desc: '근접 무기 · 높은 체력',
     hp: HERO_BASE_HP, mana: MAX_MANA, manaRegen: MANA_REGEN,
-    skills: ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash', 'fortify', 'flurry', 'concuss', 'berserk', 'decoy',
+    skills: ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash', 'fortify', 'flurry', 'concuss', 'berserk', 'decoy', 'holyhammer', 'heavenbolt',
       'aurathorns', 'aurafire', 'aurafrost',
       'spinblade', 'skyfall', 'whirlaxe', 'shieldbounce', 'rollmace', 'piercespear', 'vitalthrow'], slots: ['attack', 'warcry'], // skills 뒤 7개 = 무기 특수기 (마스터리 Lv3부터 카드)
     basic: 'melee', starterGear: true, staff: false,

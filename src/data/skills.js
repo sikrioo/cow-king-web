@@ -2,7 +2,7 @@
 // aim: 'free' = 자동 조준이 적을 겨누지 않음(순간이동 - 도망칠 때 적 쪽으로 가면 안 됨)
 // elem: 원소 스킬 분류(장비 '화염 스킬 +N' 같은 옵션) / 분류(type): physical(물리 - 전사) / magic(마법 - 마법사) / common(공통 - 모든 캐릭터). 배운 스킬은 전부 슬롯1/2에 Q/R로 넣음 캐릭터별 스킬 목록·순서는 data/classes.js, 동작(try/쿨다운)은 systems/skills.js의 SKILLS
 export const SKILL_ORDER = ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash']; // 전사 레거시 스킬 순서 (classes.warrior.skills 앞부분)
-export const SKILL_TYPE_LABEL = { physical: '물리', magic: '마법', common: '공통' };
+export const SKILL_TYPE_LABEL = { physical: '물리', magic: '마법', common: '공통', holy: '신성' }; // holy = 전사 신성 스킬 (마법처럼 항상 맞음, '전사 스킬' 옵션 적용)
 export const COMMON_SKILLS = ['teleport', 'apprentice']; // 모든 캐릭터가 카드로 배울 수 있음 (Q/R 전환 목록 뒤쪽에 붙음)
 export const SKILL_META = {
   attack:    { label: '공격',   type: 'physical', color: 'rgba(220,70,60,0.35)',   desc: '앞의 적을 무기로 벰' },
@@ -15,6 +15,9 @@ export const SKILL_META = {
   flurry:    { label: '난타',   type: 'physical', color: 'rgba(255,170,90,0.42)',  desc: '제자리에서 앞의 적을 빠르게 여러 번 벰' },
   concuss:   { label: '뇌진탕', type: 'physical', color: 'rgba(230,210,120,0.42)', desc: '앞의 적을 세게 내리쳐 오래 기절시킴' },
   berserk:   { label: '버서커', type: 'physical', color: 'rgba(220,40,40,0.45)',   desc: '잠깐 공격력·공격속도가 크게 오르지만 받는 피해도 늘어남' },
+  // 전사 신성 스킬 (2026-10-13 사용자: 전사의 약간의 마법 - 신성 피해, 해골·영혼·악마에게 더 셈. systems/holySkills.js)
+  holyhammer: { label: '신성 망치', type: 'holy', aim: 'free', color: 'rgba(255,227,138,0.5)', desc: '빛나는 망치가 내 자리에서 나선을 그리며 퍼져 나감 - 닿는 적에게 신성 피해 (해골·영혼·악마에게 더 셈)' },
+  heavenbolt: { label: '천벌', type: 'holy', color: 'rgba(255,243,176,0.5)', desc: '적 하나에게 하늘에서 신성한 번개가 내리꽂히고, 그 자리에서 빛줄기가 사방으로 퍼짐 (해골·영혼·악마에게 더 셈)' },
   decoy:     { label: '더미',   type: 'physical', color: 'rgba(200,200,210,0.40)', desc: '나와 같은 모습의 미끼 - 주변 몬스터가 미끼를 공격함' },
   // 오라 (전사, aura: true): 슬롯에 있는 동안만 켜짐(슬롯에 넣으면 AURA_SWITCH초 뒤), 하나만 - 두 슬롯 다 오라면 누른 쪽으로 바뀜. 마나 없음 (systems/auras.js)
   aurathorns: { label: '가시 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(160,110,60,0.5)',  desc: '켜 두는 오라 - 근접 공격을 받으면 받은 피해의 일부를 되돌려 줌' },
@@ -51,7 +54,7 @@ export const SKILL_META = {
 };
 // 새 스킬 카드가 나오기 시작하는 주인공 레벨. 스킬은 레벨업 카드로 배움(systems/levelCards.js) - 시작 슬롯 2개만 처음부터 Lv1
 export const SKILL_UNLOCK_LEVEL = {
-  attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7,
+  attack: 1, warcry: 1, rush: 2, leap: 3, smash: 4, whirlwind: 5, fortify: 3, flurry: 2, concuss: 4, berserk: 6, decoy: 7, holyhammer: 4, heavenbolt: 7,
   bolt: 1, fireball: 1, frostnova: 2, chain: 4, orb: 6, energyshield: 3, flamepillar: 5, firewave: 7, blizzard: 8, discharge: 3, balllightning: 6, polymorph: 9, meteor: 10, thunderstrike: 2, frostfield: 4, firetotem: 7,
   teleport: 3, aurathorns: 2, aurafire: 4, aurafrost: 6, apprentice: 5
 };
@@ -77,6 +80,7 @@ export const SKILL_LEVEL_UP = {
   concuss:   { damage: 0.12, stun: 0.15 },
   berserk:   { duration: 0.10, power: 0.08 }, // power: 공격력 증가 비율에 더함
   decoy:     { duration: 0.15, life: 0.15 },  // life: 미끼 체력 비율에 더함
+  holyhammer: { damage: 0.15, radius: 0.05 }, heavenbolt: { damage: 0.15 },
   energyshield: { duration: 0.10, amount: 0.15 }, // amount: 흡수량
   blizzard:  { damage: 0.12, radius: 0.06 },
   flamepillar: { damage: 0.15, radius: 0.08 },
@@ -189,6 +193,10 @@ export const SPELLS = {
   // 냉기 장판: 내 발밑에 너비 width × 높이 height 네모, duration초 - tick초마다 안의 적에게 냉기 damage(→ 둔화)
   frostfield: { mana: 18, cooldown: 8, duration: 5, tick: 0.5, damage: 12, width: 220, height: 140 },
   // 전기충격: range 안 적 하나(조준한 적, 없으면 조준 지점에 가까운 적) - delay초 뒤 하늘에서 번개 damage, 옆 splash 안 적은 × splashRatio
+  // 전사 신성 스킬: 신성 망치 - startRadius에서 spin(라디안/초)으로 돌며 growth(px/초)씩 퍼짐, duration초, 망치 판정 hitRadius, 망치마다 같은 적은 한 번
+  holyhammer: { mana: 6, cooldown: 0.55, damage: 32, startRadius: 12, growth: 85, spin: 5.6, duration: 2.2, hitRadius: 22 },
+  //   천벌: range 안 적 하나에 delay초 뒤 damage(옆 splash 안 × splashRatio) → 빛줄기 bolts개가 boltSpeed로 boltRange까지, 하나에 boltDamage
+  heavenbolt: { mana: 16, cooldown: 1.8, damage: 85, delay: 0.22, range: 380, splash: 50, splashRatio: 0.5, bolts: 8, boltDamage: 28, boltSpeed: 520, boltRange: 260, boltRadius: 18 },
   thunderstrike: { mana: 12, cooldown: 2.2, damage: 70, delay: 0.25, range: 380, splash: 45, splashRatio: 0.5 },
   meteor:    { mana: 26, cooldown: 7, damage: 90, delay: 1.0, fall: 0.45, radius: 90, range: 420, fieldTime: 3, fieldTick: 0.5, fieldDamage: 12, fieldRadius: 70 },
   polymorph: { mana: 25, cooldown: 18, radius: 180, duration: 2, eliteMul: 0.5, drWindow: 8, drMul: 0.5, wanderMul: 0.6, wanderTurn: 0.7 },

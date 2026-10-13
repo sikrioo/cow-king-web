@@ -6,6 +6,7 @@ import { drawPlayer } from './heroSprites.js';
 import { SPELLS } from '../data/skills.js';
 import { dischargeOrbs } from '../systems/groundSpells.js';
 import { drawMagicUnder, drawMagicOver } from './magicFx.js';
+import { drawHolyUnder, drawHolyOver } from './holyFx.js';
 import { activeAuras, auraRadius } from '../systems/auras.js';
 import { SKILL_STATS } from '../data/skills.js';
 
@@ -78,6 +79,7 @@ export function drawGroundSpellsUnder(ctx, t) {
   game.groundSpells.forEach((g, gi) => {
     ctx.save();
     drawMagicUnder(ctx, g, t, gi); // 화염 토템·냉기 장판·전기충격 (render/magicFx.js)
+    drawHolyUnder(ctx, g); // 천벌 (render/holyFx.js)
     if (g.kind === 'firefield') { // 메테오 자리: 그을린 바닥 + 일렁이는 불꽃 (끝나 갈수록 옅어짐)
       const fade = Math.min(1, (g.duration - g.age) * 2);
       ctx.globalAlpha = 0.35 * fade;
@@ -186,6 +188,7 @@ export function drawGroundSpellsOver(ctx, t) {
     if (g.kind === 'balllightning') { drawBall(ctx, g, t, gi); return; }
     if (g.kind === 'discharge') { drawDischarge(ctx, g, t, gi); return; }
     if (g.kind === 'firetotem') { ctx.save(); drawMagicOver(ctx, g, t, gi); ctx.restore(); return; }
+    if (g.kind === 'holyhammer' || g.kind === 'heavenbolt') { ctx.save(); drawHolyOver(ctx, g, t); ctx.restore(); return; }
     ctx.save();
     if (g.kind === 'blizzard' && g.age >= g.delay && g.age < g.duration) {
       // 눈 결정(육각 별 - 선 3개)이 돌며 떨어지고, 닿은 자리에 작은 하얀 김 - 선만 써서 가벼움(성능)
