@@ -439,5 +439,6 @@ export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.
 // 박치기 뱀 (2026-10-13 사용자: 튕기듯 박치기 돌진, 빗나가면 지나간 뒤 휘돌아 한 번 더 - 이중 돌진)
 //   range 안(minRange 밖)이면 coilTime초 똬리(예고선) → dashSpeed(px/초)로 dashDist 돌진, 맞으면 근접 피해 × dmgMul
 //   빗나가면 turnTime초 동안 turnSpeed로 미끄러지며 돌아 주인공을 겨눔 → dash2Dist 두 번째 돌진 → recover초 숨 고르기, 다음 돌진까지 cooldown초
-//   trailStep/trailLen: 몸 그림이 따라가는 자취 (render/beastSprites.js)
-export const SNAKE = { range: 280, minRange: 50, firstCd: 1.5, coilTime: 0.5, dashSpeed: 720, dashDist: 300, dash2Dist: 260, turnTime: 0.35, turnSpeed: 360, hitWidth: 22, dmgMul: 1.5, recover: 0.9, cooldown: 3.5, trailStep: 3, trailLen: 40 };
+//   trailStep/trailLen: 몸 그림이 따라가는 자취 (render/beastSprites.js) - 듬성듬성 찍어 물리 잡음(밀림·넉백)이 몸 굴곡에 안 남게
+//   headTurn: 기어갈 때 머리가 이동 방향으로 도는 비율(틱마다, 1 = 바로) - 홱 꺾이지 않게 (2026-10-14 사용자: 꾸물거려 이질적)
+export const SNAKE = { range: 280, minRange: 50, firstCd: 1.5, coilTime: 0.5, dashSpeed: 720, dashDist: 300, dash2Dist: 260, turnTime: 0.35, turnSpeed: 360, hitWidth: 22, dmgMul: 1.5, recover: 0.9, cooldown: 3.5, trailStep: 8, trailLen: 16, headTurn: 0.12 };

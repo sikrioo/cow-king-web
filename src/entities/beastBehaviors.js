@@ -88,7 +88,12 @@ export const beastBehaviors = {
     update(m, dt) {
       // 몸 자취 (그림이 따라 그림) + 기어갈 때 머리 방향
       const v = m.body.velocity;
-      if (m.state === 'walk' && Math.hypot(v.x, v.y) > 0.3) m.heading = Math.atan2(v.y, v.x);
+      if (m.state === 'walk' && Math.hypot(v.x, v.y) > 0.3) { // 머리는 이동 방향으로 서서히
+        let d = Math.atan2(v.y, v.x) - m.heading;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        m.heading += d * SNAKE.headTurn;
+      }
       const last = m.trail[0];
       if (!last || Math.hypot(last.x - m.x, last.y - m.y) >= SNAKE.trailStep) { m.trail.unshift({ x: m.x, y: m.y }); if (m.trail.length > SNAKE.trailLen) m.trail.pop(); }
       if (m.dashCd > 0) m.dashCd -= dt;

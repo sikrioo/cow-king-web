@@ -42,6 +42,9 @@ export function drawRat(ctx, x, y, scale, animT, facing, state, flash = false) {
   ctx.restore();
 }
 
+// 뱀 몸의 위아래 굴곡을 이만큼 눌러 그림 - 다른 몬스터(옆에서 본 그림)의 바닥 원처럼 납작하게 (2026-10-14 사용자: 시점이 달라 이질적)
+const SNAKE_SQUASH = 0.6;
+
 // 뱀 몸 마디 자리: 머리(m)에서 자취를 따라 뒤로 spacing씩 (자취가 짧으면 머리 반대쪽으로 곧게)
 function segmentPoints(m, n, spacing) {
   const pts = [{ x: m.x, y: m.y }];
@@ -57,14 +60,19 @@ function segmentPoints(m, n, spacing) {
   return pts;
 }
 
-// 뱀 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이): 자취를 따라 가늘어지는 검은 몸 + 등줄기 윤기 + 그림자 + 머리(붉은 눈, 똬리·돌진 땐 혀)
+// 뱀 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 / 10-14: 인위적인 흔들림 뺌, 매끈·납작하게): 자취를 따라 가늘어지는 검은 몸 + 등줄기 윤기 + 그림자 + 머리(붉은 눈, 똬리·돌진 땐 혀)
 export function drawSnake(ctx, m, animT, flash = false) {
   const k = m.scale / 0.4, c = flash ? { ...SNAKE_COLORS, ...WHITE } : SNAKE_COLORS;
-  const n = 10, pts = segmentPoints(m, n, 7 * k);
-  const head = m.heading || 0, px = -Math.sin(head), py = Math.cos(head);
+  const n = 10, raw = segmentPoints(m, n, 7 * k);
+  const head = m.heading || 0;
+  // 이웃 마디와 평균(매끈하게) + 위아래 굴곡을 머리 기준으로 납작하게
+  const pts = raw.map((p, i) => {
+    const a = raw[Math.max(0, i - 1)], b = raw[Math.min(n - 1, i + 1)];
+    const sx = i ? (a.x + p.x * 2 + b.x) / 4 : p.x, sy = i ? (a.y + p.y * 2 + b.y) / 4 : p.y;
+    return { x: sx, y: m.y + (sy - m.y) * SNAKE_SQUASH };
+  });
   const coil = m.state === 'coil' ? Math.min(1, m.stateElapsed / SNAKE.coilTime) : 0;
-  const wig = m.state === 'walk' ? 2.5 * k : 0; // 기어갈 때 살짝 좌우로
-  const at = (i) => { const p = pts[i], w = Math.sin(animT * 8 - i * 0.9) * wig * Math.min(1, i / 3); return { x: p.x + px * w, y: p.y + py * w - 5 * k }; };
+  const at = (i) => ({ x: pts[i].x, y: pts[i].y - 5 * k });
   const widthAt = (i) => (4 + (n - i) * 0.9) * k;
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
