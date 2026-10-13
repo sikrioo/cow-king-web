@@ -42,6 +42,7 @@ import { updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
 import {
   advanceScreen, startFromTitle, enterSelectedMap, requestExitMap, hubCycleMap, hubChangeOption
 } from './session.js';
+import { steerAroundObstacles } from './systems/obstacles.js';
 
 export { resetGame } from './session.js';
 export { initTitleScene, updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
@@ -107,6 +108,7 @@ export function fixedUpdate(dt) {
       }
     }
     updateItems(dt);
+    steerAroundObstacles(game.cows); // 구조물 앞에서 비비지 않게 둘레로 (systems/obstacles.js)
     Engine.update(engine, STEP_MS);
   }
   updateParticles(dt);

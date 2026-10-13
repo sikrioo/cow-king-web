@@ -21,7 +21,7 @@ import { MONSTER_CHILL_MOVE_MULT } from '../data/elements.js';
 import { BOSS_SLOW_SCALE } from '../data/balance.js';
 import { isBossCow, isSheep } from '../systems/cc.js';
 import { dropLoot } from '../systems/loot.js';
-import { clampToPen } from '../world/arena.js';
+import { clampToPen, obstacleAt } from '../world/arena.js';
 import { spellBehaviors } from './spellBehaviors.js';
 import { bossBehaviors } from './bossBehaviors.js';
 import { rangedBehaviors } from './rangedBehaviors.js';
@@ -214,8 +214,9 @@ export const behaviors = {
       if (m.state === 'charging') {
         m.stateElapsed += dt;
         const t = Math.min(m.stateElapsed / CHARGE_DURATION, 1);
-        const nx = m.chargeStart.x + (m.chargeTarget.x - m.chargeStart.x) * t;
-        const ny = m.chargeStart.y + (m.chargeTarget.y - m.chargeStart.y) * t;
+        let nx = m.chargeStart.x + (m.chargeTarget.x - m.chargeStart.x) * t;
+        let ny = m.chargeStart.y + (m.chargeTarget.y - m.chargeStart.y) * t;
+        if (obstacleAt(nx, ny, m.r * 0.6)) { nx = m.x; ny = m.y; m.chargeTarget = { x: nx, y: ny }; m.chargeStart = { x: nx, y: ny }; m.stateElapsed = CHARGE_DURATION; } // 구조물에 부딪힘 → 멈춤
         Body.setPosition(m.body, { x: nx, y: ny });
         Body.setVelocity(m.body, { x: 0, y: 0 });
         m.x = nx; m.y = ny;

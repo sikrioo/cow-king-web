@@ -13,7 +13,7 @@ import { canHit, getCowHitRadius, getCowBody, heroHitDamage, cowEdgeDist } from 
 import { damageCowPacket, weaponElementHit, bleedCow } from './elementCombat.js';
 import { applyCC, isBossCow } from './cc.js';
 import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText, spawnDamageNumber } from './fx.js';
-import { clampToPen } from '../world/arena.js';
+import { clampToPen, obstacleAt } from '../world/arena.js';
 
 const h = () => game.hero;
 const alive = () => game.cows.filter((c) => c.state !== 'dead' && canHit(game.hero, c));
@@ -333,6 +333,7 @@ export function updateThrows(dt) {
     t.age += dt;
     if (!game.hero.alive) t.done = true;
     else UPDATE[t.id](t, dt);
+    if ((t.phase === 'out' || t.phase === 'roll') && t.z < 40 && obstacleAt(t.x, t.y, 6)) { t.phase = 'back'; t.hits = new Map(); } // 구조물에 막힘 → 돌아옴
     (t.trail || (t.trail = [])).push({ x: t.x, y: t.y - t.z }); // 원소 꼬리 (그림용 지난 위치)
     if (t.trail.length > THROW_TRAIL) t.trail.shift();
     if (t.done) game.throws.splice(i, 1);

@@ -8,7 +8,7 @@ import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnShockwave } from '../systems/fx.js';
-import { clampToPen } from '../world/arena.js';
+import { clampToPen, obstacleAt } from '../world/arena.js';
 
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
 const ratsOf = (m) => game.cows.filter((c) => c.kind === 'rat' && c.summoner === m && c.state !== 'dead').length;
@@ -115,8 +115,9 @@ export const beastBehaviors = {
       if (m.state === 'strike') { // 박치기 돌진
         m.stateElapsed += dt;
         const step = SNAKE.dashSpeed * dt;
-        const p = clampToPen(m.x + Math.cos(m.heading) * step, m.y + Math.sin(m.heading) * step, m.r + 4);
-        const blocked = Math.hypot(p.x - m.x, p.y - m.y) < step * 0.5; // 벽
+        const wx = m.x + Math.cos(m.heading) * step, wy = m.y + Math.sin(m.heading) * step;
+        const p = clampToPen(wx, wy, m.r + 4);
+        const blocked = Math.hypot(p.x - wx, p.y - wy) > 1 || obstacleAt(wx, wy, m.r * 0.5); // 벽·구조물
         Body.setPosition(m.body, p); stop(m); m.x = p.x; m.y = p.y;
         m.dashLeft -= step;
         if (!m.dashHit && h.alive && Math.hypot(h.x - m.x, h.y - m.y) < SNAKE.hitWidth + m.r * 0.5) {

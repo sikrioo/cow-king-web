@@ -1,4 +1,5 @@
 // 관리자 - 드랍·난이도·맵: 출처별 드랍 확률(난이도 반영), 등급 분포, 소모품·장비 분류 비중, 난이도 표, 맵 표
+import { OBSTACLES } from '../../data/obstacles.js';
 import { DROP_RATES, POTION_DROP_WEIGHTS, GEAR_CATEGORY_WEIGHTS } from '../../data/drops.js';
 import { DIFFICULTY, DIFFICULTY_ORDER } from '../../data/difficulty.js';
 import { RARITY_DEF, POTION_LABEL, GEAR_CATEGORY_LABEL } from '../../data/items.js';
@@ -94,6 +95,7 @@ export function renderDrops(root) {
       { label: '크기', num: true, get: (k) => MAPS[k].size },
       { label: '레벨 보탬', num: true, get: (k) => MAPS[k].mlvl || (MAPS[k].mode === 'wave' ? '웨이브마다' : 0) },
       { label: '무리', get: (k) => (MAPS[k].packs ? `${MAPS[k].packs}개 × ${MAPS[k].packSize[0]}~${MAPS[k].packSize[1]}마리` : '웨이브') },
+      { label: '구조물', get: (k) => Object.entries(MAPS[k].obstacles || {}).map(([o, n]) => `${OBSTACLES[o].label} ${n}`).join(', ') || '-' },
       { label: '몬스터 구성', get: (k) => { const m = MAPS[k].kinds; if (!m) return '웨이브 규칙(몬스터 탭)'; const s = share(m); return Object.keys(m).map((x) => `${MONSTER_LABEL[x]} ${pct(s(x))}`).join(', '); } },
       { label: '면역', get: (k) => (MAPS[k].immune ? MAPS[k].immune.map((i) => IMMUNE_NAME[i]).join('·') : '') },
       { label: '우두머리', get: (k) => (MAPS[k].boss ? `${MONSTER_LABEL[MAPS[k].boss.kind]} 체력 ×${MAPS[k].boss.hpMul}, 드랍 ${MAPS[k].boss.drops}번` : '') }

@@ -9,6 +9,7 @@ export const MAPS = {
     mode: 'wave',
     desc: '웨이브가 계속 몰려오는 레벨업 장소 - 난이도마다 1웨이브부터',
     start: { x: 0.5, y: 0.5 }, // 주인공 시작 위치 (맵 크기 비율)
+    obstacles: { hay: 9, fence: 6 }, // 구조물 개수 (data/obstacles.js, 2026-10-14 - 막이 바뀌어도 그대로)
     size: 1900,             // 정사각형 한 변(px). 2026-10-05: 화면 맞춤(PC 약 950) → 고정 1900(넓이 약 4배)
     wallThickness: 24,      // 울타리 벽 두께(px)
     spawnMarginRatio: 0.14, // 무작위 위치를 뽑을 때 가장자리에서 띄우는 비율
@@ -38,6 +39,7 @@ export const MAPS = {
     wallThickness: 24,
     spawnMarginRatio: 0.1,
     start: { x: 0.5, y: 0.92 },   // 아래쪽 가운데에서 시작
+    obstacles: { hay: 7, fence: 5 }, // 구조물 개수 (data/obstacles.js)
     mlvl: 4,                      // 몬스터 레벨 보탬 (data/difficulty.js mlvl에 더함)
     packs: 11,                    // 무리 수 (마지막 하나가 우두머리 무리) - 2026-10-12 9 → 11
     packSize: [6, 10],            // 무리당 마리 수 (최소, 최대) - 2026-10-12 [4,7] → [6,10] (적이 적음, 약 1.6배)

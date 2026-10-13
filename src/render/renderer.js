@@ -20,6 +20,8 @@ import { drawCardOffer } from '../ui/cardPick.js';
 import {
   drawTitleScene, drawTitleOverlay, drawStartCountdown, drawWavePresentation, drawActScene, drawDemoTip, drawPauseOverlay
 } from '../ui/overlays.js';
+import { obstacles } from '../world/arena.js';
+import { drawObstacle } from './obstacleSprites.js';
 
 export function render(t) {
   ctx.fillStyle = '#0c1f10';
@@ -67,6 +69,7 @@ export function render(t) {
   const visibleCows = game.cows.filter((c) => inView(c.x, c.y, 160));
   const drawables = visibleCows.map((c) => ({ y: c.y, fn: () => drawMonster(c, ctx, t) }));
   drawables.push({ y: game.hero.y, fn: () => drawPlayer(ctx, t) });
+  obstacles.forEach((o) => { if (inView((o.ax + o.bx) / 2, o.ay, 260)) drawables.push({ y: o.ay, fn: () => drawObstacle(ctx, o, game.hero) }); }); // 구조물 (render/obstacleSprites.js)
   if (game.decoy) drawables.push({ y: game.decoy.y, fn: () => drawDecoy(ctx, t) }); // 전사 '더미'
   drawables.sort((a, b) => a.y - b.y).forEach((d) => d.fn());
   drawImmuneLabels(ctx, visibleCows);

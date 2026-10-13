@@ -27,7 +27,7 @@ import { tryApprentice } from './apprentice.js';
 import { trySpinBlade, trySkyfall, tryWhirlAxe, tryShieldBounce, tryRollMace, tryPierceSpear, tryVitalThrow, specialUsable } from './weaponThrows.js';
 import { spawnHitParticles, emitMoveReaction, spawnShockwave, spawnDamageNumber } from './fx.js';
 import { isSkillUnlocked } from './progression.js';
-import { PEN, clampToPen } from '../world/arena.js';
+import { PEN, clampToPen, obstacleAt } from '../world/arena.js';
 import { castSpeedMul, attackSpeedMul, skillMul, skillBonus, skillGearBonus, specialUsable as usableFor } from '../util.js';
 import { aim } from './aim.js';
 
@@ -110,6 +110,7 @@ export function tryLeap() {
   let ty = game.hero.y + Math.sin(game.hero.facing) * LEAP_DISTANCE;
   tx = Math.min(Math.max(tx, PEN.x + margin), PEN.x + PEN.size - margin);
   ty = Math.min(Math.max(ty, PEN.y + margin), PEN.y + PEN.size - margin);
+  ({ x: tx, y: ty } = clampToPen(tx, ty, margin)); // 구조물 위로는 뛰어넘되 그 안에 착지하지 않게
   game.hero.leapTo.x = tx;
   game.hero.leapTo.y = ty;
   game.shake = Math.min(game.shake + 3, 12);
@@ -188,8 +189,9 @@ export function updateRush(dt) {
   game.hero.rushTimer -= dt;
   const raw = 1 - Math.max(game.hero.rushTimer, 0) / RUSH_DURATION;
   const t = 1 - Math.pow(1 - raw, 2.4);
-  const nx = game.hero.rushFrom.x + (game.hero.rushTo.x - game.hero.rushFrom.x) * t;
-  const ny = game.hero.rushFrom.y + (game.hero.rushTo.y - game.hero.rushFrom.y) * t;
+  let nx = game.hero.rushFrom.x + (game.hero.rushTo.x - game.hero.rushFrom.x) * t;
+  let ny = game.hero.rushFrom.y + (game.hero.rushTo.y - game.hero.rushFrom.y) * t;
+  if (obstacleAt(nx, ny, game.hero.r * 0.8)) { nx = game.hero.x; ny = game.hero.y; game.hero.rushTimer = 0; } // 구조물에 부딪혀 멈춤
 
   Body.setPosition(game.hero.body, { x: nx, y: ny });
   Body.setVelocity(game.hero.body, { x: 0, y: 0 });

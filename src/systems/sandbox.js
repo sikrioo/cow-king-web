@@ -12,12 +12,13 @@ import { game, input, dev } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { SKILLS, trySlot } from './skills.js';
 import { PEN } from '../world/arena.js';
+import { clearObstacles } from './obstacles.js';
 
 const DUMMY_HP = 999999;
 const CAST_GAP = 0.45;      // 스킬 대기시간이 끝난 뒤 다음 시전까지 쉬는 시간(초) - 연출이 겹치지 않게
 const RESPAWN_DELAY = 1.5;  // 몬스터 미리보기: 죽거나 사라진 뒤 다시 나오기까지
 // 허수아비 자리 (주인공 기준 px): 바로 앞 한 마리(근접) + 앞쪽 무리 + 옆 두 마리 (범위 스킬이 주변을 치는 것도 보이게)
-const DUMMY_SPOTS = [[58, 0], [130, -40], [160, 45], [215, 0], [270, -65], [285, 60], [10, -120], [10, 120]];
+const DUMMY_SPOTS = [[50, 0], [130, -40], [160, 45], [215, 0], [270, -65], [285, 60], [10, -120], [10, 120]];
 
 // 주소에서 샌드박스 설정 읽기 (없으면 null)
 export function sandboxParams(search = typeof location !== 'undefined' ? location.search : '') {
@@ -53,6 +54,7 @@ export function startSandbox(sb) {
   const h = game.hero;
   const cx = PEN.x + PEN.size / 2, cy = PEN.y + PEN.size / 2;
   game.sandbox = { ...sb, timer: 0.8, anchor: { x: cx, y: cy }, respawn: 0 };
+  clearObstacles(); // 미리보기엔 구조물 없음
   dev.god = true;
   dev.infiniteMana = true;
   dev.sureHit = true; // 미리보기는 빗나가지 않게

@@ -14,7 +14,7 @@ import { hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnShockwave, floatText } from '../systems/fx.js';
 import { bossDown } from '../systems/acts.js';
 import { applyKnockback } from './actor.js';
-import { clampToPen } from '../world/arena.js';
+import { clampToPen, obstacleAt } from '../world/arena.js';
 
 const zoneCount = (m) => (m.phase2 ? BOSS_SLAM_ZONES.length : BOSS_SLAM_ZONES.length - 1);
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
@@ -67,7 +67,8 @@ export const bossBehaviors = {
       if (m.state === 'bossCharging') {
         m.stateElapsed += dt;
         const k = Math.min(1, m.stateElapsed / BOSS_CHARGE_TIME);
-        const nx = m.chargeFrom.x + (m.chargeTarget.x - m.chargeFrom.x) * k, ny = m.chargeFrom.y + (m.chargeTarget.y - m.chargeFrom.y) * k;
+        let nx = m.chargeFrom.x + (m.chargeTarget.x - m.chargeFrom.x) * k, ny = m.chargeFrom.y + (m.chargeTarget.y - m.chargeFrom.y) * k;
+        if (k < 1 && obstacleAt(nx, ny, m.r * 0.6)) { nx = m.x; ny = m.y; m.chargeFrom = { x: nx, y: ny }; m.chargeTarget = { x: nx, y: ny }; m.chargeWall = true; m.stateElapsed = BOSS_CHARGE_TIME; } // 구조물 = 벽처럼 박힘
         Body.setPosition(m.body, { x: nx, y: ny }); stop(m);
         m.x = nx; m.y = ny;
         if (!m.chargeHit && game.hero.alive && Math.hypot(game.hero.x - nx, game.hero.y - ny) < BOSS_CHARGE_WIDTH + m.r * 0.5) {

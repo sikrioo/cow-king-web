@@ -10,6 +10,7 @@ import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
 import { begin, spellDamage } from './sorcSkills.js';
 import { HOLY } from '../data/elements.js';
+import { obstacleAt } from '../world/arena.js';
 
 // 망치 자리 (그림도 같은 식): 시작 각도에서 spin(라디안/초)으로 돌며 반경이 growth(px/초)씩 커짐
 export function hammerPos(g, age = g.age) {
@@ -28,6 +29,7 @@ export function tryHolyHammer() {
 }
 function updateHammer(g) {
   const s = SPELLS.holyhammer, h = game.hero, p = hammerPos(g);
+  if (obstacleAt(p.x, p.y, 4)) { spawnHitParticles(p.x, p.y - 20, HOLY.color, 6); g.duration = g.age; return; } // 구조물에 막힘
   game.cows.forEach((c) => {
     if (c.state === 'dead' || g.hits.has(c) || !canHit(h, c)) return;
     if (Math.hypot(c.x - p.x, c.y - p.y) > s.hitRadius + getCowHitRadius(c)) return;
@@ -74,6 +76,7 @@ function updateHeavenBolt(g, dt) {
     if (b.trav >= s.boltRange) return;
     const step = s.boltSpeed * dt;
     b.x += b.dx * step; b.y += b.dy * step; b.trav += step;
+    if (obstacleAt(b.x, b.y, 4)) { b.trav = s.boltRange; return; } // 구조물에 막힘
     game.cows.forEach((c) => {
       if (c.state === 'dead' || b.hits.has(c) || !canHit(h, c)) return;
       if (Math.hypot(c.x - b.x, c.y - b.y) > s.boltRadius + getCowHitRadius(c)) return;

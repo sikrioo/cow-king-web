@@ -98,6 +98,7 @@ it('난타: 앞의 적을 여러 번 벰(그동안 제자리), 뇌진탕: 피해
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot('warrior');
+    (await import('../src/state.js')).dev.sureHit = true; // 명중 판정은 이 테스트 대상이 아님
     const h = m.game.hero;
     const c = m.place(45);
     c.speed = 0;

@@ -9,6 +9,7 @@ import { game } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { setMap, PEN, clampToPen, randomPointInPen } from '../world/arena.js';
 import { floatText } from './fx.js';
+import { layoutObstacles } from './obstacles.js';
 
 // 맵 안의 것 전부 치움 (몬스터 바디, 바닥 아이템, 이펙트)
 export function clearWorld() {
@@ -60,6 +61,7 @@ export function beginRun(mapId, opts = {}) {
   Body.setPosition(game.hero.body, p);
   Body.setVelocity(game.hero.body, { x: 0, y: 0 });
   game.hero.x = p.x; game.hero.y = p.y;
+  layoutObstacles(def.obstacles, p); // 구조물 (들어갈 때마다 새로, 시작 자리 비움)
 
   if (farm) {
     game.wave = 0;
