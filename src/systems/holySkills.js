@@ -1,11 +1,11 @@
 // 전사 신성 스킬 (2026-10-13 사용자: 전사에게 주는 약간의 마법 - 원소가 아닌 신성 피해, 마법이라 항상 맞음)
 //   신성 망치: 시전한 자리에서 망치가 나선을 그리며 퍼져 나감 (game.groundSpells kind 'holyhammer') - 망치마다 같은 적은 한 번
-//   천벌: 적 하나에 하늘에서 신성한 번개 → 그 자리에서 빛줄기가 사방으로 (kind 'heavenbolt') - 빛줄기마다 같은 적은 한 번, 맞은 대상은 빛줄기에 안 맞음
+//   천벌: 적 하나에만 하늘에서 신성한 번개 → 그 자리에서 빛의 구슬(빛줄기)이 사방으로 서서히 (kind 'heavenbolt') - 빛줄기마다 같은 적은 한 번, 맞은 대상은 빛줄기에 안 맞음
 // 신성 피해 규칙(해골·영혼·악마에게 더 셈)은 elementCombat.damageCowPacket, 수치는 data/skills.js SPELLS, 그림은 render/holyFx.js
 import { SPELLS } from '../data/skills.js';
 import { game } from '../state.js';
 import { skillMul } from '../util.js';
-import { canHit, cowEdgeDist, getCowHitRadius, getCowBody } from './combat.js';
+import { canHit, getCowHitRadius, getCowBody } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from './fx.js';
 import { begin, spellDamage } from './sorcSkills.js';
@@ -58,15 +58,11 @@ function updateHeavenBolt(g, dt) {
     const top = getCowBody(g.target);
     spawnLightningBolt(g.x + 24, g.y - 430, top.x, top.y, HOLY.bolt);
     spawnLightningBolt(g.x - 16, g.y - 400, top.x, top.y, HOLY.bolt);
-    spawnShockwave(g.x, g.y, s.splash + 12, HOLY.color);
+    spawnShockwave(g.x, g.y, 40, HOLY.color);
     spawnHitParticles(g.x, g.y - 30, HOLY.color, 14);
     game.impactFlash = Math.max(game.impactFlash, 0.1);
     game.shake = Math.min(game.shake + 4, 12);
     if (g.target.state !== 'dead') damageCowPacket(g.target, { holy: g.dmg }, { knock: 2, fromX: g.x, fromY: g.y - 1 });
-    game.cows.forEach((c) => {
-      if (c === g.target || c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, g.x, g.y) > s.splash) return;
-      damageCowPacket(c, { holy: Math.round(g.dmg * s.splashRatio) });
-    });
     // 빛줄기: 대상 둘레에서 사방으로 (같은 간격, 시작 각도는 시전 방향)
     for (let i = 0; i < s.bolts; i++) {
       const a = h.facing + (i / s.bolts) * Math.PI * 2;

@@ -17,7 +17,7 @@ export const SKILL_META = {
   berserk:   { label: '버서커', type: 'physical', color: 'rgba(220,40,40,0.45)',   desc: '잠깐 공격력·공격속도가 크게 오르지만 받는 피해도 늘어남' },
   // 전사 신성 스킬 (2026-10-13 사용자: 전사의 약간의 마법 - 신성 피해, 해골·영혼·악마에게 더 셈. systems/holySkills.js)
   holyhammer: { label: '신성 망치', type: 'holy', aim: 'free', color: 'rgba(255,227,138,0.5)', desc: '빛나는 망치가 내 자리에서 나선을 그리며 퍼져 나감 - 닿는 적에게 신성 피해 (해골·영혼·악마에게 더 셈)' },
-  heavenbolt: { label: '천벌', type: 'holy', color: 'rgba(255,243,176,0.5)', desc: '적 하나에게 하늘에서 신성한 번개가 내리꽂히고, 그 자리에서 빛줄기가 사방으로 퍼짐 (해골·영혼·악마에게 더 셈)' },
+  heavenbolt: { label: '천벌', type: 'holy', color: 'rgba(255,243,176,0.5)', desc: '적 하나에게 하늘에서 신성한 번개가 내리꽂히고, 그 자리에서 빛의 구슬이 사방으로 서서히 퍼짐 (해골·영혼·악마에게 더 셈)' },
   decoy:     { label: '더미',   type: 'physical', color: 'rgba(200,200,210,0.40)', desc: '나와 같은 모습의 미끼 - 주변 몬스터가 미끼를 공격함' },
   // 오라 (전사, aura: true): 슬롯에 있는 동안만 켜짐(슬롯에 넣으면 AURA_SWITCH초 뒤), 하나만 - 두 슬롯 다 오라면 누른 쪽으로 바뀜. 마나 없음 (systems/auras.js)
   aurathorns: { label: '가시 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(160,110,60,0.5)',  desc: '켜 두는 오라 - 근접 공격을 받으면 받은 피해의 일부를 되돌려 줌' },
@@ -195,8 +195,9 @@ export const SPELLS = {
   // 전기충격: range 안 적 하나(조준한 적, 없으면 조준 지점에 가까운 적) - delay초 뒤 하늘에서 번개 damage, 옆 splash 안 적은 × splashRatio
   // 전사 신성 스킬: 신성 망치 - startRadius에서 spin(라디안/초)으로 돌며 growth(px/초)씩 퍼짐, duration초, 망치 판정 hitRadius, 망치마다 같은 적은 한 번
   holyhammer: { mana: 6, cooldown: 0.55, damage: 32, startRadius: 12, growth: 85, spin: 5.6, duration: 2.2, hitRadius: 22 },
-  //   천벌: range 안 적 하나에 delay초 뒤 damage(옆 splash 안 × splashRatio) → 빛줄기 bolts개가 boltSpeed로 boltRange까지, 하나에 boltDamage
-  heavenbolt: { mana: 16, cooldown: 1.8, damage: 85, delay: 0.22, range: 380, splash: 50, splashRatio: 0.5, bolts: 8, boltDamage: 28, boltSpeed: 520, boltRange: 260, boltRadius: 18 },
+  //   천벌: range 안 적 하나에만 delay초 뒤 damage → 그 자리에서 빛줄기 bolts개가 boltSpeed로 boltRange까지 서서히 퍼짐, 하나에 boltDamage
+  //   (2026-10-13 사용자: 내리치는 번개는 단일 대상 - 옆 피해 없앰, 빛줄기 520 → 260 = 50% 느리게)
+  heavenbolt: { mana: 16, cooldown: 1.8, damage: 85, delay: 0.22, range: 380, bolts: 8, boltDamage: 28, boltSpeed: 260, boltRange: 260, boltRadius: 18 },
   thunderstrike: { mana: 12, cooldown: 2.2, damage: 70, delay: 0.25, range: 380, splash: 45, splashRatio: 0.5 },
   meteor:    { mana: 26, cooldown: 7, damage: 90, delay: 1.0, fall: 0.45, radius: 90, range: 420, fieldTime: 3, fieldTick: 0.5, fieldDamage: 12, fieldRadius: 70 },
   polymorph: { mana: 25, cooldown: 18, radius: 180, duration: 2, eliteMul: 0.5, drWindow: 8, drMul: 0.5, wanderMul: 0.6, wanderTurn: 0.7 },

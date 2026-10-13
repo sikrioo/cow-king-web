@@ -3,6 +3,7 @@
 import { SPELLS } from '../data/skills.js';
 import { HOLY } from '../data/elements.js';
 import { hammerPos } from '../systems/holySkills.js';
+import { hash01 } from '../util.js';
 
 const HAMMER_LIFT = 30; // 망치·빛줄기를 그리는 높이 (몸통 높이)
 
@@ -54,19 +55,39 @@ export function drawHolyOver(ctx, g, t) {
   }
   if (g.kind === 'heavenbolt' && g.struck) {
     const s = SPELLS.heavenbolt;
-    ctx.lineCap = 'round';
-    g.bolts.forEach((b) => {
+    g.bolts.forEach((b, bi) => {
       if (b.trav >= s.boltRange) return;
-      const fade = Math.min(1, (s.boltRange - b.trav) / 60);
-      const x = b.x, y = b.y - HAMMER_LIFT, tx = x - b.dx * 30, ty = y - b.dy * 30;
-      ctx.globalAlpha = 0.45 * fade;
-      ctx.strokeStyle = HOLY.color;
-      ctx.lineWidth = 9;
-      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(x, y); ctx.stroke();
-      ctx.globalAlpha = 0.95 * fade;
+      const fade = Math.min(1, (s.boltRange - b.trav) / 70, b.trav / 20 + 0.3);
+      const x = b.x, y = b.y - HAMMER_LIFT;
+      // 빛 가루 꼬리: 지나온 길에 흩날리며 사라지는 작은 빛
+      for (let k = 1; k <= 6; k++) {
+        const back = k * 9, side = (hash01(bi, k, Math.floor(b.trav / 9)) - 0.5) * 8;
+        const px = x - b.dx * back - b.dy * side, py = y - b.dy * back + b.dx * side - k * 1.5;
+        ctx.globalAlpha = fade * (0.55 - k * 0.08);
+        ctx.fillStyle = k % 2 ? HOLY.core : HOLY.color;
+        ctx.beginPath(); ctx.arc(px, py, 2.6 - k * 0.3, 0, Math.PI * 2); ctx.fill();
+      }
+      const pulse = 1 + Math.sin(t * 14 + bi) * 0.12;
+      ctx.globalAlpha = fade * 0.18; // 바깥 빛
+      ctx.fillStyle = HOLY.color;
+      ctx.beginPath(); ctx.arc(x, y, 17 * pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = fade * 0.35;
+      ctx.beginPath(); ctx.arc(x, y, 10 * pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = fade * 0.95; // 하얀 심
+      ctx.fillStyle = HOLY.core;
+      ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+      // 십자 별빛 (천천히 돌며 반짝)
+      const rot = t * 2 + bi, len = 13 * pulse;
       ctx.strokeStyle = HOLY.core;
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(x, y); ctx.stroke();
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 1.6;
+      ctx.globalAlpha = fade * 0.85;
+      ctx.beginPath();
+      for (let j = 0; j < 2; j++) {
+        const a = rot + j * Math.PI / 2, l = j ? len * 0.7 : len;
+        ctx.moveTo(x - Math.cos(a) * l, y - Math.sin(a) * l); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l);
+      }
+      ctx.stroke();
     });
   }
 }
