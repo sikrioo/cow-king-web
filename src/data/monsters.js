@@ -40,7 +40,7 @@ export const MONSTERS = {
   // 짐승 (2026-10-13 사용자: 다양성 - 소가 아닌 몬스터, entities/beastBehaviors.js · render/beastSprites.js)
   //   rat: 쥐 그림, unholy: 신성 피해에 약함(악마 쥐), snake: 뱀 그림. 악마 쥐는 쥐떼 카우가 불러냄(웨이브 목록엔 없음)
   ratKeeper: { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 2.4, exp: 32, ring: '#b0483a', colors: { hide: '#6a5a50', horn: '#e0d0c0', snout: '#3a2e28', eye: '#ff3b30' } },
-  rat:       { hp: 15, dmg: 10, scaleMul: 0.5, speedMul: 1.35, aggroMul: 2.5, exp: 3,  rat: true, unholy: true, ring: null, colors: null },
+  rat:       { hp: 15, dmg: 10, scaleMul: 0.5, speedMul: 2.0,  aggroMul: 2.5, exp: 3,  rat: true, unholy: true, ring: null, colors: null },
   snake:     { hp: 55, dmg: 30, scaleMul: 1,   speedMul: 1.1,  aggroMul: 1.6, exp: 26, snake: true, hitAt: 0.25, attackTime: 0.6, // 근접: 고개를 젖혔다가 0.25초에 물기 (2026-10-14)
                ring: '#9be35a', colors: null },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)

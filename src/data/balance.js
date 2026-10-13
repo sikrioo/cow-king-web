@@ -435,7 +435,7 @@ export const MONSTER_MOVE = {
 // 쥐떼 카우 (2026-10-13 사용자: 작은 악마 쥐를 불러 군대처럼 대형을 지어 공격 - entities/beastBehaviors.js)
 //   firstCd/cooldown초마다(살아 있는 내 쥐가 maxAlive - 한 부대 이하일 때) castTime초 주문 → 내 앞 ahead에 cols × rows 대형(간격 spacing)
 //   부대 기준점이 주인공 쪽으로 행군(쥐 속도 × marchMul, 자리가 멀면 × catchUpMul까지 따라잡음) → 주인공 breakDist 안 / breakBelow마리 이하 / maxMarch초면 대형을 풀고 각자 덤빔
-export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.5, cooldown: 10, castTime: 0.8, maxAlive: 18, breakDist: 110, breakBelow: 2, maxMarch: 9, marchMul: 0.85, catchUpMul: 1.5 };
+export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.5, cooldown: 10, castTime: 0.8, maxAlive: 18, breakDist: 110, breakBelow: 2, maxMarch: 9, marchMul: 0.9, catchUpMul: 1.5 }; // 2026-10-14 쥐 속도 1.35 → 2.0배(사용자: 느림), 행군 0.85 → 0.9
 // 박치기 뱀 (2026-10-13 사용자: 튕기듯 박치기 돌진, 빗나가면 지나간 뒤 휘돌아 한 번 더 - 이중 돌진)
 //   range 안(minRange 밖)이면 coilTime초 똬리(예고선) → dashSpeed(px/초)로 dashDist 돌진, 맞으면 근접 피해 × dmgMul
 //   빗나가면 turnTime초 동안 turnSpeed로 미끄러지며 돌아 주인공을 겨눔 → dash2Dist 두 번째 돌진 → recover초 숨 고르기, 다음 돌진까지 cooldown초
