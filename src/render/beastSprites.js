@@ -8,28 +8,35 @@ function stunDots(ctx, x, y, animT, r) {
   for (let i = 0; i < 3; i++) { const a = animT * 6 + (i * Math.PI * 2) / 3; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 3, y + Math.sin(a) * r, r * 0.6, 0, Math.PI * 2); ctx.fill(); }
 }
 
-const WHITE = { body: '#ffffff', line: '#ffffff', eye: '#ffffff' };
-// 검은 몸 + 흰 테두리(어두운 바닥에서도 보이게) + 붉은 눈 (2026-10-13 사용자)
-export const RAT_COLORS = { body: '#141414', line: '#f2f2f2', eye: '#ff2a2a' };
-export const SNAKE_COLORS = { body: '#141414', line: '#f2f2f2', eye: '#ff2a2a' };
+const WHITE = { body: '#ffffff', shine: '#ffffff', ear: '#ffffff', tail: '#ffffff', eye: '#ffffff' };
+// 검은 몸 + 붉은 눈 (2026-10-13 사용자) - 흰 테두리는 주인공과 헷갈려서 빼고, 어두운 바닥에서 보이게 옅은 회색 윤기만
+export const RAT_COLORS = { body: '#161618', shine: '#5a5a62', ear: '#3a3a40', tail: '#4a4a52', eye: '#ff2a2a' };
+export const SNAKE_COLORS = { body: '#161618', shine: '#5a5a62', eye: '#ff2a2a' };
 
-// 쥐 (2026-10-13 사용자: 더 단순하게, 검은 몸·흰 테두리·붉은 눈, 콩콩 대신 스르륵): 눈물방울 실루엣 하나 + 꼬리 선 + 눈
+// 쥐 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 - 주인공과 헷갈림): 검은 실루엣 + 등의 옅은 윤기 + 귀 + 꼬리 + 붉은 눈, 스르륵 미끄러짐
 export function drawRat(ctx, x, y, scale, animT, facing, state, flash = false) {
   const k = scale / 0.2, c = flash ? { ...RAT_COLORS, ...WHITE } : RAT_COLORS;
   ctx.save();
   ctx.translate(x, y);
+  ctx.globalAlpha *= 0.25; // 그림자
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.ellipse(0, 0, 12 * k, 3 * k, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha /= 0.25;
   ctx.scale(facing, 1);
   if (state === 'attack') ctx.translate(4 * k, 0);
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = c.line; ctx.lineWidth = 1.5 * k; // 꼬리
-  ctx.beginPath(); ctx.moveTo(-11 * k, -4 * k); ctx.quadraticCurveTo(-18 * k, -2 * k, -22 * k, -8 * k); ctx.stroke();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = c.tail; ctx.lineWidth = 1.5 * k; // 꼬리 (살랑)
+  ctx.beginPath(); ctx.moveTo(-11 * k, -4 * k); ctx.quadraticCurveTo(-18 * k, -2 * k + Math.sin(animT * 6) * 2 * k, -22 * k, -8 * k); ctx.stroke();
   ctx.fillStyle = c.body; // 몸 + 주둥이
   ctx.beginPath();
   ctx.moveTo(16 * k, -5 * k);
   ctx.quadraticCurveTo(4 * k, -15 * k, -7 * k, -12 * k);
   ctx.quadraticCurveTo(-14 * k, -9 * k, -11 * k, -1 * k);
   ctx.lineTo(9 * k, -1 * k);
-  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = c.shine; ctx.lineWidth = 1.6 * k; // 등의 윤기
+  ctx.beginPath(); ctx.moveTo(-8 * k, -10 * k); ctx.quadraticCurveTo(0, -13 * k, 6 * k, -11 * k); ctx.stroke();
+  ctx.fillStyle = c.ear; ctx.beginPath(); ctx.arc(4 * k, -13 * k, 2.8 * k, 0, Math.PI * 2); ctx.fill(); // 귀
   ctx.fillStyle = c.eye; ctx.beginPath(); ctx.arc(9 * k, -8 * k, 1.5 * k, 0, Math.PI * 2); ctx.fill();
   if (state === 'stunned') stunDots(ctx, 2 * k, -20 * k, animT, 3 * k);
   ctx.restore();
@@ -50,28 +57,37 @@ function segmentPoints(m, n, spacing) {
   return pts;
 }
 
-// 뱀 (2026-10-13 사용자: 더 단순하게, 검은 몸·흰 테두리·붉은 눈): 자취를 따라 가늘어지는 선 한 줄 + 둥근 머리 + 눈 두 점
+// 뱀 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이): 자취를 따라 가늘어지는 검은 몸 + 등줄기 윤기 + 그림자 + 머리(붉은 눈, 똬리·돌진 땐 혀)
 export function drawSnake(ctx, m, animT, flash = false) {
   const k = m.scale / 0.4, c = flash ? { ...SNAKE_COLORS, ...WHITE } : SNAKE_COLORS;
   const n = 10, pts = segmentPoints(m, n, 7 * k);
-  const head = m.heading || 0;
+  const head = m.heading || 0, px = -Math.sin(head), py = Math.cos(head);
   const coil = m.state === 'coil' ? Math.min(1, m.stateElapsed / SNAKE.coilTime) : 0;
+  const wig = m.state === 'walk' ? 2.5 * k : 0; // 기어갈 때 살짝 좌우로
+  const at = (i) => { const p = pts[i], w = Math.sin(animT * 8 - i * 0.9) * wig * Math.min(1, i / 3); return { x: p.x + px * w, y: p.y + py * w - 5 * k }; };
+  const widthAt = (i) => (4 + (n - i) * 0.9) * k;
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (let pass = 0; pass < 2; pass++) { // 0 = 흰 테두리(조금 굵게), 1 = 검은 몸
-    ctx.strokeStyle = pass ? c.body : c.line;
+  for (let pass = 0; pass < 3; pass++) { // 0 = 그림자, 1 = 몸, 2 = 등줄기 윤기
+    ctx.strokeStyle = pass === 0 ? 'rgba(0,0,0,0.22)' : pass === 1 ? c.body : c.shine;
     for (let i = n - 1; i >= 1; i--) {
-      const a = pts[i], b = pts[i - 1];
-      ctx.lineWidth = (4 + (n - i) * 0.9) * k + (pass ? 0 : 2.4 * k);
-      ctx.beginPath(); ctx.moveTo(a.x, a.y - 5 * k); ctx.lineTo(b.x, b.y - 5 * k); ctx.stroke();
+      const a = at(i), b = at(i - 1), dy = pass === 0 ? 5 * k : pass === 2 ? -widthAt(i) * 0.18 : 0;
+      ctx.lineWidth = pass === 2 ? widthAt(i) * 0.22 : widthAt(i);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y + dy); ctx.lineTo(b.x, b.y + dy); ctx.stroke();
     }
   }
   const pull = coil * -6 * k + (m.state === 'strike' ? 4 * k : 0);
   const hx = m.x + Math.cos(head) * pull, hy = m.y + Math.sin(head) * pull - 6 * k - coil * 9 * k;
   ctx.translate(hx, hy);
   ctx.rotate(head);
-  ctx.fillStyle = c.body; ctx.strokeStyle = c.line; ctx.lineWidth = 1.2 * k;
-  ctx.beginPath(); ctx.ellipse(2 * k, 0, 9 * k, 6.5 * k, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (m.state === 'coil' || m.state === 'strike') { // 혀
+    ctx.strokeStyle = c.eye; ctx.lineWidth = 1.1 * k;
+    ctx.beginPath(); ctx.moveTo(9 * k, 0); ctx.lineTo(15 * k, 0); ctx.lineTo(17 * k, -1.8 * k); ctx.moveTo(15 * k, 0); ctx.lineTo(17 * k, 1.8 * k); ctx.stroke();
+  }
+  ctx.fillStyle = c.body;
+  ctx.beginPath(); ctx.ellipse(2 * k, 0, 9 * k, 6.5 * k, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = c.shine;
+  ctx.beginPath(); ctx.ellipse(1 * k, 0, 4 * k, 1.6 * k, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = c.eye;
   ctx.beginPath(); ctx.arc(5 * k, -3.5 * k, 1.5 * k, 0, Math.PI * 2); ctx.arc(5 * k, 3.5 * k, 1.5 * k, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
