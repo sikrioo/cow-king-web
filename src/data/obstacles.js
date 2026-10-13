@@ -2,7 +2,7 @@
 //   발밑 모양만 충돌: circle = 원(반지름 r), line = 가로로 긴 캡슐(길이 len, 두께 반지름 r). 그림 높이 height는 가림·반투명 판정용
 //   배치 systems/obstacles.js, 충돌·밀어내기 world/arena.js, 그림 render/obstacleSprites.js
 export const OBSTACLES = {
-  hay:   { label: '건초더미', shape: 'circle', r: 30, height: 46 },
+  hay:   { label: '건초더미', shape: 'circle', r: 30, height: 34 }, // 2026-10-14: 통나무처럼 보여 낮은 짚더미로
   fence: { label: '나무 울타리', shape: 'line', len: [140, 210], r: 8, height: 40 }
 };
 

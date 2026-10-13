@@ -3,7 +3,7 @@
 import { OBSTACLES, OBSTACLE_FADE_ALPHA } from '../data/obstacles.js';
 import { hash01 } from '../util.js';
 
-const HAY = { top: '#e8c86c', ring: '#c9a24e', side: '#cfa048', shade: '#a87c32', straw: '#b68a3a', band: '#7a5626', bottom: '#9a7230' };
+const HAY = { base: '#a08a52', light: '#b8a066', shade: '#5e4e2c', straw: '#cdb67a', loose: '#9c8650' }; // 칙칙한 짚 색 (풀밭에서 덜 튐)
 const WOOD = { post: '#6b4a2e', cap: '#8f6844', rail: '#9a7448', railTop: '#bf9666', railLow: '#5e4228', knot: '#5a3e24' };
 
 // 주인공이 이 구조물 뒤에(그림에 가려지는 자리) 있는지
@@ -19,34 +19,40 @@ function shadow(ctx, cx, cy, rx, ry) {
   ctx.globalAlpha /= 0.26;
 }
 
-// 건초더미: 세워 둔 원통 - 옆면 짚 결 + 묶은 끈 두 줄, 윗면은 돌돌 말린 고리
-function drawHay(ctx, o, def) {
-  const x = o.ax, y = o.ay, r = o.r, H = def.height, ry = r * 0.42;
-  shadow(ctx, x + 4, y + 3, r * 1.18, ry * 1.1);
-  ctx.fillStyle = HAY.bottom; // 아래 둥근 면
-  ctx.beginPath(); ctx.ellipse(x, y, r, ry, 0, 0, Math.PI); ctx.fill();
-  ctx.fillStyle = HAY.side; // 옆면
-  ctx.fillRect(x - r, y - H, r * 2, H);
-  ctx.fillStyle = HAY.shade; // 오른쪽 그늘
-  ctx.globalAlpha *= 0.35;
-  ctx.fillRect(x + r * 0.35, y - H, r * 0.65, H);
-  ctx.beginPath(); ctx.ellipse(x, y, r, ry, 0, 0, Math.PI); ctx.fill();
-  ctx.globalAlpha /= 0.35;
-  ctx.strokeStyle = HAY.straw; // 짚 결 (세로로 짧게)
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 14; i++) {
-    const fx = (hash01(o.seed, i, 11) - 0.5) * 1.9 * r, fy = hash01(o.seed, i, 12) * (H - 8);
-    const len = 6 + hash01(o.seed, i, 13) * 8, curve = Math.sqrt(Math.max(0, 1 - (fx / r) ** 2)) * ry;
-    ctx.beginPath(); ctx.moveTo(x + fx, y - H + fy + curve); ctx.lineTo(x + fx + 1, y - H + fy + curve + len); ctx.stroke();
+// 건초더미 (2026-10-14 사용자: 튀고 통나무 같음 → 낮고 넓은 짚더미): 둥근 봉우리 실루엣 + 테두리에 삐죽한 짚 + 결 몇 가닥, 칙칙한 짚 색
+function haySilhouette(ctx, x, y, w, H, seed, inset = 0) {
+  ctx.beginPath();
+  ctx.moveTo(x - w + inset, y);
+  const n = 16;
+  for (let i = 0; i <= n; i++) { // 봉우리 둘레를 따라 들쭉날쭉 (짚 끝)
+    const a = Math.PI - (i / n) * Math.PI;
+    const jag = i % 2 ? (2 + hash01(seed, i, 31) * 4) : 0;
+    ctx.lineTo(x + Math.cos(a) * (w - inset + jag * 0.5), y - Math.sin(a) * (H - inset + jag));
   }
-  ctx.strokeStyle = HAY.band; // 묶은 끈 두 줄 (원통을 감싸는 곡선)
-  ctx.lineWidth = 2;
-  [0.32, 0.68].forEach((k) => { ctx.beginPath(); ctx.ellipse(x, y - H * k, r, ry, 0, 0, Math.PI); ctx.stroke(); });
-  ctx.fillStyle = HAY.top; // 윗면
-  ctx.beginPath(); ctx.ellipse(x, y - H, r, ry, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = HAY.ring; // 말린 고리
-  ctx.lineWidth = 1.4;
-  [0.72, 0.45, 0.2].forEach((k) => { ctx.beginPath(); ctx.ellipse(x + r * 0.04, y - H, r * k, ry * k, 0, 0, Math.PI * 2); ctx.stroke(); });
+  ctx.quadraticCurveTo(x, y + 6, x - w + inset, y);
+  ctx.closePath();
+}
+function drawHay(ctx, o, def) {
+  const x = o.ax, y = o.ay, w = o.r * 1.25, H = def.height;
+  shadow(ctx, x + 5, y + 2, w * 1.1, w * 0.36);
+  ctx.fillStyle = HAY.base; haySilhouette(ctx, x, y, w, H, o.seed); ctx.fill();
+  ctx.fillStyle = HAY.light; haySilhouette(ctx, x - w * 0.12, y - H * 0.08, w * 0.78, H * 0.88, o.seed + 7, 2); ctx.fill(); // 위쪽 밝은 덩어리
+  ctx.save(); // 오른쪽 아래 그늘
+  haySilhouette(ctx, x, y, w, H, o.seed); ctx.clip();
+  ctx.globalAlpha *= 0.3; ctx.fillStyle = HAY.shade;
+  ctx.beginPath(); ctx.ellipse(x + w * 0.55, y - H * 0.15, w * 0.7, H * 0.75, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = HAY.straw; ctx.lineWidth = 1.1; ctx.lineCap = 'round'; // 짚 결 (봉우리를 따라 비스듬히)
+  for (let i = 0; i < 9; i++) {
+    const t = 0.15 + hash01(o.seed, i, 32) * 0.7, a = Math.PI - t * Math.PI, rr = 0.35 + hash01(o.seed, i, 33) * 0.5;
+    const px = x + Math.cos(a) * w * rr, py = y - Math.sin(a) * H * rr - 2, len = 5 + hash01(o.seed, i, 34) * 6;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(a - 1.2) * len, py - Math.sin(a - 1.2) * len * 0.6); ctx.stroke();
+  }
+  ctx.strokeStyle = HAY.loose; // 바닥에 흩어진 짚 몇 가닥
+  for (let i = 0; i < 4; i++) {
+    const px = x + (hash01(o.seed, i, 35) - 0.5) * w * 2.2, py = y + 2 + hash01(o.seed, i, 36) * 5, ang = hash01(o.seed, i, 37) * 3;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(ang) * 7, py + Math.sin(ang) * 2); ctx.stroke();
+  }
 }
 
 // 울타리: 기둥(끝과 약 70px마다) + 가로대 두 줄

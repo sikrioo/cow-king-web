@@ -145,8 +145,8 @@ export const SKILL_STATS = {
   // 오라: 가시 = 근접 공격으로 받은 피해 × reflect를 때린 적에게 물리로 / 불꽃 = tick초마다 radius 안 화염 damage / 빙결 = radius 안 적 이동·공격속도 -slow(보스 × BOSS_SLOW_SCALE, 광신 오라와는 더해서 계산)
   //   ring: 발밑 고리 색 (오라 반경 표시, 가시는 내 몸 둘레)
   aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#ffd84d', glow: 32 }, // 가시: 내 둘레 반경 glow의 은은한 노란 빛(정원, 다른 오라보다 좁게 - 그림만, 반사는 근접 공격 전부) (2026-10-10 사용자)
-  aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 130, ring: '#ff8a3d' },
-  aurafrost:  { mana: 0, cooldown: 0, tick: 1, damage: 15, slow: 0.25, radius: 150, ring: '#8fe8ff' }, // 2026-10-14 사용자: 중간 냉기 피해 + 둔화(냉기 규칙 - 이동 감속), slow = 공격속도 감소만
+  aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 85, ring: '#ff8a3d' }, // 2026-10-14 사용자: 범위가 과함 130 → 85 (-35%)
+  aurafrost:  { mana: 0, cooldown: 0, tick: 1, damage: 15, slow: 0.25, radius: 100, ring: '#8fe8ff' }, // 범위 150 → 100 (-35%) // 2026-10-14 사용자: 중간 냉기 피해 + 둔화(냉기 규칙 - 이동 감속), slow = 공격속도 감소만
   // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
   //   pool: 나올 수 있는 스킬(안 배워도), 한 번에 같은 스킬 maxSame번까지, once는 한 번만. 오라가 나오면 tempAura초 동안 임시로 켜짐(지금 오라와 따로)
   //   startDelay: 첫 시전 전 뜸 / fizzle[Lv-1]: 꽝 확률(저레벨만), self[Lv-1]: 자기 자신에게 쏠 확률(배열보다 높은 Lv은 마지막 값)
