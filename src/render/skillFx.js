@@ -311,7 +311,7 @@ function drawDischarge(ctx, g, t, gi) {
 }
 
 // 오라 (발밑, 몬스터 아래): 불꽃·빙결 = 반경만큼 부드러운 원 + 발동 물결, 가시 = 내 둘레 은은한 노란 빛(정원). 바뀌는 중이면 점선
-const AURA_RIPPLE = 0.9; // 발동 물결이 퍼지는 시간(초) - 그림만 (2026-10-14 사용자: 너무 짧음 0.55 → 0.9)
+const AURA_RIPPLE = 1.8; // 발동 물결이 퍼지는 시간(초) - 그림만 (2026-10-14 사용자: 천천히 0.55 → 0.9 → 1.8, 발동 간격 1초보다 길어 겹쳐 퍼짐)
 export function drawAuraRings(ctx, t) {
   const h = game.hero;
   if (!h.alive) return;
@@ -339,8 +339,10 @@ export function drawAuraRings(ctx, t) {
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(h.x, h.y, r, 0, Math.PI * 2); ctx.fill();
     const clock = id === 'aurafire' ? h.auraFireT : id === 'aurafrost' ? h.auraFrostT : null;
-    const since = clock == null ? 99 : SKILL_STATS[id].tick - clock; // 마지막 발동 뒤 지난 시간
-    if (since >= 0 && since < AURA_RIPPLE) {
+    const tick = SKILL_STATS[id].tick;
+    // 마지막 발동 뒤 지난 시간 - 물결이 발동 간격보다 길면 앞 물결도 끝까지 (겹쳐 퍼짐)
+    for (let since = clock == null ? 99 : tick - clock; since < AURA_RIPPLE; since += tick) {
+      if (since < 0) continue;
       const k = since / AURA_RIPPLE, e = 1 - (1 - k) ** 2;
       ctx.globalAlpha = 0.16 * (1 - k); // 번쩍
       ctx.beginPath(); ctx.arc(h.x, h.y, r * e, 0, Math.PI * 2); ctx.fill();
