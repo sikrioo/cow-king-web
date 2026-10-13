@@ -311,7 +311,7 @@ function drawDischarge(ctx, g, t, gi) {
 }
 
 // 오라 (발밑, 몬스터 아래): 불꽃·빙결 = 반경만큼 부드러운 원 + 발동 물결, 가시 = 내 둘레 은은한 노란 빛(정원). 바뀌는 중이면 점선
-const AURA_RIPPLE = 1.8; // 발동 물결이 퍼지는 시간(초) - 그림만 (2026-10-14 사용자: 천천히 0.55 → 0.9 → 1.8, 발동 간격 1초보다 길어 겹쳐 퍼짐)
+const AURA_RIPPLE = 1.8; // 발동 물결이 퍼지는 시간(초) - 그림만 (2026-10-14 사용자: 천천히 0.55 → 0.9 → 1.8). 발동 간격(2초)보다 길면 겹쳐 퍼짐
 export function drawAuraRings(ctx, t) {
   const h = game.hero;
   if (!h.alive) return;

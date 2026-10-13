@@ -21,8 +21,9 @@ export const SKILL_META = {
   decoy:     { label: '더미',   type: 'physical', color: 'rgba(200,200,210,0.40)', desc: '나와 같은 모습의 미끼 - 주변 몬스터가 미끼를 공격함' },
   // 오라 (전사, aura: true): 슬롯에 있는 동안만 켜짐(슬롯에 넣으면 AURA_SWITCH초 뒤), 하나만 - 두 슬롯 다 오라면 누른 쪽으로 바뀜. 마나 없음 (systems/auras.js)
   aurathorns: { label: '가시 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(160,110,60,0.5)',  desc: '켜 두는 오라 - 근접 공격을 받으면 받은 피해의 일부를 되돌려 줌' },
-  aurafire:   { label: '불꽃 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(255,138,61,0.5)',  desc: '켜 두는 오라 - 1초마다 주변 적에게 화염 피해' },
-  aurafrost:  { label: '빙결 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(143,232,255,0.5)', desc: '켜 두는 오라 - 1초마다 주변 적에게 냉기 피해 + 둔화, 공격속도도 느려짐 (보스는 절반)' },
+  // 2026-10-14 사용자: 발동이 너무 잦아 사기 → 불꽃·빙결 오라 발동 간격 1 → 2초 (한 번 피해는 그대로 = 초당 피해 절반, 냉기 둔화 2.5초라 빙결은 계속 걸림)
+  aurafire:   { label: '불꽃 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(255,138,61,0.5)',  desc: '켜 두는 오라 - 2초마다 주변 적에게 화염 피해' },
+  aurafrost:  { label: '빙결 오라', type: 'physical', aura: true, aim: 'free', color: 'rgba(143,232,255,0.5)', desc: '켜 두는 오라 - 2초마다 주변 적에게 냉기 피해 + 둔화, 공격속도도 느려짐 (보스는 절반)' },
   // 무기 특수기 (전사): 그 무기의 마스터리가 SPECIAL_MASTERY_LEVEL 이상이면 카드에 나옴, 그 무기를 들었을 때만 씀 (weapon = 주무기 종류, offhand = 보조 칸)
   spinblade:    { label: '회전검',     type: 'physical', weapon: 'sword',      mastery: 'sword',      color: 'rgba(216,216,224,0.45)', desc: '검을 회전시켜 던짐 - 갔다가 돌아오며 지나가는 적을 여러 번 벰' },
   skyfall:      { label: '내려찍기',   type: 'physical', weapon: 'greatsword', mastery: 'greatsword', color: 'rgba(138,143,153,0.5)',  desc: '지정한 곳 위에 대검이 떠올라 커지다가 내리꽂힘 - 착지 피해 + 앞쪽 충격파' },
@@ -145,8 +146,8 @@ export const SKILL_STATS = {
   // 오라: 가시 = 근접 공격으로 받은 피해 × reflect를 때린 적에게 물리로 / 불꽃 = tick초마다 radius 안 화염 damage / 빙결 = radius 안 적 이동·공격속도 -slow(보스 × BOSS_SLOW_SCALE, 광신 오라와는 더해서 계산)
   //   ring: 발밑 고리 색 (오라 반경 표시, 가시는 내 몸 둘레)
   aurathorns: { mana: 0, cooldown: 0, reflect: 1.0, ring: '#ffd84d', glow: 32 }, // 가시: 내 둘레 반경 glow의 은은한 노란 빛(정원, 다른 오라보다 좁게 - 그림만, 반사는 근접 공격 전부) (2026-10-10 사용자)
-  aurafire:   { mana: 0, cooldown: 0, tick: 1, damage: 20, radius: 85, ring: '#ff8a3d' }, // 2026-10-14 사용자: 범위가 과함 130 → 85 (-35%)
-  aurafrost:  { mana: 0, cooldown: 0, tick: 1, damage: 15, slow: 0.25, radius: 100, ring: '#8fe8ff' }, // 범위 150 → 100 (-35%) // 2026-10-14 사용자: 중간 냉기 피해 + 둔화(냉기 규칙 - 이동 감속), slow = 공격속도 감소만
+  aurafire:   { mana: 0, cooldown: 0, tick: 2, damage: 20, radius: 85, ring: '#ff8a3d' }, // 2026-10-14 사용자: 범위가 과함 130 → 85 (-35%)
+  aurafrost:  { mana: 0, cooldown: 0, tick: 2, damage: 15, slow: 0.25, radius: 100, ring: '#8fe8ff' }, // 범위 150 → 100 (-35%) // 2026-10-14 사용자: 중간 냉기 피해 + 둔화(냉기 규칙 - 이동 감속), slow = 공격속도 감소만
   // 수습생의 마법: 스킬 레벨 lv → 시전 개수 min(maxCasts, lv), 나오는 스킬의 레벨 = lv (장비로 Lv5를 넘으면 더 셈). interval초 간격, 그때 가장 가까운 적을 겨눔
   //   pool: 나올 수 있는 스킬(안 배워도), 한 번에 같은 스킬 maxSame번까지, once는 한 번만. 오라가 나오면 tempAura초 동안 임시로 켜짐(지금 오라와 따로)
   //   startDelay: 첫 시전 전 뜸 / fizzle[Lv-1]: 꽝 확률(저레벨만), self[Lv-1]: 자기 자신에게 쏠 확률(배열보다 높은 Lv은 마지막 값)
