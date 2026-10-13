@@ -310,7 +310,8 @@ function drawDischarge(ctx, g, t, gi) {
   ctx.restore();
 }
 
-// 오라 고리 (발밑, 몬스터 아래): 불꽃·빙결 = 오라 반경 고리(색), 가시 = 내 둘레 은은한 노란 빛(정원). 바뀌는 중이면 점선
+// 오라 (발밑, 몬스터 아래): 불꽃·빙결 = 반경만큼 부드러운 원 + 발동 물결, 가시 = 내 둘레 은은한 노란 빛(정원). 바뀌는 중이면 점선
+const AURA_RIPPLE = 0.55; // 발동 물결이 퍼지는 시간(초) - 그림만
 export function drawAuraRings(ctx, t) {
   const h = game.hero;
   if (!h.alive) return;
@@ -332,14 +333,22 @@ export function drawAuraRings(ctx, t) {
       ctx.stroke();
       return;
     }
+    // 2026-10-14 사용자: 적 오라(광신·주술사)처럼 테두리 없는 부드러운 원 + 발동(tick)마다 안에서 바깥으로 퍼지는 물결
     const r = auraRadius(id, lv);
-    ctx.globalAlpha = 0.08 + Math.sin(t * 3 + i) * 0.03;
+    ctx.globalAlpha = 0.10 + Math.sin(t * 2.5 + i) * 0.04;
     ctx.fillStyle = color;
-    ctx.beginPath(); ctx.ellipse(h.x, h.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 0.55;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(h.x, h.y, r, r * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(h.x, h.y, r, 0, Math.PI * 2); ctx.fill();
+    const clock = id === 'aurafire' ? h.auraFireT : id === 'aurafrost' ? h.auraFrostT : null;
+    const since = clock == null ? 99 : SKILL_STATS[id].tick - clock; // 마지막 발동 뒤 지난 시간
+    if (since >= 0 && since < AURA_RIPPLE) {
+      const k = since / AURA_RIPPLE, e = 1 - (1 - k) ** 2;
+      ctx.globalAlpha = 0.16 * (1 - k); // 번쩍
+      ctx.beginPath(); ctx.arc(h.x, h.y, r * e, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.6 * (1 - k); // 물결 고리
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3 * (1 - k) + 1;
+      ctx.beginPath(); ctx.arc(h.x, h.y, r * (0.25 + 0.75 * e), 0, Math.PI * 2); ctx.stroke();
+    }
   });
   if (h.auraPending) { // 켜지는 중
     ctx.globalAlpha = 0.5;

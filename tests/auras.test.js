@@ -64,7 +64,7 @@ it('오라: 슬롯에 넣으면 1초 뒤 켜지고, 빼면 꺼짐 / 두 슬롯 �
   } finally { env.restore(); }
 });
 
-it('불꽃 오라: 1초마다 반경 안 화염 (버닝 카우는 절반) / 빙결 오라: 이동 느려짐, 광신 오라와 더해서, 보스는 절반', async () => {
+it('불꽃 오라: 1초마다 반경 안 화염 (버닝 카우는 절반) / 빙결 오라: 1초마다 냉기 피해 → 둔화(이동), 공격속도 감소, 보스는 절반', async () => {
   const env = installBrowserEnv({ seed: 2 });
   try {
     const m = await boot();
@@ -81,10 +81,14 @@ it('불꽃 오라: 1초마다 반경 안 화염 (버닝 카우는 절반) / 빙�
     h.skillLevels.aurafrost = 1; h.aura = 'aurafrost'; h.slot2 = 'aurafrost';
     const s = m.SKILL_STATS.aurafrost;
     const c = m.cow('normal', 60), boss = m.cow('boss', -60);
-    expect(m.getAuraSpeedMult(c)).toBeCloseTo(1 - s.slow);
-    expect(m.getAuraSpeedMult(boss)).toBeCloseTo(1 - s.slow * m.BOSS_SLOW_SCALE);
-    const fan = m.cow('fanatic', 70, 20);
-    expect(m.getAuraSpeedMult(fan)).toBeCloseTo(1 + (m.AURA_SPEED_MULT - 1) - s.slow); // 더해서
+    const { MONSTER_CHILL_MOVE_MULT } = await import('../src/data/elements.js');
+    m.updateAuras(0.01); // 첫 발동: 냉기 피해 → 둔화
+    expect(c.maxHp - c.hp).toBeGreaterThan(0);
+    expect(c.chillTimer).toBeGreaterThan(0);
+    expect(m.getAuraSpeedMult(c)).toBeCloseTo(MONSTER_CHILL_MOVE_MULT); // 이동 = 냉기 둔화
+    expect(m.getAuraSpeedMult(boss)).toBeCloseTo(1 - (1 - MONSTER_CHILL_MOVE_MULT) * m.BOSS_SLOW_SCALE);
+    expect(m.frostAuraSlow(c)).toBeCloseTo(s.slow); // 공격속도
+    expect(m.frostAuraSlow(boss)).toBeCloseTo(s.slow * m.BOSS_SLOW_SCALE);
   } finally { env.restore(); }
 });
 

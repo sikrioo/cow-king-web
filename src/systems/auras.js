@@ -1,7 +1,8 @@
 // 전사 오라 3종 (스킬 기획 정의서 v0.1): 가시(근접 반사) / 불꽃(주변 화염) / 빙결(주변 적 이동·공격속도 감소)
 //   슬롯에 있는 동안만 켜짐 (2026-10-10 사용자 결정): 슬롯에 넣으면 AURA_SWITCH초 뒤 켜지고, 빼면 꺼짐. 하나만 - 두 슬롯 다 오라면 누른 쪽으로 바뀜. 마나 없음
 //   수습생의 마법이 뽑은 오라는 tempAuras로 잠깐 따로 켜짐(겹칠 수 있음)
-//   효과 적용: 가시 = entities/monster.js 근접 공격 → reflectThorns, 빙결 = behaviors.getAuraSpeedMult·monster 근접 공격 속도 → frostAuraSlow
+//   효과 적용: 가시 = entities/monster.js 근접 공격 → reflectThorns, 빙결 = tick마다 냉기 피해(둔화는 냉기 규칙) + monster 근접 공격 속도 → frostAuraSlow
+//   발동 순간(불꽃·빙결 tick)은 hero.auraFireT/auraFrostT가 다시 차는 때 - 그림(render/skillFx.js)이 물결로 보여 줌
 import { SKILL_META, SKILL_STATS, SKILL_LEVEL_UP, AURA_SWITCH } from '../data/skills.js';
 import { BOSS_SLOW_SCALE } from '../data/balance.js';
 import { game } from '../state.js';
@@ -56,21 +57,24 @@ export function updateAuras(dt) {
   }
   for (const id in (h.tempAuras || {})) { if (h.tempAuras[id].timer > 0) h.tempAuras[id].timer -= dt; }
   if (!h.alive) return;
-  // 불꽃 오라: tick초마다 반경 안 화염 (슬롯 오라·임시 오라 각자 시계)
-  const fireLv = auraLv(h, 'aurafire');
-  if (fireLv > 0) {
-    const s = SKILL_STATS.aurafire;
-    h.auraFireT = (h.auraFireT || 0) - dt;
-    if (h.auraFireT <= 0) {
-      h.auraFireT += s.tick;
-      const r = auraRadius('aurafire', fireLv), dmg = Math.max(1, Math.round(s.damage * lvMul('aurafire', 'damage', fireLv)));
-      game.cows.forEach((c) => {
-        if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, h.x, h.y) > r) return;
-        damageCowPacket(c, { fire: dmg }); // 버닝 카우는 화염 저항 50%라 절반 (기획서 규칙과 같음)
-        spawnHitParticles(c.x, c.y - 10, '#ff8a3d', 2);
-      });
-    }
-  } else h.auraFireT = 0;
+  // 불꽃 오라(화염) / 빙결 오라(냉기 → 둔화): tick초마다 반경 안 피해 (오라마다 시계 하나, 슬롯·임시 오라 공유)
+  tickAura(h, 'aurafire', 'auraFireT', 'fire', dt);
+  tickAura(h, 'aurafrost', 'auraFrostT', 'cold', dt);
+}
+
+function tickAura(h, id, clock, elem, dt) {
+  const lv = auraLv(h, id);
+  if (!lv) { h[clock] = 0; return; }
+  const s = SKILL_STATS[id];
+  h[clock] = (h[clock] || 0) - dt;
+  if (h[clock] > 0) return;
+  h[clock] += s.tick;
+  const r = auraRadius(id, lv), dmg = Math.max(1, Math.round(s.damage * lvMul(id, 'damage', lv)));
+  game.cows.forEach((c) => {
+    if (c.state === 'dead' || !canHit(h, c) || cowEdgeDist(c, h.x, h.y) > r) return;
+    damageCowPacket(c, { [elem]: dmg }); // 저항 적용 (버닝 카우는 화염 절반), 냉기면 둔화도
+    spawnHitParticles(c.x, c.y - 10, s.ring, 2);
+  });
 }
 
 // 가시 오라: 근접 공격으로 받은 피해(taken) × 반사율을 때린 적에게 물리로
@@ -82,7 +86,7 @@ export function reflectThorns(c, taken) {
   spawnHitParticles(c.x, c.y - 20, '#c98a4d', 5);
 }
 
-// 빙결 오라: 이 몬스터가 받는 이동·공격속도 감소 (0이면 없음, 보스는 절반)
+// 빙결 오라: 이 몬스터가 받는 공격속도 감소 (0이면 없음, 보스는 절반) - 이동 감속은 냉기 피해의 둔화가 맡음 (2026-10-14)
 export function frostAuraSlow(c) {
   const h = game.hero;
   if (!h || !h.alive) return 0;

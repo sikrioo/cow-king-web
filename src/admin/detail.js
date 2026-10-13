@@ -24,7 +24,7 @@ export const SKILL_CODE = {
   shieldbounce: ['tryShieldBounce', 'updateShieldBounce'], rollmace: ['tryRollMace', 'updateRollMace'], piercespear: ['tryPierceSpear', 'updatePierceSpear', 'bleedCow'],
   vitalthrow: ['tryVitalThrow', 'updateVitalThrow'],
   holyhammer: ['tryHolyHammer', 'updateHammer', 'holyMul'], heavenbolt: ['tryHeavenBolt', 'updateHeavenBolt', 'holyMul'],
-  aurathorns: ['pickAura', 'reflectThorns', 'updateAuras'], aurafire: ['pickAura', 'updateAuras'], aurafrost: ['pickAura', 'frostAuraSlow', 'getAuraSpeedMult'],
+  aurathorns: ['pickAura', 'reflectThorns', 'updateAuras'], aurafire: ['pickAura', 'updateAuras', 'tickAura'], aurafrost: ['pickAura', 'tickAura', 'frostAuraSlow', 'getAuraSpeedMult'],
   apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)

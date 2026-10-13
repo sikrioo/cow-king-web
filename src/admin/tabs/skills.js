@@ -52,7 +52,7 @@ function skillInfo(id) {
   if (id === 'berserk') return { mana: s.mana, cd: s.cooldown, effect: `${s.duration}초: 주는 피해 +${pct(s.power)}, 공격속도 +${pct(s.speed)}, 받는 피해 +${pct(s.taken)}` };
   if (id === 'aurathorns') return { mana: 0, cd: '-', effect: `켜 두는 오라: 근접 공격으로 받은 피해의 ${pct(s.reflect)}를 되돌려 줌` };
   if (id === 'aurafire') return { mana: 0, cd: '-', effect: `켜 두는 오라: ${s.tick}초마다 반경 ${s.radius} 화염 ${s.damage}` };
-  if (id === 'aurafrost') return { mana: 0, cd: '-', effect: `켜 두는 오라: 반경 ${s.radius} 적 이동·공격속도 -${pct(s.slow)} (보스 절반)` };
+  if (id === 'aurafrost') return { mana: 0, cd: '-', effect: `켜 두는 오라: ${s.tick}초마다 반경 ${s.radius} 냉기 ${s.damage} + 둔화(냉기), 공격속도 -${pct(s.slow)} (보스 절반)` };
   if (id === 'apprentice') return { mana: s.mana, cd: s.cooldown, effect: `Lv만큼(최대 ${s.maxCasts}개) 무작위 스킬을 ${s.interval}초 간격으로, 나오는 스킬 레벨 = Lv. 후보: ${s.pool.length}종, 꽝 Lv1 ${pct(s.fizzle[0])}, 자기에게 Lv1 ${pct(s.self[0])}` };
   if (id === 'spinblade') return { mana: s.mana, cd: s.cooldown, effect: `검이 ${s.range}까지 왕복, 같은 적 ${s.tick}초마다 무기 × ${s.ratio} (갈 때·올 때 각 ${s.maxTicks}번)` };
   if (id === 'skyfall') return { mana: s.mana, cd: s.cooldown, effect: `사거리 ${s.range}, ${s.charge}초 충전 + ${s.hang}초 멈칫 뒤 반경 ${s.radius} 무기 × ${s.ratio}, 앞쪽 충격파 ${s.waveRange} 무기 × ${s.waveRatio}` };
