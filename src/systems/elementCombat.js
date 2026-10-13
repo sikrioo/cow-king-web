@@ -15,7 +15,7 @@ import { spawnDamageNumber, spawnHitParticles } from './fx.js';
 // 신성 피해 배율: 해골·영혼·악마 종족이면 더 셈 (data/elements.js HOLY)
 function holyMul(c) {
   const d = MONSTERS[c.kind];
-  return d && (d.skeleton || d.soul || d.demon) ? 1 + HOLY.undeadBonus : 1;
+  return d && (d.skeleton || d.soul || d.demon || d.unholy) ? 1 + HOLY.undeadBonus : 1;
 }
 const cardBonus = (key) => masteryBonus(game.hero, key);
 

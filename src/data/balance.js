@@ -428,5 +428,16 @@ export const MONSTER_MOVE = {
   burningSoul:    { type: 'keep', near: SOUL_KITE, far: SOUL_RANGE, own: true },
   paleSoul:       { type: 'keep', near: SOUL_KITE, far: SOUL_RANGE, own: true },
   shaman:         { type: 'hide', flee: 130, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND },
-  priest:         { type: 'hide', flee: PRIEST_FLEE, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND }
+  priest:         { type: 'hide', flee: PRIEST_FLEE, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND },
+  ratKeeper:      { type: 'keep', near: 170, far: 300 }
 };
+
+// 쥐떼 카우 (2026-10-13 사용자: 작은 악마 쥐를 불러 군대처럼 대형을 지어 공격 - entities/beastBehaviors.js)
+//   firstCd/cooldown초마다(살아 있는 내 쥐가 maxAlive - 한 부대 이하일 때) castTime초 주문 → 내 앞 ahead에 cols × rows 대형(간격 spacing)
+//   부대 기준점이 주인공 쪽으로 행군(쥐 속도 × marchMul, 자리가 멀면 × catchUpMul까지 따라잡음) → 주인공 breakDist 안 / breakBelow마리 이하 / maxMarch초면 대형을 풀고 각자 덤빔
+export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.5, cooldown: 10, castTime: 0.8, maxAlive: 18, breakDist: 110, breakBelow: 2, maxMarch: 9, marchMul: 0.85, catchUpMul: 1.5 };
+// 박치기 뱀 (2026-10-13 사용자: 튕기듯 박치기 돌진, 빗나가면 지나간 뒤 휘돌아 한 번 더 - 이중 돌진)
+//   range 안(minRange 밖)이면 coilTime초 똬리(예고선) → dashSpeed(px/초)로 dashDist 돌진, 맞으면 근접 피해 × dmgMul
+//   빗나가면 turnTime초 동안 turnSpeed로 미끄러지며 돌아 주인공을 겨눔 → dash2Dist 두 번째 돌진 → recover초 숨 고르기, 다음 돌진까지 cooldown초
+//   trailStep/trailLen: 몸 그림이 따라가는 자취 (render/beastSprites.js)
+export const SNAKE = { range: 280, minRange: 50, firstCd: 1.5, coilTime: 0.5, dashSpeed: 720, dashDist: 300, dash2Dist: 260, turnTime: 0.35, turnSpeed: 360, hitWidth: 22, dmgMul: 1.5, recover: 0.9, cooldown: 3.5, trailStep: 3, trailLen: 40 };

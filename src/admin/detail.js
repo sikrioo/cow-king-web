@@ -8,6 +8,7 @@ import { drawSoul } from '../render/soulSprites.js';
 import { findFunction, findEntry } from './source.js';
 import { el, select } from './ui.js';
 import { butcherDecor } from '../render/butcherSprites.js';
+import { drawRat, drawSnake } from '../render/beastSprites.js';
 
 // 스킬 → 관련 함수 (동작 코드). 이름이 바뀌면 tests/admin.test.js가 알려 줌
 export const SKILL_CODE = {
@@ -27,7 +28,7 @@ export const SKILL_CODE = {
   apprentice: ['tryApprentice', 'rollApprentice', 'updateApprentice', 'castFree']
 };
 // 몬스터 → 종류별 행동 훅이 있는 파일 (없으면 공통 AI만)
-export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/bossBehaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js', 'src/entities/demonBehaviors.js', 'src/entities/butcherBehaviors.js'];
+export const BEHAVIOR_FILES = ['src/entities/behaviors.js', 'src/entities/bossBehaviors.js', 'src/entities/spellBehaviors.js', 'src/entities/rangedBehaviors.js', 'src/entities/demonBehaviors.js', 'src/entities/butcherBehaviors.js', 'src/entities/beastBehaviors.js'];
 
 const fnText = (v) => (typeof v === 'function' ? v.toString() : v);
 export function jsonBlock(obj) {
@@ -123,7 +124,9 @@ function drawCard(cv, kind, t) {
     ctx.beginPath(); ctx.ellipse(x, y, 30 * scale + 8, (30 * scale + 8) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
   }
-  if (def.soul) drawSoul(ctx, x, y, scale, t, 1, def.soul);
+  if (def.rat) drawRat(ctx, x, y, scale * 1.6, t, 1, state === 'attack' ? 'attack' : 'walk');
+  else if (def.snake) drawSnake(ctx, { x: x + 10, y: y - 10, scale, heading: Math.PI, trail: [], state: 'walk', stateElapsed: elapsed }, t);
+  else if (def.soul) drawSoul(ctx, x, y, scale, t, 1, def.soul);
   else if (def.skeleton) drawSkeletonCow(ctx, x, y, scale, state, t, 1, elapsed, { king: !!def.boss, weapon: weaponFor(kind, 0), stunFn: drawStunDots, shield: !!def.shield, weaponSize: weaponScaleOf(kind) });
   else drawCow(ctx, x, y, scale, state, t, 1, elapsed, def.colors, weaponFor(kind, 0), def.butcher ? butcherDecor(def.butcher) : def.demon ? demonDecor(def.demon, { enraged: false }) : null, weaponScaleOf(kind));
   ctx.fillStyle = 'rgba(255,255,255,0.55)';

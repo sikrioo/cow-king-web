@@ -37,6 +37,10 @@ export const GOLDEN_ADDITIONS = {
   'exact.monsters.venom': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-12: 치유 카우 (사용자 요청 - 메이스를 치켜들고 범위 치유)
   'exact.monsters.priest': { hp: 70, meleeDmg: 30, scaleRatio: 1 },
+  // 2026-10-13: 짐승 - 쥐떼 카우·악마 쥐(소환)·박치기 뱀 (사용자 - 다양성)
+  'exact.monsters.ratKeeper': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
+  'exact.monsters.rat': { hp: 15, meleeDmg: 10, scaleRatio: 0.5 },
+  'exact.monsters.snake': { hp: 55, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-06: 화염술사 카우(메테오) 추가
   'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-10: 해골 카우·해골 카우 킹 (관리자 페이지에만 - 사용자 요청)

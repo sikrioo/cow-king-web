@@ -41,6 +41,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph/casting…)엔 매 틱 true.
   마법형 몬스터 훅은 `entities/spellBehaviors.js`, 카우킹은 `entities/bossBehaviors.js`(기술 3개 차례로 + 2단계), 활 쏘는 몬스터(궁수)는 `entities/rangedBehaviors.js`, 악마 종족은 `entities/demonBehaviors.js`(모두 behaviors에 합쳐짐 - 관리자 코드 보기를 위해 항목은 `kind: { ... }` 형태로), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
+- 짐승(소가 아닌 몬스터): 쥐떼 카우·악마 쥐·박치기 뱀 = `entities/beastBehaviors.js` + 그림 `render/beastSprites.js`(MONSTERS의 `rat`/`snake` 플래그로 drawMonster가 고름), 수치 `data/balance.js` RAT_SQUAD/SNAKE. 소환에 추가 값이 필요하면 pendingSpawns에 `props`(개체에 복사)·`squad`(부대 공유 객체).
 - 시체 자리: `killCow`가 `game.corpses`에 남김(해골 카우 킹이 여기서 해골을 일으킴, 수명 CORPSE_LIFE).
 - 난이도 패널티: `data/difficulty.js` resistPenalty(주인공 원소 저항에서 뺌, 음수면 더 아픔)·armorPenalty(주인공 방어력 비율 감소) → `game.run` → `elements.heroResist/heroArmorReduction`. 주인공 기절 `curses.stunHero`.
 - 몬스터 역할·목적(MONSTER_ROLE)과 기술 설명(관리자 표): `data/monsters.js` MONSTER_SKILLS - 새 몬스터를 넣으면 같이 (tests/monsters.test.js가 검사).

@@ -15,6 +15,8 @@ export function processSpawns() {
     const p = clampToPen(s.x, s.y, 24);
     const c = new Monster(0.4, s.kind, { pos: p, hunt: true, dropCount: 0 });
     c.summoner = s.summoner || null;
+    if (s.props) Object.assign(c, s.props); // 종류별 추가 값 (악마 쥐: 대형 자리)
+    if (s.squad) { c.squad = s.squad; s.squad.members.push(c); } // 부대 (쥐떼 카우)
     game.cows.push(c);
   });
 }

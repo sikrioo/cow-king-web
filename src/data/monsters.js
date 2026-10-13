@@ -37,6 +37,11 @@ export const MONSTERS = {
   // 도살자 (2026-10-11): 웨이브 도중 예고 없이 난입(data/acts.js INVADE), 크기 = 주인공의 약 1.5배(몸 반지름 30 × 0.4 × 2.1 ≈ 25, 주인공 17), 돌진·광폭·짧은 연타, 세 번째 타격과 돌진에 기절 (entities/butcherBehaviors.js)
   butcherCow:   { hp: 140, dmg: 35, scaleMul: 2.1, speedMul: 1.5, aggroMul: 3, exp: 45, butcher: 'cow', hitAt: 0.1, attackTime: 0.32, ring: '#ff2d2d', colors: { hide: '#7a5a4a', horn: '#d8c8a8', snout: '#5a3a2a', eye: '#ff2d2d' } },
   butcherDemon: { hp: 170, dmg: 40, scaleMul: 2.1, speedMul: 1.5,  aggroMul: 3, exp: 60, butcher: 'demon', element: 'fire', hitAt: 0.1, attackTime: 0.32, resist: { fire: 0.5, cold: -0.25 }, ring: '#ff5a1e', colors: { hide: '#5a1010', horn: '#14060a', snout: '#3a0a0a', eye: '#ffd34d' } },
+  // 짐승 (2026-10-13 사용자: 다양성 - 소가 아닌 몬스터, entities/beastBehaviors.js · render/beastSprites.js)
+  //   rat: 쥐 그림, unholy: 신성 피해에 약함(악마 쥐), snake: 뱀 그림. 악마 쥐는 쥐떼 카우가 불러냄(웨이브 목록엔 없음)
+  ratKeeper: { hp: 60, dmg: 30, scaleMul: 1,   speedMul: 0.9,  aggroMul: 2.4, exp: 32, ring: '#b0483a', colors: { hide: '#6a5a50', horn: '#e0d0c0', snout: '#3a2e28', eye: '#ff3b30' } },
+  rat:       { hp: 15, dmg: 10, scaleMul: 0.5, speedMul: 1.35, aggroMul: 2.5, exp: 3,  rat: true, unholy: true, ring: null, colors: null },
+  snake:     { hp: 55, dmg: 30, scaleMul: 1,   speedMul: 1.1,  aggroMul: 1.6, exp: 26, snake: true, ring: '#9be35a', colors: null },
   boss:     { hp: 780, dmg: 30, scaleMul: 2.0, speedMul: 0.85, aggroMul: 1,   exp: 400, hitAt: 0.35, attackTime: 0.9, resist: { fire: 0.2, cold: 0.2, lightning: 0.2, poison: 0.2 }, ring: '#c98bef', colors: { hide: '#6a3f8a', horn: '#e8d4ff', snout: '#361a52', eye: '#ffe066' } } // hitAt: 큰 도끼가 내려오는 순간 (2026-10-11)
 };
 // 종류별로 들 수 있는 무기 (그림은 render/monsterWeapons.js). 같은 종류 안에서는 개체마다 이 중 하나
@@ -69,6 +74,7 @@ export const MONSTER_WEAPONS = {
   imp: ['pitchfork'],
   demonCurser: ['staff'],
   demonBerserker: ['cleaver', 'axe'],
+  ratKeeper: ['staff'], rat: ['club'], snake: ['club'], // 쥐·뱀 그림에 무기 없음 (목록만)
   demonKing: ['demonblade']  // 악마 카우킹: 악마 대검 (2026-10-11 사용자 - 검붉은 톱니 날, render/monsterWeapons.js)
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
@@ -103,7 +109,7 @@ export const MONSTER_GAIT = {
   normal: ['hop', 'trot'], tough: 'stomp', fast: 'scuttle', cold: 'trot', charger: 'trot', fanatic: 'hop', burning: 'trot',
   exploder: 'scuttle', shaman: 'sway', priest: 'trot', shocker: 'sway', pyro: 'sway', venom: 'trot', boss: 'stomp',
   skeleton: ['trot', 'hop'], skeletonShield: 'stomp', skeletonSpear: 'trot', skeletonBrute: 'stomp', skeletonArcher: 'trot', archer: 'trot', skeletonKing: 'sway',
-  imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
+  ratKeeper: 'sway', imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
 };
 
 // 몬스터 역할과 목적 한 줄 (관리자 몬스터 표 - 2026-10-12 사용자: 목적을 알 수 있을 정도로만). 새 몬스터를 넣으면 같이
@@ -123,6 +129,8 @@ export const MONSTER_ROLE = {
   skeletonBrute: R('돌격', '느리지만 한 방이 큼', '공격'), imp: R('돌격', '옆으로 순간이동해 괴롭힘', '공격'),
   demonBerserker: R('돌진', '도약해 덮치고 분노하면 몰아침', '상황'), butcherCow: R('돌진', '갑자기 난입해 몰아치고 기절시킴', '공격'), butcherDemon: R('돌진', '갑자기 난입해 불로 몰아치고 기절시킴', '공격'),
   skeletonKing: R('소환', '뒤에서 해골을 부르고 터뜨림', '상황'),
+  ratKeeper: R('소환', '멀리서 악마 쥐 부대를 불러 몰아붙임', '상황'), rat: R('돌격', '대형을 지어 행군하다 한꺼번에 덤빔', '공격'),
+  snake: R('돌진', '튕기듯 박치기, 빗나가면 돌아서 한 번 더', '공격'),
   boss: R('보스', '1막의 왕 - 강타·돌진·함성', '공격'), demonKing: R('보스', '3막의 군주 - 소환·지옥불·폭발', '상황')
 };
 
@@ -150,6 +158,9 @@ export const MONSTER_SKILLS = {
   burningSoul: ['스르륵 미끄러지듯 떠다님', '순간이동(스르륵 사라졌다 다른 곳에)', '모으기 → 뻗어 나가는 하얀 번개'],
   paleSoul: ['스르륵 미끄러지듯 떠다님', '모으기 → 뻗어 나가는 하얀 번개'],
   imp: ['주인공 옆으로 순간이동'],
+  ratKeeper: ['악마 쥐 부대 소환(3×3 대형)', '거리 유지'],
+  rat: ['부대 대형으로 행군 → 가까워지면 흩어져 물기', '신성에 약함'],
+  snake: ['똬리(예고선) → 튕기듯 박치기 돌진', '빗나가면 휘돌아 두 번째 돌진'],
   demonCurser: ['저주(약화·둔화·봉인 중 하나, 죽이면 풀림)', '지옥불 구슬', '거리 유지'],
   demonBerserker: ['예고 → 도약 내려찍기', '체력 절반 아래 분노'],
   demonKing: ['지옥문(임프 소환)', '지옥불 원(분노 시 5개)', '지옥 폭발(분노 시 2연속)', '체력 절반 아래 분노', '악마 대검을 머리 위로 휘두름'],
@@ -162,13 +173,14 @@ export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', priest: '치유 카우', shocker: '전기 카우', pyro: '화염술사 카우',
   venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', butcherCow: '도살자 카우', butcherDemon: '도살자 악마', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
+  ratKeeper: '쥐떼 카우', rat: '악마 쥐', snake: '박치기 뱀',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 
 export const FLASH_COLORS = { hide: '#ffffff', horn: '#ffffff', snout: '#ffffff', eye: '#ffffff' };
 
 // 엘리트 풀 - 웨이브 ELITE_MIN_WAVE부터 eliteChance = min(BASE + wave * PER_WAVE, MAX) 확률로 이 중 하나가 균등하게 뽑힘
-export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'priest', 'shocker', 'venom', 'pyro'];
+export const ELITE_KINDS = ['tough', 'fast', 'cold', 'charger', 'fanatic', 'burning', 'exploder', 'shaman', 'priest', 'shocker', 'venom', 'pyro', 'ratKeeper', 'snake'];
 export const ELITE_MIN_WAVE = 2;
 export const ELITE_CHANCE_BASE = 0.16;
 export const ELITE_CHANCE_PER_WAVE = 0.05;
