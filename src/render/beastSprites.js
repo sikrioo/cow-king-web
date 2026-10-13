@@ -8,12 +8,13 @@ function stunDots(ctx, x, y, animT, r) {
   for (let i = 0; i < 3; i++) { const a = animT * 6 + (i * Math.PI * 2) / 3; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 3, y + Math.sin(a) * r, r * 0.6, 0, Math.PI * 2); ctx.fill(); }
 }
 
-const WHITE = { body: '#ffffff', shine: '#ffffff', ear: '#ffffff', tail: '#ffffff', eye: '#ffffff' };
-// 검은 몸 + 붉은 눈 (2026-10-13 사용자) - 흰 테두리는 주인공과 헷갈려서 빼고, 어두운 바닥에서 보이게 옅은 회색 윤기만
-export const RAT_COLORS = { body: '#161618', shine: '#5a5a62', ear: '#3a3a40', tail: '#4a4a52', eye: '#ff2a2a' };
-export const SNAKE_COLORS = { body: '#161618', shine: '#5a5a62', eye: '#ff2a2a' };
+const WHITE = { body: '#ffffff', shine: '#ffffff', ear: '#ffffff', tail: '#ffffff', nose: '#ffffff', eye: '#ffffff' };
+// 색 (2026-10-14 사용자: 검은색이 안 어울림 → 어두운 느낌은 두고 색조를 넣음, 눈은 붉은색. 흰 테두리 없음 - 주인공과 헷갈림)
+//   쥐: 악마 카우 계열 검붉은 갈색 + 칙칙한 분홍 귀·코 / 뱀: 짙은 이끼색 + 바랜 올리브 등줄기
+export const RAT_COLORS = { body: '#4a2a2a', shine: '#6e4440', ear: '#9a5a58', tail: '#7a4a48', nose: '#9a5a58', eye: '#ff2a2a' };
+export const SNAKE_COLORS = { body: '#34452c', shine: '#6f7f4a', eye: '#ff2a2a' };
 
-// 쥐 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 - 주인공과 헷갈림): 검은 실루엣 + 등의 옅은 윤기 + 귀 + 꼬리 + 붉은 눈, 스르륵 미끄러짐
+// 쥐 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 - 주인공과 헷갈림): 실루엣 + 등의 윤기 + 귀 + 코끝 + 꼬리 + 붉은 눈, 스르륵 미끄러짐
 export function drawRat(ctx, x, y, scale, animT, facing, state, flash = false) {
   const k = scale / 0.2, c = flash ? { ...RAT_COLORS, ...WHITE } : RAT_COLORS;
   ctx.save();
@@ -37,6 +38,7 @@ export function drawRat(ctx, x, y, scale, animT, facing, state, flash = false) {
   ctx.strokeStyle = c.shine; ctx.lineWidth = 1.6 * k; // 등의 윤기
   ctx.beginPath(); ctx.moveTo(-8 * k, -10 * k); ctx.quadraticCurveTo(0, -13 * k, 6 * k, -11 * k); ctx.stroke();
   ctx.fillStyle = c.ear; ctx.beginPath(); ctx.arc(4 * k, -13 * k, 2.8 * k, 0, Math.PI * 2); ctx.fill(); // 귀
+  ctx.fillStyle = c.nose; ctx.beginPath(); ctx.arc(15.5 * k, -5 * k, 1.4 * k, 0, Math.PI * 2); ctx.fill(); // 코끝
   ctx.fillStyle = c.eye; ctx.beginPath(); ctx.arc(9 * k, -8 * k, 1.5 * k, 0, Math.PI * 2); ctx.fill();
   if (state === 'stunned') stunDots(ctx, 2 * k, -20 * k, animT, 3 * k);
   ctx.restore();
@@ -60,7 +62,7 @@ function segmentPoints(m, n, spacing) {
   return pts;
 }
 
-// 뱀 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 / 10-14: 인위적인 흔들림 뺌, 매끈·납작하게): 자취를 따라 가늘어지는 검은 몸 + 등줄기 윤기 + 그림자 + 머리(붉은 눈, 똬리·돌진 땐 혀)
+// 뱀 (2026-10-13 사용자: 너무 단순하지 않게, 흰 테두리 없이 / 10-14: 인위적인 흔들림 뺌, 매끈·납작하게): 자취를 따라 가늘어지는 몸 + 등줄기 윤기 + 그림자 + 머리(붉은 눈, 똬리·돌진 땐 혀)
 export function drawSnake(ctx, m, animT, flash = false) {
   const k = m.scale / 0.4, c = flash ? { ...SNAKE_COLORS, ...WHITE } : SNAKE_COLORS;
   const n = 10, raw = segmentPoints(m, n, 7 * k);
