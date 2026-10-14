@@ -90,10 +90,12 @@ export function render(t) {
   drawComboCounter(ctx);
   ctx.restore(); // 월드 좌표 끝 - 아래는 화면 좌표
   drawVignette(ctx); // 가장자리 어둠 (막·맵마다 색, 배너·HUD는 그 위)
-  drawStartCountdown();
-  drawWavePresentation(t);
-  drawActScene();
-  drawDemoTip();
+  if (!game.sandbox) { // 관리자 미리보기(샌드박스)엔 웨이브·준비·막 안내가 캐릭터를 가려서 안 그림
+    drawStartCountdown();
+    drawWavePresentation(t);
+    drawActScene();
+    drawDemoTip();
+  }
   ctx.restore();
 
   drawHUD();
