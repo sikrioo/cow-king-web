@@ -1,4 +1,5 @@
 // 관리자 - 성장: 레벨별 필요 경험치, 몬스터 경험치(난이도 배율), 레벨업에 필요한 처치 수, 스탯 포인트
+import { CLASSES } from '../../data/classes.js';
 import { MAX_LEVEL, POINTS_PER_LEVEL, LEVEL_STAT_PER_POINT, expForLevel, HERO_BASE_HP, MAX_MANA } from '../../data/balance.js';
 import { MONSTERS, MONSTER_LABEL } from '../../data/monsters.js';
 import { DIFFICULTY, DIFFICULTY_ORDER } from '../../data/difficulty.js';
@@ -31,7 +32,7 @@ export function renderProgress(root) {
 
   root.append(
     h2('스탯 포인트 1점당'),
-    note(`전사 기본 체력 ${HERO_BASE_HP}, 기본 마나 ${MAX_MANA} (마법사는 직업 탭)`),
+    note(`직업별 시작 체력·마나: ${Object.values(CLASSES).map((c) => `${c.label} ${c.hp}/${c.mana}`).join(', ')} (data/classes.js)`),
     table([
       { label: '스탯', get: (k) => STAT_DEF[k].label },
       { label: '1점', num: true, get: (k) => STAT_DEF[k].fmt(LEVEL_STAT_PER_POINT[k]) },

@@ -42,7 +42,7 @@ it('마법사 선택: 체력/마나/슬롯/시작 장비', async () => {
     const h = m.game.hero;
     expect(h.classKey).toBe('sorc');
     expect(h.maxHp).toBe(100);
-    expect(h.maxMana).toBe(160);
+    expect(h.maxMana).toBe(180); // 2026-10-14 160 → 180 (사용자)
     expect([h.slot1, h.slot2]).toEqual(['bolt', 'fireball']);
     expect(h.equipment.weaponMain).toBe(null); // 시작 무기 없음 (지팡이 모습)
     m.cycleSkillSlot(2); // Lv1: bolt/fireball만 → 바뀌지 않음(다른 슬롯과 겹치면 건너뜀)
