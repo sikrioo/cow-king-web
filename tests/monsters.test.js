@@ -101,7 +101,9 @@ it('표의 태도와 실제 이동 규칙이 맞음: 수비 = hide, 거리 유�
   const { MONSTER_ROLE } = await import('../src/data/monsters.js');
   const { MONSTER_MOVE } = await import('../src/data/balance.js');
   const SPECIAL = ['demonBerserker', 'demonKing']; // 상황형이지만 자기 기술로 움직임(도약·분노)
+  const { MONSTERS } = await import('../src/data/monsters.js');
   Object.entries(MONSTER_ROLE).forEach(([k, r]) => {
+    if (MONSTERS[k].prop) return; // 부서지는 물체(뼈 창살)는 움직이지 않음
     const mv = MONSTER_MOVE[k];
     if (r.stance === '수비') expect(mv && mv.type, k).toBe('hide');
     if (mv && mv.type === 'hide') expect(r.stance, k).toBe('수비');

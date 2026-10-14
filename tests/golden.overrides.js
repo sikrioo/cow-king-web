@@ -41,6 +41,9 @@ export const GOLDEN_ADDITIONS = {
   'exact.monsters.ratKeeper': { hp: 60, meleeDmg: 30, scaleRatio: 1 },
   'exact.monsters.rat': { hp: 15, meleeDmg: 10, scaleRatio: 0.5 },
   'exact.monsters.snake': { hp: 55, meleeDmg: 30, scaleRatio: 1 },
+  // 2026-10-14: 뼈 감옥 - 해골 감옥지기 + 뼈 창살(부서지는 물체) (사용자)
+  'exact.monsters.skeletonJailer': { hp: 55, meleeDmg: 20, scaleRatio: 1 },
+  'exact.monsters.boneBar': { hp: 45, meleeDmg: 0, scaleRatio: 0.92 },
   // 2026-10-06: 화염술사 카우(메테오) 추가
   'exact.monsters.pyro': { hp: 50, meleeDmg: 30, scaleRatio: 1 },
   // 2026-10-10: 해골 카우·해골 카우 킹 (관리자 페이지에만 - 사용자 요청)

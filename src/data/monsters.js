@@ -24,6 +24,9 @@ export const MONSTERS = {
   paleSoul:    { hp: 40, dmg: 15, scaleMul: 1, speedMul: 1.5, aggroMul: 2, exp: 26, soul: 'ghost', element: 'lightning', resist: { lightning: 0.75, cold: 0.5, poison: 0.5 }, ring: null, colors: null },
   skeletonShield: { hp: 90, dmg: 30, scaleMul: 1.15, speedMul: 0.8, aggroMul: 1.2, exp: 30, skeleton: true, shield: true, resist: { phys: 0.5, poison: 0.75 }, ring: '#c9c1aa', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } }, // 해골 방패병: 단단함(물리 절반), 느림
   skeleton:     { hp: 50,  dmg: 30, scaleMul: 1,   speedMul: 1.05, aggroMul: 1.1, exp: 20,  skeleton: true, resist: { poison: 0.75 }, ring: '#d8d2c0', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#7fffd4' } },
+  // 뼈 감옥 (2026-10-14): 해골 감옥지기 + 뼈 창살(prop: 부술 수 있는 움직이지 않는 물체 - 경험치·드랍·처치 수 없음, CC 면역, 미니맵·자동 조준 제외)
+  skeletonJailer: { hp: 55, dmg: 20, scaleMul: 1, speedMul: 0.9, aggroMul: 2.2, exp: 30, skeleton: true, resist: { poison: 0.75 }, ring: '#c9c1aa', colors: { hide: '#e8e2d0', horn: '#cfc6b0', snout: '#bdb39a', eye: '#b8a4ff' } },
+  boneBar:        { hp: 45, dmg: 0, scaleMul: 0.92, speedMul: 0, aggroMul: 0, exp: 0, prop: true, unholy: true, resist: { poison: 1 }, ring: null, colors: null },
   skeletonKing: { hp: 600, dmg: 40, scaleMul: 2.2, speedMul: 0.8,  aggroMul: 2.4, exp: 300, skeleton: true, boss: true, resist: { poison: 0.75, cold: 0.3 }, ring: '#7fffd4', colors: { hide: '#d6cfba', horn: '#b9ae92', snout: '#a99f86', eye: '#7fffd4' } },
   // 궁수 (2026-10-10, 궁수 카우는 관리자 페이지에만 / 해골 궁수는 목장 2·3막): 거리를 두고 조준(조준선) → 화살 (entities/rangedBehaviors.js). 해골 궁수는 해골 그림
   archer:         { hp: 50, dmg: 20, scaleMul: 1, speedMul: 1,    aggroMul: 1.6, exp: 25, adminOnly: true, ring: '#9be35a', colors: { hide: '#6b5a3a', horn: '#e8d8b0', snout: '#3e3322', eye: '#ffe066' } },
@@ -76,6 +79,7 @@ export const MONSTER_WEAPONS = {
   demonCurser: ['staff'],
   demonBerserker: ['cleaver', 'axe'],
   ratKeeper: ['staff'], rat: ['club'], snake: ['club'], // 쥐·뱀 그림에 무기 없음 (목록만)
+  skeletonJailer: ['staff'], boneBar: ['club'], // 창살은 무기 없음 (목록만)
   demonKing: ['demonblade']  // 악마 카우킹: 악마 대검 (2026-10-11 사용자 - 검붉은 톱니 날, render/monsterWeapons.js)
 };
 // 개체별 무기 고르기 - 게임 난수(Math.random)를 소비하지 않도록 개체가 이미 가진 값(애니메이션 위상 등)으로 정함
@@ -110,7 +114,7 @@ export const MONSTER_GAIT = {
   normal: ['hop', 'trot'], tough: 'stomp', fast: 'scuttle', cold: 'trot', charger: 'trot', fanatic: 'hop', burning: 'trot',
   exploder: 'scuttle', shaman: 'sway', priest: 'trot', shocker: 'sway', pyro: 'sway', venom: 'trot', boss: 'stomp',
   skeleton: ['trot', 'hop'], skeletonShield: 'stomp', skeletonSpear: 'trot', skeletonBrute: 'stomp', skeletonArcher: 'trot', archer: 'trot', skeletonKing: 'sway',
-  ratKeeper: 'sway', imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
+  ratKeeper: 'sway', skeletonJailer: 'sway', imp: 'scuttle', demonCurser: 'sway', demonBerserker: 'stomp', demonKing: 'stomp', butcherCow: 'stomp', butcherDemon: 'stomp'
 };
 
 // 몬스터 역할과 목적 한 줄 (관리자 몬스터 표 - 2026-10-12 사용자: 목적을 알 수 있을 정도로만). 새 몬스터를 넣으면 같이
@@ -132,6 +136,7 @@ export const MONSTER_ROLE = {
   skeletonKing: R('소환', '뒤에서 해골을 부르고 터뜨림', '상황'),
   ratKeeper: R('소환', '멀리서 악마 쥐 부대를 불러 몰아붙임', '상황'), rat: R('돌격', '대형을 지어 행군하다 한꺼번에 덤빔', '공격'),
   snake: R('돌진', '튕기듯 박치기, 빗나가면 돌아서 한 번 더', '공격'),
+  skeletonJailer: R('지원', '뼈 감옥으로 주인공을 가둬 동료가 몰려오게 함', '상황'), boneBar: R('구조물', '감옥 창살 - 부수면 그 칸이 열림', '수비'),
   boss: R('보스', '1막의 왕 - 강타·돌진·함성', '공격'), demonKing: R('보스', '3막의 군주 - 소환·지옥불·폭발', '상황')
 };
 
@@ -162,6 +167,8 @@ export const MONSTER_SKILLS = {
   ratKeeper: ['악마 쥐 부대 소환(3×3 대형)', '거리 유지'],
   rat: ['부대 대형으로 행군 → 가까워지면 흩어져 물기', '신성에 약함'],
   snake: ['똬리(예고선) → 튕기듯 박치기 돌진', '빗나가면 휘돌아 두 번째 돌진'],
+  skeletonJailer: ['뼈 감옥(고리 예고 0.8초 → 창살 10개가 2.5초 가둠)', '거리 유지'],
+  boneBar: ['움직이지 않음 - 부수면 그 칸이 열림', '투사체는 통과', '경험치·드랍 없음'],
   demonCurser: ['저주(약화·둔화·봉인 중 하나, 죽이면 풀림)', '지옥불 구슬', '거리 유지'],
   demonBerserker: ['예고 → 도약 내려찍기', '체력 절반 아래 분노'],
   demonKing: ['지옥문(임프 소환)', '지옥불 원(분노 시 5개)', '지옥 폭발(분노 시 2연속)', '체력 절반 아래 분노', '악마 대검을 머리 위로 휘두름'],
@@ -174,7 +181,7 @@ export const MONSTER_LABEL = {
   normal: '카우', tough: '근육 카우', fast: '날쌘 카우', cold: '냉기 카우', charger: '돌진 카우', fanatic: '광신 카우',
   burning: '버닝 카우', exploder: '자폭 카우', shaman: '주술사 카우', priest: '치유 카우', shocker: '전기 카우', pyro: '화염술사 카우',
   venom: '독 카우', boss: '카우킹', skeleton: '해골 카우', skeletonKing: '해골 카우 킹', skeletonShield: '해골 방패병', skeletonSpear: '해골 창병', skeletonBrute: '해골 전사', butcherCow: '도살자 카우', butcherDemon: '도살자 악마', burningSoul: '버닝 소울', paleSoul: '창백한 원혼', archer: '궁수 카우', skeletonArcher: '해골 궁수 카우',
-  ratKeeper: '쥐떼 카우', rat: '악마 쥐', snake: '박치기 뱀',
+  ratKeeper: '쥐떼 카우', rat: '악마 쥐', snake: '박치기 뱀', skeletonJailer: '해골 감옥지기', boneBar: '뼈 창살',
   imp: '임프 카우', demonCurser: '악마 저주 카우', demonBerserker: '악마 버서커 카우', demonKing: '악마 카우킹'
 };
 

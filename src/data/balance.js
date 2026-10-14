@@ -429,12 +429,17 @@ export const MONSTER_MOVE = {
   paleSoul:       { type: 'keep', near: SOUL_KITE, far: SOUL_RANGE, own: true },
   shaman:         { type: 'hide', flee: 130, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND },
   priest:         { type: 'hide', flee: PRIEST_FLEE, seek: PRIEST_ALLY_SEEK, behind: PRIEST_BEHIND },
-  ratKeeper:      { type: 'keep', near: 170, far: 300 }
+  ratKeeper:      { type: 'keep', near: 170, far: 300 },
+  skeletonJailer: { type: 'keep', near: 190, far: 330 }
 };
 
 // 쥐떼 카우 (2026-10-13 사용자: 작은 악마 쥐를 불러 군대처럼 대형을 지어 공격 - entities/beastBehaviors.js)
 //   firstCd/cooldown초마다(살아 있는 내 쥐가 maxAlive - 한 부대 이하일 때) castTime초 주문 → 내 앞 ahead에 cols × rows 대형(간격 spacing)
 //   부대 기준점이 주인공 쪽으로 행군(쥐 속도 × marchMul, 자리가 멀면 × catchUpMul까지 따라잡음) → 주인공 breakDist 안 / breakBelow마리 이하 / maxMarch초면 대형을 풀고 각자 덤빔
+// 뼈 감옥 (2026-10-14 사용자: 진로를 가두는 적 - entities/prisonBehaviors.js): 해골 감옥지기가 range 안이면 firstCd/cooldown초마다 castTime초 주문
+//   → 주인공 자리 둘레(radius)에 뼈 창살 bars개: warn초 동안 땅의 고리(빠져나갈 수 있음) → 솟아 duration초 막음 → 무너짐
+//   창살은 부술 수 있는 움직이지 않는 몬스터(data/monsters.js boneBar, 체력은 거기) - 투사체는 통과. 창살 사이 틈 < 주인공 몸 → 못 지나감
+export const PRISON = { range: 340, firstCd: 3, cooldown: 9, castTime: 0.6, radius: 70, bars: 10, warn: 0.8, duration: 2.5 };
 export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.5, cooldown: 10, castTime: 0.8, maxAlive: 18, breakDist: 110, breakBelow: 2, maxMarch: 9, marchMul: 0.9, catchUpMul: 1.5 }; // 2026-10-14 쥐 속도 1.35 → 2.0배(사용자: 느림), 행군 0.85 → 0.9
 // 박치기 뱀 (2026-10-13 사용자: 튕기듯 박치기 돌진, 빗나가면 지나간 뒤 휘돌아 한 번 더 - 이중 돌진)
 //   range 안(minRange 밖)이면 coilTime초 똬리(예고선) → dashSpeed(px/초)로 dashDist 돌진, 맞으면 근접 피해 × dmgMul

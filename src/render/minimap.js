@@ -38,7 +38,7 @@ export function drawMinimap(ctx, x, y) {
 
   // 몬스터: 일반 빨강, 엘리트 종류색, 보스 크게
   game.cows.forEach((c) => {
-    if (c.state === 'dead') return;
+    if (c.state === 'dead' || (MONSTERS[c.kind] && MONSTERS[c.kind].prop)) return; // 창살 같은 물체는 안 그림
     if (c.kind === 'boss') { ctx.fillStyle = '#c07fe0'; ctx.fillRect(mx(c.x) - 3.5, my(c.y) - 3.5, 7, 7); return; }
     const def = MONSTERS[c.kind];
     const elite = c.kind !== 'normal' && def && def.ring;

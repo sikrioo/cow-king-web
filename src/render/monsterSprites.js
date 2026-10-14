@@ -10,6 +10,7 @@ import { demonDecor } from './demonSprites.js';
 import { drawSoul } from './soulSprites.js';
 import { butcherDecor } from './butcherSprites.js';
 import { drawRat, drawSnake } from './beastSprites.js';
+import { drawBoneBar } from './prisonSprites.js';
 
 // decor: { back(ctx, animT), front(ctx, animT) } - 몸 뒤/앞 덧그림 (악마 날개·꼬리·문양 - render/demonSprites.js)
 //   weaponSize: 무기 크기 배율 (data/monsters.js WEAPON_SCALE)
@@ -130,6 +131,7 @@ export function drawMonster(c, ctx, t) {
     ctx.save();
     ctx.globalAlpha = fade;
     if (c.sheepDead) drawSheep(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, false); // 양 모습 그대로 쓰러짐
+    else if (MONSTERS[c.kind] && MONSTERS[c.kind].prop) drawBoneBar(ctx, { ...c, x: p.x, y: p.y }, t, false, prog); // 창살: 가라앉으며 무너짐
     else if (MONSTERS[c.kind] && MONSTERS[c.kind].rat) drawRat(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, 'idle');
     else if (MONSTERS[c.kind] && MONSTERS[c.kind].snake) drawSnake(ctx, { ...c, x: p.x, y: p.y, scale: c.scale * pop, state: 'idle' }, t + c.phase);
     else if (MONSTERS[c.kind] && MONSTERS[c.kind].soul) drawSoul(ctx, p.x, p.y, c.scale * pop, t + c.phase, c.facing, MONSTERS[c.kind].soul);
@@ -191,7 +193,8 @@ export function drawMonster(c, ctx, t) {
   } else {
   ctx.save();
   const colors = c.flash > 0 ? FLASH_COLORS : style.colors;
-  if (style.rat) drawRat(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, c.state, c.flash > 0); // 악마 쥐 (render/beastSprites.js)
+  if (style.prop) drawBoneBar(ctx, c, t, c.flash > 0); // 뼈 창살 (render/prisonSprites.js)
+  else if (style.rat) drawRat(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, c.state, c.flash > 0); // 악마 쥐 (render/beastSprites.js)
   else if (style.snake) drawSnake(ctx, c, t + c.phase, c.flash > 0); // 박치기 뱀
   else if (style.soul) drawSoul(ctx, c.x, c.y, c.scale, t + c.phase, c.facing, style.soul, c.flash > 0, c.state === 'charging' ? Math.min(1, c.stateElapsed / 0.5) : c.state === 'beaming' ? 1 : 0, c.fade == null ? 1 : c.fade); // 영혼: 불꽃 기둥 (번개를 모으거나 쏘는 동안 밝아짐, 순간이동 땐 스르륵)
   else if (style.skeleton) drawSkeletonCow(ctx, c.x, c.y, c.scale, visualState, t + c.phase, c.facing, visualElapsed, { king: !!style.boss, flash: c.flash > 0, weapon: c.weapon, stunFn: drawStunDots, shield: !!style.shield, hitAt: c.hitAt, attackTime: c.attackTime, casting: CAST_STATES.includes(c.state), weaponSize: weaponScaleOf(c.kind), gait: gaitOf(c.kind, c.phase), seed: c.phase }); // 해골 카우: 전용 그림

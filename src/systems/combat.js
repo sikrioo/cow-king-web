@@ -121,6 +121,12 @@ export function updatePendingSwing(dt) {
 
 export function killCow(c) {
   c.deadPos = { x: c.x, y: c.y };
+  if (MONSTERS[c.kind] && MONSTERS[c.kind].prop) { // 부서지는 물체(뼈 창살): 경험치·처치 수·시체·드랍 없음
+    c.state = 'dead'; c.deadTimer = 0.3;
+    World.remove(world, c.body);
+    spawnHitParticles(c.x, c.y - 15, '#e8e2d0', 6);
+    return;
+  }
   c.sheepDead = c.stunTimer > 0 && c.ccKind === 'poly';
   game.corpses.push({ x: c.x, y: c.y, life: CORPSE_LIFE }); // 시체 자리 (해골 카우 킹)
   if (game.corpses.length > CORPSE_MAX) game.corpses.shift(); // 양으로 죽음 → 양 모습, 자폭 같은 처치 효과 없음

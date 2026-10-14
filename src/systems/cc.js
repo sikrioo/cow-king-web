@@ -7,7 +7,7 @@ import { SPELLS } from '../data/skills.js';
 import { MONSTERS } from '../data/monsters.js';
 
 export function isBossCow(c) {
-  return c.kind === 'boss' || !!c.mapBoss || !!(MONSTERS[c.kind] && MONSTERS[c.kind].boss);
+  return c.kind === 'boss' || !!c.mapBoss || !!(MONSTERS[c.kind] && (MONSTERS[c.kind].boss || MONSTERS[c.kind].prop)); // prop(뼈 창살)도 CC 면역
 }
 
 export const isSheep = (c) => c.stunTimer > 0 && c.ccKind === 'poly';

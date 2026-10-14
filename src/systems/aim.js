@@ -4,6 +4,7 @@
 //   자동 조준을 끄면(G, game.releaseMeta.autoAim === false) PC는 커서 그대로, 모바일은 바라보는 방향 그대로
 //   mode 'free'(순간이동처럼 적을 겨누면 안 되는 스킬): 적 보정 없이 커서/바라보는 방향만
 // 수치는 data/balance.js AUTO_AIM_* / AIM_ASSIST_ANGLE
+import { MONSTERS } from '../data/monsters.js';
 import { AUTO_AIM_RANGE, AUTO_AIM_FACING_WEIGHT, AIM_ASSIST_ANGLE, AIM_DEFAULT_DISTANCE, CLICK_PICK_PADDING } from '../data/balance.js';
 import { game, input } from '../state.js';
 import { canHit, getCowBody, cowEdgeDist } from './combat.js';
@@ -12,7 +13,9 @@ import { screenToWorld } from '../world/camera.js';
 export const autoAimOn = () => game.releaseMeta.autoAim !== false;
 
 const angleDiff = (a, b) => { let d = Math.abs(a - b) % (Math.PI * 2); return d > Math.PI ? Math.PI * 2 - d : d; };
-const alive = () => game.cows.filter((c) => c.state !== 'dead' && canHit(game.hero, c));
+// 자동 조준 대상 - 부서지는 물체(뼈 창살)는 주인공이 그 감옥 안에 갇혔을 때만 (빠져나가려고 부술 때)
+const targetable = (c) => !(MONSTERS[c.kind] && MONSTERS[c.kind].prop) || (c.prison && Math.hypot(game.hero.x - c.prison.x, game.hero.y - c.prison.y) < c.prison.r);
+const alive = () => game.cows.filter((c) => c.state !== 'dead' && canHit(game.hero, c) && targetable(c));
 
 function face(x, y) {
   const h = game.hero;

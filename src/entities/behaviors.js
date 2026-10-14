@@ -28,6 +28,7 @@ import { rangedBehaviors } from './rangedBehaviors.js';
 import { demonBehaviors } from './demonBehaviors.js';
 import { butcherBehaviors } from './butcherBehaviors.js';
 import { beastBehaviors } from './beastBehaviors.js';
+import { prisonBehaviors } from './prisonBehaviors.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
@@ -322,3 +323,4 @@ Object.assign(behaviors, rangedBehaviors); // 활 쏘는 몬스터 (entities/ran
 Object.assign(behaviors, demonBehaviors); // 악마 카우 종족 (entities/demonBehaviors.js)
 Object.assign(behaviors, butcherBehaviors); // 도살자 (entities/butcherBehaviors.js)
 Object.assign(behaviors, beastBehaviors); // 쥐떼 카우·악마 쥐·박치기 뱀 (entities/beastBehaviors.js)
+Object.assign(behaviors, prisonBehaviors); // 해골 감옥지기·뼈 창살 (entities/prisonBehaviors.js)
