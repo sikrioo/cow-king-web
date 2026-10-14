@@ -50,10 +50,13 @@ it('엔진: 첫 입력 전엔 조용, 켜면 소리를 냄, 같은 소리는 간
     expect(fa.played.length).toBe(0); // 아직 안 켬
     unlockAudio();
     await new Promise((r) => setTimeout(r, 10)); // 파일 불러오기
-    for (const name of Object.keys(SFX)) { sfx(name); fa.played.forEach((p) => { if (p.onended) { p.onended(); p.onended = null; } }); } // 하나씩 내고 바로 끝냄
+    for (const name of Object.keys(SFX)) { sfx(name, null, true); fa.played.forEach((p) => { if (p.onended) { p.onended(); p.onended = null; } }); } // 하나씩 내고 바로 끝냄
     expect(fa.played.length).toBe(Object.keys(SFX).length); // 모든 소리가 실제로 남
     const n = fa.played.length;
     sfx('hitFlesh'); sfx('hitFlesh'); // 같은 시각에 두 번 → 한 번
+    const { SFX_ON } = await import('../src/data/sfx.js');
+    expect(SFX_ON.every((k) => SFX[k])).toBe(true);
+    const before = fa.played.length; sfx('swingLight'); expect(fa.played.length).toBe(before); // 꺼 둔 소리는 안 남
     expect(fa.played.length - n).toBeLessThanOrEqual(1);
     game.releaseMeta.sfxMuted = true;
     const m = fa.played.length;

@@ -5,7 +5,7 @@
 //   - 높낮이를 살짝 흔듦: 게임 난수 대신 순번 + hash01 (게임 결과·테스트에 영향 없음)
 //   - 위치를 주면 화면 밖은 작게. 소리 장치가 없으면(테스트·Node) 아무것도 안 함
 //   파일은 public/sfx/이름.mp3 (출처·라이선스 docs/ASSETS.md), 합성음은 audio/zzfx.js
-import { SFX, SFX_MIX, SFX_DIR } from '../data/sfx.js';
+import { SFX, SFX_MIX, SFX_DIR, SFX_ON } from '../data/sfx.js';
 import { zzfxSamples } from './zzfx.js';
 import { game } from '../state.js';
 import { hash01 } from '../util.js';
@@ -50,10 +50,10 @@ export function applyVolume() {
 }
 
 // 소리 내기. at = { x, y } (월드 좌표 - 화면 밖이면 작게)
-export function sfx(name, at = null) {
+export function sfx(name, at = null, force = false) { // force: 꺼 둔 소리도 (관리자 탭에서 들어 보기)
   if (!ac || ac.state !== 'running') return;
   const d = SFX[name];
-  if (!d || (game.releaseMeta && game.releaseMeta.sfxMuted)) return;
+  if (!d || (!force && !SFX_ON.includes(name)) || (game.releaseMeta && game.releaseMeta.sfxMuted)) return; // 꺼 둔 소리 (data/sfx.js SFX_ON)
   const now = ac.currentTime;
   if (now - (last[name] != null ? last[name] : -9) < (d.gap != null ? d.gap : SFX_MIX.gap) || active >= SFX_MIX.maxVoices) return; // 0초도 '낸 적 있음'
   seq++;

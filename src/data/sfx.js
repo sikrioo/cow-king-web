@@ -2,7 +2,10 @@
 //   소리 하나 = { files: [파일 이름…](하나를 고름) 또는 synth: ZzFX 숫자(audio/zzfx.js 순서), vol 음량, gap 같은 소리 최소 간격(초), pitch 높낮이 흔들기(±비율), rate 재생 속도 }
 //   파일 묶음에 없는 소리(휘두르기 바람, 마법 지직·냉기·신성, 레벨업 등)는 합성
 export const SFX_DIR = './sfx/';
-export const SFX_MIX = { volume: 0.7, maxVoices: 14, gap: 0.03, pitch: 0.06, offscreen: 0.35 };
+export const SFX_MIX = { volume: 0.7, maxVoices: 6, gap: 0.03, pitch: 0.06, offscreen: 0.35 };
+// 켜 둔 소리 (2026-10-15 사용자: 섞여서 조잡함 → 필수 소리만 - 때리고 맞는 손맛·피해야 할 경고·보상·큰 마법). 나머지는 데이터만 남김 - 여기에 넣으면 다시 켜짐
+export const SFX_ON = ['hitFlesh', 'hitBone', 'hitHeavy', 'crush', 'heroHurt', 'heroDeath', 'telegraph', 'prison', 'roar',
+  'levelUp', 'cardPick', 'dropLegend', 'potion', 'fireBoom', 'meteor'];
 
 export const SFX = {
   // ── 화면·아이템
@@ -27,9 +30,9 @@ export const SFX = {
   swingLight:  { synth: [0.6, , 300, 0.01, 0.02, 0.08, 4, 1.4, -8, , , , , 1.6], vol: 0.5, gap: 0.05 },
   swingHeavy:  { synth: [0.8, , 180, 0.02, 0.04, 0.14, 4, 1.6, -5, , , , , 1.8], vol: 0.7, gap: 0.08 },
   miss:        { synth: [0.3, , 600, 0.01, 0.01, 0.06, 4, 1, -12, , , , , 2], vol: 0.35, gap: 0.08 },
-  hitFlesh:    { files: ['hit_flesh_1', 'hit_flesh_2', 'hit_flesh_3'], vol: 0.55, gap: 0.035 },
+  hitFlesh:    { files: ['hit_flesh_1', 'hit_flesh_2', 'hit_flesh_3'], vol: 0.55, gap: 0.09 },
   hitHeavy:    { files: ['hit_heavy_1', 'hit_heavy_2'], vol: 0.7, gap: 0.05 },
-  hitBone:     { files: ['hit_bone_1', 'hit_bone_2'], vol: 0.6, gap: 0.035 },
+  hitBone:     { files: ['hit_bone_1', 'hit_bone_2'], vol: 0.6, gap: 0.09 },
   crush:       { files: ['crush'], vol: 0.8, gap: 0.1 },
   // ── 주인공 피격
   block:       { files: ['block_1', 'block_2'], vol: 0.6, gap: 0.08 },
