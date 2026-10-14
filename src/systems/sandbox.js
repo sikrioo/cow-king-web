@@ -1,16 +1,19 @@
 // 개발자 미리보기 샌드박스 - 관리자 페이지(admin.html)가 작은 창(iframe)으로 띄움. 실제 게임 코드가 그대로 돎
 //   index.html?dev=1&sandbox=skill&id=fireball&lv=3  → 기본 카우 허수아비 앞에서 그 스킬을 계속 시전
 //   index.html?dev=1&sandbox=monster&id=pyro          → 그 몬스터가 주인공에게 모든 행동을 함 (죽으면 다시 나옴)
+//   index.html?dev=1&sandbox=hero&cls=sorc&main=staff&off=none&act=all → 그 직업·장비로 걷기 → 방향을 돌며 기본 공격 (착용·동작 모습 확인, 2026-10-14)
 // 주인공 무적·마나 무한, 웨이브·경험치(레벨업 카드) 없음. 개발자 모드에서만 (main.boot)
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import { SKILL_MAX_LEVEL, SKILL_META } from '../data/skills.js';
-import { TWO_HAND_ONLY } from '../data/items.js';
+import { TWO_HAND_ONLY, WEAPON_VARIANTS } from '../data/items.js';
+import { HERO_PREVIEW } from '../data/balance.js';
 import { rollGearItem, equipItem } from './gear.js';
 import { MONSTERS } from '../data/monsters.js';
 import { Body } from '../core/physics.js';
 import { game, input, dev } from '../state.js';
 import { Monster } from '../entities/monster.js';
-import { SKILLS, trySlot } from './skills.js';
+import { SKILLS, trySlot, tryBasicAttack } from './skills.js';
+import { recalcGearStats } from './gear.js';
 import { PEN } from '../world/arena.js';
 import { clearObstacles } from './obstacles.js';
 
@@ -24,6 +27,13 @@ const DUMMY_SPOTS = [[50, 0], [130, -40], [160, 45], [215, 0], [270, -65], [285,
 export function sandboxParams(search = typeof location !== 'undefined' ? location.search : '') {
   const p = new URLSearchParams(search || '');
   const mode = p.get('sandbox');
+  if (mode === 'hero') { // 착용·동작 미리보기
+    const cls = CLASSES[p.get('cls')] ? p.get('cls') : 'warrior';
+    const main = WEAPON_VARIANTS.includes(p.get('main')) ? p.get('main') : 'none';
+    const off = p.get('off') === 'shield' || WEAPON_VARIANTS.includes(p.get('off')) ? p.get('off') : 'none';
+    const act = ['all', 'walk', 'attack', 'idle'].includes(p.get('act')) ? p.get('act') : 'all';
+    return { mode, cls, main, two: p.get('two') === '1' || TWO_HAND_ONLY.includes(main), off, act };
+  }
   if (mode !== 'skill' && mode !== 'monster') return null;
   const id = p.get('id');
   if (mode === 'skill' && !SKILLS[id]) return null;
@@ -34,6 +44,7 @@ export function sandboxParams(search = typeof location !== 'undefined' ? locatio
 
 // 스킬을 쓰는 직업 (공통 스킬·몬스터 미리보기는 전사)
 export function sandboxClass(sb) {
+  if (sb.mode === 'hero') return sb.cls;
   if (sb.mode === 'skill') return CLASS_ORDER.find((k) => CLASSES[k].skills.includes(sb.id)) || 'warrior';
   return 'warrior';
 }
@@ -61,6 +72,7 @@ export function startSandbox(sb) {
   game.waveTransition = Infinity; // 웨이브 없음
   game.demoTipTimer = 0;
   h.facing = 0;
+  if (sb.mode === 'hero') { setupHeroPreview(game.sandbox); return; } // 복사본(game.sandbox)에 시계·방향을 둠
   if (sb.mode === 'skill') {
     h.skillLevels[sb.id] = sb.lv;
     h.slot1 = sb.id;
@@ -101,6 +113,7 @@ export function updateSandbox(dt) {
       c.x = nx; c.y = ny;
     }
   });
+  if (sb.mode === 'hero') { updateHeroPreview(sb, h, dt); return; }
   if (sb.mode === 'monster') {
     Body.setPosition(h.body, sb.anchor); Body.setVelocity(h.body, { x: 0, y: 0 }); h.x = sb.anchor.x; h.y = sb.anchor.y;
     if (!game.cows.some((c) => c.sandboxTarget && c.state !== 'dead')) {
@@ -118,4 +131,40 @@ export function updateSandbox(dt) {
   trySlot(1);
   const s = SKILLS[sb.id];
   sb.timer = Math.max(s.cd(), 0) + CAST_GAP;
+}
+
+// 착용·동작 미리보기: 장비를 비우고 고른 무기(주)·보조(방패/무기)만 낌 - 몬스터 없음
+function setupHeroPreview(sb) {
+  const h = game.hero;
+  Object.keys(h.equipment).forEach((k) => { h.equipment[k] = null; });
+  const weapon = (variant, two) => rollGearItem({ category: 'weapon', handedness: two ? 'two' : 'one', rarity: 'normal', variant, identified: true, noElement: true });
+  if (sb.main !== 'none') equipItem(weapon(sb.main, sb.two), { slot: 'weaponMain', silent: true });
+  const mainTwo = h.equipment.weaponMain && h.equipment.weaponMain.handedness === 'two';
+  if (!mainTwo && sb.off === 'shield') equipItem(rollGearItem({ category: 'shield', rarity: 'normal', identified: true }), { silent: true });
+  else if (!mainTwo && sb.off !== 'none' && !TWO_HAND_ONLY.includes(sb.off)) equipItem(weapon(sb.off, false), { slot: 'weaponOff', silent: true });
+  recalcGearStats();
+  sb.t = 0; sb.attackT = 0; sb.dir = 0;
+}
+
+// 걷기(원을 그리며) → 제자리에서 45도씩 돌며 기본 공격 → 반복 (act로 하나만 고를 수도)
+function updateHeroPreview(sb, h, dt) {
+  const P = HERO_PREVIEW;
+  sb.t += dt;
+  const cycle = P.walk + P.attack, at = sb.act === 'all' ? sb.t % cycle : 0;
+  const walking = sb.act === 'walk' || (sb.act === 'all' && at < P.walk);
+  input.mouseScreen = null;
+  if (walking) { // 기준점 둘레 원을 따라 클릭 이동처럼
+    const a = sb.t * 1.6;
+    input.moveTarget = { x: sb.anchor.x + Math.cos(a) * P.walkRadius, y: sb.anchor.y + Math.sin(a) * P.walkRadius };
+    return;
+  }
+  input.moveTarget = null;
+  Body.setPosition(h.body, sb.anchor); Body.setVelocity(h.body, { x: 0, y: 0 }); h.x = sb.anchor.x; h.y = sb.anchor.y;
+  if (sb.act === 'idle') { sb.attackT -= dt; if (sb.attackT <= 0) { sb.attackT = P.idleTurn; sb.dir = (sb.dir + 1) % 8; } h.facing = (sb.dir / 8) * Math.PI * 2; return; }
+  sb.attackT -= dt;
+  if (sb.attackT > 0) return;
+  sb.attackT = P.attackEvery;
+  sb.dir = (sb.dir + 1) % 8; // 8방향을 돌며 - 방향마다 자세 확인
+  h.facing = (sb.dir / 8) * Math.PI * 2;
+  tryBasicAttack();
 }

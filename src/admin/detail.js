@@ -51,7 +51,7 @@ export function openDrawer(title, ...nodes) {
 }
 
 // 샌드박스 미리보기 창 (실제 게임 코드가 도는 iframe)
-function preview(params) {
+export function preview(params) {
   const url = () => `./index.html?dev=1&${new URLSearchParams(params).toString()}`;
   const frame = el('iframe', { class: 'preview', src: url(), title: '미리보기' });
   const link = el('a', { href: url(), target: '_blank' }, '새 창으로 열기');

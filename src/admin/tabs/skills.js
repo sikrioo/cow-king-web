@@ -9,10 +9,10 @@ import {
   FILLER_CARDS, FILLER_ORDER
 } from '../../data/cards.js';
 import * as B from '../../data/balance.js';
-import { el, table, h2, note, src, tag, num, pct } from '../ui.js';
-import { openSkillDetail } from '../detail.js';
+import { el, table, h2, note, src, tag, num, pct, select } from '../ui.js';
+import { openSkillDetail, preview } from '../detail.js';
 import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL, MASTERY_STAT } from '../../data/masteries.js';
-import { GEAR_VARIANT_LABEL } from '../../data/items.js';
+import { GEAR_VARIANT_LABEL, WEAPON_VARIANTS, TWO_HAND_ONLY } from '../../data/items.js';
 
 // 전사 스킬 수치는 data/balance.js 상수 (마법은 SPELLS, 투지·순간이동은 SKILL_STATS)
 const WARRIOR = {
@@ -83,6 +83,24 @@ export function renderSkills(root) {
       { label: '시작 슬롯', get: (k) => CLASSES[k].slots.map((s) => SKILL_META[s].label).join(' / ') },
       { label: '배울 수 있는 스킬', get: (k) => [...CLASSES[k].skills, ...COMMON_SKILLS].map((s) => SKILL_META[s].label).join(', ') }
     ], CLASS_ORDER)
+  );
+
+  // 착용·동작 미리보기 (2026-10-14 사용자): 직업·주무기·보조를 바꿔 가며 실제 게임 그림으로 (샌드박스 주인공 모드)
+  const hp = { sandbox: 'hero', cls: 'sorc', main: 'staff', off: 'none', act: 'all', two: '0' };
+  const view = preview(hp);
+  const wl = (v) => GEAR_VARIANT_LABEL[v] || v;
+  const set = (k) => (v) => { hp[k] = v; view.reload(); };
+  root.append(
+    h2('착용·동작 미리보기'),
+    note(`직업과 장비를 바꾸면 실제 게임 그림으로 걷기 → 8방향으로 돌며 기본 공격을 반복. ${src('src/systems/sandbox.js')} 주인공 모드, 시간 ${src('src/data/balance.js')} HERO_PREVIEW`),
+    el('div', { class: 'controls' },
+      select('직업 ', CLASS_ORDER.map((k) => [k, CLASSES[k].label]), hp.cls, set('cls')),
+      select(' 주무기 ', [['none', '없음(맨손)'], ...WEAPON_VARIANTS.map((v) => [v, wl(v)])], hp.main, set('main')),
+      select(' 양손 ', [['0', '한손(되는 무기만)'], ['1', '양손']], hp.two, set('two')),
+      select(' 보조 ', [['none', '없음'], ['shield', '방패'], ...WEAPON_VARIANTS.filter((v) => !TWO_HAND_ONLY.includes(v)).map((v) => [v, wl(v)])], hp.off, set('off')),
+      select(' 동작 ', [['all', '걷기 → 공격'], ['walk', '걷기만'], ['attack', '공격만'], ['idle', '서서 방향만']], hp.act, set('act')),
+      ' ', view.link),
+    view.frame
   );
 
   const rows = [];

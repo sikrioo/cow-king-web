@@ -76,3 +76,32 @@ it('모든 몬스터: 주인공에게 행동하고, 죽거나 사라지면 다�
     }
   } finally { env.restore(); }
 }, 120000);
+
+it('착용·동작 미리보기(주인공 모드): 고른 직업·장비를 끼고 걷다가 방향을 돌며 기본 공격', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    for (const q of ['?sandbox=hero&cls=sorc&main=staff&off=none', '?sandbox=hero&cls=warrior&main=sword&off=shield', '?sandbox=hero&cls=warrior&main=dagger&off=sword', '?sandbox=hero&cls=warrior&main=none']) {
+      const sb = m.sandboxParams(q);
+      m.ui.selectedClass = m.sandboxClass(sb);
+      m.resetGame();
+      m.startSandbox(sb);
+      const h = m.game.hero, eq = h.equipment;
+      expect(h.classKey).toBe(sb.cls);
+      expect(eq.weaponMain ? eq.weaponMain.variant : 'none', q).toBe(sb.main);
+      if (sb.off === 'shield') expect(eq.weaponOff.category).toBe('shield');
+      else if (sb.off !== 'none') expect(eq.weaponOff.variant).toBe(sb.off);
+      let moved = 0, attacked = false;
+      const facings = new Set();
+      for (let i = 0; i < 60 * 9; i++) {
+        env.frame(1);
+        moved = Math.max(moved, Math.hypot(h.x - m.game.sandbox.anchor.x, h.y - m.game.sandbox.anchor.y));
+        if (h.attackTimer > 0) attacked = true;
+        facings.add(Math.round(h.facing * 100));
+      }
+      expect(moved, q).toBeGreaterThan(30);
+      expect(attacked, q).toBe(true);
+      expect(facings.size, q).toBeGreaterThanOrEqual(4);
+    }
+  } finally { env.restore(); }
+}, 120000);
