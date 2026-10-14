@@ -14,5 +14,32 @@ export const BOT = {
   lootRange: 650, homeRadius: 260, flowWait: 1.5,
   stuckTime: 1.0, unstuckTime: 0.5,
   avoidLook: 60, approachPad: 30, meleeLos: 70, shotRadius: 6,
-  crowdRadius: 110, crowdCount: 4, crowdHp: 0.65, retreatTime: 1.0, retreatCd: 4
+  crowdRadius: 110, crowdCount: 4, crowdHp: 0.65, retreatTime: 1.0, retreatCd: 4,
+  // 생존 (src/bot/heuristic.js survive): 체력이 surviveHp 아래인데 바로 마실 생명 물약이 없으면 - 바닥 생명 물약(potionRange 안)으로, 없으면 가장 덜 위험한 쪽으로 달림
+  //   escapeDirs방향 × escapeStep 앞을 재 보고 적 위협 합(가중치 / 거리)이 가장 작은 쪽. 보스·예고 중인 적은 위협이 큼
+  surviveHp: 0.35, potionRange: 500, escapeDirs: 16, escapeStep: 90, threatBoss: 3, threatCharging: 2, threatRanged: 0.6,
+  // 먼저 잡을 적 (치유·소환·저주·원거리 마법) - priorityRange 안이고 가는 길이 막히지 않으면 가장 가까운 적보다 먼저
+  priorityKinds: ['priest', 'shaman', 'skeletonJailer', 'demonCurser', 'ratKeeper', 'pyro'], priorityRange: 320
+};
+
+// 봇 성장 관리 (src/bot/upkeep.js, upkeepEvery초마다)
+//   build: 스탯 포인트 비율 (이 비율대로 고르게 - 레벨 스탯 키) / skills: 슬롯에 넣을 스킬 우선순위 (배운 것 중 앞에서 둘, 오라·무기 특수기 제외)
+//   gear: 장비 점수 가중치 - 능력치 키는 STAT_DEF 단위(% 옵션은 소수, 고정 수치는 ×10 정수), dps = 무기 평균 피해/초(마법사는 0), armor = 방어력
+//   equipMargin: 지금 장비보다 점수가 이 비율 이상 높아야 바꿔 낌(왔다 갔다 방지)
+export const BOT_UPKEEP = { upkeepEvery: 1, equipMargin: 0.05 };
+export const BOT_BUILD = {
+  warrior: {
+    build: { health: 4, atkPower: 3, accuracy: 2, defense: 1, atkSpeed: 1 },
+    skills: ['whirlwind', 'smash', 'leap', 'concuss', 'heavenbolt', 'holyhammer', 'flurry', 'rush', 'berserk', 'fortify', 'warcry'],
+    gear: { dps: 1.2, armor: 0.6, atkPower: 1, health: 0.7, mana: 0.1, atkSpeed: 120, castSpeed: 30, defense: 120, evasion: 110, accuracy: 80, moveSpeed: 60,
+      lifeLeech: 250, manaLeech: 60, crushBlow: 150, knockback: 8, fireDmg: 0.8, coldDmg: 0.8, lightningDmg: 0.8, poisonDmg: 0.8,
+      skillAll: 30, skillWarrior: 30, skillWeapon: 10 }
+  },
+  sorc: {
+    build: { health: 4, mana: 2, castSpeed: 3, evasion: 1 },
+    skills: ['meteor', 'blizzard', 'chain', 'fireball', 'balllightning', 'orb', 'thunderstrike', 'firewave', 'flamepillar', 'frostnova', 'discharge', 'energyshield'],
+    gear: { dps: 0, armor: 0.6, atkPower: 0, health: 0.8, mana: 0.5, atkSpeed: 60, castSpeed: 150, defense: 100, evasion: 120, accuracy: 0, moveSpeed: 80,
+      lifeLeech: 0, manaLeech: 0, crushBlow: 0, knockback: 0, fireDmg: 0, coldDmg: 0, lightningDmg: 0, poisonDmg: 0,
+      skillAll: 30, skillSorc: 30, skillFire: 15, skillCold: 15, skillLightning: 15 }
+  }
 };

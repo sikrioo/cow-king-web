@@ -12,7 +12,7 @@ async function run(cls, seed) {
   try {
     vi.resetModules();
     await import('../src/main.js');
-    const m = { ...(await import('../src/state.js')), ...(await import('../src/game.js')), ...(await import('../src/bot/bot.js')) };
+    const m = { ...(await import('../src/state.js')), ...(await import('../src/game.js')), ...(await import('../src/bot/bot.js')), ...(await import('../src/bot/upkeep.js')), ...(await import('../src/data/items.js')) };
     m.ui.selectedClass = cls;
     m.setBot(true);
     let level = 0, kills = 0, lastKills = 0;
@@ -23,14 +23,15 @@ async function run(cls, seed) {
       lastKills = m.game.kills;
     }
     const s = m.botStats();
-    return { cls, seed, runs: s.runs, deaths: s.deaths, act: s.bestAct + 1, wave: s.bestWave, level, kills: kills + lastKills };
+    const h = m.game.hero, gear = Math.round(m.GEAR_SLOTS.reduce((t, k) => t + m.gearScore(h.equipment[k]), 0));
+    return { cls, seed, runs: s.runs, deaths: s.deaths, act: s.bestAct + 1, wave: s.bestWave, level, kills: kills + lastKills, slots: `${h.slot1}/${h.slot2}`, gear };
   } finally { env.restore(); }
 }
 
 it('봇 보고서', async () => {
   const rows = [];
   for (const cls of CLASSES) for (const seed of SEEDS) rows.push(await run(cls, seed));
-  const head = ['직업', '시드', '판', '죽음', '최고 막', '최고 웨이브', '레벨', '처치'];
-  const lines = rows.map((r) => [r.cls, r.seed, r.runs, r.deaths, r.act, r.wave, r.level, r.kills].join('\t'));
+  const head = ['직업', '시드', '판', '죽음', '최고 막', '최고 웨이브', '레벨', '처치', '슬롯', '장비 점수'];
+  const lines = rows.map((r) => [r.cls, r.seed, r.runs, r.deaths, r.act, r.wave, r.level, r.kills, r.slots, r.gear].join('\t'));
   process.stdout.write(`\n봇 보고서 (${SECONDS}초씩, 보통 난이도 목장)\n${head.join('\t')}\n${lines.join('\n')}\n\n`);
 }, 0);

@@ -133,7 +133,9 @@ export function detourPoint(x, y, tx, ty, radius, pad = 18) {
     if (cx < PEN.x || cy < PEN.y || cx > PEN.x + PEN.size || cy > PEN.y + PEN.size) return;
     if (Math.hypot(cx - x, cy - y) < 10) return; // 이미 거기 - 다음 후보
     if (pathBlocked(x, y, cx, cy, radius * 0.9)) return;
-    const cost = Math.hypot(cx - x, cy - y) + Math.hypot(tx - cx, ty - cy);
+    // 거기서 목표까지도 이 구조물에 막히지 않는 모서리를 먼저 (막힌 모서리는 이미 도착해도 또 막힘 - 막다른 모서리)
+    const through = segSegDist(cx, cy, tx, ty, o.ax, o.ay, o.bx, o.by) >= o.r + radius * 0.9;
+    const cost = Math.hypot(cx - x, cy - y) + Math.hypot(tx - cx, ty - cy) + (through ? 0 : 1e6);
     if (!best || cost < best.cost) best = { x: cx, y: cy, cost };
   });
   return best;

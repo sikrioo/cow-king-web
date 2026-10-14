@@ -1,9 +1,9 @@
 // 휴리스틱 봇 (규칙으로 판단): 관측(bot/observe.js) → 행동(bot/act.js). 화면 흐름(타이틀·맵 선택·죽음)도 스스로 넘김
 //   우선순위: 카드 고르기 → 물약 → 감옥 창살 부수기 → 피하기(지역 공격·돌진 줄·투사체) → 스킬 → 공격(마법사는 거리 유지) → 줍기·대기
 //   판단에 쓰는 수치는 data/bot.js BOT (튜닝용 숫자를 코드에 박지 않음). mem = 봇 기억(틱 사이 유지)
-import { BOT } from '../data/bot.js';
+import { BOT, BOT_BUILD } from '../data/bot.js';
 import { IDLE } from './act.js';
-import { detourPoint } from '../world/arena.js';
+import { detourPoint, obstacleAt } from '../world/arena.js';
 
 const len = (x, y) => Math.hypot(x, y) || 1;
 const norm = (x, y) => { const l = len(x, y); return { x: x / l, y: y / l }; };
@@ -42,7 +42,8 @@ function aroundObstacles(obs, v) {
 
 function chooseCard(obs) {
   const slotted = [obs.hero.slot1 && obs.hero.slot1.id, obs.hero.slot2 && obs.hero.slot2.id];
-  const score = (c) => (c.type === 'skillUp' && slotted.includes(c.id) ? 5 : c.type === 'mastery' ? 4 : c.type === 'upgrade' ? 3 : c.type === 'skillUp' ? 2 : c.type === 'newSkill' ? 1 : 0);
+  const prio = (BOT_BUILD[obs.hero.cls] || BOT_BUILD.warrior).skills.slice(0, 4); // 슬롯에 넣고 싶은 스킬 (bot/upkeep.js가 넣음)
+  const score = (c) => (c.type === 'newSkill' && prio.includes(c.id) ? 6 : c.type === 'skillUp' && slotted.includes(c.id) ? 5 : c.type === 'mastery' ? 4 : c.type === 'upgrade' ? 3 : c.type === 'skillUp' ? 2 : c.type === 'newSkill' ? 1 : 0);
   let best = 0;
   obs.cards.forEach((c, i) => { if (score(c) > score(obs.cards[best])) best = i; });
   return best;
@@ -68,6 +69,25 @@ function dodge(obs) {
     if (Math.abs(side) < p.r + h.r + BOT.dodgePad) { const s = side >= 0 ? 1 : -1; return { x: -p.dy * s, y: p.dx * s }; }
   }
   return null;
+}
+
+// 가장 덜 위험한 방향: 여러 방향으로 조금 가 본 자리에서 적 위협(가중치 / 거리)의 합 + 위험 지역·맵 끝·구조물 벌점이 가장 작은 쪽
+function safestDir(obs, foes) {
+  const h = obs.hero, p = obs.pen, step = BOT.escapeStep;
+  let best = null;
+  for (let i = 0; i < BOT.escapeDirs; i++) {
+    const a = (i / BOT.escapeDirs) * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a), x = h.x + dx * step, y = h.y + dy * step;
+    let s = 0;
+    if (x < p.x + BOT.edge * 0.5 || y < p.y + BOT.edge * 0.5 || x > p.x + p.size - BOT.edge * 0.5 || y > p.y + p.size - BOT.edge * 0.5) s += 50;
+    if (obstacleAt(x, y, h.r)) s += 50;
+    obs.dangers.forEach((d) => { if (Math.hypot(x - d.x, y - d.y) < d.r + h.r) s += 30; });
+    foes.forEach((m) => {
+      const w = m.boss ? BOT.threatBoss : m.threat ? BOT.threatCharging : m.ranged ? BOT.threatRanged : 1;
+      s += w * 100 / Math.max(25, Math.hypot(x - m.x, y - m.y));
+    });
+    if (!best || s < best.s) best = { s, x: dx, y: dy };
+  }
+  return best && { x: best.x, y: best.y };
 }
 
 export function decide(obs, mem, dt) {
@@ -109,6 +129,20 @@ export function decide(obs, mem, dt) {
   const away = dodge(obs);
   if (away && !h.busy) { a.move = withCenterPull(obs, away); a.run = true; mem.wantMove = a.move; return a; }
 
+  // 생존: 체력이 낮은데 바로 마실 생명 물약이 없으면 - 바닥 생명 물약으로, 없으면 가장 덜 위험한 쪽으로 달림
+  //   체력 회복이 없어서 도망은 '곧 마실 수 있을 때'(물약이 있고 대기 중)만 - 물약이 하나도 없으면 도망 대신 조심해서 싸움(외톨이 적부터, 아래)
+  const lowHp = h.hp < h.maxHp * BOT.surviveHp && !(h.potions.heal > 0 && h.potionReady.heal);
+  const noPotion = !(h.potions.heal > 0);
+  if (lowHp && foes.length) {
+    const pot = obs.items.filter((it) => it.type === 'heal').sort((p, q) => Math.hypot(p.x - h.x, p.y - h.y) - Math.hypot(q.x - h.x, q.y - h.y))[0];
+    if (pot && Math.hypot(pot.x - h.x, pot.y - h.y) < BOT.potionRange) { a.move = aroundObstacles(obs, norm(pot.x - h.x, pot.y - h.y)); a.run = true; mem.wantMove = a.move; return a; }
+    // 물약이 하나도 없으면 도망쳐도 회복이 없어 끝없이 쫓김 → 싸움(외톨이부터)
+    if (!noPotion) { const esc = safestDir(obs, foes.filter((m) => m.dist < 400)); if (esc) { a.move = esc; a.run = true; mem.wantMove = a.move; return a; } }
+  }
+  // 보스가 크게 때리려는 중(예고)이면 그 둘레에서 벗어남
+  const bossWindup = foes.find((m) => m.boss && m.threat && m.dist < 230);
+  if (bossWindup && !h.busy) { const esc = safestDir(obs, foes.filter((m) => m.dist < 400)); if (esc) { a.move = esc; a.run = true; mem.wantMove = a.move; return a; } }
+
   // 조언자 전술 (bot/advisor.js): retreat = 무리 반대쪽으로 달림, loot = 적이 붙기 전까지 줍기 먼저, hold = 제자리에서 사거리 안만
   if (mem.tactic === 'retreat' && foes.length) {
     const g = foes.slice(0, 5), cx = g.reduce((s, m) => s + m.x, 0) / g.length, cy = g.reduce((s, m) => s + m.y, 0) / g.length;
@@ -125,7 +159,11 @@ export function decide(obs, mem, dt) {
     if (inReach) a.attack = inReach.ref;
     return a;
   }
-  const near = foes[0];
+  // 먼저 잡을 적(치유·소환·저주 등)이 가깝고 길이 열려 있으면 그쪽부터
+  const prio = foes.find((m) => BOT.priorityKinds.includes(m.kind) && m.dist < BOT.priorityRange && !detourPoint(h.x, h.y, m.x, m.y, h.r));
+  // 체력이 낮고 물약도 없으면: 가까운 적 중 주변에 동료가 가장 적은(외톨이) 적부터
+  const lonely = lowHp && noPotion && foes.length > 1 ? foes.slice(0, 6).map((m) => ({ m, n: foes.filter((q) => q !== m && Math.hypot(q.x - m.x, q.y - m.y) < BOT.crowdRadius).length })).sort((p, q) => p.n - q.n || p.m.dist - q.m.dist)[0].m : null;
+  const near = prio || lonely || foes[0];
   if (!near) { // 싸울 적이 없으면: 막 넘기기 전에 바닥 아이템 줍기 → 가운데 근처에서 대기
     const it = obs.items.slice().sort((p, q) => Math.hypot(p.x - h.x, p.y - h.y) - Math.hypot(q.x - h.x, q.y - h.y))[0];
     if (it && Math.hypot(it.x - h.x, it.y - h.y) < BOT.lootRange) { a.move = aroundObstacles(obs, norm(it.x - h.x, it.y - h.y)); mem.wantMove = a.move; return a; }

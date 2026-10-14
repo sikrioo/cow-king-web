@@ -40,7 +40,7 @@ export function observe() {
       hp: h.hp, maxHp: h.maxHp + h.bonusMaxHp + h.gearMaxHp, mana: h.mana, maxMana: h.maxMana,
       potions: { ...h.potions }, potionReady: { heal: !(h.potionCd.heal > 0), mana: !(h.potionCd.mana > 0) },
       stunned: h.stunTimer > 0, busy: h.leapTimer > 0 || h.rushTimer > 0 || h.whirlwindTimer > 0 || h.flurryTimer > 0 || h.smashTimer > 0,
-      slot1: slot(1), slot2: slot(2), jail: jail ? jail.prison : null
+      slot1: slot(1), slot2: slot(2), jail: jail ? jail.prison : null, statPoints: h.statPoints, pendingCards: h.pendingCards || 0
     },
     monsters: alive.map((c) => {
       const def = MONSTERS[c.kind];
@@ -58,7 +58,7 @@ export function observe() {
       ...game.hazards.map((z) => ({ x: z.x, y: z.y, r: z.r })),
       ...game.hellfires.map((f) => ({ x: f.x, y: f.y, r: f.r }))
     ],
-    items: game.items.map((it) => ({ x: it.x, y: it.y })),
+    items: game.items.map((it) => ({ x: it.x, y: it.y, type: it.type })), // type: gear | material | heal | mana
     obstacles: obstacles.map((o) => ({ ax: o.ax, ay: o.ay, bx: o.bx, by: o.by, r: o.r })),
     pen: { x: PEN.x, y: PEN.y, size: PEN.size }
   };

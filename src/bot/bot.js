@@ -6,6 +6,7 @@ import { game, ui } from '../state.js';
 import { observe, toJSON } from './observe.js';
 import { applyAction, releaseInput, IDLE } from './act.js';
 import { decide } from './heuristic.js';
+import { upkeep } from './upkeep.js';
 import { setAdvisor, tickAdvisor, advisorState, buildQuestion } from './advisor.js';
 
 let policy = decide;
@@ -26,6 +27,7 @@ export function botTick(dt) {
     lastScreen = obs.screen;
   }
   if (obs.screen === 'playing') { stats.bestAct = Math.max(stats.bestAct, obs.act); stats.bestWave = Math.max(stats.bestWave, obs.wave); }
+  upkeep(mem, dt); // 스탯·감정·장비·강화·슬롯 (bot/upkeep.js)
   mem.tactic = tickAdvisor(obs, dt); // 전술 조언자(JEV 등)가 있으면 그 답 - 없으면 'fight' (bot/advisor.js)
   applyAction(policy(obs, mem, dt) || IDLE, obs);
 }
