@@ -3,6 +3,7 @@
 // (몬스터 40마리 이상이 동시에 그려지므로 그라데이션/filter 없이 단색 도형만)
 import { PALETTE } from '../data/palette.js';
 import { drawAbstractSword } from './heroWeapons.js';
+import { drawGnarledStaff } from './heroStaff.js';
 
 const WOOD = '#7a5230';
 const WOOD_DARK = '#4e3320';
@@ -129,21 +130,9 @@ function drawStaff(ctx) {
   ctx.fill();
 }
 
-// 양손 지팡이 (해골 카우 킹, 2026-10-14 사용자): 몸보다 긴 굵은 자루(손 뒤로도 길게 - 두 손으로 쥠) + 끝에 작은 해골 + 청록 빛
+// 양손 지팡이 (해골 카우 킹, 2026-10-14 사용자: 간달프 지팡이처럼) - 주인공 지팡이와 같은 그림(render/heroStaff.js), 손 뒤로 길게 + 청록 수정
 function drawGreatStaff(ctx, animT = 0) {
-  shaft(ctx, -62, 62, 5, WOOD_DARK);
-  ctx.strokeStyle = '#cfc6b0'; // 뼈 감개 두 곳
-  ctx.lineWidth = 6;
-  ctx.lineCap = 'butt';
-  [[-18, -10], [40, 48]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, 0); ctx.lineTo(b, 0); ctx.stroke(); });
-  const pulse = 1 + Math.sin(animT * 4) * 0.12;
-  ctx.fillStyle = 'rgba(127,255,212,0.28)'; // 빛
-  ctx.beginPath(); ctx.arc(72, 0, 15 * pulse, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#e8e2d0'; // 작은 해골 (머리 + 턱)
-  ctx.beginPath(); ctx.arc(72, -1, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.fillRect(66, 4, 12, 5);
-  ctx.fillStyle = '#7fffd4'; // 눈
-  ctx.beginPath(); ctx.arc(69, -2, 1.8, 0, Math.PI * 2); ctx.arc(75, -2, 1.8, 0, Math.PI * 2); ctx.fill();
+  drawGnarledStaff(ctx, 70, 58, 5, '#7fffd4', '#e8fff8', animT);
 }
 
 // 횃불 (버닝 카우 - 일렁이는 불꽃)
