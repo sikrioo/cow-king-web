@@ -12,7 +12,7 @@ export const BOT = {
   lineWatch: 420, lineWidth: 46, shotWatch: 180,
   castRangeWarrior: 170, castRangeSorc: 380, sorcKeep: 170, edge: 150,
   lootRange: 650, homeRadius: 260, flowWait: 1.5,
-  cardWait: 1.2, // 레벨업 카드가 뜨면 이만큼 보여 준 뒤 고름 (구경할 때 보이게 - 2026-10-14 사용자)
+  cardWait: 1.5, // 레벨업 카드가 뜨면 이만큼 보여 준 뒤 고름 (구경할 때 보이게 - 2026-10-14 사용자)
   stuckTime: 1.0, unstuckTime: 0.5,
   avoidLook: 60, approachPad: 30, meleeLos: 70, shotRadius: 6,
   crowdRadius: 110, crowdCount: 4, crowdHp: 0.65, retreatTime: 1.0, retreatCd: 4,

@@ -203,7 +203,7 @@ export function drawHUD() {
     ctx.textAlign = 'left';
   }
 
-  if (game.cows.length === 0 && game.gameState === 'playing') {
+  if (game.cows.length === 0 && game.gameState === 'playing' && !game.sandbox) { // 관리자 미리보기(몬스터 없음)엔 '웨이브 클리어' 안 띄움
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
