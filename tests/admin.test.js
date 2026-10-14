@@ -29,6 +29,7 @@ it('관리자 탭 전부 그리기 (몬스터·스킬·장비·드랍·시뮬레
       items: (await import('../src/admin/tabs/items.js')).renderItems,
       drops: (await import('../src/admin/tabs/drops.js')).renderDrops,
       sim: (await import('../src/admin/tabs/sim.js')).renderSim,
+      sounds: (await import('../src/admin/tabs/sounds.js')).renderSounds,
       progress: (await import('../src/admin/tabs/progress.js')).renderProgress
     };
     const texts = {};

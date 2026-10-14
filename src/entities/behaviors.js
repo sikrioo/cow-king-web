@@ -29,6 +29,7 @@ import { demonBehaviors } from './demonBehaviors.js';
 import { butcherBehaviors } from './butcherBehaviors.js';
 import { beastBehaviors } from './beastBehaviors.js';
 import { prisonBehaviors } from './prisonBehaviors.js';
+import { sfx } from '../audio/sfx.js';
 
 // 광신 오라: 광신 카우 자신 또는 오라 반경 안의 아군은 이동이 빨라짐
 // (이동 배율이 쓰이는 모든 곳에 같이 들어가므로 둔화(냉기)도 여기서 곱함 - 보스는 둔화 절반)
@@ -250,6 +251,7 @@ export const behaviors = {
           m.chargeTarget = clampToPen(m.x + m.chargeDir.x * CHARGE_DISTANCE, m.y + m.chargeDir.y * CHARGE_DISTANCE, m.r + 6);
           m.facing = m.chargeDir.x >= 0 ? 1 : -1;
           m.setState('telegraph', 0);
+          sfx('telegraph', m);
           Body.setVelocity(m.body, { x: 0, y: 0 });
           return true;
         }

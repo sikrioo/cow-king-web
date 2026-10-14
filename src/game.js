@@ -43,6 +43,7 @@ import {
   advanceScreen, startFromTitle, enterSelectedMap, requestExitMap, hubCycleMap, hubChangeOption
 } from './session.js';
 import { steerAroundObstacles } from './systems/obstacles.js';
+import { applyVolume } from './audio/sfx.js';
 
 export { resetGame } from './session.js';
 export { initTitleScene, updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
@@ -185,6 +186,13 @@ export function handleKeyDown(intent, k, e) {
     game.releaseMeta.autoAim = !autoAimOn();
     saveReleaseMeta();
     floatText(game.hero.x, game.hero.y - 60, `자동 조준 ${autoAimOn() ? '켬' : '끔'}`, '#ffe066');
+    return;
+  }
+  if (k === 'm' && !ui.showInventory) { // 효과음 켜기/끄기 (메뉴가 열렸을 땐 M = 마나 스탯)
+    game.releaseMeta.sfxMuted = !game.releaseMeta.sfxMuted;
+    applyVolume();
+    saveReleaseMeta();
+    if (game.hero) floatText(game.hero.x, game.hero.y - 60, `효과음 ${game.releaseMeta.sfxMuted ? '끔' : '켬'} (M)`, '#ffe066');
     return;
   }
   if (intent === 'debugLevelUp' && game.gameState === 'playing' && isDevMode()) gainExp(Math.max(1, game.hero.expToNext - game.hero.exp)); // 개발자 모드: L = 한 레벨 업

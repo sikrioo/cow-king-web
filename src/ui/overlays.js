@@ -240,5 +240,6 @@ export function drawPauseOverlay() {
   ctx.font = '12px monospace';
   ctx.fillStyle = 'rgba(255,255,255,.50)';
   ctx.fillText(`WAVE ${game.wave}  ·  KILLS ${game.kills}  ·  v${RELEASE_VERSION}`, cx, cy + 34);
+  ctx.fillText(`효과음 ${game.releaseMeta.sfxMuted ? '끔' : '켬'} - M 키로 바꿈`, cx, cy + 56);
   ctx.restore();
 }

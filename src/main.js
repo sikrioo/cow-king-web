@@ -19,9 +19,12 @@ import { layoutArena } from './world/arena.js';
 import { pickCard, rerollCards } from './systems/levelCards.js';
 import { sandboxParams, sandboxClass, startSandbox } from './systems/sandbox.js';
 import { requestNextAct } from './systems/acts.js';
+import { unlockAudio, setSfxView, sfx } from './audio/sfx.js';
+import { inView } from './world/camera.js';
 
 // 맵 선택 화면 클릭 (영역은 ui/mapSelect.js가 그릴 때 등록): 무엇을 눌렀는지 → session 함수
 function hubClick(r) {
+  sfx('uiClick');
   if (r.action === 'map') hubSelectMap(r.map);
   else if (r.action === 'opt') hubChangeOption(r.dir);
   else if (r.action === 'enter') enterSelectedMap();
@@ -34,6 +37,9 @@ function boot() {
   window.addEventListener('resize', resizeCanvas);
   layoutArena();
   game.hero = createHero();
+  // 효과음: 브라우저는 첫 입력 전엔 소리를 막음 - 입력마다 켜기 시도 (이미 켜졌으면 아무것도 안 함)
+  setSfxView(inView);
+  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, unlockAudio, { passive: true }));
   bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards, hubClick, nextAct: requestNextAct });
   bindDomButtons({ restart: advanceScreen, pressAction, setPaused, toggleHelp, exitMap: requestExitMap });
   if (isDevMode()) {

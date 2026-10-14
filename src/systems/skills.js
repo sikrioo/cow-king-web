@@ -30,6 +30,8 @@ import { isSkillUnlocked } from './progression.js';
 import { PEN, clampToPen, obstacleAt } from '../world/arena.js';
 import { castSpeedMul, attackSpeedMul, skillMul, skillBonus, skillGearBonus, specialUsable as usableFor } from '../util.js';
 import { aim } from './aim.js';
+import { sfx } from '../audio/sfx.js';
+import { SKILL_SFX } from '../data/sfx.js';
 
 export function tryWarCry() {
   if (!game.hero.alive || game.hero.warcryCooldown > 0 || game.hero.whirlwindTimer > 0 || game.hero.leapTimer > 0 || game.hero.rushTimer > 0 || game.hero.smashTimer > 0) return;
@@ -134,6 +136,7 @@ export function updateLeap(dt) {
 }
 
 export function leapLand() {
+  sfx('leapLand', game.hero);
   const radius = LEAP_RADIUS * skillMul(game.hero, 'leap', 'radius');
   spawnShockwave(game.hero.x, game.hero.y, radius + 20, '#c9b48a');
   game.shake = Math.min(game.shake + 8, 12);
@@ -391,7 +394,9 @@ export function trySlot(n, repeat = false) {
   if (game.hero.sheepTimer > 0 || game.hero.stunTimer > 0) return; // 양이 된 동안(수습생의 마법 반동)·기절 중엔 못 씀
   const id = n === 2 ? game.hero.slot2 : game.hero.slot1;
   aimAtCursor(id);
+  const cd0 = SKILLS[id].cd();
   SKILLS[id].try({ repeat });
+  if (SKILL_SFX[id] && SKILLS[id].cd() > cd0) sfx(SKILL_SFX[id], game.hero); // 실제로 썼을 때만 (data/sfx.js)
 }
 
 // 무기를 바꿔서 슬롯의 무기 특수기를 못 쓰게 되면 → 다음 쓸 수 있는 스킬로 바꿔 끼움 (특수기는 그 무기를 들었을 때만 보임)

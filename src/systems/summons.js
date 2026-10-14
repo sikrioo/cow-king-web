@@ -3,6 +3,7 @@
 import { game } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { clampToPen } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 // 시체 자리 수명
 export function updateCorpses(dt) {
@@ -11,6 +12,7 @@ export function updateCorpses(dt) {
 
 export function processSpawns() {
   if (!game.pendingSpawns.length) return;
+  sfx('summon', game.pendingSpawns[0]); // 한 번 부를 때 한 번
   game.pendingSpawns.splice(0).forEach((s) => {
     const p = clampToPen(s.x, s.y, 24);
     const c = new Monster(0.4, s.kind, { pos: p, hunt: true, dropCount: 0 });

@@ -7,10 +7,13 @@ import { PEN, obstacleAt } from '../world/arena.js';
 import { hitPlayer, canHit, cowEdgeDist } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave } from './fx.js';
+import { sfx } from '../audio/sfx.js';
 
 // p: { kind, team, x, y, dirX, dirY(단위 벡터), speed(px/초), range(px), radius(몸통 판정), packet(피해 묶음),
 //      explodeRadius(0이면 맞은 대상만), knock, color, pierce, onTick, onEnd }
+const SHOT_SFX = { arrow: 'arrow', bonespear: 'boneShot' }; // 몬스터가 쏠 때 (없으면 마법 소리)
 export function spawnProjectile(p) {
+  if (p.team !== 'hero') sfx(SHOT_SFX[p.kind] || 'monsterSpell', p);
   game.projectiles.push({ team: 'monster', explodeRadius: 0, knock: 0, ...p, traveled: 0 });
 }
 
@@ -59,6 +62,7 @@ function explodeOnCows(p, hit) {
   spawnHitParticles(p.x, p.y, p.color, p.explodeRadius ? 12 : 5);
   const opts = { knock: p.knock, fromX: p.x - p.dirX * 20, fromY: p.y - p.dirY * 20 };
   if (p.explodeRadius) {
+    if (p.packet && p.packet.fire) sfx('fireBoom', p);
     spawnShockwave(p.x, p.y, p.explodeRadius, p.color);
     game.cows.forEach((c) => {
       if (c.state === 'dead' || !canHit(game.hero, c)) return;

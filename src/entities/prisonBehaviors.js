@@ -11,6 +11,7 @@ import { game } from '../state.js';
 import { killCow } from '../systems/combat.js';
 import { spawnHitParticles, spawnShockwave } from '../systems/fx.js';
 import { clampToPen } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
 // 주인공이 이미 갇혀 있는지 (살아 있는 창살의 감옥 안)
@@ -77,7 +78,7 @@ export const prisonBehaviors = {
         m.risen = true;
         m.body.isSensor = false; // 이제 막음
         spawnHitParticles(m.x, m.y, '#e8e2d0', 4);
-        if (m.barAngle === 0) { spawnShockwave(m.prison.x, m.prison.y, m.prison.r + 10, '#e8e2d0'); game.shake = Math.min(game.shake + 3, 12); }
+        if (m.barAngle === 0) { sfx('prison', m); spawnShockwave(m.prison.x, m.prison.y, m.prison.r + 10, '#e8e2d0'); game.shake = Math.min(game.shake + 3, 12); }
       }
       if (m.age >= PRISON.warn + PRISON.duration) killCow(m); // 무너짐 (prop - 경험치·드랍 없음)
       return true;

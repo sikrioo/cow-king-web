@@ -17,6 +17,7 @@ import { stunHero } from '../systems/curses.js';
 import { spawnHitParticles, spawnShockwave, spawnFireHazard, floatText } from '../systems/fx.js';
 import { applyKnockback } from './actor.js';
 import { clampToPen } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
 
@@ -77,6 +78,7 @@ function butcher() {
           m.chargeDirX = dx / d; m.chargeDirY = dy / d; // 예고 순간 방향 고정 (옆으로 피할 수 있음)
           if (Math.abs(dx) > 1) m.facing = dx > 0 ? 1 : -1;
           m.setState('chargePrep', 0);
+          sfx('telegraph', m);
           stop(m);
           return true;
         }

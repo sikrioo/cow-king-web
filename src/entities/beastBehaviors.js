@@ -9,6 +9,7 @@ import { game } from '../state.js';
 import { hitPlayer } from '../systems/combat.js';
 import { spawnHitParticles, spawnShockwave } from '../systems/fx.js';
 import { clampToPen, obstacleAt } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
 const ratsOf = (m) => game.cows.filter((c) => c.kind === 'rat' && c.summoner === m && c.state !== 'dead').length;
@@ -153,7 +154,7 @@ export const beastBehaviors = {
       }
       if (m.dashCd <= 0 && h.alive) {
         const d = Math.hypot(h.x - m.x, h.y - m.y);
-        if (d <= SNAKE.range && d > SNAKE.minRange) { m.setState('coil', 0); stop(m); return true; }
+        if (d <= SNAKE.range && d > SNAKE.minRange) { m.setState('coil', 0); stop(m); sfx('snakeHiss', m); return true; }
       }
       return false;
     },

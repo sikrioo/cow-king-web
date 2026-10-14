@@ -8,12 +8,13 @@ import { renderItems } from './tabs/items.js';
 import { renderDrops } from './tabs/drops.js';
 import { renderSim } from './tabs/sim.js';
 import { renderProgress } from './tabs/progress.js';
+import { renderSounds } from './tabs/sounds.js';
 
 const FILES = [
   ['src/data/monsters.js', '몬스터 수치·이름·엘리트 규칙'], ['src/data/classes.js', '직업'], ['src/data/skills.js', '스킬 메타·마법 수치·레벨 보너스'],
   ['src/data/cards.js', '레벨업 카드'], ['src/data/items.js', '장비 베이스·등급·능력치 이름'], ['src/data/affixes.js', '접사(옵션) 계열·단계'],
   ['src/data/drops.js', '드랍 테이블'], ['src/data/difficulty.js', '난이도·몬스터 레벨'], ['src/data/maps.js', '맵'],
-  ['src/data/elements.js', '원소·상태 이상'], ['src/data/balance.js', '전투·이동·전사 스킬·특수 공격 등 그 밖의 수치']
+  ['src/data/elements.js', '원소·상태 이상'], ['src/data/sfx.js', '효과음'], ['src/data/balance.js', '전투·이동·전사 스킬·특수 공격 등 그 밖의 수치']
 ];
 
 function renderOverview(root) {
@@ -31,6 +32,7 @@ const TABS = [
   ['items', '장비·접사', renderItems],
   ['drops', '드랍·난이도·맵', renderDrops],
   ['sim', '시뮬레이터', renderSim],
+  ['sounds', '효과음', renderSounds],
   ['progress', '성장', renderProgress]
 ];
 

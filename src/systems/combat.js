@@ -20,6 +20,7 @@ import {
 import { gainExp } from './progression.js';
 import { applyCC, isBossCow } from './cc.js';
 import { CORPSE_LIFE, CORPSE_MAX, ON_HIT } from '../data/balance.js';
+import { sfx } from '../audio/sfx.js';
 
 // 피아 판정 - 지금 동작: 주인공은 몬스터만 침 (진영이 다르면 true)
 export function canHit(attacker, target) {
@@ -74,6 +75,7 @@ export function tryPlayerAttack(onHit) {
   game.hero.attackCooldownMax = game.hero.attackCooldown;
   const mainW = game.hero.equipment.weaponMain;
   const heavy = mainW && mainW !== 'LOCKED' ? WEAPON_HEAVY[mainW.variant] : null; // 대검: 더 묵직하게
+  sfx(heavy ? 'swingHeavy' : 'swingLight', game.hero);
   if (heavy && heavy.windup) {
     // 무거운 무기: 들어 올렸다가 내리치는 순간에 맞음 (그 순간 앞에 있는 적, 그때 굴림) - updatePendingSwing
     game.hero.pendingSwing = { t: game.hero.currentAttackDuration * heavy.windup, ws, onHit, heavy };
@@ -125,8 +127,11 @@ export function killCow(c) {
     c.state = 'dead'; c.deadTimer = 0.3;
     World.remove(world, c.body);
     spawnHitParticles(c.x, c.y - 15, '#e8e2d0', 6);
+    sfx('boneBreak', c);
     return;
   }
+  const def = MONSTERS[c.kind] || {}; // 죽는 소리 (종류별)
+  sfx(def.skeleton ? 'boneBreak' : def.soul ? 'soulVanish' : def.rat ? 'ratSqueak' : def.snake ? 'snakeHiss' : 'cowDie', c);
   c.sheepDead = c.stunTimer > 0 && c.ccKind === 'poly';
   game.corpses.push({ x: c.x, y: c.y, life: CORPSE_LIFE }); // 시체 자리 (해골 카우 킹)
   if (game.corpses.length > CORPSE_MAX) game.corpses.shift(); // 양으로 죽음 → 양 모습, 자폭 같은 처치 효과 없음
@@ -166,6 +171,7 @@ export function heroHitChance(c) {
 // 빗나가면 'MISS'를 띄우고 false (그 타격은 피해·추가 효과 모두 없음)
 export function rollHeroHit(c) {
   if (dev.sureHit || Math.random() < heroHitChance(c)) return true;
+  sfx('miss', c);
   spawnDamageNumber(c.x, c.y - 40 * c.scale, 'MISS', '#b8b8b8');
   return false;
 }
@@ -183,6 +189,7 @@ export function applyOnHit(c, dealt) {
     if (cut > 0) {
       c.hp -= cut;
       spawnDamageNumber(c.x, c.y - 58 * c.scale, `강타 -${cut}`, '#ff5a3c');
+      sfx('crush', c);
     }
   }
   if (o.knockback && !isBossCow(c)) {
@@ -236,6 +243,7 @@ export function damageCow(c, dmg, heavy = null) {
   spawnHitParticles(c.x, c.y, PALETTE.hide, 7);
 
   showCowDamage(c, dmg);
+  sfx(MONSTERS[c.kind] && (MONSTERS[c.kind].skeleton || MONSTERS[c.kind].prop) ? 'hitBone' : heavy ? 'hitHeavy' : 'hitFlesh', c); // 기본 공격 타격음
   c.hp -= dmg;
   applyOnHit(c, dmg);
   if (c.hp <= 0 && c.state !== 'dead') {
@@ -251,6 +259,7 @@ export function hitPlayer(fromX, fromY, dmg) {
   const totalEvasion = Math.min(BASE_EVASION + game.hero.gearEvasion, EVASION_CAP);
   if (Math.random() < totalEvasion) {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'MISS', '#8fe8ff');
+    sfx('dodge', game.hero);
     game.hero.invuln = 0.25;
     return 0;
   }
@@ -263,10 +272,11 @@ export function hitPlayer(fromX, fromY, dmg) {
     const taken = heroDamageTaken(r.total); // 버서커(더 받음)·에너지 쉴드(마나로 받음)
     game.hero.hp -= taken;
     tookDamage = taken;
-    if (taken > 0) spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, damageColor(r.dominant));
+    if (taken > 0) { spawnDamageNumber(game.hero.x, game.hero.y - 34, `-${taken}`, damageColor(r.dominant)); sfx('heroHurt', game.hero); }
     applyHeroStatuses(r.parts);
   } else {
     spawnDamageNumber(game.hero.x, game.hero.y - 34, 'BLOCK', '#8fd0ff');
+    sfx('block', game.hero);
   }
 
   game.hero.invuln = 0.55; // 기존 0.8 → 0.55, 여러 마리에게 둘러싸였을 때 실제로 더 아프게

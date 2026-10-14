@@ -32,7 +32,7 @@ export const game = {
   waveBannerTimer: 0,
   demoTipTimer: 0,
   runRecorded: false,
-  releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0 },
+  releaseMeta: { bestWave: 0, bestKills: 0, clears: 0, runs: 0, sfxMuted: false, sfxVolume: null }, // sfx*: 효과음 (audio/sfx.js, M 키)
   // 지금 들어와 있는 맵 (systems/mapRun.js beginRun이 채움). 배율은 파밍 맵 난이도(data/difficulty.js), 목장은 전부 1
   run: { mapId: 'ranch', mode: 'wave', difficulty: 'normal', hpMul: 1, dmgMul: 1, expMul: 1, gearDropMul: 1, rarityBoost: 1, resistPenalty: 0, armorPenalty: 0, cleared: false, total: 0 },
   sandbox: null, // 개발자 미리보기 샌드박스 (systems/sandbox.js) - 관리자 페이지의 미리보기 창

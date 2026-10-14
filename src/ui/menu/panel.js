@@ -8,8 +8,10 @@ import { pointInRect } from './common.js';
 import { drawEquipTab } from './equipTab.js';
 import { drawStatsTab } from './statsTab.js';
 import { drawUpgradeTab } from './upgradeTab.js';
+import { sfx } from '../../audio/sfx.js';
 
 export function setInventoryOpen(open) {
+  if (open !== ui.showInventory) sfx(open ? 'uiOpen' : 'uiClose');
   ui.showInventory = open;
   if (!open) { ui.selectedInvIndex = null; ui.hoverInvIndex = null; ui.selectedEquipSlot = null; ui.hoverEquipSlot = null; }
   const dim = open ? '0.15' : '1';

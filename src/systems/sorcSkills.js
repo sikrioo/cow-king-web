@@ -9,6 +9,7 @@ import { rollLightning } from './elements.js';
 import { spawnHitParticles, spawnIceRing, spawnLightningBolt, spawnShockwave, floatText } from './fx.js';
 import { spawnProjectile } from './projectiles.js';
 import { applyPoly } from './cc.js';
+import { sfx } from '../audio/sfx.js';
 
 // 주인공 레벨 + 스킬 레벨에 따라 오르는 주문 피해 (정수)
 export function spellDamage(base, id) {
@@ -48,6 +49,7 @@ const castPoint = (d) => ({ x: game.hero.x + d.x * game.hero.r, y: game.hero.y +
 export function tryBolt() {
   const s = SPELLS.bolt;
   if (!begin('bolt', s.cooldown * attackSpeedMul(game.hero))) return;
+  sfx('bolt', game.hero);
   const d = facingDir(), o = castPoint(d);
   spawnProjectile({
     kind: 'bolt', team: 'hero', x: o.x, y: o.y, dirX: d.x, dirY: d.y, speed: s.speed, range: s.range, radius: s.radius,

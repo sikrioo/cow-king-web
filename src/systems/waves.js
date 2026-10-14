@@ -12,6 +12,7 @@ import { Monster } from '../entities/monster.js';
 import { clampToPen } from '../world/arena.js';
 import { ACT_WAVE_SIZE, BOSS_ESCORTS, INVADE } from '../data/acts.js';
 import { waveInfo } from '../util.js';
+import { sfx } from '../audio/sfx.js';
 
 // 이번 막에서 나올 종류: 엘리트 확률(웨이브가 갈수록) → 막의 엘리트 목록, 아니면 막의 일반 비중대로 (data/acts.js)
 export function pickCowKind(def = null) {
@@ -61,6 +62,7 @@ export function startNextWave() {
   const info = waveInfo(game.wave);
   game.act = info.act;
   if (info.isBoss) {
+    sfx('roar'); // 보스 등장
     const c = pickPackCenter();
     game.cows.push(new Monster(info.def.boss === 'boss' ? 1.0 : 0.4, info.def.boss, { pos: c, hunt: true, ...diffOpts() }));
     for (let i = 0; i < BOSS_ESCORTS; i++) game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, pickCowKind({ normals: info.def.normals }), { pos: packPoint(c), hunt: true, ...diffOpts() }));
@@ -85,5 +87,6 @@ export function updateInvade(dt) {
   v.t -= dt;
   if (v.t > 0) return;
   game.invade = null;
+  sfx('roar'); // 도살자 난입 (경고 문구 없이 소리만 - 2026-10-11 사용자)
   game.cows.push(new Monster((1.05 + Math.random() * 0.5) * 0.3, v.kind, { pos: pickPackCenter(), hunt: true, ...diffOpts() }));
 }

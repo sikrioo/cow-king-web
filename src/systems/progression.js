@@ -6,6 +6,7 @@ import { floatText } from './fx.js';
 import { recalcGearStats } from './gear.js';
 import { queueLevelCard } from './levelCards.js';
 import { learnedLevel } from '../util.js';
+import { sfx } from '../audio/sfx.js';
 
 export function gainExp(amount) {
   if (game.sandbox) return; // 관리자 미리보기에선 레벨업(카드) 없음
@@ -17,6 +18,7 @@ export function gainExp(amount) {
     game.hero.statPoints += POINTS_PER_LEVEL;
     game.hero.expToNext = expForLevel(game.hero.level);
     floatText(game.hero.x, game.hero.y - 54, `LEVEL UP! Lv.${game.hero.level}`, '#ffe066');
+    sfx('levelUp');
     queueLevelCard(); // 레벨마다 카드 한 번 (systems/levelCards.js)
     game.shake = Math.min(game.shake + 5, 12);
   }

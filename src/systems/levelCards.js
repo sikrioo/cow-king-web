@@ -12,6 +12,7 @@ import { game, input } from '../state.js';
 import { learnedLevel, specialUsable } from '../util.js';
 import { floatText, spawnHitParticles } from './fx.js';
 import { recalcGearStats } from './gear.js';
+import { sfx } from '../audio/sfx.js';
 
 // 카드 강화 합계 (gear.recalcGearStats와 elementCombat이 읽음)
 export function emptyCardBonus() {
@@ -40,6 +41,7 @@ function openNextOffer() {
   if (game.hero.pendingCards <= 0 || !game.hero.alive) { game.cardOffer = null; return; }
   game.hero.pendingCards--;
   game.cardOffer = { cards: rollCards() };
+  sfx('cardShow');
   // 고르는 동안 눌려 있던 시전/클릭 명령은 풀어 둠 (고른 뒤 혼자 움직이지 않게)
   input.holdSlot1 = false;
   input.holdSlot2 = false;
@@ -114,6 +116,7 @@ export function rerollCards() {
 export function pickCard(i) {
   const offer = game.cardOffer;
   if (!offer || !offer.cards[i]) return false;
+  sfx('cardPick');
   applyCard(offer.cards[i]);
   game.cardOffer = null;
   openNextOffer();

@@ -6,6 +6,7 @@ import {
 import { ITEM_STYLE } from '../data/items.js';
 import { game } from '../state.js';
 import { spawnHitParticles, floatText } from './fx.js';
+import { sfx } from '../audio/sfx.js';
 
 export function tryDrinkPotion(kind) {
   if (!game.hero.alive || game.hero.potionCd[kind] > 0) return;
@@ -27,6 +28,7 @@ export function tryDrinkPotion(kind) {
     floatText(game.hero.x, game.hero.y - 40, `+${POTION_MANA_AMOUNT} MP`, color);
   }
   game.hero.potions[kind] -= 1;
+  sfx('potion');
   game.hero.potionCd[kind] = POTION_COOLDOWN;
   spawnHitParticles(game.hero.x, game.hero.y, color, 8);
 }

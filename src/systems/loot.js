@@ -9,6 +9,7 @@ import { rollGearItem } from './gear.js';
 import { applyItem } from './potions.js';
 import { unidentifiedTitle } from '../ui/itemView.js';
 import { MONSTERS } from '../data/monsters.js';
+import { sfx } from '../audio/sfx.js';
 
 // 가방 장비 버리기: 주인공 발밑에 떨어뜨림 (다시 주울 수 있음, DISCARD_ITEM_LIFE초 뒤 사라짐)
 export function discardFromInventory(index) {
@@ -41,7 +42,9 @@ export function dropLoot(x, y, source, count, ilvl = 1) {
     const rates = DROP_RATES[src] || DROP_RATES.normal;
     // 파밍 맵 난이도: 장비 드랍 확률 배율(최대 1), 높은 등급 비중 배율 (목장은 1 = 기본)
     if (Math.random() < Math.min(1, rates.gear * game.run.gearDropMul)) {
-      game.items.push(new Item(px, py, 'gear', rollGearItem({ source: src, ilvl, rarityBoost: game.run.rarityBoost })));
+      const gear = rollGearItem({ source: src, ilvl, rarityBoost: game.run.rarityBoost });
+      game.items.push(new Item(px, py, 'gear', gear));
+      sfx(gear.rarity === 'legendary' ? 'dropLegend' : gear.rarity === 'normal' ? 'dropNormal' : 'dropMagic', { x: px, y: py }); // 등급에 따라 (전설은 종소리)
       continue;
     }
     if (Math.random() < rates.material) {
@@ -74,11 +77,13 @@ export function updateItems(dt) {
             continue; // 바닥에 그대로 둠
           }
           game.hero.inventory.push(it.gearData);
+          sfx('pickupGear');
           // 미감정 상태로 줍는 것이므로 등급은 아직 알려주지 않음 (감정해야 공개됨)
           floatText(it.x, it.y - 30, `${unidentifiedTitle(it.gearData)} 획득`, '#c9c9c9');
           spawnHitParticles(it.x, it.y, '#9a9a9a', 8);
         } else if (it.type === 'material') {
           game.hero.materials++;
+          sfx('pickupMisc');
           floatText(it.x, it.y - 30, `재료 +1 (보유 ${game.hero.materials})`, '#c9c9c9');
           spawnHitParticles(it.x, it.y, '#c9c9c9', 6);
         } else if (it.type === 'heal' || it.type === 'mana') {
@@ -87,6 +92,7 @@ export function updateItems(dt) {
             continue; // 바닥에 그대로 둠
           }
           game.hero.potions[it.type] += 1;
+          sfx('pickupMisc');
           floatText(it.x, it.y - 30, `${it.type === 'heal' ? '생명' : '마나'} 물약 +1 (${game.hero.potions[it.type]})`, ITEM_STYLE[it.type].color);
           spawnHitParticles(it.x, it.y, ITEM_STYLE[it.type].color, 8);
         } else {

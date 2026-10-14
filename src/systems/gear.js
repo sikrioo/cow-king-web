@@ -15,6 +15,7 @@ import { CLASSES } from '../data/classes.js';
 export { rollGearItem, rollRarity, nextItemUid } from './itemGen.js';
 import { game, ui } from '../state.js';
 import { spawnHitParticles, spawnShockwave, floatText, showInvToast } from './fx.js';
+import { sfx } from '../audio/sfx.js';
 
 
 export function tryIdentify(index) {
@@ -40,6 +41,7 @@ export function revealIdentifiedGear(gear) {
   const rDef = RARITY_DEF[gear.rarity];
   // 등급이 높을수록 연출을 크게 - "감정의 기쁨"을 등급에 비례해서 전달
   const intensity = { normal: 1, magic: 2, rare: 3, legendary: 5 }[gear.rarity] || 1;
+  sfx(gear.rarity === 'legendary' ? 'dropLegend' : 'identify');
   game.shake = Math.min(game.shake + intensity * 2, 12);
   game.impactFlash = Math.max(game.impactFlash, Math.min(0.06 * intensity, 0.22));
   spawnHitParticles(game.hero.x, game.hero.y - 30, rDef.color, 4 + intensity * 4);
@@ -193,8 +195,10 @@ export function tryUpgradeSlot(slotIndex) {
     it.upgradeLevel = (it.upgradeLevel || 0) + 1;
     recalcGearStats();
     floatText(game.hero.x, game.hero.y - 40, `${GEAR_SLOT_LABEL[slot]} 업그레이드 성공 +${it.upgradeLevel}`, RARITY_DEF[it.rarity].color);
+    sfx('upgradeOk');
   } else {
     floatText(game.hero.x, game.hero.y - 40, '업그레이드 실패...', '#999');
+    sfx('upgradeFail');
   }
 }
 

@@ -11,6 +11,7 @@ import { spawnHitParticles, spawnShockwave, spawnLightningBolt, floatText } from
 import { begin, spellDamage } from './sorcSkills.js';
 import { HOLY } from '../data/elements.js';
 import { obstacleAt } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 // 망치 자리 (그림도 같은 식): 시작 각도에서 spin(라디안/초)으로 돌며 반경이 growth(px/초)씩 커짐
 export function hammerPos(g, age = g.age) {
@@ -59,6 +60,7 @@ function updateHeavenBolt(g, dt) {
     g.struck = true;
     const top = getCowBody(g.target);
     spawnLightningBolt(g.x + 24, g.y - 430, top.x, top.y, HOLY.bolt);
+    sfx('holyStrike', g);
     spawnLightningBolt(g.x - 16, g.y - 400, top.x, top.y, HOLY.bolt);
     spawnShockwave(g.x, g.y, 40, HOLY.color);
     spawnHitParticles(g.x, g.y - 30, HOLY.color, 14);

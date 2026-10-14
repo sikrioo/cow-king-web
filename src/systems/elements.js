@@ -11,6 +11,7 @@ import { recordRun } from '../save.js';
 import { spawnDamageNumber, spawnHitParticles, spawnShockwave, floatText } from './fx.js';
 import { curseMul } from './curses.js';
 import { armorReductionOf } from '../util.js';
+import { sfx } from '../audio/sfx.js';
 
 export function toPacket(dmg) {
   return typeof dmg === 'number' ? { phys: dmg } : dmg;
@@ -136,6 +137,7 @@ export function checkHeroDeath() {
   if (game.hero.hp > 0 || !game.hero.alive) return;
   game.hero.hp = 0;
   game.hero.alive = false;
+  sfx('heroDeath');
   game.gameState = 'gameover';
   recordRun('gameover');
   Body.setVelocity(game.hero.body, { x: 0, y: 0 });

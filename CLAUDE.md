@@ -32,6 +32,7 @@ world/camera.js    카메라(주인공 추적, 맵 끝 멈춤, 작은 화면 줌
 state.js           game / ui / input 상태 그룹 (주인공은 game.hero)
 core/              context(canvas), physics(Matter 엔진·별칭), loop(고정 타임스텝)
 bot/               자동 플레이 봇 (main.js가 game.setTickHook으로 연결, 게임 코드는 봇을 모름): observe(관측 - 읽기만) → heuristic(판단, 수치 data/bot.js) → act(입력과 같은 길로 적용), advisor(전술 조언자 - JEV 같은 외부 모델), 켜기 ?bot=1 / 개발자 패널, window.cowBot
+audio/             효과음 (sfx.js 엔진 - 소리만 냄, zzfx.js 합성). 수치 data/sfx.js, 파일 public/sfx, 출처 docs/ASSETS.md
 util.js save.js config.js
 data/              숫자·콘텐츠만: balance, monsters, items, elements, skills, drops, maps, palette
 ```
@@ -46,6 +47,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 짐승(소가 아닌 몬스터): 쥐떼 카우·악마 쥐·박치기 뱀 = `entities/beastBehaviors.js` + 그림 `render/beastSprites.js`(MONSTERS의 `rat`/`snake` 플래그로 drawMonster가 고름), 수치 `data/balance.js` RAT_SQUAD/SNAKE. 소환에 추가 값이 필요하면 pendingSpawns에 `props`(개체에 복사)·`squad`(부대 공유 객체).
 - 구조물(통과 불가, 2026-10-14): 수치 `data/obstacles.js`(발밑 원/가로 캡슐), 개수 `data/maps.js` obstacles, 배치·몬스터 비켜 가기 `systems/obstacles.js`, 충돌 `world/arena.js`(obstacles·obstacleAt·pushOutOfObstacles - **clampToPen이 구조물 밖으로도 밀어냄**), 그림 `render/obstacleSprites.js`(renderer가 발 위치 순서로, 뒤에 가리면 반투명). 투사체·던진 무기·신성 빛줄기는 막힘, 돌진은 멈춤. 새로 직선 이동(setPosition)을 만들면 `obstacleAt` 검사를 넣을 것.
 - 뼈 감옥(2026-10-14): 해골 감옥지기·뼈 창살 = `entities/prisonBehaviors.js` + 그림 `render/prisonSprites.js`, 수치 `data/balance.js` PRISON. 창살은 MONSTERS의 `prop: true`(부서지는 움직이지 않는 물체 - killCow에서 경험치·처치 수·시체·드랍 없음, CC 면역, 미니맵 제외, 자동 조준은 그 감옥에 갇혔을 때만). 몬스터라서 주인공의 모든 공격으로 부서지고, 몬스터 투사체는 통과(투사체는 주인공만 맞힘).
+- 효과음(2026-10-14): 그 순간에 `sfx('이름', 위치?)` 한 줄 (`audio/sfx.js`, 이름·파일·음량·간격은 `data/sfx.js` SFX, 슬롯 스킬은 SKILL_SFX로 자동). 새 소리 = SFX 항목 + (파일이면) tools/sfx-sources.json + `node tools/sfx-import.mjs`. 엔진은 게임 난수를 쓰지 않음(hash01), 테스트·Node에선 아무것도 안 함. M 키 음소거(game.releaseMeta.sfxMuted).
 - 시체 자리: `killCow`가 `game.corpses`에 남김(해골 카우 킹이 여기서 해골을 일으킴, 수명 CORPSE_LIFE).
 - 난이도 패널티: `data/difficulty.js` resistPenalty(주인공 원소 저항에서 뺌, 음수면 더 아픔)·armorPenalty(주인공 방어력 비율 감소) → `game.run` → `elements.heroResist/heroArmorReduction`. 주인공 기절 `curses.stunHero`.
 - 몬스터 역할·목적(MONSTER_ROLE)과 기술 설명(관리자 표): `data/monsters.js` MONSTER_SKILLS - 새 몬스터를 넣으면 같이 (tests/monsters.test.js가 검사).

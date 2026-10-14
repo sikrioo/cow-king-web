@@ -15,6 +15,7 @@ import { spawnHitParticles, spawnShockwave, floatText } from '../systems/fx.js';
 import { bossDown } from '../systems/acts.js';
 import { applyKnockback } from './actor.js';
 import { clampToPen, obstacleAt } from '../world/arena.js';
+import { sfx } from '../audio/sfx.js';
 
 const zoneCount = (m) => (m.phase2 ? BOSS_SLAM_ZONES.length : BOSS_SLAM_ZONES.length - 1);
 const stop = (m) => Body.setVelocity(m.body, { x: 0, y: 0 });
@@ -27,6 +28,7 @@ function startCharge(m, telegraph) {
   m.chargeTelegraph = telegraph;
   m.facing = Math.cos(ang) >= 0 ? 1 : -1;
   m.setState('chargePrep', 0);
+  sfx('telegraph', m);
   stop(m);
 }
 
