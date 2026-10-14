@@ -15,7 +15,7 @@ import { STAT_DEF } from '../data/items.js';
 
 let built = false;
 const spawnImmune = new Set(); // 소환할 때 붙일 면역 (여러 개 가능)
-let panelActions = { newGameAs: () => {} };
+let panelActions = { newGameAs: () => {}, toggleBot: () => false };
 
 const TOGGLES = [
   ['god', '무적'],
@@ -107,6 +107,7 @@ function build() {
 
   const tools = row(body, '도구');
   // 관리자 페이지 (게임 데이터 보기·시뮬레이터·미리보기) - 새 탭. 배포본은 ?dev=1을 붙여야 열림
+  const bot = button(tools, '봇: 끔', () => { const on = panelActions.toggleBot(); bot.textContent = `봇: ${on ? '켬' : '끔'}`; bot.classList.toggle('on', on); }); // 자동 플레이 (src/bot)
   button(tools, '관리자 페이지 열기 ↗', () => { try { window.open('./admin.html?dev=1', '_blank'); } catch (_) { /* 팝업 막힘 */ } });
 
   const items = row(body, '아이템');
@@ -122,7 +123,7 @@ export function toggleDevPanel() {
   document.getElementById('dev-panel').classList.toggle('open', ui.devPanelOpen);
 }
 
-// 부팅: 개발자 모드면 DEV 버튼 보이기. actions = { newGameAs(classKey) }
+// 부팅: 개발자 모드면 DEV 버튼 보이기. actions = { newGameAs(classKey), toggleBot() → 켜졌는지 }
 export function bindDevButton(actions) {
   panelActions = actions;
   document.body.classList.add('dev-mode');

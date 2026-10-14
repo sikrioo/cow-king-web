@@ -5,7 +5,8 @@ import { resizeCanvas } from './core/context.js';
 import { startLoop } from './core/loop.js';
 import { game, ui } from './state.js';
 import { createHero } from './entities/hero.js';
-import { setPaused, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp } from './game.js';
+import { setPaused, pressAction, fixedUpdate, handleKeyDown, slotPress, toggleHelp, setTickHook } from './game.js';
+import { botTick, setBot, botApi } from './bot/bot.js';
 import { resetGame, advanceScreen, requestExitMap, hubSelectMap, hubChangeOption, enterSelectedMap, goTitle } from './session.js';
 import { initTitleScene } from './ui/titleScene.js';
 import { bindInput } from './input.js';
@@ -36,7 +37,11 @@ function boot() {
   bindInput({ keyDown: handleKeyDown, slotPress, pickCard, rerollCards, hubClick, nextAct: requestNextAct });
   bindDomButtons({ restart: advanceScreen, pressAction, setPaused, toggleHelp, exitMap: requestExitMap });
   if (isDevMode()) {
-    bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); } });
+    bindDevButton({ newGameAs: (key) => { ui.selectedClass = key; resetGame(); }, toggleBot: () => setBot(!ui.botOn) });
+    // 자동 플레이 봇: 개발자 패널 버튼 또는 주소 ?bot=1, 콘솔·외부 스크립트는 window.cowBot (src/bot/bot.js)
+    setTickHook(botTick);
+    window.cowBot = botApi;
+    try { if (new URLSearchParams(location.search).has('bot')) setBot(true); } catch (_) { /* 주소 없음 */ }
   }
 
   // 관리자 페이지 미리보기 창(?dev=1&sandbox=...): 타이틀 없이 바로 샌드박스 (systems/sandbox.js)

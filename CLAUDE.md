@@ -14,6 +14,7 @@
 - `npm run dev` 개발 서버 / `npm run build` 빌드 / `npm test` Vitest
 - 관리자 페이지: 개발 서버에서 `/admin.html` (배포본은 `admin.html?dev=1`). `src/data`와 생성 코드를 그대로 import해서 표·시뮬레이터로 보여줌(읽기 전용). 코드 `src/admin/`(탭별 `tabs/*.js`). 데이터 항목을 추가하면 해당 탭에도 표시되는지 확인할 것
   상세 서랍(`admin/detail.js`): 미리보기 = 게임 샌드박스(`systems/sandbox.js`, `index.html?dev=1&sandbox=skill&id=..&lv=..` / `sandbox=monster&id=..`) iframe + 데이터 JSON + 실제 소스에서 잘라 온 코드(`admin/source.js`, Vite `?raw`). 새 스킬은 `SKILL_CODE`에 함수 이름 추가 (빠지면 tests/admin.test.js 실패)
+- 봇 보고서: `npm run bot:report` - 화면 없이 직업 × 시드마다 자동 플레이 봇을 300초 돌려 표(판·죽음·최고 막/웨이브·레벨·처치). 새 몬스터·밸런스를 바꾼 뒤 비교용 (`tools/bot-report.js`, npm test에는 안 들어감)
 - 레거시 자체 점검: `node legacy/tools/smoke.cjs`, `node legacy/tools/baseline.cjs --check`
 
 ## 구조 (의존 방향: 위가 아래를 import, 역방향 금지)
@@ -30,6 +31,7 @@ world/arena.js     지금 맵(currentMap/setMap) 배치(고정 크기 data/maps.
 world/camera.js    카메라(주인공 추적, 맵 끝 멈춤, 작은 화면 줌) - 보기 전용, 게임 결과에 영향 금지
 state.js           game / ui / input 상태 그룹 (주인공은 game.hero)
 core/              context(canvas), physics(Matter 엔진·별칭), loop(고정 타임스텝)
+bot/               자동 플레이 봇 (main.js가 game.setTickHook으로 연결, 게임 코드는 봇을 모름): observe(관측 - 읽기만) → heuristic(판단, 수치 data/bot.js) → act(입력과 같은 길로 적용), advisor(전술 조언자 - JEV 같은 외부 모델), 켜기 ?bot=1 / 개발자 패널, window.cowBot
 util.js save.js config.js
 data/              숫자·콘텐츠만: balance, monsters, items, elements, skills, drops, maps, palette
 ```

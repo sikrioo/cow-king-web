@@ -6,7 +6,7 @@ import {
 import { ITEM_STYLE } from '../data/items.js';
 import { ELEMENTS, ELEMENT_DEF, RESIST_CAP, BURN_DURATION, POISON_DURATION, COLD_NOVA_CHILL_DURATION } from '../data/elements.js';
 import { canvas, ctx } from '../core/context.js';
-import { game } from '../state.js';
+import { game, ui } from '../state.js';
 import { MAPS } from '../data/maps.js';
 import { DIFFICULTY } from '../data/difficulty.js';
 import { attacksPerSecond } from '../util.js';
@@ -141,6 +141,7 @@ export function drawStatReadout(ctx) {
 }
 
 export function drawHUD() {
+  if (ui.botOn) drawBotTag();
   const orbR = 38;
   const hpX = orbR + 14, hpY = orbR + 14;
   const manaX = canvas.width - orbR - 14, manaY = orbR + 14;
@@ -302,4 +303,16 @@ export function overlay(title, sub) {
   ctx.font = '16px sans-serif';
   ctx.fillText(sub, canvas.width / 2, canvas.height / 2 + 24);
   ctx.textAlign = 'left';
+}
+
+// 자동 플레이 중 표시 (화면 위 가운데)
+function drawBotTag() {
+  ctx.save();
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(canvas.width / 2 - 52, 4, 104, 20);
+  ctx.fillStyle = '#7fe0ff';
+  ctx.fillText('자동 플레이 (봇)', canvas.width / 2, 18);
+  ctx.restore();
 }

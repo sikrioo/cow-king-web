@@ -60,7 +60,12 @@ export function pressAction(fn) {
   fn();
 }
 
+// 틱 맨 앞에서 부를 함수 (자동 플레이 봇 - main.js가 연결, 게임 코드는 봇을 모름)
+let tickHook = null;
+export function setTickHook(fn) { tickHook = fn; }
+
 export function fixedUpdate(dt) {
+  if (tickHook) tickHook(dt);
   if (game.gameState === 'title' || game.gameState === 'hub') {
     updateTitleScene(dt);
     if (ui.showInventory) updateIdentify(dt); // 맵 선택 화면에서도 장비창(감정) 사용
