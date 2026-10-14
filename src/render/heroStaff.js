@@ -89,6 +89,6 @@ export function drawHeroStaff(ctx, x, y, angle, r, alpha = 1, t = 0) {
   ctx.translate(x, y);
   ctx.rotate(angle);
   ctx.globalAlpha = alpha;
-  drawWarStaff(ctx, r * 1.75, r * 0.75, r * 0.14, t); // 주인공은 전투 지팡이 (해골 카우 킹은 drawGnarledStaff)
+  drawWarStaff(ctx, r * 1.8, r * 1.05, r * 0.14, t); // 주인공은 전투 지팡이 (해골 카우 킹은 drawGnarledStaff) - 세워 들면 아래 끝이 발 근처
   ctx.restore();
 }

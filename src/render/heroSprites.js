@@ -92,6 +92,18 @@ export function drawPlayer(ctx, t = 0, h = game.hero) {
     const strap = (alpha) => drawAbstractSword(ctx, gx, gy, hang, h.r, alpha, rightHeld.variant, carryFlip(hang)); // 도끼날은 아래(땅 쪽)로
     strap(0.95);
     drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
+  } else if (holdsStaff(h)) {
+    // 지팡이 (2026-10-14 사용자: 세운 채로 들어야 함): 오른손 옆에 세워 들고(바깥쪽으로 살짝), 시전·공격 땐 바라보는 쪽으로 잠깐 기울임
+    //   손은 평소 자세(pose.right)를 따라가고, 지팡이는 그 손에서 위로. 위를 보면 몸 뒤
+    const gx = rightBase.x + Math.cos(pose.right.handAngle) * pose.right.handDist, gy = rightBase.y + Math.sin(pose.right.handAngle) * pose.right.handDist;
+    const ang = staffAngle(h), front = ui.heroTopView || fy > -0.25;
+    if (!front) drawHeroStaff(ctx, gx, gy, ang, h.r, 0.9, h.renderBreath);
+    drawHandsAndBody(ctx, h, pose, leftBase, rightBase, leftDepth, rightDepth, { kind: 'none' }, { kind: 'none' }, () => drawAbstractHeroBody(ctx, fx, fy, sx, sy, h.r, speedN, t, h));
+    if (front) {
+      drawHeroStaff(ctx, gx, gy, ang, h.r, 1, h.renderBreath);
+      ctx.fillStyle = look().hand; ctx.strokeStyle = '#e2ddd1'; ctx.lineWidth = 2; // 쥔 손 (지팡이 위)
+      ctx.beginPath(); ctx.arc(gx, gy, h.r * 0.22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
   } else if (isTwoHanded(h)) {
     // 양손 무기: 몸 가운데 앞에서 두 손으로 쥠 (왼손은 손잡이에 붙음). 위를 보면 칼이 몸 뒤, 아래를 보면 앞
     const centerBase = { x: fx * h.r * 0.12, y: fy * h.r * 0.12 };
@@ -173,6 +185,23 @@ export function drawAbstractScarf(ctx, fx, fy, sx, sy, r, speedN, t, h = game.he
   ctx.closePath();
   ctx.fill();
   ctx.restore();
+}
+
+// 지팡이를 들었는지: 지팡이 무기 또는 마법사 빈손(지팡이 모습)
+function holdsStaff(h) {
+  const w = h.equipment.weaponMain;
+  return w && w !== 'LOCKED' ? w.variant === 'staff' : !!heroClass().staff;
+}
+// 세운 지팡이 각도: 화면 위(-90도)에서 바라보는 쪽 바깥으로 살짝, 시전·공격 중엔 바라보는 쪽으로 기울였다가 돌아옴
+const STAFF_TILT = 0.18, STAFF_CAST_LEAN = 0.6;
+function staffAngle(h) {
+  const side = Math.cos(h.facing) >= 0 ? 1 : -1, up = -Math.PI / 2 + side * STAFF_TILT;
+  if (!(h.attackTimer > 0) || !h.currentAttackDuration) return up;
+  const p = 1 - h.attackTimer / h.currentAttackDuration, k = Math.sin(Math.max(0, Math.min(1, p)) * Math.PI) * STAFF_CAST_LEAN;
+  let d = h.facing - up;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return up + d * k;
 }
 
 export function drawFloatingHandAndBlade(ctx, base, handPose, r, alpha = 1, heldKind = 'weapon', heldVariant = 'sword', h = game.hero) {
