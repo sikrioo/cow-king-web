@@ -34,3 +34,25 @@ it('시나리오: 몬스터를 치우고 막을 맞춘 뒤 정한 수만큼 소�
     expect(m.game.cows.length).toBeGreaterThan(0); // 다음 웨이브가 나옴
   } finally { env.restore(); }
 }, 60000);
+
+it('스탯 올리기: 스탯 포인트 ±10점, 장비 옵션은 보이지 않는 장비처럼 합계에 (명중률 +10%, 생명력 흡수, 0 아래로 안 내려감)', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    vi.resetModules();
+    await import('../src/main.js');
+    const m = { ...(await import('../src/state.js')), ...(await import('../src/game.js')), ...(await import('../src/systems/dev.js')) };
+    m.ui.selectedClass = 'warrior';
+    m.resetGame();
+    const h = m.game.hero;
+    expect(m.devAddStat('pt:accuracy', 1)).toBe(10);
+    const acc0 = h.gearAccuracy;
+    m.devAddStat('accuracy', 1);
+    expect(h.gearAccuracy).toBeCloseTo(acc0 + 0.1);
+    m.devAddStat('lifeLeech', 1);
+    expect(h.gearOnHit.lifeLeech).toBeCloseTo(0.1);
+    expect(m.devAddStat('lifeLeech', -1)).toBe(0);
+    expect(m.devAddStat('lifeLeech', -1)).toBe(0);
+    m.devResetStats();
+    expect(h.gearAccuracy).toBeCloseTo(acc0);
+  } finally { env.restore(); }
+});

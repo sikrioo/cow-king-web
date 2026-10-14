@@ -228,30 +228,35 @@ export function recalcGearStats() {
   const gearSkill = { all: 0, warrior: 0, sorc: 0, fire: 0, cold: 0, lightning: 0, weapon: {} }; // 스킬 레벨 옵션 (util.skillGearBonus)
   const onHit = { crushBlow: 0, knockback: 0, lifeLeech: 0, manaLeech: 0 }; // 타격 옵션 (combat.applyOnHit)
   let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, accuracy = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
-  GEAR_SLOTS.forEach((slot) => {
-    const it = game.hero.equipment[slot];
-    if (!it || it === 'LOCKED') return;
-    armor += gearArmor(it);
-    if (it.stats.atkSpeed) atkSpeed += it.stats.atkSpeed;
-    if (it.stats.castSpeed) castSpeed += it.stats.castSpeed;
-    if (it.stats.atkPower) atkPower += it.stats.atkPower;
-    if (it.stats.defense) defense += it.stats.defense;
-    if (it.stats.evasion) evasion += it.stats.evasion;
-    if (it.stats.accuracy) accuracy += it.stats.accuracy;
-    for (const k in onHit) if (it.stats[k]) onHit[k] += it.stats[k];
-    if (it.stats.moveSpeed) moveSpeed += it.stats.moveSpeed;
-    if (it.stats.health) health += it.stats.health;
-    if (it.stats.mana) mana += it.stats.mana;
-    for (const k in it.stats) { const el = STAT_DEF[k] && STAT_DEF[k].element; if (el) elemDmg[el] += it.stats[k]; }
-    const sk = it.stats;
+  // 능력치 합산 (st = 능력치 묶음, it = 그 장비 - 무기 특수기 스킬 옵션의 종류를 볼 때만, 개발자 스탯은 null)
+  const addStats = (st, it) => {
+    if (st.atkSpeed) atkSpeed += st.atkSpeed;
+    if (st.castSpeed) castSpeed += st.castSpeed;
+    if (st.atkPower) atkPower += st.atkPower;
+    if (st.defense) defense += st.defense;
+    if (st.evasion) evasion += st.evasion;
+    if (st.accuracy) accuracy += st.accuracy;
+    for (const k in onHit) if (st[k]) onHit[k] += st[k];
+    if (st.moveSpeed) moveSpeed += st.moveSpeed;
+    if (st.health) health += st.health;
+    if (st.mana) mana += st.mana;
+    for (const k in st) { const el = STAT_DEF[k] && STAT_DEF[k].element; if (el) elemDmg[el] += st[k]; }
+    const sk = st;
     if (sk.skillAll) gearSkill.all += sk.skillAll;
     if (sk.skillWarrior) gearSkill.warrior += sk.skillWarrior;
     if (sk.skillSorc) gearSkill.sorc += sk.skillSorc;
     if (sk.skillFire) gearSkill.fire += sk.skillFire;
     if (sk.skillCold) gearSkill.cold += sk.skillCold;
     if (sk.skillLightning) gearSkill.lightning += sk.skillLightning;
-    if (sk.skillWeapon) { const kind = it.category === 'shield' ? 'shield' : it.variant; gearSkill.weapon[kind] = (gearSkill.weapon[kind] || 0) + sk.skillWeapon; }
+    if (sk.skillWeapon && it) { const kind = it.category === 'shield' ? 'shield' : it.variant; gearSkill.weapon[kind] = (gearSkill.weapon[kind] || 0) + sk.skillWeapon; }
+  };
+  GEAR_SLOTS.forEach((slot) => {
+    const it = game.hero.equipment[slot];
+    if (!it || it === 'LOCKED') return;
+    armor += gearArmor(it);
+    addStats(it.stats, it);
   });
+  if (game.hero.devStats) addStats(game.hero.devStats, null); // 개발자 패널 스탯 (systems/dev.js devAddStat) - 보이지 않는 장비처럼
 
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
   atkSpeed += (game.hero.levelStats.atkSpeed || 0) * LEVEL_STAT_PER_POINT.atkSpeed;

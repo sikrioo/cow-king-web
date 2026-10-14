@@ -9,8 +9,9 @@ import { ui } from '../state.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import {
   devLevelUp, devMaxLevel, devSkipCards, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn, devScenario, devResumeWaves,
-  devGiveGear, devMaterials, devPotions
+  devGiveGear, devMaterials, devPotions, devAddStat, devResetStats, DEV_STAT_POINT_KEYS
 } from '../systems/dev.js';
+import { STAT_DEF } from '../data/items.js';
 
 let built = false;
 const spawnImmune = new Set(); // 소환할 때 붙일 면역 (여러 개 가능)
@@ -56,6 +57,24 @@ function build() {
   button(ch, '체력·마나 가득', devFill);
   // 그림 비교: 주인공 손 - 3/4 시점(위를 보면 앞 손이 몸에 가려짐) / 탑뷰(늘 보임)
   const view = button(ch, '손: 3/4 시점', () => { ui.heroTopView = !ui.heroTopView; view.textContent = `손: ${ui.heroTopView ? '탑뷰' : '3/4 시점'}`; view.classList.toggle('on', ui.heroTopView); });
+
+  // 스탯 올리기: 선택 상자(스탯 포인트 / 장비 옵션) + ±10
+  const st = row(body, '스탯');
+  const sel = document.createElement('select');
+  const group = (label, opts) => {
+    const g = document.createElement('optgroup');
+    g.label = label;
+    opts.forEach(([value, text]) => { const o = document.createElement('option'); o.value = value; o.textContent = text; g.appendChild(o); });
+    sel.appendChild(g);
+  };
+  group('스탯 포인트 (±10점)', DEV_STAT_POINT_KEYS.map((k) => [`pt:${k}`, STAT_DEF[k] ? STAT_DEF[k].label : k]));
+  group('장비 옵션 (±10 / ±10% / 스킬 ±1)', Object.keys(STAT_DEF).map((k) => [k, STAT_DEF[k].label]));
+  sel.addEventListener('click', (e) => e.stopPropagation());
+  sel.addEventListener('keydown', (e) => e.stopPropagation()); // 게임 단축키로 안 넘어가게
+  st.appendChild(sel);
+  button(st, '+10', () => devAddStat(sel.value, 1));
+  button(st, '-10', () => devAddStat(sel.value, -1));
+  button(st, '장비 옵션 초기화', devResetStats);
 
   const cheat = row(body, '치트');
   TOGGLES.forEach(([flag, label]) => {

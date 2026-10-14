@@ -7,7 +7,9 @@ import { World, world } from '../core/physics.js';
 import { game, dev } from '../state.js';
 import { Monster } from '../entities/monster.js';
 import { floatText } from './fx.js';
-import { rollGearItem } from './gear.js';
+import { rollGearItem, recalcGearStats } from './gear.js';
+import { STAT_DEF } from '../data/items.js';
+import { LEVEL_STAT_KEYS } from '../data/balance.js';
 import { gainExp } from './progression.js';
 import { clampToPen } from '../world/arena.js';
 import { waveInfo } from '../util.js';
@@ -114,6 +116,36 @@ export function devResumeWaves() {
   if (game.run.mode !== 'wave') return;
   game.waveTransition = 0.3;
   say('웨이브 재개');
+}
+
+// 스탯 올리기 (패널 선택 상자): 'pt:키' = 스탯 포인트 ±10점(레벨 스탯), 그 밖 = 장비 옵션(보이지 않는 장비 hero.devStats)
+//   장비 옵션 한 번 = 고정 수치면 10, %면 10%, 스킬 레벨 옵션은 1 (0 아래로는 안 내려감)
+export const DEV_STAT_POINT_KEYS = Object.values(LEVEL_STAT_KEYS);
+export function devStatStep(key) {
+  if (key.startsWith('pt:')) return 10;
+  const d = STAT_DEF[key];
+  return d.noUpgrade ? 1 : d.flat ? 10 : 0.1;
+}
+export function devAddStat(key, sign = 1) {
+  const h = game.hero, step = devStatStep(key) * sign;
+  if (key.startsWith('pt:')) {
+    const k = key.slice(3);
+    h.levelStats[k] = Math.max(0, (h.levelStats[k] || 0) + step);
+    recalcGearStats();
+    say(`${k} 포인트 ${h.levelStats[k]}`);
+    return h.levelStats[k];
+  }
+  h.devStats = h.devStats || {};
+  const v = Math.max(0, Math.round(((h.devStats[key] || 0) + step) * 1000) / 1000);
+  if (v) h.devStats[key] = v; else delete h.devStats[key];
+  recalcGearStats();
+  say(`${STAT_DEF[key].label} ${STAT_DEF[key].fmt(v) || v}`);
+  return v;
+}
+export function devResetStats() {
+  game.hero.devStats = {};
+  recalcGearStats();
+  say('개발자 스탯 초기화');
 }
 
 export function devGiveGear(rarity) {

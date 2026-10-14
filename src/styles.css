@@ -129,4 +129,5 @@
     padding:4px 7px; font:11px sans-serif; cursor:pointer;
   }
   .dev-row button:hover { background:rgba(127,224,255,0.22); }
+  .dev-row select { background:#0d1a12; color:#dfe9d8; border:1px solid rgba(127,224,255,0.35); border-radius:4px; font-size:11px; padding:3px; max-width:150px; }
   .dev-row button.on { background:rgba(255,224,102,0.25); border-color:#ffe066; color:#ffe066; }

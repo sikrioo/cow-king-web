@@ -33,6 +33,7 @@ export function newCharacter() {
   h.exp = 0;
   h.expToNext = expForLevel(1);
   h.statPoints = 0;
+  h.devStats = {}; // 개발자 패널로 더한 장비 옵션 (systems/dev.js)
   h.levelStats = { atkPower: 0, defense: 0, evasion: 0, accuracy: 0, atkSpeed: 0, castSpeed: 0, moveSpeed: 0, health: 0, mana: 0 };
   h.bonusMaxHp = 0;
   h.equipment = { armor: null, weaponMain: null, weaponOff: null, greaves: null, boots: null, accessory1: null, accessory2: null };
