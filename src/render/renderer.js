@@ -22,6 +22,7 @@ import {
 } from '../ui/overlays.js';
 import { obstacles } from '../world/arena.js';
 import { drawObstacle } from './obstacleSprites.js';
+import { drawVignette } from './vignette.js';
 
 export function render(t) {
   ctx.fillStyle = '#0c1f10';
@@ -88,6 +89,7 @@ export function render(t) {
   drawFloatTexts(ctx);
   drawComboCounter(ctx);
   ctx.restore(); // 월드 좌표 끝 - 아래는 화면 좌표
+  drawVignette(ctx); // 가장자리 어둠 (막·맵마다 색, 배너·HUD는 그 위)
   drawStartCountdown();
   drawWavePresentation(t);
   drawActScene();

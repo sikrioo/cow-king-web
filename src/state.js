@@ -79,7 +79,8 @@ export const dev = {
   god: false,          // 무적 (피해 안 받음)
   infiniteMana: false, // 마나 항상 가득
   noCooldown: false,   // 스킬 대기시간 0
-  sureHit: false       // 물리 공격 항상 명중 (샌드박스 미리보기·테스트)
+  sureHit: false,      // 물리 공격 항상 명중 (샌드박스 미리보기·테스트)
+  noVignette: false    // 가장자리 어둠 끄기 (render/vignette.js)
 };
 
 // 입력 상태 (눌린 키, 슬롯 길게 누르기, 가상 조이스틱)

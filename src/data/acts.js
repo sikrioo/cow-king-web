@@ -11,17 +11,21 @@ export const BOSS_ESCORTS = 7; // 2026-10-12 4 → 7 (적 수 늘림)
 export const ACT_WAVE_SIZE = { base: 10, perWave: 6, perAct: 4 }; // 2026-10-12 사용자: 적이 적음 → 약 1.6배 (6/4/3 → 10/6/4)
 // 난입 도살자 (2026-10-11 사용자: 경고 없이 그냥 등장 - 나중에 소리만): 막 안 INVADE.minActWave번째 웨이브부터(보스 웨이브 제외) 웨이브마다 chance 확률로
 //   웨이브가 시작되고 delay[0]~delay[1]초 사이 어느 순간 주인공 주변에 한 마리 (종류 = 막의 invader)
+// 가벼운 시야 (2026-10-14 사용자): 화면 가운데에서 대각선 반의 VIGNETTE_INNER까지는 그대로, 그 바깥으로 갈수록 막의 vignette 색으로 (그림만)
+export const VIGNETTE_INNER = 0.45;
 export const INVADE = { chance: 0.15, minActWave: 2, delay: [5, 15] }; // 마리 수 = base + 막 안 웨이브 × perWave + 막 번호 × perAct
 
 export const ACTS = [
   {
     id: 'ranch', name: '1막 · 왕의 목장', sub: 'SURVIVE THE PASTURE', waves: BOSS_WAVE,
     boss: 'boss', bossName: 'THE COW KING', bossSub: '왕의 목장에 입장했습니다', bossDrops: 4, invader: 'butcherCow',
+    vignette: { color: '#0b1408', alpha: 0.45 }, // 가장자리 어둠 (render/vignette.js) - 목장은 살짝
     normals: { normal: 1 }, elites: ELITE_KINDS, ground: null
   },
   {
     id: 'graveyard', name: '2막 · 저주받은 묘지', sub: '죽은 자들이 깨어난다', waves: 4,
     boss: 'skeletonKing', bossName: 'THE SKELETON KING', bossSub: '묘지의 주인이 일어섰습니다', bossDrops: 5, invader: 'butcherCow',
+    vignette: { color: '#04070d', alpha: 0.7 }, // 묘지: 푸르스름하게 더 어둡게
     normals: { skeleton: 4, skeletonSpear: 2, skeletonArcher: 2, paleSoul: 1, normal: 2 }, elites: ['skeletonShield', 'skeletonBrute', 'tough', 'cold', 'fanatic', 'shaman', 'priest', 'venom', 'snake'],
     ground: {
       base: '#2c3330', shades: ['#29302d', '#2c3330', '#313a35', '#36403a'], dirt: '#3e3a33', dirtEdge: '#343530',
@@ -38,6 +42,7 @@ export const ACTS = [
   {
     id: 'hell', name: '3막 · 지옥문', sub: '불타는 땅이 열린다', waves: 4,
     boss: 'demonKing', bossName: 'THE DEMON COW KING', bossSub: '지옥의 군주가 내려왔습니다', bossDrops: 6, invader: 'butcherDemon',
+    vignette: { color: '#1c0303', alpha: 0.7 }, // 지옥: 붉게 어둡게
     normals: { imp: 5, burningSoul: 2, skeletonSpear: 1, skeletonArcher: 1 }, elites: ['demonCurser', 'demonBerserker', 'skeletonShield', 'skeletonBrute', 'pyro', 'burning', 'ratKeeper'],
     ground: {
       base: '#3a1414', shades: ['#341212', '#3a1414', '#421616', '#4a1a16'], dirt: '#241010', dirtEdge: '#5a1a10',

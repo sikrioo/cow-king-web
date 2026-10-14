@@ -40,6 +40,7 @@ export const MAPS = {
     spawnMarginRatio: 0.1,
     start: { x: 0.5, y: 0.92 },   // 아래쪽 가운데에서 시작
     obstacles: { hay: 7, fence: 5 }, // 구조물 개수 (data/obstacles.js)
+    vignette: { color: '#120c05', alpha: 0.55 }, // 가장자리 어둠 (render/vignette.js) - 흙먼지 갈색
     mlvl: 4,                      // 몬스터 레벨 보탬 (data/difficulty.js mlvl에 더함)
     packs: 11,                    // 무리 수 (마지막 하나가 우두머리 무리) - 2026-10-12 9 → 11
     packSize: [6, 10],            // 무리당 마리 수 (최소, 최대) - 2026-10-12 [4,7] → [6,10] (적이 적음, 약 1.6배)

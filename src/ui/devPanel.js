@@ -19,7 +19,8 @@ const TOGGLES = [
   ['god', '무적'],
   ['infiniteMana', '마나 무한'],
   ['noCooldown', '스킬 대기시간 0'],
-  ['sureHit', '항상 명중']
+  ['sureHit', '항상 명중'],
+  ['noVignette', '어둠 끄기']
 ];
 
 function button(parent, label, fn) {
