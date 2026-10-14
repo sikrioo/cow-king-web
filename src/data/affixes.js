@@ -55,6 +55,7 @@ const FAMILIES = [
   { id: 'leechMana', side: 'suffix', group: 'manaLeech', stat: 'manaLeech', types: [...W, ...ACC],
     tiers: [[4, [0.02, 0.03], 5], [14, [0.04, 0.05], 2]] },
   // 회복 (2026-10-14): 체력 회복은 방어구·장신구, 마나 회복은 무기(지팡이 등)·장신구
+  //   체력은 고정(초당 +N), 마나는 기본 회복의 % - 디아블로2와 같은 구조로 유지 (2026-10-14 사용자 결정: 체력은 기본 회복이 없어 %가 의미 없음)
   { id: 'regen', side: 'suffix', group: 'lifeRegen', stat: 'lifeRegen', types: DEF_ALL,
     tiers: [[1, [2, 4], 7], [10, [5, 8], 4], [20, [9, 14], 1.5]] },
   { id: 'meditate', side: 'suffix', group: 'manaRegen', stat: 'manaRegenPct', types: [...W, ...ACC],
