@@ -38,7 +38,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 
 ## 확장할 때 고칠 곳
 - 몬스터 이동: 거리 유지(keep)·수비(hide)는 `data/balance.js` MONSTER_MOVE에 숫자만 → `entities/movement.js` moveByRule(Monster.update가 종류별 steer 다음에 부름, 규칙이 있으면 근접 공격 안 함). 특별한 움직임만 종류별 steer. 표의 태도(MONSTER_ROLE stance)와 맞아야 함(tests/monsters.test.js).
-- 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
+- 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 개발자 패널 소환 목록 `data/scenarios.js` DEV_SPAWN_GROUPS(빠지면 tests/devPanel.test.js 실패, 확인용 시나리오도 여기) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph/casting…)엔 매 틱 true.
   마법형 몬스터 훅은 `entities/spellBehaviors.js`, 카우킹은 `entities/bossBehaviors.js`(기술 3개 차례로 + 2단계), 활 쏘는 몬스터(궁수)는 `entities/rangedBehaviors.js`, 악마 종족은 `entities/demonBehaviors.js`(모두 behaviors에 합쳐짐 - 관리자 코드 보기를 위해 항목은 `kind: { ... }` 형태로), 마법 자체(메테오/파이어볼/화염 벽)는 `systems/spells.js`.
 - 짐승(소가 아닌 몬스터): 쥐떼 카우·악마 쥐·박치기 뱀 = `entities/beastBehaviors.js` + 그림 `render/beastSprites.js`(MONSTERS의 `rat`/`snake` 플래그로 drawMonster가 고름), 수치 `data/balance.js` RAT_SQUAD/SNAKE. 소환에 추가 값이 필요하면 pendingSpawns에 `props`(개체에 복사)·`squad`(부대 공유 객체).

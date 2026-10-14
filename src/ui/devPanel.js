@@ -1,13 +1,14 @@
 // 개발자 패널 (HTML, index.html의 #dev-panel). ` 키 또는 DEV 버튼으로 열고 닫음
 // 버튼 연결과 몬스터 소환 버튼 생성은 처음 열 때 한 번 (부팅/테스트 환경에서는 DOM을 건드리지 않음)
-import { ELITE_KINDS } from '../data/monsters.js';
+import { MONSTER_LABEL } from '../data/monsters.js';
+import { SCENARIOS, DEV_SPAWN_GROUPS } from '../data/scenarios.js';
 import { RARITY_DEF } from '../data/items.js';
 import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
 import { waveInfo, TOTAL_WAVES } from '../util.js';
 import { ui } from '../state.js';
 import { CLASSES, CLASS_ORDER } from '../data/classes.js';
 import {
-  devLevelUp, devMaxLevel, devSkipCards, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn,
+  devLevelUp, devMaxLevel, devSkipCards, devStatPoints, devFill, devToggle, devKillAll, devJumpWave, devSpawn, devScenario, devResumeWaves,
   devGiveGear, devMaterials, devPotions
 } from '../systems/dev.js';
 
@@ -64,6 +65,11 @@ function build() {
   const prog = row(body, '웨이브');
   for (let w = 1; w <= TOTAL_WAVES(); w++) button(prog, waveInfo(w).isBoss ? `${w} (보스)` : `${w}`, () => devJumpWave(w)); // 막을 이어서 (data/acts.js)
   button(prog, '몬스터 전부 제거', devKillAll);
+  button(prog, '웨이브 재개', devResumeWaves);
+
+  // 시나리오 (data/scenarios.js): 그 상황을 바로 만들고 웨이브는 멈춤
+  const sc = row(body, '시나리오');
+  SCENARIOS.forEach((s) => button(sc, s.label, () => devScenario(s.id)));
 
   const imm = row(body, '면역 (켜고 소환)');
   [['phys', '물리'], ...ELEMENTS.map((el) => [el, ELEMENT_DEF[el].label])].forEach(([key, label]) => {
@@ -74,8 +80,11 @@ function build() {
       b.classList.toggle('on', on);
     });
   });
-  const spawn = row(body, '소환');
-  ['normal', ...ELITE_KINDS, 'boss'].forEach((k) => button(spawn, k, () => devSpawn(k, [...spawnImmune])));
+  // 소환: 막별 묶음, 바라보는 쪽 170 거리에 한 마리 (위 면역을 켜면 그 면역으로)
+  DEV_SPAWN_GROUPS.forEach((g) => {
+    const r = row(body, `소환 ${g.label}`);
+    g.kinds.forEach((k) => button(r, MONSTER_LABEL[k] || k, () => devSpawn(k, [...spawnImmune])));
+  });
 
   const tools = row(body, '도구');
   // 관리자 페이지 (게임 데이터 보기·시뮬레이터·미리보기) - 새 탭. 배포본은 ?dev=1을 붙여야 열림

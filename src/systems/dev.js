@@ -11,6 +11,9 @@ import { rollGearItem } from './gear.js';
 import { gainExp } from './progression.js';
 import { clampToPen } from '../world/arena.js';
 import { waveInfo } from '../util.js';
+import { MONSTERS } from '../data/monsters.js';
+import { SCENARIOS } from '../data/scenarios.js';
+import { ACTS } from '../data/acts.js';
 
 const say = (text, color = '#7fe0ff') => floatText(game.hero.x, game.hero.y - 50, text, color);
 
@@ -73,14 +76,44 @@ export function devJumpWave(n) {
 }
 
 // immune: 면역으로 만들 속성 목록 (['phys', 'fire', ...]) - 개체 저항 c.resist에 1로 덮어씀 (종류 기본 저항은 그대로)
-export function devSpawn(kind, immune = []) {
+// at: 소환 자리 { x, y } (없으면 바라보는 쪽 170). 크기는 웨이브와 같은 규칙 (카우킹 1.0, 다른 보스·도살자 0.4, 그 밖엔 무작위 체구)
+export function devSpawn(kind, immune = [], at = null) {
   const a = game.hero.facing;
-  const p = clampToPen(game.hero.x + Math.cos(a) * 170, game.hero.y + Math.sin(a) * 170, 40);
-  const scale = kind === 'boss' ? 1.0 : (1.05 + Math.random() * 0.5) * 0.3;
+  const p = at ? clampToPen(at.x, at.y, 40) : clampToPen(game.hero.x + Math.cos(a) * 170, game.hero.y + Math.sin(a) * 170, 40);
+  const def = MONSTERS[kind] || {};
+  const scale = kind === 'boss' ? 1.0 : def.boss || def.butcher ? 0.4 : (1.05 + Math.random() * 0.5) * 0.3;
   const c = new Monster(scale, kind, { pos: p, hunt: true });
   if (immune.length) c.resist = Object.fromEntries(immune.map((k) => [k, 1]));
   game.cows.push(c);
   return c;
+}
+
+// 시나리오 (data/scenarios.js): 몬스터를 치우고 막을 맞춘 뒤 웨이브를 멈추고 주인공 둘레에 소환
+export function devScenario(id) {
+  const sc = SCENARIOS.find((s) => s.id === id);
+  if (!sc || game.run.mode !== 'wave') { say('목장(웨이브)에서만', '#ff8a80'); return; }
+  clearCows();
+  if (sc.act != null) { // 막 맞춤 (그 막의 첫 웨이브 번호)
+    game.act = sc.act;
+    game.wave = ACTS.slice(0, sc.act).reduce((s, a) => s + a.waves, 0);
+  }
+  game.actClear = 0; game.actScene = 0; game.invade = null;
+  game.waveTransition = Infinity; // 웨이브 멈춤 ('웨이브 재개'로)
+  const h = game.hero;
+  sc.spawns.forEach((sp) => {
+    for (let i = 0; i < sp.n; i++) {
+      const ang = sp.spread == null ? (i / sp.n) * Math.PI * 2 : h.facing + sp.spread + (sp.n > 1 ? (i / (sp.n - 1) - 0.5) * 0.9 : 0);
+      devSpawn(sp.kind, [], { x: h.x + Math.cos(ang) * sp.dist, y: h.y + Math.sin(ang) * sp.dist });
+    }
+  });
+  say(`시나리오: ${sc.label}`);
+}
+
+// 멈춘 웨이브 다시
+export function devResumeWaves() {
+  if (game.run.mode !== 'wave') return;
+  game.waveTransition = 0.3;
+  say('웨이브 재개');
 }
 
 export function devGiveGear(rarity) {
