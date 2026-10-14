@@ -44,7 +44,8 @@ it('마법사 선택: 체력/마나/슬롯/시작 장비', async () => {
     expect(h.maxHp).toBe(100);
     expect(h.maxMana).toBe(180); // 2026-10-14 160 → 180 (사용자)
     expect([h.slot1, h.slot2]).toEqual(['bolt', 'fireball']);
-    expect(h.equipment.weaponMain).toBe(null); // 시작 무기 없음 (지팡이 모습)
+    expect(h.equipment.weaponMain.variant).toBe('staff'); // 시작 무기 = 양손 지팡이 (2026-10-14)
+    expect(h.equipment.weaponOff).toBe('LOCKED');
     m.cycleSkillSlot(2); // Lv1: bolt/fireball만 → 바뀌지 않음(다른 슬롯과 겹치면 건너뜀)
     expect(['bolt', 'fireball']).toContain(h.slot2);
     m.ui.selectedClass = 'warrior'; m.resetGame();

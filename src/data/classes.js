@@ -13,7 +13,7 @@ export const CLASSES = {
     skills: ['attack', 'warcry', 'whirlwind', 'leap', 'rush', 'smash', 'fortify', 'flurry', 'concuss', 'berserk', 'decoy', 'holyhammer', 'heavenbolt',
       'aurathorns', 'aurafire', 'aurafrost',
       'spinblade', 'skyfall', 'whirlaxe', 'shieldbounce', 'rollmace', 'piercespear', 'vitalthrow'], slots: ['attack', 'warcry'], // skills 뒤 7개 = 무기 특수기 (마스터리 Lv3부터 카드)
-    basic: 'melee', starterGear: true, staff: false,
+    basic: 'melee', starterGear: { weapons: ['sword', 'mace'], shield: true }, staff: false, // 시작 장비: 한손 무기 하나(무작위) + 방패
     look: { body: ['#7a8088', '#2e3137', '#101216'], trim: '#d5d0c4', scarf: ['#5a1721', '#862534'], gem: '#8a2331', eyes: '#ffb65c', hand: '#a3abb4' }
   },
   sorc: {
@@ -21,7 +21,7 @@ export const CLASSES = {
     hp: 100, mana: 180, manaRegen: 3.6, armor: 0, // 마나 회복 9 → 3.6 (2026-10-14 사용자: 너무 빠름 - 바닥에서 가득까지 약 50초, 나머지는 물약·마나 흡수·명상 카드·나중 장비 옵션) // 마나 160 → 180 (2026-10-14 사용자)
     // 몸은 약하지만 시원시원하게
     skills: ['bolt', 'fireball', 'frostnova', 'chain', 'orb', 'energyshield', 'flamepillar', 'firewave', 'blizzard', 'discharge', 'balllightning', 'polymorph', 'meteor', 'thunderstrike', 'frostfield', 'firetotem'], slots: ['bolt', 'fireball'],
-    basic: 'bolt', starterGear: false, staff: true, // 무기를 안 들었으면 지팡이를 든 모습
+    basic: 'bolt', starterGear: { weapons: ['staff'], shield: false }, staff: true, // 시작 장비: 양손 지팡이 (2026-10-14 사용자) / 무기를 빼면 맨손 대신 지팡이 모습
     look: { body: ['#6a7cc8', '#2a2f6e', '#10122e'], trim: '#e8d9a8', scarf: ['#2a3f8a', '#4d6bff'], gem: '#7fd4ff', eyes: '#bfeaff', hand: '#c9c3e8' }
   }
 };

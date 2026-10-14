@@ -1,7 +1,10 @@
+import { drawHeroStaff } from './heroStaff.js';
+
 // 주인공이 드는 것 그림: 무기 종류별 칼날(검·도끼·메이스·단검·창·대검), 방패, 베기 궤적 - 상태 없음 (heroSprites.js가 씀)
 
 // flip: 칼날 면을 자루 기준 반대쪽으로 뒤집음 (도끼처럼 한쪽에만 날이 있는 무기를 반대 방향으로 휘두를 때 날이 앞장서게)
 export function drawAbstractSword(ctx, x, y, angle, r, alpha = 1, variant = 'sword', flip = false) {
+  if (variant === 'staff') { drawHeroStaff(ctx, x, y, angle, r, alpha); return; } // 지팡이 무기 = 마법사 지팡이 그림 (render/heroStaff.js)
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);

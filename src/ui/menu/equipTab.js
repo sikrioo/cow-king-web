@@ -75,6 +75,7 @@ export function drawEquipTab(ctx, x, startRow, w) {
     ['블락률', `+${Math.round(game.hero.gearDefense * 100)}%`],
     ['회피율', `+${Math.round(game.hero.gearEvasion * 100)}%`],
     ['명중률', `+${Math.round((game.hero.gearAccuracy || 0) * 100)}%`],
+    ['회복 체력/마나', `초당 +${Math.round(game.hero.gearLifeRegen || 0)} / +${Math.round((game.hero.gearManaRegenPct || 0) * 100)}%`],
     ['흡수 생명/마나', `${Math.round((game.hero.gearOnHit ? game.hero.gearOnHit.lifeLeech : 0) * 100)}%/${Math.round((game.hero.gearOnHit ? game.hero.gearOnHit.manaLeech : 0) * 100)}%`],
     ['강타', `${Math.round((game.hero.gearOnHit ? game.hero.gearOnHit.crushBlow : 0) * 100)}%${game.hero.gearOnHit && game.hero.gearOnHit.knockback ? ' · 밀쳐내기' : ''}`],
     ['이동속도', `+${Math.round((game.hero.gearSpeedMult - 1) * 100)}%`],

@@ -172,7 +172,15 @@ export function updatePlayer(dt) {
   if (game.hero.moveFxCooldown > 0) game.hero.moveFxCooldown -= dt;
   if (game.hero.moveReaction > 0) game.hero.moveReaction = Math.max(0, game.hero.moveReaction - dt * 4.2);
   game.hero.renderBreath += dt * (game.hero.moveSpeedN > 0.08 ? 4.0 : 1.35);
-  game.hero.mana = Math.min(game.hero.maxMana, game.hero.mana + game.hero.manaRegen * dt);
+  game.hero.mana = Math.min(game.hero.maxMana, game.hero.mana + game.hero.manaRegen * (1 + (game.hero.gearManaRegenPct || 0)) * dt); // 장비 마나 회복 %
+  if (game.hero.gearLifeRegen > 0 && game.hero.alive) { // 장비 체력 회복: 체력은 정수라 소수는 쌓았다가 1씩
+    const maxHp = game.hero.maxHp + game.hero.bonusMaxHp + game.hero.gearMaxHp;
+    if (game.hero.hp < maxHp) {
+      game.hero.lifeRegenAcc = (game.hero.lifeRegenAcc || 0) + game.hero.gearLifeRegen * dt;
+      const add = Math.floor(game.hero.lifeRegenAcc + 1e-6); // 소수 누적 오차(11.9999…) 보정
+      if (add > 0) { game.hero.lifeRegenAcc -= add; game.hero.hp = Math.min(maxHp, game.hero.hp + add); }
+    } else game.hero.lifeRegenAcc = 0;
+  }
 
   if (!game.hero.alive) {
     Body.setVelocity(game.hero.body, { x: 0, y: 0 });

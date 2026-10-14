@@ -65,3 +65,19 @@ it('신성 피해: 해골·영혼·악마에게 +50%, 일반 카우는 그대로
     expect(damageCowPacket(skel, { holy: 100 })).toBe(Math.round(100 * (1 + HOLY.undeadBonus)));
   } finally { env.restore(); }
 });
+
+it('회복 옵션: 체력 회복은 초당 고정(체력은 정수 - 소수는 쌓았다가), 마나 회복은 기본 회복에 %', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await boot();
+    const h = m.game.hero;
+    h.devStats = { lifeRegen: 6, manaRegenPct: 1 };
+    (await import('../src/systems/gear.js')).recalcGearStats();
+    m.game.cows = [];
+    h.hp = 50; h.mana = 0;
+    for (let i = 0; i < 120; i++) m.fixedUpdate(1 / 60); // 2초
+    expect(Number.isInteger(h.hp)).toBe(true);
+    expect(h.hp).toBe(50 + 12);
+    expect(h.mana).toBeCloseTo(h.manaRegen * 2 * 2, 0); // +100% = 두 배
+  } finally { env.restore(); }
+});

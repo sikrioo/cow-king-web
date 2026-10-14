@@ -33,13 +33,13 @@ export const BOT_BUILD = {
     skills: ['whirlwind', 'smash', 'leap', 'concuss', 'heavenbolt', 'holyhammer', 'flurry', 'rush', 'berserk', 'fortify', 'warcry'],
     gear: { dps: 1.2, armor: 0.6, atkPower: 1, health: 0.7, mana: 0.1, atkSpeed: 120, castSpeed: 30, defense: 120, evasion: 110, accuracy: 80, moveSpeed: 60,
       lifeLeech: 250, manaLeech: 60, crushBlow: 150, knockback: 8, fireDmg: 0.8, coldDmg: 0.8, lightningDmg: 0.8, poisonDmg: 0.8,
-      skillAll: 30, skillWarrior: 30, skillWeapon: 10 }
+      skillAll: 30, skillWarrior: 30, skillWeapon: 10, lifeRegen: 4, manaRegenPct: 10 }
   },
   sorc: {
     build: { health: 4, mana: 2, castSpeed: 3, evasion: 1 },
     skills: ['meteor', 'blizzard', 'chain', 'fireball', 'balllightning', 'orb', 'thunderstrike', 'firewave', 'flamepillar', 'frostnova', 'discharge', 'energyshield'],
     gear: { dps: 0, armor: 0.6, atkPower: 0, health: 0.8, mana: 0.5, atkSpeed: 60, castSpeed: 150, defense: 100, evasion: 120, accuracy: 0, moveSpeed: 80,
       lifeLeech: 0, manaLeech: 0, crushBlow: 0, knockback: 0, fireDmg: 0, coldDmg: 0, lightningDmg: 0, poisonDmg: 0,
-      skillAll: 30, skillSorc: 30, skillFire: 15, skillCold: 15, skillLightning: 15 }
+      skillAll: 30, skillSorc: 30, skillFire: 15, skillCold: 15, skillLightning: 15, lifeRegen: 4, manaRegenPct: 60 }
   }
 };

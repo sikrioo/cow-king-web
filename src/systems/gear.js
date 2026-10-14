@@ -5,7 +5,7 @@ import {
   ARMOR_K, ARMOR_MAX_REDUCTION, BASE_DAMAGE, ATTACK_COOLDOWN
 } from '../data/balance.js';
 import {
-  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, STAT_DEF, RARITY_DEF, GEAR_BASE_ARMOR,
+  GEAR_SLOTS, GEAR_SLOT_LABEL, WEAPON_VARIANTS, TWO_HAND_ONLY, STAT_DEF, RARITY_DEF, GEAR_BASE_ARMOR,
   WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, TEST_ELEMENT_WEAPON_DMG
 } from '../data/items.js';
 import { rollGearItem, nextItemUid } from './itemGen.js';
@@ -126,12 +126,12 @@ export function equipItem(gear, opts = {}) {
 }
 
 // 시작할 때 맨손 대신 기본 장비를 쥐어줌 - 한손검+방패 또는 도끼+방패 중 랜덤
-export function giveStarterGear() {
-  const weaponVariant = Math.random() < 0.5 ? 'sword' : 'mace'; // 한손 무기 + 방패 (도끼는 양손 전용이 됨 - 2026-10-10)
-  const weapon = rollGearItem({ category: 'weapon', handedness: 'one', rarity: 'normal', variant: weaponVariant, identified: true, noElement: true });
-  const shield = rollGearItem({ category: 'shield', rarity: 'normal', identified: true });
+// 직업별 시작 장비 (data/classes.js starterGear): 무기 목록 중 하나 + 방패 여부 - 전사 한손 무기 + 방패, 마법사 양손 지팡이
+export function giveStarterGear(sg = (CLASSES[game.hero.classKey] || CLASSES.warrior).starterGear) {
+  const weaponVariant = sg.weapons[Math.floor(Math.random() * sg.weapons.length)];
+  const weapon = rollGearItem({ category: 'weapon', handedness: TWO_HAND_ONLY.includes(weaponVariant) ? 'two' : 'one', rarity: 'normal', variant: weaponVariant, identified: true, noElement: true });
   equipItem(weapon, { silent: true });
-  equipItem(shield, { silent: true });
+  if (sg.shield) equipItem(rollGearItem({ category: 'shield', rarity: 'normal', identified: true }), { silent: true });
 }
 
 // 장비를 바꿔가며 테스트할 수 있도록 가방에 종류별로 하나씩 넣어줌 (전부 감정된 일반 등급)
@@ -228,6 +228,7 @@ export function recalcGearStats() {
   const elemDmg = { fire: 0, cold: 0, lightning: 0, poison: 0 }; // 무기 원소 피해 (STAT_DEF의 element 옵션)
   const gearSkill = { all: 0, warrior: 0, sorc: 0, fire: 0, cold: 0, lightning: 0, weapon: {} }; // 스킬 레벨 옵션 (util.skillGearBonus)
   const onHit = { crushBlow: 0, knockback: 0, lifeLeech: 0, manaLeech: 0 }; // 타격 옵션 (combat.applyOnHit)
+  let lifeRegen = 0, manaRegenPct = 0; // 회복 옵션 (entities/hero.js가 매 틱)
   let atkSpeed = 0, castSpeed = 0, atkPower = 0, defense = 0, evasion = 0, accuracy = 0, moveSpeed = 0, health = 0, mana = 0, armor = 0;
   // 능력치 합산 (st = 능력치 묶음, it = 그 장비 - 무기 특수기 스킬 옵션의 종류를 볼 때만, 개발자 스탯은 null)
   const addStats = (st, it) => {
@@ -237,6 +238,8 @@ export function recalcGearStats() {
     if (st.defense) defense += st.defense;
     if (st.evasion) evasion += st.evasion;
     if (st.accuracy) accuracy += st.accuracy;
+    if (st.lifeRegen) lifeRegen += st.lifeRegen;
+    if (st.manaRegenPct) manaRegenPct += st.manaRegenPct;
     for (const k in onHit) if (st[k]) onHit[k] += st[k];
     if (st.moveSpeed) moveSpeed += st.moveSpeed;
     if (st.health) health += st.health;
@@ -286,6 +289,8 @@ export function recalcGearStats() {
   game.hero.gearDefense = defense;
   game.hero.gearEvasion = evasion;
   game.hero.gearOnHit = onHit;
+  game.hero.gearLifeRegen = lifeRegen;
+  game.hero.gearManaRegenPct = manaRegenPct;
   game.hero.gearAccuracy = accuracy; // 물리 명중률 (combat.heroHitChance)
   game.hero.gearArmor = armor;
   game.hero.armorReduction = armorReduction(armor);

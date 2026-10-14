@@ -54,6 +54,11 @@ const FAMILIES = [
     tiers: [[4, [0.02, 0.03], 6], [14, [0.04, 0.06], 2]] },
   { id: 'leechMana', side: 'suffix', group: 'manaLeech', stat: 'manaLeech', types: [...W, ...ACC],
     tiers: [[4, [0.02, 0.03], 5], [14, [0.04, 0.05], 2]] },
+  // 회복 (2026-10-14): 체력 회복은 방어구·장신구, 마나 회복은 무기(지팡이 등)·장신구
+  { id: 'regen', side: 'suffix', group: 'lifeRegen', stat: 'lifeRegen', types: DEF_ALL,
+    tiers: [[1, [2, 4], 7], [10, [5, 8], 4], [20, [9, 14], 1.5]] },
+  { id: 'meditate', side: 'suffix', group: 'manaRegen', stat: 'manaRegenPct', types: [...W, ...ACC],
+    tiers: [[1, [0.2, 0.35], 7], [10, [0.4, 0.6], 4], [20, [0.65, 0.9], 1.5]] },
   { id: 'stamina', side: 'suffix', group: 'stamina', stat: 'health', types: DEF_ALL, // 접두사 life와 다른 그룹 → 함께 붙을 수 있음
     tiers: [[1, [5, 9], 8], [12, [10, 16], 4]] },
   { id: 'gale', side: 'suffix', group: 'gale', types: ACC, // 하이브리드: 공격속도 + 이동속도

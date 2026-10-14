@@ -49,6 +49,7 @@ it('해금: 무기 마스터리 Lv3 전엔 특수기 카드가 안 나오고, Lv
     const m = await boot();
     const h = m.game.hero;
     const offered = () => { for (let i = 0; i < 40; i++) if (m.rollCards().some((c) => c.id === 'spinblade')) return true; return false; };
+    m.equipItem(m.rollGearItem({ category: 'weapon', handedness: 'one', rarity: 'normal', variant: 'sword', identified: true }), { slot: 'weaponMain', silent: true }); // 특수기는 그 무기를 들었을 때만 (시작 무기는 무작위)
     h.masteries.sword = 2;
     expect(offered()).toBe(false);
     h.masteries.sword = m.SPECIAL_MASTERY_LEVEL;

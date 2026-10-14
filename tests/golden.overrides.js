@@ -8,7 +8,7 @@ export const GOLDEN_OVERRIDES = {
   // 2026-10-07: 스킬은 레벨이 아니라 레벨업 카드(뱀서식)로 배움 (사용자 결정) - 카드를 안 고른 새 캐릭터는 레벨과 상관없이 시작 스킬만
   'exact.slot2OptionsByLevel': { 1: ['warcry'], 2: ['warcry'], 3: ['warcry'], 4: ['warcry'], 5: ['warcry'] },
   // 2026-10-08: 개발자 모드 테스트 가방에 원소별 테스트 무기 4개 추가 (사용자 결정: 전사로 면역 몬스터 시험)
-  'exact.start.testStashCount': 12,
+  'exact.start.testStashCount': 13, // 2026-10-14: + 지팡이
   // 2026-10-10: 창은 찌르기 - 사거리 68 → 88, 공격 각도는 좁게 (사용자 요청)
   'exact.weaponRange.spear': 88, // 2026-10-09: + 대검(무기 종류마다 하나씩 넣는 테스트 가방)
   // 2026-10-09: 옵션 개수는 등급별 접사 규칙(data/affixes.js AFFIX_RULES - 일반 0 / 매직 1~2 / 레어 3~6 / 레전드 5~6)으로 바뀌어 RARITY_DEF의 statMin/statMax 제거 (사용자 결정: 디아식 접사 체계)
@@ -88,6 +88,10 @@ export const GOLDEN_ADDITIONS = {
   'exact.statDef.knockback': { label: '밀쳐내기', min: 1, max: 1, fmtAtMax: '' },
   'exact.statDef.lifeLeech': { label: '생명력 흡수', min: 0.02, max: 0.06, fmtAtMax: '6%' },
   'exact.statDef.manaLeech': { label: '마나 흡수', min: 0.02, max: 0.05, fmtAtMax: '5%' },
+  // 2026-10-14: 회복 옵션 + 지팡이 (사용자)
+  'exact.statDef.lifeRegen': { label: '체력 회복', min: 2, max: 14, fmtAtMax: '초당 +14' },
+  'exact.statDef.manaRegenPct': { label: '마나 회복', min: 0.2, max: 0.9, fmtAtMax: '+90%' },
+  'exact.weaponRange.staff': 62,
   'exact.statDef.accuracy': { label: '명중률', min: 0.03, max: 0.13, fmtAtMax: '+13%' },
   // 2026-10-08: 물리 스킬 투지(전사), 공통 스킬 순간이동 - 새 스킬 카드가 나오는 레벨
   'exact.progression.skillUnlockLevel.fortify': 3,

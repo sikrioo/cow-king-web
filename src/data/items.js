@@ -19,12 +19,14 @@ export const GEAR_SLOT_LABEL = {
 };
 export const GEAR_CATEGORY_LABEL = { armor: '갑옷', weapon: '무기', greaves: '각반', boots: '신발', accessory: '장신구', shield: '방패' };
 export const GEAR_VARIANT_LABEL = {
-  sword: '검', axe: '도끼', mace: '메이스', dagger: '단검', spear: '창', greatsword: '대검',
+  sword: '검', axe: '도끼', mace: '메이스', dagger: '단검', spear: '창', greatsword: '대검', staff: '지팡이',
   amulet: '목걸이', ring: '반지', charm: '부적'
 };
-export const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear', 'greatsword'];
+export const WEAPON_VARIANTS = ['sword', 'axe', 'mace', 'dagger', 'spear', 'greatsword', 'staff'];
 // 양손으로만 나오는 무기 (대검 - 몸보다 큰 칼, 도끼 - 흉악한 큰 도끼)
-export const TWO_HAND_ONLY = ['greatsword', 'axe'];
+// 마법사용 무기: 근접 초당 피해를 다른 무기와 맞추지 않음(일부러 약함 - 옵션을 들고 다니는 무기, tests/weapon.test.js)
+export const CASTER_WEAPONS = ['staff'];
+export const TWO_HAND_ONLY = ['greatsword', 'axe', 'staff']; // 지팡이(2026-10-14): 양손 - 마법사 시작 무기
 // 무거운 무기: 기본 공격이 맞을 때 넉백·화면 흔들림·히트스톱(프레임)을 더함
 //   windup: 휘두르는 동작의 이 비율 지점에서 피해가 들어감 (등 뒤에서 들어 올렸다가 앞으로 내리치는 딜레이 - 그림은 render/heroSprites)
 export const WEAPON_HEAVY = { greatsword: { knock: 13, shake: 3, hitstop: 3, windup: 0.45 }, axe: { knock: 7, shake: 2, hitstop: 1, windup: 0.35 } }; // 도끼도 등 뒤에서 내리침 (대검보다 짧은 딜레이)
@@ -37,6 +39,7 @@ export const WEAPON_BASE = {
   spear:  { min: 26, max: 42, aps: 2.2 },
   axe:    { min: 43, max: 63, aps: 1.41 }, // 양손 전용 - 양손 배율까지 69~101, 초당 약 1.2회 (대검보다 빠르고 가벼움)
   mace:   { min: 30, max: 50, aps: 1.9 },
+  staff:  { min: 20, max: 34, aps: 1.6 }, // 지팡이: 양손 전용 - 양손 배율까지 32~54, 근접으로는 약함(마법사용 옵션을 들고 다니는 무기)
   greatsword: { min: 60, max: 95, aps: 0.98 } // 양손 전용 - 양손 배율까지 곱하면 96~152, 초당 약 0.83회 (가장 느리고 한 방이 가장 셈, 초당 피해는 다른 무기와 비슷)
 };
 export const TWO_HAND_DAMAGE_MULT = 1.6;
@@ -64,6 +67,9 @@ export const STAT_DEF = {
   knockback: { label: '밀쳐내기',  min: 1,    max: 1,    flat: true, noUpgrade: true, fmt: () => '' },
   lifeLeech: { label: '생명력 흡수', min: 0.02, max: 0.06, fmt: (v) => `${Math.round(v * 100)}%` },
   manaLeech: { label: '마나 흡수',   min: 0.02, max: 0.05, fmt: (v) => `${Math.round(v * 100)}%` },
+  // 회복 옵션 (2026-10-14 사용자): 체력 회복 = 초당 고정(×10 정수 - 소수는 쌓았다가 1씩), 마나 회복 = 기본 회복(직업 manaRegen)에 % 더함
+  lifeRegen:    { label: '체력 회복', min: 2, max: 14, flat: true, fmt: (v) => `초당 +${Math.round(v)}` },
+  manaRegenPct: { label: '마나 회복', min: 0.2, max: 0.9, fmt: (v) => `+${Math.round(v * 100)}%` },
   accuracy:  { label: '명중률',   min: 0.03, max: 0.13, fmt: (v) => `+${Math.round(v * 100)}%` }, // 물리 공격만 (2026-10-12)
   moveSpeed: { label: '이동속도', min: 0.05, max: 0.15, fmt: (v) => `+${Math.round(v * 100)}%` },
   health:    { label: '체력',     min: 10,   max: 30,   flat: true, fmt: (v) => `+${Math.round(v)}` },

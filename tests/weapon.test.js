@@ -19,7 +19,7 @@ it('느린 무기일수록 한 방이 세고, 초당 피해는 비슷하다', as
   const env = installBrowserEnv({ seed: 1 });
   try {
     const m = await boot();
-    const list = Object.keys(m.WEAPON_BASE).map((v) => ({ v, ...m.weaponStats(weapon(v)) }));
+    const list = Object.keys(m.WEAPON_BASE).filter((v) => !m.CASTER_WEAPONS.includes(v)).map((v) => ({ v, ...m.weaponStats(weapon(v)) })); // 지팡이(마법사용)는 근접이 일부러 약함
     const bySpeed = [...list].sort((a, b) => a.interval - b.interval);
     for (let i = 1; i < bySpeed.length; i++) expect((bySpeed[i].min + bySpeed[i].max)).toBeGreaterThan(bySpeed[i - 1].min + bySpeed[i - 1].max);
     const dps = list.map((s) => (s.min + s.max) / 2 / s.interval);
@@ -220,6 +220,7 @@ it('양손 도끼도 대검처럼: 등 뒤에서 내리치는 순간(windup)에 
     resetGame(); game.waveTransition = 999;
     const h = game.hero;
     equipFromInventory(h.inventory.findIndex((it) => it.variant === 'axe'));
+    (await import('../src/state.js')).dev.sureHit = true; // 명중 판정은 이 테스트 대상이 아님
     expect(h.equipment.weaponMain.handedness).toBe('two');
     const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 100000; c.speed = 0;
     const p = { x: h.x + 40, y: h.y }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
