@@ -129,6 +129,23 @@ function drawStaff(ctx) {
   ctx.fill();
 }
 
+// 양손 지팡이 (해골 카우 킹, 2026-10-14 사용자): 몸보다 긴 굵은 자루(손 뒤로도 길게 - 두 손으로 쥠) + 끝에 작은 해골 + 청록 빛
+function drawGreatStaff(ctx, animT = 0) {
+  shaft(ctx, -62, 62, 5, WOOD_DARK);
+  ctx.strokeStyle = '#cfc6b0'; // 뼈 감개 두 곳
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'butt';
+  [[-18, -10], [40, 48]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, 0); ctx.lineTo(b, 0); ctx.stroke(); });
+  const pulse = 1 + Math.sin(animT * 4) * 0.12;
+  ctx.fillStyle = 'rgba(127,255,212,0.28)'; // 빛
+  ctx.beginPath(); ctx.arc(72, 0, 15 * pulse, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8e2d0'; // 작은 해골 (머리 + 턱)
+  ctx.beginPath(); ctx.arc(72, -1, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(66, 4, 12, 5);
+  ctx.fillStyle = '#7fffd4'; // 눈
+  ctx.beginPath(); ctx.arc(69, -2, 1.8, 0, Math.PI * 2); ctx.arc(75, -2, 1.8, 0, Math.PI * 2); ctx.fill();
+}
+
 // 횃불 (버닝 카우 - 일렁이는 불꽃)
 function drawTorch(ctx, animT) {
   shaft(ctx, -26, 30, 5, WOOD_DARK);
@@ -285,6 +302,7 @@ function drawHolyMace(ctx) {
 }
 
 export const WEAPON_DRAW = {
+  greatstaff: (ctx, animT) => drawGreatStaff(ctx, animT),
   holymace: drawHolyMace,
   meatcleaver: drawMeatCleaver, hellcleaver: drawHellCleaver,
   bow: drawBow, greatsword: drawGreatsword, battleaxe: drawBattleAxe, demonblade: (ctx, animT) => drawDemonBlade(ctx, -8, 0, 0, BIG_WEAPON_SCALE, animT),

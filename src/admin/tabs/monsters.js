@@ -20,7 +20,7 @@ const elemTag = (e) => (e ? tag(ELEMENT_DEF[e].label, ELEMENT_DEF[e].color) : '<
 const resistText = (r) => (r ? Object.entries(r).map(([k, v]) => tag(`${k === 'phys' ? '물리' : ELEMENT_DEF[k].label} ${v >= 1 ? '면역' : pct(v)}`, k === 'phys' ? '#ddd' : ELEMENT_DEF[k].color)).join('') : null);
 
 export function renderMonsters(root) {
-  const kinds = Object.keys(MONSTERS);
+  const kinds = Object.keys(MONSTERS).filter((k) => !MONSTERS[k].prop); // 뼈 창살 같은 물체는 몬스터가 아니라 기술 (그 몬스터의 기술 칸에)
   root.append(
     h2('모습'),
     note(`게임과 같은 그림 함수(${src('render/monsterSprites.drawCow')})로 그림 - 대기·걷기·공격·기절 반복. 버튼 = 실제 게임에서 행동하는 미리보기 + 데이터 + 코드`),

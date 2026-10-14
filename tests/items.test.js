@@ -127,10 +127,12 @@ it('무기 종류별 잘 붙는 옵션: 지팡이는 시전속도·마나 회복
   const { rollAffixes } = await import('../src/systems/itemGen.js');
   const { VARIANT_AFFIX_WEIGHT } = await import('../src/data/affixes.js');
   expect(VARIANT_AFFIX_WEIGHT.staff.focus).toBeGreaterThan(1);
+  const { mulberry32 } = await import('./helpers/browserEnv.js');
   const rate = (variant, id) => {
+    const rnd = Math.random; Math.random = mulberry32(7); // 같은 난수로 비교
     let n = 0;
-    for (let i = 0; i < 3000; i++) if (rollAffixes('weapon', 'rare', 30, { variant }).some((a) => a.id.startsWith(id + '_'))) n++;
-    return n / 3000;
+    try { for (let i = 0; i < 4000; i++) if (rollAffixes('weapon', 'magic', 30, { variant }).some((a) => a.id.startsWith(id + '_'))) n++; } finally { Math.random = rnd; }
+    return n / 4000;
   };
   expect(rate('staff', 'focus')).toBeGreaterThan(rate('sword', 'focus') * 1.3);
   expect(rate('staff', 'meditate')).toBeGreaterThan(rate('sword', 'meditate') * 1.3);

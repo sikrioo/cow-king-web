@@ -1,9 +1,11 @@
 // 뼈 감옥 (2026-10-14 사용자: 플레이어의 진로를 가두는 적 - PoE 참고) - behaviors.js의 behaviors에 합쳐짐 (훅 규칙은 behaviors.js 맨 위)
 //   해골 감옥지기(skeletonJailer): 거리를 두고(MONSTER_MOVE) 지팡이를 들어 castTime초 주문 → 그 순간 주인공 자리에 뼈 창살(boneBar) bars개를 둥글게 부름
+//     뼈 창(JAILER_SPEAR): 평소엔 가끔, 주인공이 갇히면 빠르게 쏨 - 창살 틈으로 들어감 (강령술사처럼 가두고 쏨, 2026-10-14 사용자)
 //   뼈 창살(boneBar): 움직이지 않는 작은 '몬스터'(prop) - warn초 동안은 땅의 고리만(밟고 나갈 수 있음) → 솟아올라 duration초 동안 막음 → 무너짐
 //     주인공의 모든 공격으로 부술 수 있음(부수면 그 칸이 열림), 몬스터 투사체는 통과(창살 틈 - 사용자), 경험치·드랍 없음, CC 면역
 // 수치 data/balance.js PRISON, 그림 render/prisonSprites.js
-import { PRISON } from '../data/balance.js';
+import { PRISON, JAILER_SPEAR } from '../data/balance.js';
+import { spawnProjectile } from '../systems/projectiles.js';
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
 import { killCow } from '../systems/combat.js';
@@ -16,7 +18,8 @@ const heroJailed = () => game.cows.some((c) => c.kind === 'boneBar' && c.state !
 
 export const prisonBehaviors = {
   skeletonJailer: {
-    init(m) { m.prisonCd = PRISON.firstCd + Math.random(); },
+    ranged: true,
+    init(m) { m.prisonCd = PRISON.firstCd + Math.random(); m.spearCd = JAILER_SPEAR.spearCd; },
     interrupt(m) { if (m.state === 'casting') m.prisonCd = PRISON.cooldown * 0.5; },
     update(m, dt) {
       m.prisonCd -= dt;
@@ -36,8 +39,18 @@ export const prisonBehaviors = {
         }
         return true;
       }
-      if (!h.alive || m.prisonCd > 0) return false;
-      if (Math.hypot(h.x - m.x, h.y - m.y) > PRISON.range || heroJailed()) return false;
+      if (!h.alive) return false;
+      // 뼈 창: 갇혀 있으면 빠르게
+      m.spearCd -= dt;
+      const dist = Math.hypot(h.x - m.x, h.y - m.y), jailed = heroJailed();
+      if (m.spearCd <= 0 && dist <= JAILER_SPEAR.range) {
+        m.spearCd = jailed ? JAILER_SPEAR.jailedCd : JAILER_SPEAR.spearCd;
+        const oy = m.y - 40 * m.scale, a = Math.atan2(h.y - oy, h.x - m.x);
+        spawnProjectile({ kind: 'bonespear', x: m.x, y: oy, dirX: Math.cos(a), dirY: Math.sin(a), speed: JAILER_SPEAR.speed, range: JAILER_SPEAR.range + 60, radius: JAILER_SPEAR.radius, packet: { phys: JAILER_SPEAR.damage }, color: '#e8e2d0' });
+        if (Math.abs(h.x - m.x) > 1) m.facing = h.x > m.x ? 1 : -1;
+      }
+      if (m.prisonCd > 0) return false;
+      if (dist > PRISON.range || jailed) return false;
       m.prisonCd = PRISON.cooldown;
       m.setState('casting', 0);
       stop(m);

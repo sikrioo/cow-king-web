@@ -441,6 +441,8 @@ export const MONSTER_MOVE = {
 //   → 주인공 자리 둘레(radius)에 뼈 창살 bars개: warn초 동안 땅의 고리(빠져나갈 수 있음) → 솟아 duration초 막음 → 무너짐
 //   창살은 부술 수 있는 움직이지 않는 몬스터(data/monsters.js boneBar, 체력은 거기) - 투사체는 통과. 창살 사이 틈 < 주인공 몸 → 못 지나감
 export const PRISON = { range: 340, firstCd: 3, cooldown: 9, castTime: 0.6, radius: 70, bars: 10, warn: 0.8, duration: 2.5 };
+// 감옥지기 뼈 창 (2026-10-14 사용자: 강령술사처럼 가두고 쏨): spearCd초마다 range 안이면 한 발(물리 damage), 주인공이 갇혀 있으면 jailedCd초마다 - 창살 틈으로 들어감(투사체는 창살을 통과)
+export const JAILER_SPEAR = { range: 380, spearCd: 2.6, jailedCd: 0.8, damage: 30, speed: 330, radius: 7 };
 export const RAT_SQUAD = { rows: 3, cols: 3, spacing: 26, ahead: 50, firstCd: 1.5, cooldown: 10, castTime: 0.8, maxAlive: 18, breakDist: 110, breakBelow: 2, maxMarch: 9, marchMul: 0.9, catchUpMul: 1.5 }; // 2026-10-14 쥐 속도 1.35 → 2.0배(사용자: 느림), 행군 0.85 → 0.9
 // 박치기 뱀 (2026-10-13 사용자: 튕기듯 박치기 돌진, 빗나가면 지나간 뒤 휘돌아 한 번 더 - 이중 돌진)
 //   range 안(minRange 밖)이면 coilTime초 똬리(예고선) → dashSpeed(px/초)로 dashDist 돌진, 맞으면 근접 피해 × dmgMul

@@ -65,7 +65,7 @@ export const MONSTER_WEAPONS = {
   pyro:     ['firestaff'],
   boss:     ['battleaxe'],   // 카우킹: 양손 도끼 (2026-10-11 사용자)
   skeleton: ['club', 'spear'],
-  skeletonKing: ['staff'],
+  skeletonKing: ['greatstaff'], // 양손 지팡이 (2026-10-14 사용자)
   skeletonShield: ['cleaver'],
   skeletonSpear: ['spear'],
   skeletonBrute: ['greatsword', 'battleaxe'],
@@ -103,7 +103,7 @@ export const WEAPON_STYLE = {
   spear: 'thrust', pitchfork: 'thrust', halberd: 'thrust',
   club: 'chop', hammer: 'chop', axe: 'chop',
   cleaver: 'slash', meatcleaver: 'slash', hellcleaver: 'slash',
-  staff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast', holymace: 'cast',
+  staff: 'cast', greatstaff: 'cast', rod: 'cast', firestaff: 'cast', torch: 'cast', holymace: 'cast',
   bow: 'bow',
   greatsword: 'big', battleaxe: 'big', demonblade: 'big'
 };
@@ -136,7 +136,7 @@ export const MONSTER_ROLE = {
   skeletonKing: R('소환', '뒤에서 해골을 부르고 터뜨림', '상황'),
   ratKeeper: R('소환', '멀리서 악마 쥐 부대를 불러 몰아붙임', '상황'), rat: R('돌격', '대형을 지어 행군하다 한꺼번에 덤빔', '공격'),
   snake: R('돌진', '튕기듯 박치기, 빗나가면 돌아서 한 번 더', '공격'),
-  skeletonJailer: R('지원', '뼈 감옥으로 주인공을 가둬 동료가 몰려오게 함', '상황'), boneBar: R('구조물', '감옥 창살 - 부수면 그 칸이 열림', '수비'),
+  skeletonJailer: R('원거리', '뼈 감옥으로 가두고 뼈 창을 쏨 (강령술사)', '상황'), boneBar: R('구조물', '감옥 창살 - 부수면 그 칸이 열림', '수비'),
   boss: R('보스', '1막의 왕 - 강타·돌진·함성', '공격'), demonKing: R('보스', '3막의 군주 - 소환·지옥불·폭발', '상황')
 };
 
@@ -167,7 +167,7 @@ export const MONSTER_SKILLS = {
   ratKeeper: ['악마 쥐 부대 소환(3×3 대형)', '거리 유지'],
   rat: ['부대 대형으로 행군 → 가까워지면 흩어져 물기', '신성에 약함'],
   snake: ['똬리(예고선) → 튕기듯 박치기 돌진', '빗나가면 휘돌아 두 번째 돌진'],
-  skeletonJailer: ['뼈 감옥(고리 예고 0.8초 → 창살 10개가 2.5초 가둠)', '거리 유지'],
+  skeletonJailer: ['뼈 감옥(고리 예고 0.8초 → 창살 10개가 2.5초 가둠, 창살은 부술 수 있음)', '뼈 창(갇히면 빠르게 - 창살 틈으로 들어옴)', '거리 유지'],
   boneBar: ['움직이지 않음 - 부수면 그 칸이 열림', '투사체는 통과', '경험치·드랍 없음'],
   demonCurser: ['저주(약화·둔화·봉인 중 하나, 죽이면 풀림)', '지옥불 구슬', '거리 유지'],
   demonBerserker: ['예고 → 도약 내려찍기', '체력 절반 아래 분노'],

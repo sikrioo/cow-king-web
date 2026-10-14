@@ -70,3 +70,18 @@ it('뼈 감옥: 창살 10개가 둘레에 솟고, 솟으면 못 나가고, 하�
     expect(h.exp === exp && h.level === lv).toBe(true);
   } finally { env.restore(); }
 }, 60000);
+
+it('해골 감옥지기: 사거리 안이면 뼈 창을 쏘고, 주인공이 갇히면 더 빠르게', async () => {
+  const env = installBrowserEnv({ seed: 6 });
+  try {
+    const m = await boot();
+    const h = m.game.hero, cx = m.PEN.size / 2, cy = m.PEN.size / 2;
+    m.Body.setPosition(h.body, { x: cx, y: cy }); h.x = cx; h.y = cy;
+    const j = new m.Monster(0.4, 'skeletonJailer', { pos: { x: cx + 250, y: cy } }); j.prisonCd = 99; j.spearCd = 0;
+    m.game.cows.push(j); m.game.projectiles = [];
+    let shots = 0;
+    for (let i = 0; i < 60 * 3; i++) { const n = m.game.projectiles.length; m.fixedUpdate(1 / 60); if (m.game.projectiles.length > n) shots++; }
+    expect(shots).toBeGreaterThanOrEqual(1);
+    expect(shots).toBeLessThanOrEqual(2); // 평소엔 느리게 (2.6초마다)
+  } finally { env.restore(); }
+}, 60000);
