@@ -1,7 +1,7 @@
 // 세션 흐름: 새 캐릭터(타이틀에서 고른 직업) → 맵 선택(hub) → 맵 입장(enterMap) → 죽음/승리/나가기 → 다시 맵 선택
 // 캐릭터(레벨·스탯·스킬·카드·장비·가방)는 맵을 오가도 그대로 - 영구 저장은 나중에 서버(docs/SERVER_DESIGN.md)
 // 맵 안의 진행(배치·클리어)은 systems/mapRun.js
-import { ATTACK_DURATION, expForLevel } from './data/balance.js';
+import { ATTACK_DURATION, expForLevel, START_POTIONS } from './data/balance.js';
 import { CLASSES } from './data/classes.js';
 import { MAPS, MAP_ORDER } from './data/maps.js';
 import { DIFFICULTY_ORDER } from './data/difficulty.js';
@@ -53,7 +53,7 @@ export function newCharacter() {
   h.gearMaxMana = 0;
   h.materials = 0;
   h.inventory = [];
-  h.potions = { heal: 2, mana: 2 };
+  h.potions = { ...START_POTIONS };
   h.potionCd = { heal: 0, mana: 0 };
   if (cls.starterGear) giveStarterGear(); // gear 보너스 초기화 이후에 호출해야 장착 효과가 덮어써지지 않음
   if (isDevMode()) giveTestStash(); // 개발자 모드: 장비 교체 테스트용 무기/방패 + 원소 테스트 무기

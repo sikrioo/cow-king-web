@@ -2,8 +2,7 @@
 import {
   ATTACK_DURATION, WHIRLWIND_MANA_DRAIN, MOVE_START_ACCEL, MOVE_CRUISE_ACCEL, MOVE_TURN_ACCEL,
   MOVE_REVERSE_ACCEL, MOVE_BRAKE, MOVE_FACING_RESPONSE, WALK_SPEED, RUN_SPEED, MAX_MANA, MANA_REGEN, MAX_STAMINA,
-  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, HERO_SLOW_MULT, expForLevel
-} from '../data/balance.js';
+  STAMINA_DRAIN, STAMINA_REGEN, HERO_BASE_HP, MOVE_ARRIVE_RADIUS, HERO_SLOW_MULT, expForLevel, START_POTIONS } from '../data/balance.js';
 import { clamp01, lerpAngle, moveToward2D } from '../util.js';
 import { World, Bodies, Body, world } from '../core/physics.js';
 import { game, input } from '../state.js';
@@ -98,7 +97,7 @@ export function createHero() {
     shieldTimer: 0, shieldMax: 0, shieldHp: 0, shieldHpMax: 0, // 에너지 쉴드 - 남은 시간, 남은 흡수량 (systems/groundSpells.js)
     aimX: null, aimY: null, // 조준 지점 (systems/aim.js)
     pendingSwing: null, // 대검 내리치기 대기 { t, ws, onHit, heavy } (systems/combat.updatePendingSwing)
-    potions: { heal: 2, mana: 2 }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
+    potions: { ...START_POTIONS }, // 가방과 별개로 보관하는 생명/마나 물약 (1·2키 / 화면 버튼으로 마심)
     potionCd: { heal: 0, mana: 0 }, // 종류별 대기시간 (생명 마신 직후에도 마나는 바로 마실 수 있게)
     moveOffsetX: 0,
     moveOffsetY: 0,

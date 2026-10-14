@@ -142,6 +142,7 @@ export const ARMOR_MAX_REDUCTION = 0.6;
 
 // --- 물약
 export const POTION_MAX = 6;           // 종류별 보관 한도
+export const START_POTIONS = { heal: 5, mana: 5 }; // 새 캐릭터 시작 물약 (2026-10-14 사용자: 2 → 5)
 export const POTION_COOLDOWN = 1.2;    // 물약 사이 대기시간 (연타 방지)
 export const POTION_HEAL_RATIO = 0.5;  // 생명 물약: 최대 체력의 50% 회복
 export const POTION_MANA_AMOUNT = 60;  // 마나 물약: 마나 60 회복

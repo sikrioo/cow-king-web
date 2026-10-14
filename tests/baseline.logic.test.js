@@ -80,13 +80,14 @@ beforeAll(async () => {
     // 5) 물약
     fresh();
     const o = {}; ui.showInventory = false;
-    tryDrinkPotion('heal'); o.fullHpDoesNotConsume = hero().potions.heal === 2;
+    const p0 = hero().potions.heal, m0 = hero().potions.mana; // 시작 물약 수 (2026-10-14 2 → 5, data/balance.js START_POTIONS) - 개수가 아니라 줄었는지를 봄
+    tryDrinkPotion('heal'); o.fullHpDoesNotConsume = hero().potions.heal === p0;
     const h0 = 30; // 레거시 체력 3 = 새 단위 30
     hero().hp = h0; hero().potionCd = { heal: 0, mana: 0 };
     const maxHp = hero().maxHp + hero().bonusMaxHp + hero().gearMaxHp;
-    tryDrinkPotion('heal'); o.healAmountIsHalfMaxCeil = (hero().hp - h0) === Math.min(Math.ceil(maxHp * 0.5), maxHp - h0); o.healConsumed = hero().potions.heal === 1;
-    hero().mana = 10; tryDrinkPotion('mana'); o.manaAdds60 = hero().mana === 70; o.otherTypeNotBlockedByCooldown = hero().potions.mana === 1;
-    tryDrinkPotion('heal'); o.sameTypeBlockedByCooldown = hero().potions.heal === 1;
+    tryDrinkPotion('heal'); o.healAmountIsHalfMaxCeil = (hero().hp - h0) === Math.min(Math.ceil(maxHp * 0.5), maxHp - h0); o.healConsumed = hero().potions.heal === p0 - 1;
+    hero().mana = 10; tryDrinkPotion('mana'); o.manaAdds60 = hero().mana === 70; o.otherTypeNotBlockedByCooldown = hero().potions.mana === m0 - 1;
+    tryDrinkPotion('heal'); o.sameTypeBlockedByCooldown = hero().potions.heal === p0 - 1;
     out.exact.potions = Object.assign(o, { max: POTION_MAX, cooldown: POTION_COOLDOWN, healRatio: POTION_HEAL_RATIO, manaAmount: POTION_MANA_AMOUNT, dropWeights: POTION_DROP_WEIGHTS });
 
     // 6) 휠윈드: 4마리를 반경 안에 가둔 최악 조건에서의 사망 시점
