@@ -101,7 +101,12 @@ export function decide(obs, mem, dt) {
     return a;
   }
   mem.flowT = 0;
-  if (obs.cards) { a.card = chooseCard(obs); return a; }
+  if (obs.cards) { // 카드는 cardWait초 보여 준 뒤 고름 (게임은 카드가 떠 있는 동안 멈춰 있음)
+    mem.cardT = (mem.cardT || 0) + dt;
+    if (mem.cardT >= BOT.cardWait) { mem.cardT = 0; a.card = chooseCard(obs); }
+    return a;
+  }
+  mem.cardT = 0;
   const h = obs.hero;
   if (!h.alive || obs.paused) return a;
 
