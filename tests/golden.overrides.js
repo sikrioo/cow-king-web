@@ -24,6 +24,8 @@ export const GOLDEN_OVERRIDES = {
   'exact.waveSizes': [16, 22, 28, 34, 40, 8],
   // 2026-10-14: 시작 물약 2 → 5 (사용자 - 봇 보고서에서 전사가 초반에 물약이 모자라 죽음)
   'exact.start.potions': { heal: 5, mana: 5 },
+  // 2026-10-14: 전사 체력 150 → 230 + 직업 기본 방어력 100 (사용자: 전사는 답답하지만 단단하게)
+  'exact.start.maxHp': 230,
   // 2026-10-12: 스탯 포인트 1점당 수치를 최대 레벨 100·장비 수치 기준으로 낮춤, 공격력 포인트는 무기 피해 % (사용자 결정)
   'exact.progression.perPoint.defense': 0.0015,
   'exact.progression.perPoint.evasion': 0.0015,

@@ -51,7 +51,8 @@ it('장착 방어구 합계가 주인공에 반영되고, 블락/회피 실패 �
     const m = await boot();
     m.resetGame();
     const h = m.game.hero;
-    const expected = Object.values(h.equipment).filter((x) => x && x !== 'LOCKED').reduce((s, x) => s + m.gearArmor(x), 0);
+    const { CLASSES } = await import('../src/data/classes.js');
+    const expected = Object.values(h.equipment).filter((x) => x && x !== 'LOCKED').reduce((s, x) => s + m.gearArmor(x), 0) + (CLASSES[h.classKey].armor || 0); // + 직업 기본 방어력 (2026-10-14)
     expect(h.gearArmor).toBe(expected);
     expect(h.gearArmor).toBeGreaterThan(0); // 시작 방패
     expect(h.armorReduction).toBe(m.armorReduction(expected));

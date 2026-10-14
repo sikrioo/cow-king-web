@@ -10,6 +10,7 @@ import {
 } from '../data/items.js';
 import { rollGearItem, nextItemUid } from './itemGen.js';
 import { armorReductionOf } from '../util.js';
+import { CLASSES } from '../data/classes.js';
 
 export { rollGearItem, rollRarity, nextItemUid } from './itemGen.js';
 import { game, ui } from '../state.js';
@@ -256,6 +257,7 @@ export function recalcGearStats() {
     armor += gearArmor(it);
     addStats(it.stats, it);
   });
+  armor += (CLASSES[game.hero.classKey] || {}).armor || 0; // 직업 기본 방어력 (data/classes.js - 전사가 단단하게)
   if (game.hero.devStats) addStats(game.hero.devStats, null); // 개발자 패널 스탯 (systems/dev.js devAddStat) - 보이지 않는 장비처럼
 
   // 레벨업으로 분배한 포인트도 같은 합계에 더함(아래 gearXXX 필드는 "장비+레벨+카드" 합산치)
