@@ -3,7 +3,7 @@ import {
   RARITY_DEF, WEAPON_BASE, TWO_HAND_DAMAGE_MULT, TWO_HAND_SPEED_MULT, GEAR_BASE_ARMOR, STAT_DEF, GEAR_CATEGORY_LABEL,
   GEAR_VARIANT_LABEL, OPTION_ROLL_SKEW, ROLL_QUALITY
 } from '../../data/items.js';
-import { AFFIXES, AFFIX_RULES, MAX_ITEM_LEVEL } from '../../data/affixes.js';
+import { AFFIXES, AFFIX_RULES, MAX_ITEM_LEVEL, VARIANT_AFFIX_WEIGHT } from '../../data/affixes.js';
 import { el, table, h2, note, src, tag, pct, select, barPct } from '../ui.js';
 
 const rarityTag = (r) => tag(RARITY_DEF[r].label, RARITY_DEF[r].color);
@@ -40,6 +40,11 @@ export function renderItems(root) {
       { label: '초당 공격', num: true, get: (v) => WEAPON_BASE[v].aps },
       { label: '양손 피해', num: true, get: (v) => `${Math.round(WEAPON_BASE[v].min * TWO_HAND_DAMAGE_MULT)}~${Math.round(WEAPON_BASE[v].max * TWO_HAND_DAMAGE_MULT)}` }
     ], Object.keys(WEAPON_BASE)),
+    h3('무기 종류별 잘 붙는 옵션 (가중치 배율 - 없으면 ×1, 검은 기준)'),
+    table([
+      { label: '무기', get: (v) => GEAR_VARIANT_LABEL[v] || v },
+      { label: '잘 붙는 옵션', get: (v) => Object.entries(VARIANT_AFFIX_WEIGHT[v]).map(([id, w]) => { const a = AFFIXES.find((x) => x.family === id); const k = a && Object.keys(a.mods)[0]; return `${k && STAT_DEF[k] ? STAT_DEF[k].label : id} ×${w}`; }).join(', ') }
+    ], Object.keys(VARIANT_AFFIX_WEIGHT)),
     h3('방어구 기본 방어력'),
     table([{ label: '부위', get: (k) => GEAR_CATEGORY_LABEL[k] || k }, { label: '방어력', num: true, get: (k) => GEAR_BASE_ARMOR[k] }], Object.keys(GEAR_BASE_ARMOR))
   );

@@ -67,7 +67,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
   새 카드 종류(수습생의 마법 등)는 `rollCards`의 뽑기 풀에 추가.
 - 아이템 표시: `ui/itemView.js` 한 곳. 장비는 순수 데이터 + `uid` + 접사 기록(`affixes`) + 능력치 합계(`stats`).
 - 아이템 생성(디아식 핵심만, 고유 이름·세트 없음): `systems/itemGen.js`. 접사 = `data/affixes.js`(접두/접미, 그룹 중복 금지, 티어별 접사 레벨·수치·가중치, 부위 제한, 매직 전용 최상위 티어, 하이브리드). 등급별 개수 `AFFIX_RULES`(일반 0 / 매직 1~2 / 레어 3~6 / 레전드 5~6).
-  아이템 레벨 = 몬스터 레벨(`util.monsterLevel`: 난이도 `mlvl` + 웨이브/맵 + 엘리트·보스) → 붙을 수 있는 티어. 드랍 테이블 `data/drops.js`(출처 normal/elite/boss/mapBoss별 드랍 종류·등급 비중, `loot.dropSource`). 새 옵션 = `STAT_DEF`(능력치 이름) + affixes 계열 하나 + 적용 코드(recalcGearStats 등).
+  아이템 레벨 = 몬스터 레벨(`util.monsterLevel`: 난이도 `mlvl` + 웨이브/맵 + 엘리트·보스) → 붙을 수 있는 티어. 드랍 테이블 `data/drops.js`(출처 normal/elite/boss/mapBoss별 드랍 종류·등급 비중, `loot.dropSource`). 새 옵션 = `STAT_DEF`(능력치 이름) + affixes 계열 하나 + 적용 코드(recalcGearStats 등). 무기 종류별 잘 붙는 옵션은 같은 파일 `VARIANT_AFFIX_WEIGHT`(계열 → 배율, 종류를 먼저 정한 뒤 접사 추첨).
 - 스탯 키 `defense`는 **블락률**(데미지를 통째로 막을 확률)이다. 골든 호환 때문에 키 이름 유지.
 - 무기 기본 속성: `data/items.js`의 `WEAPON_BASE`(종류별 피해 min~max, 초당 공격 aps) + 양손 배율. 계산 `systems/gear.js`의 `weaponStats` → `hero.weaponStats {main, off}`, 피해 굴림 `combat.heroHitDamage`. 쌍수는 주/보조 번갈아. 맨손은 `BASE_DAMAGE`/`ATTACK_COOLDOWN`.
 - 원소(화염/냉기/번개/독): 수치·색 `data/elements.js`, 규칙 `systems/elements.js`(피해 묶음 `{phys, fire, cold, lightning, poison}` → 물리=방어력, 원소=저항(상한 75%), 화상/중독 지속 피해, 둔화). `hitPlayer`는 숫자(물리) 또는 묶음을 받음. 몬스터 근접 원소는 `data/monsters.js`의 `element`. 1단계(10-06) 주인공이 받는 쪽, 마법사(10-07)로 몬스터 저항·상태 추가. 남은 것: 무기 원소 피해 옵션·주인공 저항 옵션.

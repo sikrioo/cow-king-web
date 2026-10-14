@@ -122,3 +122,17 @@ it('드랍 테이블: 출처(일반/엘리트/카우킹/우두머리)별 등급 
     expect(monsterLevel(run('extreme', 'barn'), 0, 'tough', true)).toBeGreaterThan(monsterLevel(run('normal', 'barn'), 0, 'tough', true));
   } finally { env.restore(); }
 });
+
+it('무기 종류별 잘 붙는 옵션: 지팡이는 시전속도·마나 회복이, 도끼는 강타가 검보다 자주 (가중치 배율)', async () => {
+  const { rollAffixes } = await import('../src/systems/itemGen.js');
+  const { VARIANT_AFFIX_WEIGHT } = await import('../src/data/affixes.js');
+  expect(VARIANT_AFFIX_WEIGHT.staff.focus).toBeGreaterThan(1);
+  const rate = (variant, id) => {
+    let n = 0;
+    for (let i = 0; i < 3000; i++) if (rollAffixes('weapon', 'rare', 30, { variant }).some((a) => a.id.startsWith(id + '_'))) n++;
+    return n / 3000;
+  };
+  expect(rate('staff', 'focus')).toBeGreaterThan(rate('sword', 'focus') * 1.3);
+  expect(rate('staff', 'meditate')).toBeGreaterThan(rate('sword', 'meditate') * 1.3);
+  expect(rate('axe', 'crush')).toBeGreaterThan(rate('sword', 'crush') * 1.3);
+});

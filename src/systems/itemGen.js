@@ -4,7 +4,7 @@
 //   affixes는 원본 기록(어떤 접사·티어·굴림이었는지), stats는 능력치 합계(장착 계산·비교에 씀 - 강화하면 stats만 커짐)
 // 게임 난수(Math.random) 사용 - systems에서만
 import { STAT_DEF, RARITY_DEF, WEAPON_VARIANTS, ACCESSORY_VARIANTS, OPTION_ROLL_SKEW, TWO_HAND_ONLY } from '../data/items.js';
-import { AFFIXES, AFFIX_RULES, MAX_ITEM_LEVEL } from '../data/affixes.js';
+import { AFFIXES, AFFIX_RULES, MAX_ITEM_LEVEL, VARIANT_AFFIX_WEIGHT } from '../data/affixes.js';
 import { DROP_RATES, GEAR_CATEGORY_WEIGHTS } from '../data/drops.js';
 import { game } from '../state.js';
 
@@ -46,7 +46,7 @@ function rollMods(affix) {
 }
 
 // 접사 고르기: 등급 규칙(개수·구성·방향당 최대) + 후보 조건(부위·접사 레벨·매직 전용·그룹 중복)
-//   후보가 모자라면 붙을 수 있는 만큼만 (낮은 레벨·좁은 부위). opts.noElement: 원소 피해 접사 제외
+//   후보가 모자라면 붙을 수 있는 만큼만 (낮은 레벨·좁은 부위). opts.noElement: 원소 피해 접사 제외, opts.variant: 무기 종류 - 잘 붙는 옵션 가중치(VARIANT_AFFIX_WEIGHT)
 export function rollAffixes(category, rarity, ilvl, opts = {}) {
   const rule = AFFIX_RULES[rarity] || AFFIX_RULES.normal;
   const alvl = Math.min(MAX_ITEM_LEVEL, ilvl + (rule.alvlBonus || 0));
@@ -73,7 +73,8 @@ export function rollAffixes(category, rarity, ilvl, opts = {}) {
     let list = candidates(side);
     if (!list.length) { side = side === 'prefix' ? 'suffix' : 'prefix'; list = candidates(side); } // 한쪽이 다 차거나 없으면 다른 쪽
     if (!list.length) break;
-    const a = pickWeighted(list.map((x) => [x, x.weight]));
+    const vw = VARIANT_AFFIX_WEIGHT[opts.variant] || {};
+    const a = pickWeighted(list.map((x) => [x, x.weight * (vw[x.family] || 1)])); // 계열(family) 단위
     usedGroups.add(`${side}:${a.group}`);
     count[side]++;
     chosen.push(rollMods(a));
@@ -94,12 +95,12 @@ export function rollGearItem(opts = {}) {
   const handedness = category === 'weapon' ? (opts.handedness || (Math.random() < 0.5 ? 'two' : 'one')) : null;
   const rarity = opts.rarity || rollRarity(opts.rarityBoost || 1, opts.source || 'normal');
   const ilvl = Math.max(1, Math.min(MAX_ITEM_LEVEL, Math.round(opts.ilvl || (game.hero && game.hero.level) || 1)));
-  const affixes = rollAffixes(category, rarity, ilvl, opts);
-  let variant = opts.variant || null;
+  let variant = opts.variant || null; // 종류를 먼저 (무기 종류마다 잘 붙는 옵션이 달라서 - 2026-10-14)
   if (!variant) {
     if (category === 'weapon') variant = WEAPON_VARIANTS[Math.floor(Math.random() * WEAPON_VARIANTS.length)];
     else if (category === 'accessory') variant = ACCESSORY_VARIANTS[Math.floor(Math.random() * ACCESSORY_VARIANTS.length)];
   }
+  const affixes = rollAffixes(category, rarity, ilvl, { ...opts, variant });
   const hand = TWO_HAND_ONLY.includes(variant) ? 'two' : handedness; // 대검은 언제나 양손
   return { category, handedness: hand, rarity, ilvl, affixes, stats: sumAffixStats(affixes), upgradeLevel: 0, identified: !!opts.identified, variant, uid: nextItemUid() };
 }

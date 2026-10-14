@@ -99,3 +99,14 @@ export const AFFIX_RULES = {
   legendary: { count: { 5: 50, 6: 50 }, maxPerSide: 3, alvlBonus: 6 }
 };
 export const MAX_ITEM_LEVEL = 30; // 아이템/접사 레벨 상한 (주인공 최대 레벨과 같음)
+
+// 무기 종류별 잘 붙는 옵션 (2026-10-14 사용자): 접사 계열(family) → 가중치 배율 (없으면 1). 막지 않고 확률만 1.5~2배 - 무기마다 성격, 파밍 목표
+//   검은 기준(고르게). systems/itemGen.js rollAffixes가 곱함
+export const VARIANT_AFFIX_WEIGHT = {
+  axe:        { crush: 2, power: 1.5 },
+  mace:       { crush: 1.5, knock: 2 },
+  dagger:     { haste: 2, poison: 2, precise: 1.5 },
+  spear:      { precise: 2, leechLife: 1.5 },
+  greatsword: { power: 2, crush: 1.5 },
+  staff:      { focus: 2, meditate: 2, skillSorc: 2 }
+};
