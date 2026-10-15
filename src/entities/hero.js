@@ -12,7 +12,7 @@ import { updateWhirlwind, updateLeap, updateRush, updateGroundSmash } from '../s
 import { emptySpellCooldowns } from '../systems/sorcSkills.js';
 import { unarmedStats } from '../systems/gear.js';
 import { emptyResist, emptyDot } from '../systems/elements.js';
-import { tryBasicAttack, basicAttackReady, basicAttackReach } from '../systems/skills.js';
+import { slotAttack, slotAttackReady, slotReach } from '../systems/skills.js';
 import { updateFlurry } from '../systems/physSkills.js';
 import { SPELLS } from '../data/skills.js';
 import { curseMul } from '../systems/curses.js';
@@ -123,17 +123,17 @@ export function createHero() {
   return hero;
 }
 
-// 클릭 공격: 사거리 밖이면 다가갈 방향을 돌려주고, 사거리 안이면 멈춰서 적을 보고 기본 공격
-// 버튼을 뗀 상태면 한 번 휘두른 뒤 목표 해제 (자동 공격 없음)
+// 클릭 공격: 사거리 밖이면 다가갈 방향을 돌려주고, 사거리 안이면 멈춰서 적을 보고 슬롯1 스킬 (2026-10-15 - 기본 공격은 슬롯1이 기본 공격일 때만)
+// 버튼을 뗀 상태면 한 번 쓴 뒤 목표 해제 (자동 공격 없음)
 function clickAttackStep() {
   const c = input.attackTarget;
   if (!c || c.state === 'dead' || !game.cows.includes(c)) { input.attackTarget = null; return null; }
   const tx = c.x - game.hero.x, ty = c.y - game.hero.y;
   const d = Math.hypot(tx, ty) || 1;
-  if (d > basicAttackReach(c)) return { x: tx / d, y: ty / d };
+  if (d > slotReach(c, 1)) return { x: tx / d, y: ty / d };
   game.hero.facing = Math.atan2(ty, tx);
-  if (basicAttackReady()) {
-    tryBasicAttack();
+  if (slotAttackReady(1)) {
+    slotAttack(1);
     if (!input.attackHeld) input.attackTarget = null;
   }
   return null;

@@ -4,6 +4,7 @@
 import { BOT_BUILD, BOT_UPKEEP } from '../data/bot.js';
 import { GEAR_SLOTS } from '../data/items.js';
 import { SKILL_META } from '../data/skills.js';
+import { CLASSES } from '../data/classes.js';
 import { game, ui } from '../state.js';
 import { trySpendStatPoint, isSkillUnlocked } from '../systems/progression.js';
 import { tryIdentify, equipFromInventory, tryUpgradeSlot, weaponStats, gearArmor } from '../systems/gear.js';
@@ -66,12 +67,14 @@ function upgradeGear() {
 }
 
 // 배운 스킬 중 우선순위 앞의 둘을 슬롯1·2에 (오라·무기 특수기는 휴리스틱이 다루지 않아 뺌)
+// 슬롯1 = 기본 공격(클릭 공격이 슬롯1이라 마나가 없어도 싸울 수 있게 - 2026-10-15), 슬롯2 = 배운 스킬 중 우선순위 맨 앞
 function fillSlots() {
-  const h = game.hero;
-  const want = buildOf().skills.filter((id) => isSkillUnlocked(id) && !SKILL_META[id].aura && specialUsable(h, id)).slice(0, 2);
-  want.forEach((id, n) => {
-    const key = n === 0 ? 'slot1' : 'slot2';
-    for (let i = 0; i < 40 && h[key] !== id; i++) { const before = h[key]; cycleSkillSlot(n + 1); if (h[key] === before) break; }
+  const h = game.hero, basic = (CLASSES[h.classKey] || CLASSES.warrior).slots[0];
+  const best = buildOf().skills.find((id) => isSkillUnlocked(id) && !SKILL_META[id].aura && specialUsable(h, id) && id !== basic);
+  [[1, basic], [2, best]].forEach(([n, id]) => {
+    const key = n === 1 ? 'slot1' : 'slot2';
+    if (!id) return;
+    for (let i = 0; i < 40 && h[key] !== id; i++) { const before = h[key]; cycleSkillSlot(n); if (h[key] === before) break; }
   });
 }
 

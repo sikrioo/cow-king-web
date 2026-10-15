@@ -11,7 +11,7 @@ import { applyCC } from './cc.js';
 import { PALETTE } from '../data/palette.js';
 import { SKILL_META, SPELLS, SKILL_STATS, COMMON_SKILLS, AURA_SWITCH } from '../data/skills.js';
 import { CLASSES } from '../data/classes.js';
-import { CLICK_ATTACK_RANGE_SLACK } from '../data/balance.js';
+import { CLICK_ATTACK_RANGE_SLACK, SLOT_REACH_RATIO } from '../data/balance.js';
 import { Body } from '../core/physics.js';
 import { game, ui, input } from '../state.js';
 import { applyKnockback } from '../entities/actor.js';
@@ -368,6 +368,27 @@ export function basicAttackReach(c) {
   return getWeaponRange() + getCowHitRadius(c) - CLICK_ATTACK_RANGE_SLACK;
 }
 
+// 클릭 공격 = 슬롯 스킬 (2026-10-15 사용자: 원칙적으로 슬롯에 있는 기술만 - 마력탄이 슬롯에 없으면 안 나감)
+//   슬롯이 기본 공격(전사 '공격' / 마법사 '마력탄')이면 기본 공격, 아니면 그 스킬 (대기시간·마나는 스킬 규칙대로)
+const isBasicSlot = (id) => id === 'attack' || id === 'bolt';
+const slotId = (n) => (n === 2 ? game.hero.slot2 : game.hero.slot1);
+// 적 c에게 슬롯 n 스킬을 쓰려면 이만큼 가까이 (사거리 있는 스킬은 사거리, 그 밖은 무기 거리)
+export function slotReach(c, n = 1) {
+  const id = slotId(n);
+  if (isBasicSlot(id)) return basicAttackReach(c);
+  const range = (SPELLS[id] && SPELLS[id].range) || (SKILL_STATS[id] && SKILL_STATS[id].range);
+  if (range) return range * SLOT_REACH_RATIO;
+  const radius = SPELLS[id] && SPELLS[id].radius; // 내 주변 마법(서리노바 등)
+  return radius ? radius * SLOT_REACH_RATIO : getWeaponRange() + getCowHitRadius(c) - CLICK_ATTACK_RANGE_SLACK;
+}
+export function slotAttackReady(n = 1) {
+  const id = slotId(n);
+  return isBasicSlot(id) ? basicAttackReady() : SKILLS[id].cd() <= 0;
+}
+export function slotAttack(n = 1, repeat = false) {
+  if (isBasicSlot(slotId(n))) tryBasicAttack(); else trySlot(n, repeat);
+}
+
 export function cycleSkillSlot(slotNum) {
   const key = slotNum === 1 ? 'slot1' : 'slot2';
   const otherKey = slotNum === 1 ? 'slot2' : 'slot1';
@@ -409,6 +430,6 @@ export function updateSkillSlots() {
   if (game.gameState !== 'playing' || game.paused || ui.showInventory) return;
   if (input.holdSlot1) trySlot(1, true);
   if (input.holdSlot2) trySlot(2, true);
-  // Shift+좌클릭 제자리 공격 (캐릭터의 기본 공격)
-  if (input.standAttackHeld && basicAttackReady()) { aimAtCursor(); tryBasicAttack(); }
+  // Shift+좌클릭 제자리 공격 = 슬롯1 (기본 공격이 슬롯1일 때만 기본 공격)
+  if (input.standAttackHeld && slotAttackReady(1)) { if (isBasicSlot(game.hero.slot1)) aimAtCursor(); slotAttack(1, true); }
 }

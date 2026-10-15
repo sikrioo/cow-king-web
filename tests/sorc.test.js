@@ -184,3 +184,27 @@ it('판정은 그림의 몸통 기준: 발밑이 아니라 몸통 위쪽을 지�
     expect(cowEdgeDist(c, b.x, b.y - b.r * 0.5)).toBeLessThanOrEqual(0); // 몸통 클릭 지점은 적 위
   } finally { env.restore(); }
 });
+
+it('클릭 공격 = 슬롯1 스킬: 화염구가 슬롯1이면 화염구, 마력탄은 슬롯에 없으면 안 나감 (2026-10-15)', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await bootSorc();
+    const { input } = await import('../src/state.js');
+    const { Monster } = await import('../src/entities/monster.js');
+    const { Body } = await import('../src/core/physics.js');
+    const h = m.game.hero;
+    h.mana = 999; h.skillLevels.balllightning = 1;
+    h.slot1 = 'fireball'; h.slot2 = 'balllightning';
+    m.game.cows = []; m.game.waveTransition = 1e9;
+    const c = new Monster(0.4, 'normal'); c.hp = c.maxHp = 99999; c.speed = 0;
+    const p = { x: h.x + 150, y: h.y }; Body.setPosition(c.body, p); c.x = p.x; c.y = p.y;
+    m.game.cows.push(c);
+    m.game.projectiles = [];
+    input.attackTarget = c; input.attackHeld = true;
+    const kinds = new Set();
+    for (let i = 0; i < 90; i++) { m.fixedUpdate(1 / 60); m.game.projectiles.forEach((q) => kinds.add(q.kind)); }
+    expect(kinds.has('fireball')).toBe(true);
+    expect(kinds.has('bolt')).toBe(false);
+    input.attackTarget = null; input.attackHeld = false;
+  } finally { env.restore(); }
+});
