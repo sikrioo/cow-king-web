@@ -93,6 +93,7 @@ export const input = {
   mouseMoveHeld: false, // 좌클릭을 누른 채 끄는 중 (커서를 계속 따라감)
   attackTarget: null, // 클릭한 적 - 사거리까지 걸어가서 공격. 누르고 있는 동안(attackHeld)은 계속, 떼면 한 번 치고 끝
   attackHeld: false,
+  attackFired: false,     // 이번 클릭으로 이미 공격했는지 (클릭 한 번 = 한 번)
   standAttackHeld: false, // Shift+좌클릭: 제자리에서 커서 방향으로 기본 공격 (누르는 동안 계속)
   mouseScreen: null, // 마지막 마우스 위치(캔버스 px) - PC에서 스킬/공격을 커서 방향으로. 터치만 쓰면 null
   joystick: { active: false, id: null, baseX: 0, baseY: 0, dx: 0, dy: 0, magnitude: 0 }

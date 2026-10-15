@@ -161,6 +161,7 @@ export function bindInput(actions) {
         // 적 클릭: 그 적에게 가서 공격 (누르고 있는 동안 계속)
         input.attackTarget = cow;
         input.attackHeld = true;
+        input.attackFired = false; // 새 클릭 (hero.clickAttackStep: 한 번 쏘면 뗄 때 끝)
         input.moveTarget = null;
         return;
       }

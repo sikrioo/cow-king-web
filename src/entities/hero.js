@@ -132,8 +132,10 @@ function clickAttackStep() {
   const d = Math.hypot(tx, ty) || 1;
   if (d > slotReach(c, 1)) return { x: tx / d, y: ty / d };
   game.hero.facing = Math.atan2(ty, tx);
+  if (!input.attackHeld && input.attackFired) { input.attackTarget = null; return null; } // 클릭 한 번 = 한 번 (뗀 뒤 대기시간이 끝나 한 번 더 쏘던 문제 - 2026-10-15)
   if (slotAttackReady(1)) {
     slotAttack(1);
+    input.attackFired = true;
     if (!input.attackHeld) input.attackTarget = null;
   }
   return null;

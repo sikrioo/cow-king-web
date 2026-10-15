@@ -225,3 +225,28 @@ it('마력탄은 기본 공격이라 명중 판정 - 높은 레벨 몬스터에�
     expect(hits).toBeLessThan(shots); // 일부 빗나감
   } finally { env.restore(); }
 });
+
+it('적 클릭 한 번 = 한 발 (뗀 뒤 대기시간이 끝나 한 발 더 나가지 않음), 누르고 있으면 계속 (2026-10-15)', async () => {
+  const env = installBrowserEnv({ seed: 1 });
+  try {
+    const m = await bootSorc();
+    const { input } = await import('../src/state.js');
+    const h = m.game.hero;
+    const c = m.place(200);
+    const shots = (frames, holdFrames) => {
+      let n = 0; const seen = new Set();
+      input.attackTarget = c; input.attackHeld = true; input.attackFired = false;
+      for (let i = 0; i < frames; i++) {
+        if (i === holdFrames) input.attackHeld = false;
+        m.fixedUpdate(1 / 60);
+        m.game.projectiles.forEach((p) => { if (!seen.has(p)) { seen.add(p); n++; } });
+      }
+      input.attackTarget = null; input.attackHeld = false;
+      return n;
+    };
+    h.slot1 = 'bolt';
+    expect(shots(70, 6)).toBe(1);        // 짧게 클릭
+    h.spellCd.bolt = 0;
+    expect(shots(90, 90)).toBeGreaterThanOrEqual(3); // 1.5초 누름 (0.42초마다)
+  } finally { env.restore(); }
+});
