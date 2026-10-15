@@ -6,8 +6,8 @@ import { game } from '../state.js';
 import { TEAM_MONSTER } from './actor.js';
 import { getAuraSpeedMult, behaviors } from './behaviors.js';
 import { hitPlayer } from '../systems/combat.js';
-import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS, MONSTER_MOVE } from '../data/balance.js';
-import { moveByRule } from './movement.js';
+import { HUNT_SPEED_MULT, HOME_WANDER_RADIUS, MONSTER_MOVE, MELEE_SOCKETS } from '../data/balance.js';
+import { moveByRule, socketAngle } from './movement.js';
 import { randomPointInPen, clampToPen } from '../world/arena.js';
 import { monsterLevel } from '../util.js';
 import { decoyFor, hitDecoy } from '../systems/physSkills.js';
@@ -187,6 +187,24 @@ export class Monster {
       Body.setVelocity(this.body, { x: (dxP / distP) * sp, y: (dyP / distP) * sp });
       if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1;
       return;
+    }
+
+    // 둘러싸기 자리가 있으면 그 자리로 (entities/movement.js assignSockets - 앞으로만 몰리지 않게). 바깥 자리면 거기서 기다림
+    if (playerNear && !decoy && this.socketIdx != null && !isRangedKiter) {
+      const S = MELEE_SOCKETS, inner = this.socketIdx < S.inner, a = socketAngle(this.socketIdx);
+      const r = this.meleeRange * (inner ? S.innerMul : S.outerMul);
+      // 자리가 반대편이면 주인공을 가로지르지 않고 둘레를 따라 조금씩 (한 번에 arcStep 라디안씩)
+      const cur = Math.atan2(-dyP, -dxP);
+      let da = a - cur; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2;
+      const goA = Math.abs(da) > S.arcStep ? cur + Math.sign(da) * S.arcStep : a, goR = Math.abs(da) > S.arcStep ? Math.max(r, distP) : r;
+      const tx = game.hero.x + Math.cos(goA) * goR - this.x, ty = game.hero.y + Math.sin(goA) * goR - this.y, td = Math.hypot(tx, ty);
+      if (!(inner && Math.abs(da) <= S.arcStep && td <= S.arrive)) { // 안쪽 자리에 도착하면 아래 공격으로
+        this.state = td > 6 ? 'walk' : 'idle';
+        const sp = this.speed * auraMult / 60 * (Math.abs(da) > S.arcStep ? S.flankMul : 1); // 둘레를 돌아 자리 잡는 동안은 조금 빠르게
+        Body.setVelocity(this.body, td > 6 ? { x: (tx / td) * sp, y: (ty / td) * sp } : { x: 0, y: 0 });
+        if (Math.abs(dxP) > 1) this.facing = dxP > 0 ? 1 : -1; // 주인공을 보며
+        return;
+      }
     }
 
     if (playerNear && distP > this.meleeRange && !isRangedKiter) {

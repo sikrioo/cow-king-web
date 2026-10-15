@@ -15,16 +15,14 @@ async function run(cls, seed) {
     const m = { ...(await import('../src/state.js')), ...(await import('../src/game.js')), ...(await import('../src/bot/bot.js')), ...(await import('../src/bot/upkeep.js')), ...(await import('../src/data/items.js')) };
     m.ui.selectedClass = cls;
     m.setBot(true);
-    let level = 0, kills = 0, lastKills = 0;
+    let level = 0;
     for (let i = 0; i < SECONDS * 60; i++) {
       m.fixedUpdate(1 / 60);
       level = Math.max(level, m.game.hero.level);
-      if (m.game.kills < lastKills) kills += lastKills; // 새 판에서 처치 수가 0으로 돌아감
-      lastKills = m.game.kills;
     }
     const s = m.botStats();
     const h = m.game.hero, gear = Math.round(m.GEAR_SLOTS.reduce((t, k) => t + m.gearScore(h.equipment[k]), 0));
-    return { cls, seed, runs: s.runs, deaths: s.deaths, act: s.bestAct + 1, wave: s.bestWave, level, kills: kills + lastKills, slots: `${h.slot1}/${h.slot2}`, gear };
+    return { cls, seed, runs: s.runs, deaths: s.deaths, act: s.bestAct + 1, wave: s.bestWave, level, kills: s.kills, slots: `${h.slot1}/${h.slot2}`, gear };
   } finally { env.restore(); }
 }
 

@@ -12,7 +12,8 @@ import { setAdvisor, tickAdvisor, advisorState, buildQuestion } from './advisor.
 let policy = decide;
 let mem = {};
 let lastObs = null;
-const stats = { ticks: 0, deaths: 0, runs: 0, bestAct: 0, bestWave: 0 };
+const stats = { ticks: 0, deaths: 0, runs: 0, bestAct: 0, bestWave: 0, kills: 0 }; // kills: 판을 넘어 누적
+let lastKills = 0;
 let lastScreen = null;
 
 export function botTick(dt) {
@@ -26,6 +27,9 @@ export function botTick(dt) {
     if (obs.screen === 'playing' && lastScreen !== 'playing') stats.runs++;
     lastScreen = obs.screen;
   }
+  const k = game.kills || 0; // 새 판이면 0으로 돌아감 → 늘어난 만큼만 더함
+  if (k > lastKills) stats.kills += k - lastKills;
+  lastKills = k;
   if (obs.screen === 'playing') { stats.bestAct = Math.max(stats.bestAct, obs.act); stats.bestWave = Math.max(stats.bestWave, obs.wave); }
   upkeep(mem, dt); // 스탯·감정·장비·강화·슬롯 (bot/upkeep.js)
   mem.tactic = tickAdvisor(obs, dt); // 전술 조언자(JEV 등)가 있으면 그 답 - 없으면 'fight' (bot/advisor.js)
@@ -42,7 +46,7 @@ export function setBot(on) {
 // 판단 바꾸기: fn(관측, 기억, dt) → 행동. null이면 휴리스틱으로 되돌림
 export function setPolicy(fn) { policy = fn || decide; mem = {}; }
 
-export function botStats() { return { ...stats, kills: game.kills || 0 }; }
+export function botStats() { return { ...stats }; }
 
 export const botApi = {
   observe: () => toJSON(lastObs || observe()),

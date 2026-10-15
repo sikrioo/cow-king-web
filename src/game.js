@@ -44,6 +44,7 @@ import {
 } from './session.js';
 import { steerAroundObstacles } from './systems/obstacles.js';
 import { applyVolume } from './audio/sfx.js';
+import { assignSockets } from './entities/movement.js';
 
 export { resetGame } from './session.js';
 export { initTitleScene, updateTitleScene, cycleTitleClass } from './ui/titleScene.js';
@@ -99,6 +100,7 @@ export function fixedUpdate(dt) {
     updateDev();
     if (game.sandbox) updateSandbox(dt); // 관리자 미리보기
     updateSkillSlots();
+    assignSockets(game.cows); // 근접 몬스터 둘러싸기 자리 (entities/movement.js)
     game.cows.forEach((c) => c.update(dt));
     for (let i = game.cows.length - 1; i >= 0; i--) {
       if (game.cows[i].state === 'dead' && game.cows[i].deadTimer <= 0) game.cows.splice(i, 1);

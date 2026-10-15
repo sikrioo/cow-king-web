@@ -70,3 +70,21 @@ it('비켜 가기: 주인공과 사이에 건초더미가 있어도 몬스터가
     expect(best).toBeLessThan(cx - 40); // 건초더미(가운데)를 지나 주인공 쪽으로
   } finally { env.restore(); }
 }, 60000);
+
+it('둘러싸기 자리: 한쪽에서 몰려와도 근접 몬스터가 주인공 둘레로 퍼져 섬 (앞으로만 몰리지 않음)', async () => {
+  const env = installBrowserEnv({ seed: 9 });
+  try {
+    const m = await boot();
+    m.setObstacles([]);
+    const h = m.game.hero, cx = m.PEN.size / 2, cy = m.PEN.size / 2;
+    m.game.cows = [];
+    for (let i = 0; i < 8; i++) m.game.cows.push(new m.Monster(0.4, 'normal', { pos: { x: cx + 200 + (i % 3) * 20, y: cy - 60 + i * 15 }, hunt: true }));
+    m.dev.god = true;
+    for (let i = 0; i < 600; i++) { m.Body.setPosition(h.body, { x: cx, y: cy }); h.x = cx; h.y = cy; m.fixedUpdate(1 / 60); }
+    const angs = m.game.cows.map((c) => Math.atan2(c.y - cy, c.x - cx)).sort((p, q) => p - q);
+    let gap = 0;
+    angs.forEach((v, i) => { gap = Math.max(gap, (i + 1 < angs.length ? angs[i + 1] : angs[0] + Math.PI * 2) - v); });
+    expect(gap).toBeLessThan(Math.PI * 130 / 180); // 둘레가 크게 비지 않음 (자리 없이는 오른쪽에 몰림 - 빈 각도 180도 근처)
+    expect(m.game.cows.filter((c) => c.x < cx).length).toBeGreaterThanOrEqual(2); // 반대편(왼쪽)으로도 돌아옴
+  } finally { env.restore(); }
+}, 60000);

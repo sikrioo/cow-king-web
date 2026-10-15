@@ -4,6 +4,9 @@
 //   Monster.update가 종류별 steer 다음에 부름 (특별한 움직임 - 영혼 곡선·도살자 돌진 등 - 은 종류별 행동이 먼저)
 import { Body } from '../core/physics.js';
 import { game } from '../state.js';
+import { MELEE_SOCKETS, MONSTER_MOVE } from '../data/balance.js';
+import { MONSTERS } from '../data/monsters.js';
+import { PEN, obstacleAt } from '../world/arena.js';
 
 const go = (m, vx, vy, sp) => { m.state = 'walk'; Body.setVelocity(m.body, { x: vx * sp, y: vy * sp }); };
 
@@ -41,4 +44,48 @@ export function moveByRule(m, rule, dxP, dyP, distP, auraMult) {
     return true;
   }
   return false;
+}
+
+// 둘러싸기 자리(소켓) (2026-10-15 사용자: 적이 주인공 앞으로만 몰려옴 → 둘레 자리 중 가까운 빈자리로)
+//   틱마다 한 번(game.js, 몬스터 갱신 전): 주인공 가까이(engage) 쫓아오는 근접 몬스터를 가까운 순서로, 각자 지금 방향에서 가장 가까운 빈자리에
+//   안쪽 inner개(근접 거리) - 다 차면 바깥 outer개(대기, outerMul배 거리). 지금 자리면 keepBias만큼 유리(자리가 매 틱 바뀌지 않게)
+//   대상: 근접으로 싸우는 몬스터만 (원거리·이동 규칙·보스·물체 제외). Monster.update는 미끼를 노릴 땐 안 씀
+export function socketAngle(i) {
+  const S = MELEE_SOCKETS;
+  return i < S.inner ? (i / S.inner) * Math.PI * 2 : ((i - S.inner) / S.outer) * Math.PI * 2 + Math.PI / S.outer;
+}
+export function assignSockets(cows) {
+  const S = MELEE_SOCKETS, h = game.hero;
+  const cands = [];
+  cows.forEach((c) => {
+    c.socketIdx = null;
+    if (!h.alive || c.state === 'dead') return;
+    const def = MONSTERS[c.kind] || {};
+    if (def.prop || def.boss || c.kind === 'boss' || MONSTER_MOVE[c.kind] || (c.behavior && c.behavior.ranged)) return;
+    const d = Math.hypot(c.x - h.x, c.y - h.y);
+    if (d < S.engage) cands.push({ c, d, a: Math.atan2(c.y - h.y, c.x - h.x) });
+  });
+  cands.sort((p, q) => p.d - q.d);
+  const taken = new Array(S.inner + S.outer).fill(false);
+  const diff = (a, b) => { let x = Math.abs(a - b) % (Math.PI * 2); return x > Math.PI ? Math.PI * 2 - x : x; };
+  // 벽 밖·구조물 안인 자리는 못 감 (주인공이 맵 구석에 있을 때 - 2026-10-15 봇 보고서로 발견: 못 가는 자리를 받은 몬스터가 공격도 안 하고 맴돎)
+  const reachable = (c, i) => {
+    const r = c.meleeRange * (i < S.inner ? S.innerMul : S.outerMul), a = socketAngle(i);
+    const x = h.x + Math.cos(a) * r, y = h.y + Math.sin(a) * r, m = c.r + 2;
+    return x > PEN.x + m && y > PEN.y + m && x < PEN.x + PEN.size - m && y < PEN.y + PEN.size - m && !obstacleAt(x, y, c.r);
+  };
+  cands.forEach(({ c, a }) => {
+    let best = -1, bestCost = Infinity;
+    for (let ring = 0; ring < 2 && best < 0; ring++) {
+      const from = ring ? S.inner : 0, to = ring ? S.inner + S.outer : S.inner;
+      for (let i = from; i < to; i++) {
+        if (taken[i] || !reachable(c, i)) continue;
+        const cost = diff(a, socketAngle(i)) - (c.prevSocket === i ? S.keepBias : 0);
+        if (cost < bestCost) { bestCost = cost; best = i; }
+      }
+    }
+    if (best < 0) return;
+    taken[best] = true;
+    c.socketIdx = best; c.prevSocket = best;
+  });
 }
