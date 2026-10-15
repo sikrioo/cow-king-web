@@ -1,4 +1,5 @@
 // 이펙트 그리기 (파티클/불바닥/번개/충격파/떠오르는 글자) - 생성·갱신은 main.js
+import { MONSTERS } from '../data/monsters.js';
 import { hexToRgba, hash01, resistOf } from '../util.js';
 import { ELEMENTS, ELEMENT_DEF } from '../data/elements.js';
 import { game, ui, input } from '../state.js';
@@ -218,7 +219,7 @@ export function drawImmuneLabels(ctx, cows) {
   ctx.lineWidth = 3;
   ctx.strokeStyle = 'rgba(0,0,0,0.75)';
   cows.forEach((c) => {
-    if (c.state === 'dead') return;
+    if (c.state === 'dead' || (MONSTERS[c.kind] && MONSTERS[c.kind].prop)) return; // 뼈 창살 같은 물체엔 면역 글자 안 띄움 (2026-10-15 사용자)
     const keys = IMMUNE_KEYS.filter((k) => resistOf(c, k) >= 1);
     if (!keys.length) return;
     const top = c.y - 70 * c.scale - 8; // 몸통 원(발 위 40*scale, 반지름 30*scale) 위

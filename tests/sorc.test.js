@@ -208,3 +208,20 @@ it('클릭 공격 = 슬롯1 스킬: 화염구가 슬롯1이면 화염구, 마력
     input.attackTarget = null; input.attackHeld = false;
   } finally { env.restore(); }
 });
+
+it('마력탄은 기본 공격이라 명중 판정 - 높은 레벨 몬스터에겐 일부 빗나감 (화염구는 항상 맞음) (2026-10-15)', async () => {
+  const env = installBrowserEnv({ seed: 3 });
+  try {
+    const m = await bootSorc();
+    const h = m.game.hero;
+    const a = m.place(150); a.level = 60; // 명중 하한(50%)까지
+    let hits = 0, shots = 0, hp = a.hp;
+    for (let i = 0; i < 20; i++) {
+      h.spellCd.bolt = 0; m.tryBolt(); shots++;
+      m.fly(0.6);
+      if (a.hp < hp) { hits++; hp = a.hp; }
+    }
+    expect(hits).toBeGreaterThan(0);
+    expect(hits).toBeLessThan(shots); // 일부 빗나감
+  } finally { env.restore(); }
+});

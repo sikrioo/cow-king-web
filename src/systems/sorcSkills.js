@@ -52,7 +52,8 @@ export function tryBolt() {
   sfx('bolt', game.hero);
   const d = facingDir(), o = castPoint(d);
   spawnProjectile({
-    kind: 'bolt', team: 'hero', x: o.x, y: o.y, dirX: d.x, dirY: d.y, speed: s.speed, range: s.range, radius: s.radius,
+    // hitRoll: 마력탄은 기본 공격이라 명중 판정 (2026-10-15, 마나 쓰는 마법은 항상 맞음)
+    kind: 'bolt', team: 'hero', hitRoll: true, x: o.x, y: o.y, dirX: d.x, dirY: d.y, speed: s.speed, range: s.range, radius: s.radius,
     packet: { phys: spellDamage(s.damage, 'bolt') }, knock: 2, color: '#c9b8ff'
   });
 }

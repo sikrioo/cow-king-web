@@ -4,7 +4,7 @@
 // 그리기는 render/fx.js의 drawProjectiles (kind로 모양 구분)
 import { game } from '../state.js';
 import { PEN, obstacleAt } from '../world/arena.js';
-import { hitPlayer, canHit, cowEdgeDist } from './combat.js';
+import { hitPlayer, canHit, cowEdgeDist, rollHeroHit } from './combat.js';
 import { damageCowPacket } from './elementCombat.js';
 import { spawnHitParticles, spawnShockwave } from './fx.js';
 import { sfx } from '../audio/sfx.js';
@@ -35,8 +35,10 @@ export function updateProjectiles(dt) {
     if (p.onTick) p.onTick(p, dt);
     let target = null;
     if (!p.pierce) {
-      if (p.team === 'hero') target = cowHit(p);
-      else if (game.hero.alive && Math.hypot(game.hero.x - p.x, game.hero.y - p.y) <= p.radius + game.hero.r) target = game.hero;
+      if (p.team === 'hero') {
+        target = cowHit(p);
+        if (target && p.hitRoll && !rollHeroHit(target)) { game.projectiles.splice(i, 1); continue; } // 기본 공격 투사체(마력탄): 명중 판정 - 빗나가면 사라짐 (MISS)
+      } else if (game.hero.alive && Math.hypot(game.hero.x - p.x, game.hero.y - p.y) <= p.radius + game.hero.r) target = game.hero;
     }
     const outside = p.x < PEN.x || p.y < PEN.y || p.x > PEN.x + PEN.size || p.y > PEN.y + PEN.size;
     const blocked = !target && obstacleAt(p.x, p.y, p.radius * 0.5); // 구조물이 막음 (2026-10-14 사용자: 투사체 전부)

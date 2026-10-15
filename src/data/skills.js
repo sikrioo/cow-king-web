@@ -165,7 +165,7 @@ export const THROW_TRAIL = 7;           // 던진 무기 뒤 원소 꼬리 길�
 //   mana: 소모, cooldown: 초, speed/range/radius: 투사체(px), explode: 폭발 반경
 export const SPELL_LEVEL_SCALE = 0.07;
 export const SPELLS = {
-  bolt:      { mana: 0,  cooldown: 0.42, damage: 22, speed: 430, range: 420, radius: 7 },                 // 기본 공격 (공격속도 영향)
+  bolt:      { mana: 0,  cooldown: 0.42, damage: 18, speed: 430, range: 420, radius: 7 },                 // 기본 공격 (공격속도 영향) - 2026-10-15 사용자: 피해 22 → 18(근접 기본 공격보다 30% 넘게 낮게) + 명중 판정(마나 안 쓰는 기본 공격이라)
   fireball:  { mana: 9,  cooldown: 0.75, damage: 38, speed: 330, range: 440, radius: 10, explode: 52 },   // 화염 → 화상
   frostnova: { mana: 14, cooldown: 3.0,  damage: 24, radius: 150 },                                         // 냉기 → 둔화, 주변 전체
   chain:     { mana: 13, cooldown: 1.1,  damage: 40, range: 340, cone: 0.7, jumpRange: 170, jumps: 4, falloff: 0.85 }, // 번개, 근처로 튐
