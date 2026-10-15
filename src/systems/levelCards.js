@@ -8,7 +8,7 @@ import { SKILL_META, SKILL_UNLOCK_LEVEL, SKILL_MAX_LEVEL, COMMON_SKILLS, SPECIAL
 import { POTION_MAX } from '../data/balance.js';
 import { MASTERIES, MASTERY_ORDER, MASTERY_MAX_LEVEL } from '../data/masteries.js';
 import { CLASSES } from '../data/classes.js';
-import { game, input } from '../state.js';
+import { game, input, ui } from '../state.js';
 import { learnedLevel, specialUsable } from '../util.js';
 import { floatText, spawnHitParticles } from './fx.js';
 import { recalcGearStats } from './gear.js';
@@ -41,6 +41,7 @@ function openNextOffer() {
   if (game.hero.pendingCards <= 0 || !game.hero.alive) { game.cardOffer = null; return; }
   game.hero.pendingCards--;
   game.cardOffer = { cards: rollCards() };
+  ui.cardHover = -1; // 새 카드 - 마우스 오버 초기화
   sfx('cardShow');
   // 고르는 동안 눌려 있던 시전/클릭 명령은 풀어 둠 (고른 뒤 혼자 움직이지 않게)
   input.holdSlot1 = false;

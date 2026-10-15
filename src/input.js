@@ -173,6 +173,11 @@ export function bindInput(actions) {
     actions.slotPress(e.button === 2 ? 2 : 1); // 타이틀/게임오버에서는 시작
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (game.cardOffer && e.pointerType !== 'touch') { // 레벨업 카드 마우스 오버
+      const rect = canvas.getBoundingClientRect(), mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const i = ui.cardRects.findIndex((r) => mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h);
+      if (i !== ui.cardHover) { ui.cardHover = i; ui.cardHoverSince = performance.now() / 1000; }
+    }
     if (e.pointerType !== 'touch' && e.pointerType !== 'pen') rememberMouse(e);
     if (ui.showInventory || game.cardOffer || game.gameState !== 'playing') return;
     // 적 위에서는 커서 모양으로 공격 가능함을 알림

@@ -103,6 +103,7 @@ export function decide(obs, mem, dt) {
   mem.flowT = 0;
   if (obs.cards) { // 카드는 cardWait초 보여 준 뒤 고름 (게임은 카드가 떠 있는 동안 멈춰 있음)
     mem.cardT = (mem.cardT || 0) + dt;
+    if (mem.cardT >= BOT.cardHoverAt) a.cardHover = chooseCard(obs); // 고를 카드에 잠깐 마우스를 올림
     if (mem.cardT >= BOT.cardWait) { mem.cardT = 0; a.card = chooseCard(obs); }
     return a;
   }

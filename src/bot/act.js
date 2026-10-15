@@ -1,20 +1,21 @@
 // 봇 행동 적용 - 사람이 누르는 것과 같은 길로 (클릭 이동·클릭 공격 = input.moveTarget/attackTarget, 슬롯 = trySlot, 물약·카드·막 넘기기)
 //   행동 = { move: {x, y}(가려는 방향, 단위 벡터) | null, run, attack: 몬스터(또는 toJSON 번호) | null, cast: 0|1|2,
-//            potion: 'heal'|'mana'|null, card: 번호|null, nextAct, flow: 'advance'|'enter'|'start'|null }
+//            potion: 'heal'|'mana'|null, card: 번호|null, cardHover: 번호|null(고르기 전 마우스를 올린 것처럼), nextAct, flow: 'advance'|'enter'|'start'|null }
 //   봇은 게임 난수(Math.random)를 쓰지 않음 - 같은 시드면 같은 결과
-import { game, input } from '../state.js';
+import { game, input, ui } from '../state.js';
 import { trySlot } from '../systems/skills.js';
 import { tryDrinkPotion } from '../systems/potions.js';
 import { pickCard } from '../systems/levelCards.js';
 import { requestNextAct } from '../systems/acts.js';
 import { advanceScreen, enterSelectedMap } from '../session.js';
 
-export const IDLE = { move: null, run: false, attack: null, cast: 0, potion: null, card: null, nextAct: false, flow: null };
+export const IDLE = { move: null, run: false, attack: null, cast: 0, potion: null, card: null, cardHover: null, nextAct: false, flow: null };
 
 export function applyAction(a, obs) {
   if (a.flow === 'advance') { advanceScreen(); return; }
   if (a.flow === 'enter') { enterSelectedMap(); return; }
   if (game.gameState !== 'playing') return;
+  if (a.cardHover != null && game.cardOffer && ui.cardHover !== a.cardHover) { ui.cardHover = a.cardHover; ui.cardHoverSince = performance.now() / 1000; } // 사람처럼 마우스를 올린 것처럼
   if (a.card != null && game.cardOffer) { pickCard(a.card); return; }
   if (a.nextAct) requestNextAct();
   if (game.paused || game.cardOffer) return;

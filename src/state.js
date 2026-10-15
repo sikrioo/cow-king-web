@@ -62,6 +62,7 @@ export const ui = {
   identifyTimer: 0,
   moveMarker: null, // 클릭 이동 표시 {x, y, t0} (그리기 전용)
   devPanelOpen: false,
+  cardHover: -1, cardHoverSince: 0, // 레벨업 카드 마우스 오버 (ui/cardPick.js가 살짝 띄워 그림, 봇도 고르기 전에 씀)
   botOn: false, // 자동 플레이 봇 (src/bot/bot.js)
   heroTopView: false, // 주인공 손 그리기 비교: false = 3/4 시점(위를 보면 앞 손이 가려짐), true = 탑뷰(손이 늘 보임) - 개발자 패널
   selectedClass: 'warrior', // 시작 화면에서 고른 캐릭터 (data/classes.js)

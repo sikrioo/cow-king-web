@@ -6,6 +6,7 @@ import { SKILL_META, SKILL_LEVEL_UP, SKILL_LEVEL_STAT, SKILL_STATS, SPELLS, SKIL
 import { FILLER_CARDS, UPGRADE_CARDS, CARD_RARITY, UPGRADE_MAX_PICKS } from '../data/cards.js';
 import { MASTERIES, MASTERY_STAT } from '../data/masteries.js';
 import { GEAR_VARIANT_LABEL } from '../data/items.js';
+import { CARD_HOVER } from '../data/cards.js';
 
 const TYPE_STYLE = {
   newSkill: { tag: '새 스킬', color: '#9be39b' },
@@ -110,12 +111,21 @@ export function drawCardOffer(t) {
   ctx.fillText(`카드를 하나 고르세요 (1 / 2 / 3 · 클릭/탭)${more}`, W / 2, top - 20);
 
   ui.cardRects = [];
-  offer.cards.forEach((card, i) => {
-    const x = wide ? (W - (n * cw + (n - 1) * gap)) / 2 + i * (cw + gap) : (W - cw) / 2;
-    const y = wide ? top : top + i * (ch + gap);
-    ui.cardRects.push({ x, y, w: cw, h: ch });
-    drawCard(card, i, x, y, cw, ch, wide, t);
-  });
+  const hover = ui.cardHover, lift = hover >= 0 ? Math.min(1, (performance.now() / 1000 - ui.cardHoverSince) / CARD_HOVER.time) : 0;
+  const at = (i) => ({ x: wide ? (W - (n * cw + (n - 1) * gap)) / 2 + i * (cw + gap) : (W - cw) / 2, y: wide ? top : top + i * (ch + gap) });
+  offer.cards.forEach((card, i) => { const p = at(i); ui.cardRects.push({ x: p.x, y: p.y, w: cw, h: ch }); if (i !== hover) drawCard(card, i, p.x, p.y, cw, ch, wide, t); });
+  if (hover >= 0 && offer.cards[hover]) { // 마우스를 올린 카드: 살짝 앞으로 (클릭 영역은 그대로)
+    const p = at(hover), k = 1 - (1 - lift) ** 2, s = 1 + CARD_HOVER.scale * k;
+    ctx.save();
+    ctx.globalAlpha = 0.35 * k; // 그림자
+    ctx.fillStyle = '#000';
+    ctx.fillRect(p.x + 6, p.y + 8, cw, ch);
+    ctx.globalAlpha = 1;
+    ctx.translate(p.x + cw / 2, p.y + ch / 2 - CARD_HOVER.lift * k);
+    ctx.scale(s, s);
+    drawCard(offer.cards[hover], hover, -cw / 2, -ch / 2, cw, ch, wide, t, k);
+    ctx.restore();
+  }
 
   // 다시 뽑기
   const bw = 180, bh = 34;
@@ -135,10 +145,10 @@ export function drawCardOffer(t) {
   ctx.restore();
 }
 
-function drawCard(card, i, x, y, w, h, wide, t) {
+function drawCard(card, i, x, y, w, h, wide, t, hot = 0) {
   const style = cardStyle(card);
   const txt = cardText(card);
-  const glow = 0.5 + Math.sin(t * 3 + i) * 0.5;
+  const glow = Math.max(hot, 0.5 + Math.sin(t * 3 + i) * 0.5); // 마우스를 올리면 테두리가 환하게
   ctx.save();
   ctx.fillStyle = '#16211a';
   ctx.fillRect(x, y, w, h);

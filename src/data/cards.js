@@ -38,3 +38,6 @@ export const FILLER_CARDS = {
   mana:    { label: '마나 물약 +1', desc: '마나 물약을 하나 더 받음', color: '#6b9bff' }
 };
 export const FILLER_ORDER = ['restore', 'heal', 'mana'];
+
+// 카드 마우스 오버 (ui/cardPick.js, 2026-10-15 사용자): lift px 위로, scale만큼 커짐, time초에 걸쳐
+export const CARD_HOVER = { lift: 10, scale: 0.06, time: 0.12 };
