@@ -88,3 +88,21 @@ it('둘러싸기 자리: 한쪽에서 몰려와도 근접 몬스터가 주인공
     expect(m.game.cows.filter((c) => c.x < cx).length).toBeGreaterThanOrEqual(2); // 반대편(왼쪽)으로도 돌아옴
   } finally { env.restore(); }
 }, 60000);
+
+it('둘러싸여도 주인공이 걸어서 빠져나갈 수 있음 (자리 때문에 갇히지 않음 - 2026-10-15 사용자: 이동이 막힘)', async () => {
+  const env = installBrowserEnv({ seed: 5 });
+  try {
+    const m = await boot();
+    m.setObstacles([]);
+    const h = m.game.hero, cx = m.PEN.size / 2, cy = m.PEN.size / 2;
+    m.Body.setPosition(h.body, { x: cx, y: cy }); h.x = cx; h.y = cy;
+    m.game.cows = [];
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; m.game.cows.push(new m.Monster(0.4, 'normal', { pos: { x: cx + Math.cos(a) * 120, y: cy + Math.sin(a) * 120 }, hunt: true })); }
+    for (let i = 0; i < 180; i++) m.fixedUpdate(1 / 60); // 둘러쌀 시간
+    const x0 = h.x, y0 = h.y;
+    m.input.keys.d = true;
+    for (let i = 0; i < 120; i++) m.fixedUpdate(1 / 60);
+    m.input.keys.d = false;
+    expect(Math.hypot(h.x - x0, h.y - y0)).toBeGreaterThan(30); // 바깥 대기 줄이 있을 땐 13px (갇힘)
+  } finally { env.restore(); }
+}, 60000);

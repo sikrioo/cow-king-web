@@ -445,7 +445,8 @@ export const MONSTER_MOVE = {
 export const SLOT_REACH_RATIO = 0.85;
 // 둘러싸기 자리 (entities/movement.js assignSockets, 2026-10-15 사용자): 주인공 engage px 안 근접 몬스터가 안쪽 inner개(근접 거리 × innerMul) 자리에 둘러섬,
 //   다 차면 바깥 outer개(근접 거리 × outerMul)에서 대기, keepBias = 지금 자리를 유지하는 쪽으로 주는 덤(라디안)
-export const MELEE_SOCKETS = { inner: 6, outer: 10, engage: 280, innerMul: 0.9, outerMul: 2.2, keepBias: 0.5, arrive: 16, arcStep: 0.6, flankMul: 1.4 }; // flankMul: 둘레를 돌아 자리 잡는 동안 빠르기 // arrive: 자리에 이만큼 가까우면 도착(공격), arcStep: 둘레를 돌 때 한 번에 가는 각도
+export const MELEE_SOCKETS = { inner: 6, outer: 0, // outer: 바깥 대기 자리 - 0 (2026-10-15 사용자: 주인공이 갇혀 못 움직임 → 넘치는 몬스터는 그냥 쫓아옴)
+  engage: 280, innerMul: 0.9, outerMul: 2.2, keepBias: 0.5, arrive: 16, arcStep: 0.6, flankMul: 1.4 }; // flankMul: 둘레를 돌아 자리 잡는 동안 빠르기 // arrive: 자리에 이만큼 가까우면 도착(공격), arcStep: 둘레를 돌 때 한 번에 가는 각도
 export const HERO_PREVIEW = { walk: 3.5, walkRadius: 90, attack: 5, attackEvery: 0.7, idleTurn: 1 };
 export const PRISON = { range: 340, firstCd: 3, cooldown: 9, castTime: 0.6, radius: 70, bars: 10, warn: 0.8, duration: 2.5 };
 // 감옥지기 뼈 창 (2026-10-14 사용자: 강령술사처럼 가두고 쏨): spearCd초마다 range 안이면 한 발(물리 damage), 주인공이 갇혀 있으면 jailedCd초마다 - 창살 틈으로 들어감(투사체는 창살을 통과)

@@ -40,7 +40,7 @@ data/              숫자·콘텐츠만: balance, monsters, items, elements, ski
 - 새 import를 추가하면 순환이 없는지 확인할 것.
 
 ## 확장할 때 고칠 곳
-- 근접 몬스터 둘러싸기(2026-10-15): `entities/movement.js` assignSockets(game.js가 틱마다 몬스터 갱신 전) - 주인공 둘레 안쪽 자리(근접)·바깥 자리(대기), 벽 밖·구조물 안 자리는 안 줌, 자리에 도착해야 공격, 반대편은 둘레를 돌아서. 수치 `data/balance.js` MELEE_SOCKETS. 원거리·이동 규칙·보스·물체는 제외.
+- 근접 몬스터 둘러싸기(2026-10-15): `entities/movement.js` assignSockets(game.js가 틱마다 몬스터 갱신 전) - 주인공 둘레 안쪽 자리(근접 6개 - 넘치는 몬스터는 그냥 쫓아옴, 바깥 대기 줄은 주인공을 가둬서 뺌), 벽 밖·구조물 안 자리는 안 줌, 자리에 도착해야 공격, 반대편은 둘레를 돌아서. 수치 `data/balance.js` MELEE_SOCKETS. 원거리·이동 규칙·보스·물체는 제외.
 - 몬스터 이동: 거리 유지(keep)·수비(hide)는 `data/balance.js` MONSTER_MOVE에 숫자만 → `entities/movement.js` moveByRule(Monster.update가 종류별 steer 다음에 부름, 규칙이 있으면 근접 공격 안 함). 특별한 움직임만 종류별 steer. 표의 태도(MONSTER_ROLE stance)와 맞아야 함(tests/monsters.test.js).
 - 몬스터 추가: `data/monsters.js` 항목 하나(+ 엘리트로 나오게 하려면 같은 파일 `ELITE_KINDS`) + 개발자 패널 소환 목록 `data/scenarios.js` DEV_SPAWN_GROUPS(빠지면 tests/devPanel.test.js 실패, 확인용 시나리오도 여기) + 특수 행동이 있으면 `entities/behaviors.js` 훅 하나.
   훅: `init / update(true=상태 점유) / steer / ranged / onDeath(true=자체 드랍) / drawUnder / drawOver`. 상태 점유 중(fusing/zapping/telegraph/casting…)엔 매 틱 true.

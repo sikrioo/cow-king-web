@@ -19,7 +19,7 @@ export function spawnProjectile(p) {
 
 function cowHit(p) {
   for (const c of game.cows) {
-    if (c.state === 'dead' || !canHit(game.hero, c)) continue;
+    if (c.state === 'dead' || !canHit(game.hero, c) || (p.missed && p.missed.has(c))) continue; // 빗나간 몬스터는 지나침
     if (cowEdgeDist(c, p.x, p.y) <= p.radius) return c; // 그림의 몸통/발밑에 닿으면
   }
   return null;
@@ -37,7 +37,7 @@ export function updateProjectiles(dt) {
     if (!p.pierce) {
       if (p.team === 'hero') {
         target = cowHit(p);
-        if (target && p.hitRoll && !rollHeroHit(target)) { game.projectiles.splice(i, 1); continue; } // 기본 공격 투사체(마력탄): 명중 판정 - 빗나가면 사라짐 (MISS)
+        if (target && p.hitRoll && !rollHeroHit(target)) { (p.missed || (p.missed = new Set())).add(target); target = null; } // 기본 공격 투사체(마력탄): 명중 판정 - 빗나가면 그 몬스터를 지나쳐 계속 날아감 (MISS, 뒤의 적은 다시 판정)
       } else if (game.hero.alive && Math.hypot(game.hero.x - p.x, game.hero.y - p.y) <= p.radius + game.hero.r) target = game.hero;
     }
     const outside = p.x < PEN.x || p.y < PEN.y || p.x > PEN.x + PEN.size || p.y > PEN.y + PEN.size;
